@@ -22,6 +22,8 @@ ArcaSim speaks ARCA's protocol: the same WSDL files, the same operations, the sa
 | **Saturation and bottlenecks** | A requests-per-minute limit, capacity with a service time and a queue: what does not fit gets HTTP 503, like a saturated load balancer. The panel shows each service's saturation meter and a live log. |
 | **Its own clock** | Freeze it or move it ahead: expire a ticket, leave a voucher's date range or cross 01/12/2026, when the receiver's VAT condition becomes mandatory. |
 
+![The panel's traffic section: the WSFEv1 saturation meter reads 58.3 %, with 12 requests in the last minute and 7 refused, two served at once and three places in the queue](docs/media/trafico.jpg)
+
 ![Swapping ArcaSim for ARCA, in five steps: the application gets its access ticket and its CAE from ArcaSim, the panel causes failures and moves the clock, and for production two addresses and the certificate change](docs/media/modulo_en.gif)
 
 ## Using it from an application

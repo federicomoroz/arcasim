@@ -22,6 +22,8 @@ ArcaSim habla el mismo protocolo que ARCA: los mismos WSDL, las mismas operacion
 | **Saturación y cuellos de botella** | Límite de pedidos por minuto, capacidad con tiempo de atención y una cola: lo que no entra recibe HTTP 503, como un balanceador saturado. El panel muestra el medidor de saturación de cada servicio y un registro en vivo. |
 | **Reloj propio** | Detenerlo o adelantarlo: vencer un ticket, salir del rango de fechas de un comprobante o cruzar el 01/12/2026, cuando la condición frente al IVA del receptor pasa a ser obligatoria. |
 
+![La sección de tráfico del panel: el medidor de saturación de WSFEv1 marca 58,3 %, con 12 pedidos en el último minuto y 7 rechazados, dos atendidos a la vez y tres lugares en la cola](docs/media/trafico.jpg)
+
 ![Cambiar ArcaSim por ARCA, en cinco pasos: la aplicación pide el ticket de acceso y el CAE a ArcaSim, el panel provoca fallas y mueve el reloj, y para producción se cambian dos direcciones y el certificado](docs/media/modulo.gif)
 
 ## Cómo se usa desde una aplicación
