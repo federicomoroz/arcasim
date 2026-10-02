@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
+using ArcaSim.Application.Events;
 using ArcaSim.Domain;
 
 namespace ArcaSim.Application.Wsaa;
@@ -22,12 +23,21 @@ public sealed partial class WsaaService(
     ITrustStore trustStore,
     IAccessRepository access,
     ITicketLog tickets,
-    ITokenSigner signer)
+    ITokenSigner signer,
+    EventManager events,
+    TimeProvider time)
 {
     public static readonly TimeSpan TicketLifetime = TimeSpan.FromHours(12);
     private static readonly TimeSpan Tolerance = TimeSpan.FromHours(24);
 
     public async Task<LoginResult> LoginAsync(string? in0, CancellationToken ct = default)
+    {
+        var result = await CheckAndIssueAsync(in0, ct);
+        if (result.Fault is { } fault) events.Publish(new LoginRefused(time.GetUtcNow(), fault.Code, fault.Message));
+        return result;
+    }
+
+    private async Task<LoginResult> CheckAndIssueAsync(string? in0, CancellationToken ct)
     {
         if (settings.ChaosFor("wsaa").Down) return LoginResult.Fail(WsaaFault.WsaaUnavailable);
 
@@ -122,6 +132,7 @@ public sealed partial class WsaaService(
         await tickets.AddAsync(new IssuedTicket(clientDn, service.Id, generation, expiration), ct);
 
         var token = BuildToken(service, clientDn, authorizations, generation, expiration);
+        events.Publish(new TicketIssued(time.GetUtcNow(), clientDn, service.Id));
         return LoginResult.Ok(BuildTicket(clientDn, generation, expiration, token, signer.Sign(token)));
     }
 

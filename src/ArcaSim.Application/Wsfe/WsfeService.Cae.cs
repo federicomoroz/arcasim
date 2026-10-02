@@ -1,3 +1,4 @@
+using ArcaSim.Application.Events;
 using ArcaSim.Domain;
 
 namespace ArcaSim.Application.Wsfe;
@@ -69,9 +70,15 @@ public sealed partial class WsfeService
                 if (!rejected && (detail.CbteDesde != next || date < lastDate))
                 {
                     errors.Add(catalog.For(RuleCodes.Cae, 10016, "Err").ToErr());
+                    findings.Add(catalog.For(RuleCodes.Cae, 10016, "Err"));
                     rejected = true;
                 }
-                if (rejected) break;
+                if (rejected)
+                {
+                    events.Publish(new VoucherRejected(time.GetUtcNow(), auth.Cuit, header.PtoVta, header.CbteTipo, detail.CbteDesde,
+                        findings.Where(f => f.Rejects).Select(f => f.Code).ToList()));
+                    break;
+                }
 
                 var cae = codes.NextCae();
                 var due = date.AddDays(settings.CaeLifetimeDays);
@@ -80,6 +87,8 @@ public sealed partial class WsfeService
                     auth.Cuit, header.PtoVta, header.CbteTipo, detail.CbteDesde, detail.CbteHasta, date,
                     EmissionType.Cae, cae, due, clock.Now, Normalized(detail, date), observations), ct);
 
+                events.Publish(new VoucherAuthorized(time.GetUtcNow(), auth.Cuit, header.PtoVta, header.CbteTipo,
+                    detail.CbteDesde, detail.CbteHasta, "CAE", cae));
                 answer.Resultado = "A";
                 answer.CAE = cae;
                 answer.CAEFchVto = Fev1Dates.Format(due);

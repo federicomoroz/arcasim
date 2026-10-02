@@ -1,3 +1,4 @@
+using ArcaSim.Application.Events;
 using ArcaSim.Domain;
 
 namespace ArcaSim.Application.Wsfe;
@@ -19,7 +20,9 @@ public sealed partial class WsfeService(
     ICaeaStore caeas,
     IExchangeRates rates,
     IAuthorizationCodes codes,
-    SequenceLocks locks)
+    SequenceLocks locks,
+    EventManager events,
+    TimeProvider time)
 {
     public const string Name = "wsfe";
 

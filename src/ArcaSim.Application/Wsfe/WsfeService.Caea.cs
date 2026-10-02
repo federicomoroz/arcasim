@@ -1,4 +1,5 @@
 using System.Globalization;
+using ArcaSim.Application.Events;
 using ArcaSim.Domain;
 
 namespace ArcaSim.Application.Wsfe;
@@ -43,6 +44,7 @@ public sealed partial class WsfeService
 
         var caea = new IssuedCaea(auth.Cuit, request.Periodo, request.Orden, codes.NextCaea(), from, to, to.AddMonths(1), clock.Now);
         await caeas.AddAsync(caea, ct);
+        events.Publish(new CaeaGranted(time.GetUtcNow(), auth.Cuit, caea.Period, caea.Fortnight, caea.Code));
         var result = ToGet(caea);
         result.Observaciones = [catalog.For(method, 15018).ToObs()];
         return new FECAEAGetResponse { ResultGet = result };
@@ -167,6 +169,8 @@ public sealed partial class WsfeService
                     auth.Cuit, header.PtoVta, header.CbteTipo, detail.CbteDesde, detail.CbteHasta, date,
                     EmissionType.Caea, code, caea.ValidTo, clock.Now, Normalized(detail, date),
                     answer.Observaciones ?? []), ct);
+                events.Publish(new VoucherAuthorized(time.GetUtcNow(), auth.Cuit, header.PtoVta, header.CbteTipo,
+                    detail.CbteDesde, detail.CbteHasta, "CAEA", code));
                 answer.Resultado = "A";
                 next = detail.CbteHasta + 1;
                 lastDate = date;

@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using ArcaSim.Application.Events;
 
 namespace ArcaSim.Application.Traffic;
 
@@ -18,80 +19,65 @@ public sealed record TrafficLimits(int RequestsPerMinute = 0, int Capacity = 0, 
     public static readonly TrafficLimits None = new();
 }
 
-/// <summary>What the gate saw for one service over the last minute, and what it holds now.</summary>
-public sealed record TrafficSnapshot(
-    string Service,
-    TrafficLimits Limits,
-    int InFlight,
-    int Queued,
-    int Requests,
-    int Admitted,
-    int Refused,
-    double AverageMilliseconds,
-    double P95Milliseconds)
-{
-    /// <summary>Refused over total in the last minute: the needle of the meter.</summary>
-    public double SaturationPercent => Requests == 0 ? 0 : 100.0 * Refused / Requests;
-
-    /// <summary>How full the slots and the queue are right now.</summary>
-    public double LoadPercent =>
-        Limits.Capacity == 0 ? 0 : Math.Min(100.0, 100.0 * (InFlight + Queued) / (Limits.Capacity + Limits.QueueLimit));
-}
+/// <summary>What the gate holds for a service right now.</summary>
+public sealed record TrafficState(string Service, TrafficLimits Limits, int InFlight, int Queued);
 
 /// <summary>
-/// Admission control in front of ARCA's endpoints: rate limit, slots with a
-/// queue, and the numbers the panel's meter shows. Uses real time, not
-/// ArcaSim's clock: saturation is about how fast requests arrive now, even
-/// with the simulated date frozen.
+/// Admission control in front of ARCA's endpoints: a rate limit and slots with
+/// a bounded queue. It only admits or refuses, and says so on the event bus;
+/// the meter and the activity log listen. Uses real time, not ArcaSim's clock:
+/// saturation is about how fast requests arrive now, even with the date frozen.
 /// </summary>
-public sealed class TrafficGate(TimeProvider time)
+public sealed class TrafficGate(TimeProvider time, EventManager events)
 {
     private static readonly TimeSpan Window = TimeSpan.FromMinutes(1);
+
+    /// <summary>ARCA's services ArcaSim answers; they show on the meter before their first request.</summary>
+    public static readonly string[] KnownServices = ["wsaa", "wsfe"];
+
     private readonly ConcurrentDictionary<string, ServiceTraffic> _services = new(StringComparer.OrdinalIgnoreCase);
 
     public void SetLimits(string service, TrafficLimits limits) => For(service).SetLimits(limits);
 
     public void Reset() => _services.Clear();
 
-    /// <summary>ARCA's services ArcaSim answers; they show on the meter before their first request.</summary>
-    public static readonly string[] KnownServices = ["wsaa", "wsfe"];
-
-    public IReadOnlyList<TrafficSnapshot> Snapshot()
+    public IReadOnlyList<TrafficState> States()
     {
         foreach (var service in KnownServices) For(service);
-        return _services.Select(s => s.Value.Snapshot(s.Key, time.GetUtcNow() - Window)).OrderBy(s => s.Service).ToList();
+        return _services.Select(s => s.Value.State(s.Key)).OrderBy(s => s.Service).ToList();
     }
 
     /// <summary>A pass to go through, or null when the service is saturated and the request has to be refused.</summary>
     public async Task<Admission?> EnterAsync(string service, CancellationToken ct)
     {
-        var traffic = For(service);
         var arrived = time.GetUtcNow();
-        var slot = await traffic.TryEnterAsync(arrived - Window, ct);
+        var slot = await For(service).TryEnterAsync(arrived - Window, arrived, ct);
         if (slot is null)
         {
-            traffic.Record(arrived, admitted: false, TimeSpan.Zero);
+            events.Publish(new RequestRefused(arrived, service));
             return null;
         }
-        return new Admission(traffic, slot, arrived, time);
+        return new Admission(service, slot, arrived, time, events);
     }
 
-    private ServiceTraffic For(string service) => _services.GetOrAdd(service, _ => new ServiceTraffic(time));
+    private ServiceTraffic For(string service) => _services.GetOrAdd(service, _ => new ServiceTraffic());
 
-    /// <summary>Held while ArcaSim answers; disposing it frees the slot and records how long it took.</summary>
+    /// <summary>Held while ArcaSim answers; disposing it frees the slot and reports how long it took.</summary>
     public sealed class Admission : IAsyncDisposable
     {
-        private readonly ServiceTraffic _traffic;
+        private readonly string _service;
         private readonly Slot _slot;
         private readonly DateTimeOffset _arrived;
         private readonly TimeProvider _time;
+        private readonly EventManager _events;
 
-        internal Admission(ServiceTraffic traffic, Slot slot, DateTimeOffset arrived, TimeProvider time)
+        internal Admission(string service, Slot slot, DateTimeOffset arrived, TimeProvider time, EventManager events)
         {
-            _traffic = traffic;
+            _service = service;
             _slot = slot;
             _arrived = arrived;
             _time = time;
+            _events = events;
         }
 
         /// <summary>The time the configured service takes: the request keeps its slot meanwhile.</summary>
@@ -101,7 +87,8 @@ public sealed class TrafficGate(TimeProvider time)
         public ValueTask DisposeAsync()
         {
             _slot.Release();
-            _traffic.Record(_arrived, admitted: true, _time.GetUtcNow() - _arrived);
+            var now = _time.GetUtcNow();
+            _events.Publish(new RequestServed(now, _service, now - _arrived));
             return ValueTask.CompletedTask;
         }
     }
@@ -117,11 +104,10 @@ public sealed class TrafficGate(TimeProvider time)
         }
     }
 
-    internal sealed class ServiceTraffic(TimeProvider time)
+    internal sealed class ServiceTraffic
     {
         private readonly object _gate = new();
         private readonly Queue<DateTimeOffset> _admittedTimes = new();
-        private readonly Queue<(DateTimeOffset At, bool Admitted, double Milliseconds)> _log = new();
         private TrafficLimits _limits = TrafficLimits.None;
         private SemaphoreSlim? _slots;
         private int _inFlight;
@@ -137,7 +123,12 @@ public sealed class TrafficGate(TimeProvider time)
             }
         }
 
-        public async Task<Slot?> TryEnterAsync(DateTimeOffset windowStart, CancellationToken ct)
+        public TrafficState State(string service)
+        {
+            lock (_gate) return new TrafficState(service, _limits, Math.Max(0, _inFlight), Math.Max(0, _queued));
+        }
+
+        public async Task<Slot?> TryEnterAsync(DateTimeOffset windowStart, DateTimeOffset now, CancellationToken ct)
         {
             SemaphoreSlim? slots;
             TrafficLimits limits;
@@ -155,7 +146,7 @@ public sealed class TrafficGate(TimeProvider time)
                     _queued++;
                     queued = true;
                 }
-                _admittedTimes.Enqueue(time.GetUtcNow());
+                _admittedTimes.Enqueue(now);
             }
 
             if (slots is not null)
@@ -172,30 +163,6 @@ public sealed class TrafficGate(TimeProvider time)
 
             Interlocked.Increment(ref _inFlight);
             return new Slot(slots, TimeSpan.FromMilliseconds(limits.ServiceTimeMilliseconds), () => Interlocked.Decrement(ref _inFlight));
-        }
-
-        public void Record(DateTimeOffset at, bool admitted, TimeSpan took)
-        {
-            lock (_gate) _log.Enqueue((at, admitted, took.TotalMilliseconds));
-        }
-
-        public TrafficSnapshot Snapshot(string service, DateTimeOffset windowStart)
-        {
-            lock (_gate)
-            {
-                while (_log.Count > 0 && _log.Peek().At < windowStart) _log.Dequeue();
-                var served = _log.Where(e => e.Admitted).Select(e => e.Milliseconds).Order().ToList();
-                return new TrafficSnapshot(
-                    service,
-                    _limits,
-                    Math.Max(0, _inFlight),
-                    Math.Max(0, _queued),
-                    _log.Count,
-                    served.Count,
-                    _log.Count - served.Count,
-                    served.Count == 0 ? 0 : Math.Round(served.Average(), 1),
-                    served.Count == 0 ? 0 : Math.Round(served[(int)Math.Ceiling(served.Count * 0.95) - 1], 1));
-            }
         }
     }
 }

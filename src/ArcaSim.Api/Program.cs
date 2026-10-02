@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using ArcaSim.Api.Admin;
 using ArcaSim.Api.Soap;
 using ArcaSim.Application;
+using ArcaSim.Application.Events;
 using ArcaSim.Application.Traffic;
 using ArcaSim.Application.Wsaa;
 using ArcaSim.Application.Wsfe;
@@ -14,7 +15,9 @@ using Npgsql;
 var builder = WebApplication.CreateBuilder(args);
 var options = builder.Configuration.GetSection("ArcaSim");
 
-builder.Services.ConfigureHttpJsonOptions(json => json.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(json => json.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<SimulatedClock>();
@@ -51,7 +54,10 @@ builder.Services.AddSingleton(_ => ValidationCatalog.Load());
 builder.Services.AddSingleton(_ => ParameterTables.Load());
 builder.Services.AddSingleton<IAuthorizationCodes, RandomAuthorizationCodes>();
 builder.Services.AddSingleton<SequenceLocks>();
+builder.Services.AddSingleton<EventManager>();
 builder.Services.AddSingleton<TrafficGate>();
+builder.Services.AddSingleton<TrafficMeter>();
+builder.Services.AddSingleton<ActivityLog>();
 builder.Services.AddSingleton<TokenValidator>();
 builder.Services.AddSingleton<VoucherValidator>();
 builder.Services.AddSingleton<WsfeService>();
@@ -63,12 +69,16 @@ var app = builder.Build();
 
 if (app.Services.GetService<PostgresStore>() is { } postgres) await postgres.EnsureSchemaAsync();
 
+// The listeners subscribe when they are built: build them before the first request.
+app.Services.GetRequiredService<TrafficMeter>();
+app.Services.GetRequiredService<ActivityLog>();
+
 TrafficMiddleware.Use(app);
 app.UseDefaultFiles();
 app.UseStaticFiles();
 WsaaEndpoint.Map(app);
 WsfeEndpoint.Map(app);
-AdminApi.Map(app);
+app.MapControllers();
 app.MapGet("/", () => Results.Redirect("/arcasim/"));
 
 app.Run();

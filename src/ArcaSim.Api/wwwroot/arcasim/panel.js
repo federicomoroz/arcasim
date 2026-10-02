@@ -275,7 +275,26 @@ $("#traffic").addEventListener("submit", run(async (event) => {
 
 $("#traffic").service.addEventListener("change", () => loadTraffic().catch(() => {}));
 
+async function loadActivity() {
+  const entries = await api("/activity?limit=60");
+  $("#activity").replaceChildren(...entries.map((a) => {
+    const li = document.createElement("li");
+    const time = document.createElement("time");
+    time.textContent = new Date(a.at).toLocaleTimeString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", hour12: false });
+    const service = document.createElement("span");
+    service.className = "svc";
+    service.textContent = a.service;
+    const text = document.createElement("span");
+    text.className = a.kind;
+    text.textContent = a.text;
+    li.append(time, service, text);
+    return li;
+  }));
+}
+
 run(reloadAll)();
 run(loadTraffic)();
+run(loadActivity)();
+setInterval(() => loadActivity().catch(() => {}), 2000);
 setInterval(() => loadStatus().catch(() => {}), 5000);
 setInterval(() => loadTraffic().catch(() => {}), 1000);

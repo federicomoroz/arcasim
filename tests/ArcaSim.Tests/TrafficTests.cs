@@ -59,3 +59,28 @@ public class TrafficTests
         (await sim.Http.GetFromJsonAsync<JsonElement[]>("/arcasim/api/traffic"))!
         .Single(t => t.GetProperty("service").GetString() == service);
 }
+
+/// <summary>The live log is fed by the event bus: whoever acts publishes, the log only listens.</summary>
+public class ActivityTests
+{
+    [Fact]
+    public async Task The_activity_log_tells_the_ticket_the_CAE_and_the_rejection()
+    {
+        var (sim, wsfe) = await ArcaSimHarness.StartWithIssuerAsync();
+        await using var _ = sim;
+
+        var approved = await wsfe.AuthorizeNextAsync(1, 6, new Voucher
+        {
+            Concept = 1, DocumentType = 99, DocumentNumber = 0, Total = 121, Net = 100, Vat = 21,
+            ReceiverVatCondition = 5, VatLines = [new VatLine(5, 100, 21)],
+        });
+        await wsfe.AuthorizeNextAsync(1, 6, new Voucher { Concept = 1, DocumentType = 99, DocumentNumber = 0, Total = 999, Net = 100, Vat = 21, ReceiverVatCondition = 5, VatLines = [new VatLine(5, 100, 21)] });
+        var log = await sim.Http.GetFromJsonAsync<JsonElement[]>("/arcasim/api/activity");
+        var texts = log!.Select(e => e.GetProperty("text").GetString()!).ToList();
+
+        Assert.Contains(texts, t => t.StartsWith("Ticket para wsfe"));
+        Assert.Contains(texts, t => t.EndsWith($"→ CAE {approved.Cae}"));
+        Assert.Contains(texts, t => t.Contains("2 rechazado (10048)"));
+        Assert.Contains("rechazado", texts[0]);
+    }
+}
