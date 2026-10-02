@@ -126,3 +126,7 @@ Clients generated from the official WSDL expect HTTPS, because ARCA's addresses 
 ### Admin API and full reference
 
 The 22 operations, the errors, the admin API, the test scenarios and how to integrate it from any language are in the **[API reference](docs/api.en.md)**. [`docs/ejemplos/curl.sh`](docs/ejemplos/curl.sh) gets a CAE with openssl and curl, no library at all.
+
+## License
+
+[MIT](LICENSE): free to use, modify and distribute, commercial projects included.

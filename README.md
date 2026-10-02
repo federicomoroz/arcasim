@@ -126,3 +126,7 @@ Los clientes generados del WSDL oficial esperan HTTPS, porque las direcciones de
 ### API de administración y referencia completa
 
 Las 22 operaciones, los errores, la API de administración, los escenarios de prueba y cómo integrarlo desde cualquier lenguaje están en la **[referencia de la API](docs/api.md)**. [`docs/ejemplos/curl.sh`](docs/ejemplos/curl.sh) pide un CAE con openssl y curl, sin ninguna librería.
+
+## Licencia
+
+[MIT](LICENSE): se puede usar, modificar y distribuir libremente, también en proyectos comerciales.

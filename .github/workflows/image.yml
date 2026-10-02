@@ -33,3 +33,4 @@ jobs:
           labels: |
             org.opencontainers.image.source=https://github.com/federicomoroz/arcasim
             org.opencontainers.image.description=ARCA's web services (WSAA + WSFEv1) for development and testing
+            org.opencontainers.image.licenses=MIT
