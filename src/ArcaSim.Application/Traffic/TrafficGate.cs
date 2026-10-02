@@ -12,7 +12,7 @@ namespace ArcaSim.Application.Traffic;
 /// </list>
 /// Capacity and service time make a bottleneck: past Capacity / ServiceTime
 /// requests per second, the queue grows, latency with it, and then requests
-/// are refused, the way an overloaded ARCA behaves at the end of the month.
+/// are refused, the way an overloaded service behaves.
 /// </summary>
 public sealed record TrafficLimits(int RequestsPerMinute = 0, int Capacity = 0, int ServiceTimeMilliseconds = 0, int QueueLimit = 0)
 {
