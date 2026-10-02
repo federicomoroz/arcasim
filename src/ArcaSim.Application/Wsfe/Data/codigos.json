@@ -1,0 +1,3982 @@
+{
+ "literals": {
+  "10016:Err": "El numero o fecha del comprobante no se corresponde con el proximo a autorizar. Consultar metodo FECompUltimoAutorizado.",
+  "10016:Obs:1": "Campo CbteFch Debe estar comprendido  en el  rango  N-5 y N+5 siendo N la fecha de envio del pedido  de autorizacion para 1 - Productos",
+  "10016:Obs:FCE-ND-NC": "Campo CbteFch Debe estar comprendido  en el  rango  N-5 y N siendo N la fecha de envio del pedido de autorizacion para Facturas de Credito del tipo Nota de Debito o Nota de Credito",
+  "10217": "El credito fiscal discriminado en el presente comprobante solo podra ser computado a efectos del Procedimiento permanente de transicion al Regimen General.",
+  "602": "No existen datos en nuestros registros para los parametros ingresados.",
+  "782": "El <CAEA> es obligatorio informarlo.",
+  "15004": "El campo <Periodo> debe tener el formato AAAAMM, donde AAAA indica el año y MM el mes en números.",
+  "1200": "El codigo de autorizacion debe ser del tipo CAEA"
+ },
+ "codes": [
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <Auth>",
+   "code": 10000,
+   "kind": "Rechazo",
+   "field": "<Cuit>",
+   "manualText": "Verificación de datos registrales, Inscripción en el régimen, autorización de emisión de comprobantes, domicilio fiscal. Etc. Los mensajes posibles son 01 “LA CUIT INFORMADA NO CORRESPONDE A UN RESPONSABLE INSCRIPTO EN EL IMPUESTO” 02 “LA CUIT INFORMADA NO SE ENCUENTRA AUTORIZADA A EMITIR COMPROBANTES ELECTRONICOS ORIGINALES O EL PERIODO DE INICIO AUTORIZADO ES POSTERIOR AL DE LA GENERACION DE LA SOLICITUD” 03 “LA CUIT INFORMADA REGISTRA INCONVENIENTES CON EL DOMICILIO FISCAL” 04 “LA CUIT INFORMADA NO SE ENCUENTRA AUTORIZADA A EMITIR COMPROBANTES CLASE “A” O FACTURA DE CREDITO, (Esta validación no aplica para comprobantes tipo C)” 05 “EL CUIT INFORMADO COMO EMISOR NO SE ENCUENTRA REGISTRADO DE FORMA ACTIVA EN LAS BASES DE LA ADMINISTRACIÓN.” 06 “DEBE POSEER AL MENOS UNA ACTIVAD ACTIVA.” (Esta validación no aplica para comprobantes tipo C” 07 “NO AUTORIZADO A EMITIR COMPROBANTES – LA CUIT INFORMADA NO SE ENCUENTRA AUTORIZADA A EMITIR COMPROBANTES SEGÚN RG 3411” (Esta validación solo aplica para comprobante 49 – Bien Usado”) 08 “NO AUTORIZADO A EMITIR COMPROBANTES – LA CUIT INFORMADA NO CORRESPONDE A UN EXENTO EN IVA. 09 “LA CUIT INFORMADA NO SE ENCUENTRA AUTORIZADA A EMITIR COMPROBANTES CLASE A CON LEYENDA ‘OPERACIÓN SUJETA A RETENCIÓN’” 10 “LA CUIT INFORMADA NO SE ENCUENTRA REGISTRADA COMO PYME SEGÚN EL REGIMEN FCE” 11 “LA CUIT INFORMADA NO TIENE ACTIVO EL DOMICILIO FISCAL ELECTRONICO”"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeCabReq>",
+   "code": 10001,
+   "kind": "Rechazo",
+   "field": "<CantReg>",
+   "manualText": "Cantidad de registros de detalle del comprobante o lote de comprobantes de ingreso <CantReg> debe estar comprendido entre 1 y 9998."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeCabReq>",
+   "code": 10002,
+   "kind": "Rechazo",
+   "field": "<CantReg>",
+   "manualText": "La cantidad de registros del detalle del comprobante o lote de comprobantes de ingreso debe ser igual a lo informado en cabecera del comprobante o lote de comprobantes de ingreso <CantReg>"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeCabReq>",
+   "code": 10003,
+   "kind": "Rechazo",
+   "field": "Cantidad de registros incluidos",
+   "manualText": "La cantidad de registros en detalle debe ser menor igual al valor permitido. Consulte método FECompTotXRequest para obtener cantidad máxima de registros por cada requerimiento. Para comprobantes del tipo MiPyMEs (FCE), la cantidad habilitada es 1 comprobante por request"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeCabReq>",
+   "code": 10004,
+   "kind": "Rechazo",
+   "field": "<PtoVta>",
+   "manualText": "Campo <PtoVta> debe estar comprendido entre 1 y 99998."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeCabReq>",
+   "code": 10005,
+   "kind": "Rechazo",
+   "field": "<PtoVta>",
+   "manualText": "El punto de venta informado debe estar dado de alta y ser del tipo RECE."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeCabReq>",
+   "code": 10006,
+   "kind": "Rechazo",
+   "field": "<CbteTipo>",
+   "manualText": "Campo CbteTipo debe ser un valor numérico mayor a 0."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeCabReq>",
+   "code": 10007,
+   "kind": "Rechazo",
+   "field": "<CbteTipo>",
+   "manualText": "Campo CbteTipo sea: - 01, 02, 03, 04, 05 ,34, 39, 60, 63, 201, 202, 203 para los clase A - 06, 07, 08, 09, 10, 35, 40,64, 61, 206, 207, 208 para los clase B. - 11, 12, 13, 15, 211, 212, 213 para los clase C. - 51, 52, 53, 54 para los clase “A con leyenda operación sujeta a retención”. - 49 para los Bienes Usados. Consultar método FEParamGetTiposCbte."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10008,
+   "kind": "Rechazo",
+   "field": "<CbteDesde>",
+   "manualText": "Campo <CbteDesde> se encuentre entre 1 y 99999999."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10010,
+   "kind": "Rechazo",
+   "field": "<CbteHasta>",
+   "manualText": "Campo <CbteHasta> se encuentre entre 1 y 99999999."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10011,
+   "kind": "Rechazo",
+   "field": "<CbteHasta>",
+   "manualText": "Campo <CbteHasta> sea mayor o igual a <CbteDesde> para comprobantes tipo B. Para comprobantes tipo C <CbteHasta> debe ser igual a <CbteDesde>."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10012,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <CbteDesde> / <CbteHasta>",
+   "manualText": "Para comprobantes clase “A”, “C”, “A con leyenda operación sujeta a retención”, “49” – Bienes Usados y comprobantes MiPyMEs (FCE) el campo CbteDesde debe ser igual al campo CbteHasta"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10013,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <DocTipo>",
+   "manualText": "Para comprobantes clase “A” y “A con leyenda operación sujeta a retención” el campo DocTipo tenga valor 80 (CUIT)"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10014,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <CbteDesde> / <CbteHasta>",
+   "manualText": "Para comprobantes clase B y CbteHasta distinto a CbteDesde el resultado de la operación ImpTotal / (CbteHasta –CbteDesde +1) < monto en pesos resultante según RG4444."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10015,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <DocTipo> / <DocNro>",
+   "manualText": "Para comprobantes tipo B en pedidos múltiples (CbteDesde distinto a CbteHasta) y el resultado de la operación ImpTotal / (CbteHasta – CbteDesde + 1 ) < monto en pesos resultante según RG4444. el campo DocTipo deberá ser igual a 99, el campo DocNro deberá ser cero (0). Para comprobantes tipo B en pedidos individuales (CbteDesde igual a CbteHasta) y el resultado de la operación ImpTotal / (CbteHasta – CbteDesde + 1 ) < monto en pesos resultante según RG4444 si el campo DocTipo es igual a 99, el campo DocNro deberá ser cero. Para comprobantes tipo B individuales (CbteDesde igual a CbteHasta), si el campo DocTipo es 80, 86 u 87, deberá verificarse que el número consignado se encuentre en los padrones de ARCA. Si DocTipo es 80 y DocNro es 23000000000 (No Categorizado) esta validación no se tendrá en cuenta. Si el campo DocTipo es distinto de 80, 86 u 87, deberá verificarse que se ingrese uno de los valores devueltos por el método FEParamGetTiposDoc y que se informe el campo DocNro. Para pedidos individuales (CbteDesde igual a CbteHasta) tipo B con montos superiores a monto en pesos resultante según RG4444 el campo DocTipo deberá ser igual a algunos de los valores devueltos por el método FEParamGetTiposDoc excepto 99 y deberá informar el campo DocNro. Para comprobantes tipo 49 – Bienes Usados, DocTipo deberá ser igual a algunos de los valores devueltos por el método FEParamGetTiposDoc excepto el 99 y deberá informar el campo DocNro. Para comprobantes tipo 49 – Bienes Usados, si DocTipo es 80, 86 u 87, deberá verificarse que el número consignado se encuentra en los padrones de arca. Para comprobantes MiPyMEs (FCE) el documento del receptor debe ser 80 CUIT."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10016,
+   "kind": "Rechazo",
+   "field": "<CbteDesde> / <CbteFch>",
+   "manualText": "El número de comprobante informado <CbteDesde> debe ser mayor en 1 al último informado para igual punto de venta y tipo de comprobante. Consultar método FECompUltimoAutorizado El campo <CbteFch> podrá ser: - Nulo o comprendido en el rango N-5 y N+5 siendo N la fecha de envío del pedido de autorización, para Concepto= 01 Productos. La misma no podrá exceder el mes de presentación. - Para Concepto 02, 03 el campo CbteFch puede ser nulo o comprendido en el rango N-10 y N+10 siendo N la fecha de envío del pedido de autorización. - Deberá ser mayor o igual al del ultimo comprobante emitido para ese tipo y punto de venta - Para comprobantes MiPyMEs (FCE) estar comprendido en el rango N-5 y N+1 siendo N la fecha de envío del pedido de autorización. De tratarse de notas de débito o crédito, la fecha del comprobante puede ser hasta N-5."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10018,
+   "kind": "Rechazo",
+   "field": "<AlicIVA>",
+   "manualText": "Si <ImpIVA> es igual a 0 los objetos <IVA> y <AlicIva> solo deben informarse con ImpIVA = 3 (iva 0) Si <ImpIVA> es mayor a 0 el objeto <IVA> y <AlicIva> son obligatorios. El objeto <AlicIva> es obligatorio y no debe ser nulo si ingresa <IVA> No aplica para comprobantes tipo C."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10019,
+   "kind": "Rechazo",
+   "field": "<AlicIVA><id>",
+   "manualText": "El campo Id en AlicIVA es obligatorio informarlo. Si el tipo de comprobante es 2, 3, 7, 8, 52 o 53 informarlo es opcional. Siempre que se informe Id, debe ser un valor devuelto por el método FEParamGetTiposIva. No aplica para comprobantes tipo C."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10020,
+   "kind": "Rechazo",
+   "field": "<AlicIVA><BaseImp>",
+   "manualText": "El campo BaseImp en AlicIVA es obligatorio y debe ser mayor a 0 cero. Excepto para comprobantes 2, 3, 7, 8, 52 o 53 que puede ser cero o no ser informado. No aplica para comprobantes tipo C."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10021,
+   "kind": "Rechazo",
+   "field": "<AlicIVA><Importe>",
+   "manualText": "El campo Importe en AlicIVA es obligatorio, mayor o igual 0 cero. Excepto para comprobantes 2, 3, 7, 8, 52 o 53 que puede ser cero o no ser informado. No aplica para comprobantes tipo C."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10022,
+   "kind": "Rechazo",
+   "field": "<AlicIVA><id>",
+   "manualText": "El campo Id en AlicIVA no debe repetirse. Deberá totalizarse por alícuota. No aplica para comprobantes tipo C."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10023,
+   "kind": "Rechazo",
+   "field": "<ImpIVA> / <AlicIVA><importe>",
+   "manualText": "La suma de los campos <importe> en <IVA> debe ser igual al valor ingresado en ImpIVA. Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01 * cantidad de alícuotas de IVA ingresadas * No aplica para comprobantes tipo C."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10024,
+   "kind": "Rechazo",
+   "field": "<Tributo>",
+   "manualText": "Si ImpTrib es mayor a 0 el objeto <Tributos> y <Tributo> son obligatorios. El objeto <Tributo> es obligatorio y no deber ser nulo si se incluye el objeto <Tributos> Si impTrib es igual a cero el objeto <Tributos> y <Tributo> no deben enviarse."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10025,
+   "kind": "Rechazo",
+   "field": "<Tributo><id>",
+   "manualText": "El campo <Id> en <Tributo> es obligatorio y debe ser alguno de los devueltos por el método FEParamGetTiposTributos"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10026,
+   "kind": "Rechazo",
+   "field": "<Tributo><BaseImp>",
+   "manualText": "El campo <BaseImp> en <Tributo> es obligatorio y debe ser mayor o igual a 0 cero"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10027,
+   "kind": "Rechazo",
+   "field": "<Tributo><Alic>",
+   "manualText": "El campo <Alic> en <Tributo> es obligatorio , mayor o igual 0 cero"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10028,
+   "kind": "Rechazo",
+   "field": "<Tributo><importe>",
+   "manualText": "El campo <Importe> en <Tributo> es obligatorio , mayor o igual 0 cero"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10029,
+   "kind": "Rechazo",
+   "field": "<ImpTrib> / <Tributo><importe>",
+   "manualText": "La suma de los importes en <Tributo> debe ser igual al valor ingresado en <ImpTrib> Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01 * cantidad de tributos *"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10030,
+   "kind": "Rechazo",
+   "field": "<concepto>",
+   "manualText": "El campo <Concepto> es obligatorio y debe corresponder con algún valor devuelto por el método FEParamGetTiposConcepto 1 Productos 2 Servicios 3 Productos y Servicios"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10031,
+   "kind": "Rechazo",
+   "field": "<FchServDesde> / <FchServHasta> / <FchVtoPago>",
+   "manualText": "El campo “fecha desde del servicio a facturar” <FchServDesde> es obligatorio si se informa “fecha hasta del servicio a facturar” <FchServHasta> y/o “fecha de vencimiento para el pago” <FchVtoPago>."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10032,
+   "kind": "Rechazo",
+   "field": "<FchServDesde> / <FchServHasta>",
+   "manualText": "El campo “fecha desde del servicio a facturar” <FchServDesde> no puede ser posterior al campo “fecha hasta del servicio a facturar” <FchServHasta>."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10033,
+   "kind": "Rechazo",
+   "field": "<FchServDesde> / <FchServHasta> / <FchVtoPago>",
+   "manualText": "El campo “fecha hasta del servicio a facturar” <FchServHasta> es obligatorio si se informa “fecha desde del servicio a facturar” <FchServDesde> y/o “fecha de vencimiento para el pago” <FchVtoPago>."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10035,
+   "kind": "Rechazo",
+   "field": "<FchServDesde> / <FchServHasta> / <FchVtoPago>",
+   "manualText": "El campo “fecha de vencimiento para el pago” <FchVtoPago> es obligatorio si se informa “fecha desde del servicio a facturar” <FchServDesde> y/o “fecha hasta del servicio a facturar” <FchServHasta>."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10036,
+   "kind": "Rechazo",
+   "field": "<FchVtoPago>",
+   "manualText": "El campo “fecha de vencimiento para el pago” <FchVtoPago> no puede ser anterior a la fecha del comprobante."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10037,
+   "kind": "Rechazo",
+   "field": "<MonId>",
+   "manualText": "El campo <MonId> es obligatorio y debe corresponder a algún valor devuelto por el método FEParamGetTiposMonedas"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10038,
+   "kind": "Rechazo",
+   "field": "<MonCotiz>",
+   "manualText": "El campo <MonCotiz> es obligatorio si no informa el campo CanMisMonExt = S, y de informarse debe ser mayor a 0. Si se indica que el pago del comprobante se realiza en la misma moneda extranjera que la factura, la cotización de la moneda provista debe coincidir exactamente con la registrada en las bases de ARCA para el día hábil anterior a la fecha de emisión del comprobante, si esta es anterior a la fecha actual, o bien con la registrada para el día hábil anterior a la fecha actual, si la fecha de emisión es posterior a esta. En caso contrario, se puede omitir el campo de Cotización de Moneda."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10039,
+   "kind": "Rechazo",
+   "field": "<MonId> / <MonCotiz>",
+   "manualText": "El campo <MonCotiz> es obligatorio , e igual a 1 cuando se trate de <MonId>=PES"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10040,
+   "kind": "Rechazo",
+   "field": "<CbtesAsoc> / <CbteTipo>",
+   "manualText": "De enviarse el tag <CbtesAsoc>, entonces el campo “código de tipo de comprobante” <CbteTipo> a autorizar tiene que ser 01, 02, 03, 06, 07, 08, 12, 13, 51, 52, 53, 201, 206 o 211 Para 02 y 03 pueden asociarse los tipos de comprobante 01, 02, 03, 04, 05, 34, 39, 60, 63, 88 y 991 Para 07 y 08 pueden asociarse 06, 07, 08, 09, 10, 35, 40, 61, 64, 88 y 991 Para 12 o 13 pueden asociarse 11, 12, 13 y 15. Para 52 o 53 pueden asociarse 51, 52, 53, 54, 88 y 991 Para 01,06 y 51 pueden asociarse 88 y 991 Para comprobantes MiPyMEs (FCE) 201, 206 o 211 puede asociarse los comprobantes (91, 990, 991, 993, 994, 995). Para comprobantes MiPyMEs (FCE) A 202 y 203, puede asociar 201,202 o 203. Para comprobantes MiPyMEs (FCE) B 207, 208 puede asociar 206, 207, 208. Para comprobantes MiPyMEs (FCE) C 212, 213 puede asociarse 211, 212, 213."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10042,
+   "kind": "Rechazo",
+   "field": "<Tirbuto><Id> / <Tirbuto><Desc>",
+   "manualText": "El campo <Desc> en Tributo es obligatorio cuando se informe <Id> = 99. Para comprobantes MiPyMEs (FCE) siempre es obligatoria la descripción"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10043,
+   "kind": "Rechazo",
+   "field": "<ImpTotConc>",
+   "manualText": "El campo “Importe neto no gravado” <ImpTotConc>. No puede ser menor a cero (0). Para comprobantes tipo C debe ser igual a cero (0). Para comprobantes tipo 49 – Bienes usados, si el emisor es MONOTRIBUTISTA, este campo corresponde al importe del subtotal de la operación"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10044,
+   "kind": "Rechazo",
+   "field": "<ImpOpEx>",
+   "manualText": "El campo “importe exento” <ImpOpEx>. No puede ser menor a cero (0). Para comprobantes tipo C debe ser igual a cero (0). Para comprobantes tipo 49 – Bienes usados, si se encuentra inscripto en MONOTRIBUTO no debe informarse o debe ser igual a cero (0)."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10045,
+   "kind": "Rechazo",
+   "field": "<ImpNeto>",
+   "manualText": "El campo “Importe neto gravado” <ImpNeto>. No puede ser menor a cero (0). Para comprobantes tipo C este campo corresponde al Importe del Sub Total. Para comprobantes tipo 49 – Bienes usados, si se encuentra inscripto en MONOTRIBUTO no debe informarse o debe ser igual a cero (0)."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10046,
+   "kind": "Rechazo",
+   "field": "<ImpTrib>",
+   "manualText": "El campo “Importe de tributos” <ImpTrib>. No puede ser menor a cero (0)."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10047,
+   "kind": "Rechazo",
+   "field": "<ImpIVA>",
+   "manualText": "El campo “Importe de IVA” <ImpIVA>. No puede ser menor a cero (0). Para comprobantes tipo C debe ser igual a cero (0). Para comprobantes tipo 49 – Bienes usados, si se encuentra inscripto en MONOTRIBUTO no debe informarse o debe ser igual a cero (0)."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10048,
+   "kind": "Rechazo",
+   "field": "<ImpTotConc> / <ImpOpEx> / <ImpNeto> / <ImpTrib> / <ImpIVA> / <ImpTotal>",
+   "manualText": "El campo “Importe Total” <ImpTotal>, debe ser igual a la suma de ImpTotConc + ImpNeto + ImpOpEx + ImpTrib + ImpIVA Para comprobantes tipo C, el campo “Importe Total” <ImpTotal>, debe ser igual a la suma de ImpNeto + ImpTrib. Para comprobantes tipo 49 – Bienes Usados, si se encuentra inscripto en MONOTRIBUTO el campo “Importe Total” <ImpTotal>, debe ser igual a la suma de ImpTotConc + ImpTrib. Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10049,
+   "kind": "Rechazo",
+   "field": "<FchServDesde> / <FchServHasta> / <FchVtoPago>",
+   "manualText": "Los campos <FchServDesde>, <FchServHasta>, <FchVtoPago>, es obligatorio cuando el campo <Concepto> es igual a 2 o 3. Si se informa deberá tener el siguiente formato yyyymmdd."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10051,
+   "kind": "Rechazo",
+   "field": "<AlicIVA>",
+   "manualText": "Los importes informados en AlicIVA se deben corresponder según el tipo de iva seleccionado. Para comprobantes tipo 2, 3, 7, 8, 52 y 53 no se tiene en cuenta esta validación. Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01 No aplica para comprobantes tipo C"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10052,
+   "kind": "Rechazo",
+   "field": "<Opcionales>",
+   "manualText": "Si envía <Opcionales>, <Opcional> es obligatorio."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10053,
+   "kind": "Rechazo",
+   "field": "<Opcional>",
+   "manualText": "El campo <Id> en <Opcionales> es obligatorio y debe ser alguno de los devueltos por el método FEParamGetTiposOpcional."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10054,
+   "kind": "Rechazo",
+   "field": "<Opcional>",
+   "manualText": "El campo <Id> en <Opcionales> es obligatorio y no debe repetirse. Solo pueden repetirse los identificadores 1801 y 1802 informados para la RG 4004-E, y los identificadores 2901 y 2902 para la RG 4291-Seguros de Caución."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10055,
+   "kind": "Rechazo",
+   "field": "<Opcional>",
+   "manualText": "El campo <Valor> en Opcionales es obligatorio"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10056,
+   "kind": "Rechazo",
+   "field": "Importes en general",
+   "manualText": "Que se informen los mismos con la precisión indicada."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10057,
+   "kind": "Rechazo",
+   "field": "<CbteAsoc><Tipo>",
+   "manualText": "De enviarse el tag CbteAsoc debe enviarse Tipo > a 0"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10058,
+   "kind": "Rechazo",
+   "field": "<CbteAsoc><PtoVta>",
+   "manualText": "De enviarse el tag CbteAsoc debe enviarse PtoVta > a 0 y < a 99999"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10059,
+   "kind": "Rechazo",
+   "field": "<CbteAsoc><Nro>",
+   "manualText": "De enviarse el tag CbteAsoc debe enviarse Nro > a 0 y < a 99999999"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10060,
+   "kind": "Rechazo",
+   "field": "<CbteAsoc><Tipo> / <CbteAsoc><PtoVta> / <CbteAsoc><Nro>",
+   "manualText": "De enviarse el tag CbteAsoc, los comprobantes no deben repetirse."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10061,
+   "kind": "Rechazo",
+   "field": "<ImpNeto> / <AlicIVA><BaseImp>",
+   "manualText": "La suma de los campos <BaseImp> en <AlicIva> debe ser igual al valor ingresado en ImpNeto. Esta validación no deberá ser tenida en cuenta, cuando el <CbteTipo> sea 02, 03 ,07, 08, para comprobantes tipo C (11, 12, 13, 15) y para Comprobantes tipo “A con leyenda operación sujeta a retención” (52, 53) Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01 * cantidad de alícuotas de IVA ingresadas *"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10062,
+   "kind": "Rechazo",
+   "field": "<CbtesAsoc><CbteAsoc>",
+   "manualText": "Si envía <CbtesAsoc>, <CbteAsoc> es obligatorio."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10064,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id><Valor>",
+   "manualText": "Si selecciona Id = 2 el valor ingresado debe ser un numérico de 8 (ocho) dígitos mayor o igual a 0 (cero)."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10065,
+   "kind": "Rechazo",
+   "field": "<ImpTotal>",
+   "manualText": "El campo “Importe Total” <ImpTotal>. No puede ser menor a cero (0)."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10066,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id><Valor>",
+   "manualText": "Si Id = 2 y el comprobante corresponde a una actividad alcanzada por el beneficio de Promoción Industrial en el campo <Valor> se deberá informar el número identificador del proyecto (el mismo deberá corresponder a la CUIT emisora del comprobante), si no corresponde a una actividad alcanzada por el beneficio el campo <Valor> deberá ser 0 (cero). El Id = 2 solo podrá informarse cuando <CbteTipo> es igual a 1, 2, 3, 6, 7, 8."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10067,
+   "kind": "Rechazo",
+   "field": "<ImpTrib> <DocTipo><DocNro>",
+   "manualText": "Falta informar en la sección Otros Tributos el tributo con ID = 13 – Percepción de IVA No Categorizado según la RG 2126/2006. Si <CbteTipo> es igual a 6, 7 u 8, <DocTipo> es 80 (CUIT), <DocNro> es 23000000000 (No Categorizado), la suma de ImpNeto + ImpIVA es mayor a 0 (cero), y el campo ImpTrib = 0, debe informar el ID “13 – Percepción de IVA No Categorizado“ en el array de tributos con un importe mayor a 0 (cero)"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10068,
+   "kind": "Rechazo",
+   "field": "<Opcionales><CbteTipo>",
+   "manualText": "El array <Opcionales> no es obligatorio. Solo puede informarse si <CbteTipo> es 1, 2, 3, 4, 6, 7, 8, 9, 11,12, 13, 15, 49, 51, 52, 53, 54, 63, 64, 201, 206, 211, 203, 208, 213, 202, 207, 212."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10069,
+   "kind": "Rechazo",
+   "field": "<DocNro>",
+   "manualText": "El N° de documento del receptor del comprobante no puede ser igual al del emisor."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10070,
+   "kind": "Rechazo",
+   "field": "<ImpNeto>/ <Iva>",
+   "manualText": "Si el importe neto es mayor a cero, es obligatorio informar el array de iva."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10071,
+   "kind": "Rechazo",
+   "field": "<Iva>",
+   "manualText": "Si el tipo de comprobante es C, el array de IVA no debe informarse."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10075,
+   "kind": "Rechazo",
+   "field": "<CbteTipo>/<AlicIVA>",
+   "manualText": "Si el comprobante informado es tipo 49 – Bienes Usados, el emisor del comprobante se encuentra inscripto en el MONOTRIBUTO. El objeto <IVA> y <AlicIva> no deben informarse."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10076,
+   "kind": "Rechazo",
+   "field": "<Opcionales><CbteTipo>/<DocTipo>",
+   "manualText": "Si el comprobante informado es tipo 49 – Bienes Usados, es obligatorio informar opcionales. Ver método FEParamGetTiposOpcional()"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10077,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 91 el valor ingresado no puede ser un blanco y debe ser un alfanumérico de 100 caracteres como máximo."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10078,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/<CbteTipo>",
+   "manualText": "Si el comprobante es del tipo 49 – Bienes Usados es obligatorio informar el Nombre y Apellido mediante el ID = 91."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10079,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 92 el valor ingresado debe ser un valor numérico de 3 posiciones."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10080,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 92, el contenido del campo <Valor> debe corresponder a un código de país valido. Ver método FEParamGetTiposPaises"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10081,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/<CbteTipo>",
+   "manualText": "Si el comprobante es del tipo 49 – Bienes Usados, los valores posibles para el id son 91, 92, 93."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10082,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <CbteTipo>",
+   "manualText": "Si en el campo TipoDoc se informa 30, 91 o 94 se deberá informar el id 92 con el código del país del vendedor. Consultar Método FEParamGetTiposPaises. Si TIPODOC es distinto de 30, 91 o 94 no debe informarse el id 92."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10083,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 93, el valor ingresado no puede ser blanco y debe ser alfanumérico de 250 caracteres como máximo"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10084,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/<CbteTipo>",
+   "manualText": "Si el comprobante es del tipo 49 – Bienes Usados es obligatorio informar el Domicilio del receptor/vendedor el ID = 93."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10085,
+   "kind": "Rechazo",
+   "field": "<concepto>",
+   "manualText": "Para comprobantes tipo 49 – Bienes usados, solo informar 1 – Productos"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10086,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/<CbteTipo>",
+   "manualText": "Si el comprobante es del tipo A (1, 2, 3, 4, 5, 34, 39, 60, 63) e intenta informar datos opcionales según Resolución General 3668, los valores posibles para los identificadores son 5, 61, 62, 7."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10088,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 5, el valor ingresado no puede ser blanco y debe ser alfanumérico de 2 caracteres."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10089,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 5, el contenido del campo <Valor> debe corresponder a un código de EXCEPCION válido comprendido por alguno de los sig: 01 – Locador / Prestador del mismo 02 – Congresos / Eventos 03 – Operación contemplada en RG 74 04 – Bienes de Cambio 05 – Ropa de trabajo 06 – Intermediario"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10090,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 61, el valor ingresado no puede ser blanco y debe ser numérico de 2 caracteres."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10091,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 61, el contenido del campo <Valor> debe corresponder a un código que represente el tipo de documento del firmante. Ver método FEParamGetTiposDoc."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10092,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 62, el valor ingresado no puede ser blanco y debe ser numérico de 11 caracteres como máximo."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10093,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Se encuentra dado de baja mediante redmine RM57235"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10094,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 7, el valor ingresado no puede ser blanco y debe ser numérico de 2 caracteres."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10095,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 7, el contenido del campo <Valor> debe corresponder a un código de carácter firmante válido comprendido por alguno de los sig: 01 – Titular 02 – Director / Presidente 03 – Apoderado 04 – Empleado"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10096,
+   "kind": "Rechazo",
+   "field": "<PtoVta> / <CbteTipo>",
+   "manualText": "Para comprobantes tipo C, si el contribuyente se encuentra registrado en las bases del organismo como exento, el punto de venta a utilizar al momento de autorizar el comprobante debe ser del tipo “COMPROBANTES – EXENTO EN IVA – WEB SERVICES”."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10097,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id = 10 (RG 3.368 Establecimientos de educación pública de gestión privada), el valor ingresado no puede ser blanco y debe ser un numerico de 1 carácter: 0 – Actividades no comprendidas 1 – Actividades comprendidas"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10098,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id = 1011 (RG 3.368 Establecimientos de educación pública de gestión privada), el valor ingresado no puede ser blanco y debe corresponder al tipo de documento del titular del pago. Ver método FEParamGetTiposDoc."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10099,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id = 1012 (RG 3.368 Establecimientos de educación pública de gestión privada), el valor ingresado no puede ser blanco y debe corresponder al n° de documento del titular del pago. Numérico de 11 caracteres como máximo para tipo de documento 80, 86, 87, 96 o alfanumérico de 20 como máximo para el resto de los tipos de documentos."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10110,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id = 11 (RG 2.820 Operaciones económicas vinculadas con bienes inmuebles), el valor ingresado no puede ser blanco y debe ser un numérico de 1 carácter: 0 – Actividades no comprendidas 1 – Actividades comprendidas"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10111,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id = 12 (RG 3.687 Locación temporaria de inmuebles con fines turísticos), el valor ingresado no puede ser blanco y debe ser un numérico de 1 carácter: 0 – Actividades no comprendidas 1 – Actividades comprendidas"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10112,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>",
+   "manualText": "Si intenta informar datos opcionales según Resolución General: RG 3.368 Establecimientos de educación pública de gestión privada (identificador 10) RG 2.820 Operaciones económicas vinculadas con bienes inmuebles (identificador 11) RG 3.687 Locación temporaria de inmuebles con fines turísticos (identificador 12). RG 2.863 Representantes de Modelos (identificador 13). RG 2.863 Agencias de publicidad (identificador 14). RG 2.863 Personas físicas que desarrollen actividad de modelaje (identificador 15). RG 4004-E Alquiler de inmuebles con destino casa habitación (identificador 17, en caso de ser necesario informar titular o cotitular, el identificador que acompaña al 17 es el 1801 y 1802). Recordar que en un mismo comprobante solo puede informar identificadores opcionales para solo 1 resolución por comprobante."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10113,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id = 10 (RG 3.368 Establecimientos de educación pública de gestión privada) con valor “1 – Actividades comprendidas” Informar 1011 – Tipo de Documento 1012 – N° de documento Si informa id = 10 (RG 3.368 Establecimientos de educación pública de gestión privada) con valor “0 – Actividades No comprendidas” No informar 1011 – Tipo de Documento 1012 – N° de documento"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10114,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id = 1011 o 1012 (RG 3.368 Establecimientos de educación pública de gestión privada) es obligatorio informar el identificador que representa si se encuentra comprendida (id = 10, valor = 1)"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10115,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id = 10 (RG 3.368 Establecimientos de educación pública de gestión privada) con valor “1 – Actividades comprendidas” e informa ID = 1011 (Tipo de Documento) con un valor que se corresponde al 80, 86, 87, 96 (CUIT, CUIL, CDI, DNI respectivamente), deberá verificarse que el número consignado en el ID = 1012 (n° de documento del titular del pago), se encuentra en los padrones de arca."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10116,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id = 13 (RG 2.863 Representantes de Modelos), el valor ingresado no puede ser blanco y debe ser un numérico de 1 carácter: 0 - Actividades no comprendidas 1 - Actividades comprendidas"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10117,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id = 14 (RG 2.863 Agencias de publicidad), el valor ingresado no puede ser blanco y debe ser un numérico de 1 carácter: 0 - Actividades no comprendidas 1 - Actividades comprendidas"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10118,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id = 15 (RG 2.863 Personas físicas que desarrollen actividad de modelaje), el valor ingresado no puede ser blanco y debe ser un numérico de 1 carácter: 0 - Actividades no comprendidas 1 - Actividades comprendidas"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10119,
+   "kind": "Rechazo",
+   "field": "<MonId>/<MonCotiz>",
+   "manualText": "Si la moneda es <> PES, el tipo de cambio no podrá ser inferior al 2% ni superior en un 400% del que suministra arca como orientativo de acuerdo a la cotización oficial. Para poder obtener la cotización ver Metodo FEParamGetCotizacion."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10120,
+   "kind": "Rechazo",
+   "field": "<CbteAsoc><Tipo> / <CbteAsoc><PtoVta> / <CbteAsoc><Nro>",
+   "manualText": "Si informa comprobantes asociados, y sus códigos son 91, 88, 988, 990, 991, 993, 994, 995, 996, 997, los mismos deben encontrarse registrados."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10121,
+   "kind": "Rechazo",
+   "field": "<CbteAsoc><Tipo> / <CbteAsoc><PtoVta> / <CbteAsoc><Nro>",
+   "manualText": "Si informa comprobantes asociados, y sus códigos son 91, 88, 988, 990, 991, 993, 994, 995, 996, 997, los mismos deben encontrarse confirmados."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10122,
+   "kind": "Rechazo",
+   "field": "<DocTipo> / <DocNro> <CbteAsoc><Cuit>",
+   "manualText": "Si informa comprobantes asociados y sus códigos son 91, 88, 988, 990, 991, 993, 994, 995, 996, 997, el receptor del comprobante a autorizar debe ser igual al receptor del comprobante asociado."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10123,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si el comprobante es del tipo B o C e intenta informar datos opcionales según Resolución General 4004-E, los valores posibles para los identificadores son 17, 1801, 1802."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10124,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id = 17 (RG 4004-E Locación de inmuebles destino \"casa-habitación\"), el valor ingresado no puede ser blanco y debe ser un numérico de 1 carácter: 1 (uno) = facturación a través de intermediario 2 (dos) = facturación directa"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10125,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id = 1801 (RG 4004-E Locación de inmuebles destino \"casa-habitación\"), el valor ingresado no puede ser blanco y debe corresponder al CUIT del propietario/locador. Numérico de 11 caracteres."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10126,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 1801 (RG 4004-E Locación de inmuebles destino \"casa-habitación\"), verificar que el número consignado se encuentra en los padrones de arca."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10127,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 1802 (RG 4004-E Locación de inmuebles destino \"casa-habitación\") el valor ingresado no puede ser un blanco y debe ser un alfanumérico de 100 caracteres como máximo que representa el Nombre y Apellido propietario/locador."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10128,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 1801 (RG 4004-E Locación de inmuebles destino \"casa-habitación\") con un CUIT propietario/locador no repetirlo dentro de la lista de propietarios/locadores."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10129,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id 17 con valor 1 (Intermediario) (RG 4004-E Locación de inmuebles destino \"casa- habitación\"), deben informarse obligatoriamente los identificadores 1801 y 1802. Si informa id 17 con valor 2 (Directo) (RG 4004-E Locación de inmuebles destino \"casa-habitación\"), pueden no informarse los identificadores 1801, 1802. Solo informarlos cuando hay otro/s propietarios/locadores."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10130,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id 1801 y id 1802 (RG 4004-E Locación de inmuebles destino \"casa-habitación\"), la cantidad de opcionales con id 1801 y 1802 deben ser iguales."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10131,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor> <Auth><Cuit>",
+   "manualText": "Si informa Id = 1801 (RG 4004-E Locación de inmuebles destino \"casa-habitación\") con un CUIT propietario/locador no puede ser el mismo que el emisor del comprobante."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10132,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa id 1801 y id 1802 (RG 4004-E Locación de inmuebles destino \"casa-habitación\"), es obligatorio informar el id 17 con valor 1 (Intermediario) o 2 (Directo)."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10133,
+   "kind": "Rechazo",
+   "field": "<Compradores>/<Comprador>",
+   "manualText": "Si envía compradores, comprador es obligatorio y no debe ser vacío."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10134,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Compradores>",
+   "manualText": "La estructura compradores se encuentra habilitada para comprobantes tipo A, B, C o M."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10135,
+   "kind": "Rechazo",
+   "field": "<Compradores>/<Comprador>/<DocTipo>",
+   "manualText": "Si envía compradores, el tipo de documento del comprador es obligatorio informarlo."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10136,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><DocTipo>/ <Compradores>",
+   "manualText": "Solo informar compradores cuando el tipo de documento del receptor del comprobante es 80, 86, 87 (CUIT, CUIL, CDI respectivamente)."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10137,
+   "kind": "Rechazo",
+   "field": "<Compradores>/<Comprador>/<DocTipo>",
+   "manualText": "Los tipos de documentos habilitados a informar sobre el comprador son 80, 86, 87 (CUIT, CUIL, CDI respectivamente)."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10138,
+   "kind": "Rechazo",
+   "field": "<Compradores>/<Comprador>/<DocNro>",
+   "manualText": "Si envía compradores, el número de documento del comprador es obligatorio informarlo."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10139,
+   "kind": "Rechazo",
+   "field": "<Compradores>/<Comprador>/<DocNro>",
+   "manualText": "Si envía compradores, el número de documento debe ser un documento con formato válido, numérico de 11 caracteres."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10140,
+   "kind": "Rechazo",
+   "field": "<Auth>/<Cuit> <Compradores>/<Comprador>/<DocNro>",
+   "manualText": "Si envía compradores, el número de documento del comprador no puede ser igual al número de documento del emisor del comprobante"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10141,
+   "kind": "Rechazo",
+   "field": "<Compradores>/<Comprador>",
+   "manualText": "Si envía compradores, los mismos no pueden repetirse en la lista."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10142,
+   "kind": "Rechazo",
+   "field": "<Compradores>/<Comprador>/<Porcentaje>",
+   "manualText": "Si envía compradores, el porcentaje de titularidad del comprador es obligatorio informarlo."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10143,
+   "kind": "Rechazo",
+   "field": "<Compradores>/<Comprador>/<Porcentaje>",
+   "manualText": "Si envía compradores, el porcentaje de titularidad debe ser un valor numérico de 2 enteros y 2 decimales, los cuales deben ser valores mayores a cero."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10144,
+   "kind": "Rechazo",
+   "field": "<Compradores>/<Comprador>/<Porcentaje>",
+   "manualText": "Si envía compradores, el porcentaje de titularidad debe ser mayor a cero."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10145,
+   "kind": "Rechazo",
+   "field": "<Compradores>/<Comprador>",
+   "manualText": "Si envía compradores, los compradores informados deben ser al menos 2. Uno de los dos debe ser el receptor del comprobante."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10146,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><DocTipo> <FECAEDetRequest><DocNro> <Compradores>/<Comprador>/<DocTipo> <Compradores>/<Comprador>/<DocNro>",
+   "manualText": "Si envía compradores, el comprador de mayor porcentaje de titularidad debe coincidir con el receptor del comprobante."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10147,
+   "kind": "Rechazo",
+   "field": "<Compradores>/<Comprador>/<Porcentaje>",
+   "manualText": "Si envía compradores, la sumatoria de todos los porcentajes de titularidad debe ser del 100%."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10148,
+   "kind": "Rechazo",
+   "field": "<Compradores>/<Comprador>/<DocNro>",
+   "manualText": "Si envía compradores, los compradores deben encontrarse registrados en el padrón de arca, en condición activa."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10149,
+   "kind": "Rechazo",
+   "field": "<Compradores>/<Comprador>/<DocNro>",
+   "manualText": "Si envía compradores, y el tipo de comprobante es “A” o “A con leyenda operación sujeta a retención”, el receptor o al menos uno de los compradores deben encontrarse registrados de forma activa en el Impuesto al Valor Agregado o Responsable Monotributo."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10150,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><Concepto>/ <Compradores>",
+   "manualText": "Solo enviar compradores cuando el concepto es 1 – PRODUCTO"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10151,
+   "kind": "Rechazo",
+   "field": "<CbteAsoc><Cuit>",
+   "manualText": "Si informa Cuit en comprobantes asociados, no informar en blanco, el mismo debe ser un valor de 11 caracteres numéricos. Para comprobante del tipo MiPyMEs (FCE) del tipo débito o crédito es obligatorio informar el campo."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10152,
+   "kind": "Rechazo",
+   "field": "<CbteFch>/<Concepto>",
+   "manualText": "Si informa fecha de comprobante <CbteFch> para el Concepto del tipo “01 – Productos” con fecha superior a la fecha de envío de autorización, el mes de la fecha del comprobante <CbteFch> debe coincidir con el mes de la fecha de envío de autorización. Si informa fecha de comprobante <CbteFch> para comprobantes del tipo MiPyMEs (FCE) con fecha superior a la fecha de envío de autorización, el mes de la fecha del comprobante <CbteFch> debe coincidir con el mes de la fecha de envío de autorización."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10153,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FECAEDetRequest><CbtesAsoc>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) y corresponde a un comprobante de débito o crédito, es obligatorio informar comprobantes asociados."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10154,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc><Tipo><PtoVta><Nro><Cuit>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) y corresponde a un comprobante de débito o crédito. Tener en cuenta que: - sí el comprobante asociado se encuentra rechazado por el comprador hay que informar el código de anulación correspondiente sobre el campo \"Adicionales por RG\", códigos 22 - Anulación. Valor “S” - sí el comprobante asociado no se encuentra rechazado por el comprador hay que informar el código de no anulación correspondiente sobre el campo \"Adicionales por RG\", códigos 22 - Anulación. Valor “N”"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10155,
+   "kind": "Rechazo",
+   "field": "<Auth><Cuit> <FeCabReq><CbteTipo>/ <CbteAsoc><Cuit>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), el CUIT del emisor del comprobante asociado debe coincidir con el CUIT del emisor del comprobante a autorizar."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10156,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc><Tipo>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito sin código de Anulación siempre debe asociar 1 comprobante tipo factura"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10157,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc><Tipo>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito sin código de Anulación solo puede asociar: Para comprobantes A, asociar 201 o (91, 88, 988, 990, 991, 993, 994, 995, 996, 997). Para comprobantes B, asociar 206 o (91, 88, 988, 990, 991, 993, 994, 995, 996, 997). Para comprobantes C, asociar 211 o (91, 88, 988, 990, 991, 993, 994, 995, 996, 997)."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10158,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc> / <Tipo> / <PtoVta> / <Nro> / <Cuit> / <CbteFch>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito, es obligatorio informar la fecha del comprobante asociado"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10159,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FeDetReq>/<CbteFch>/ <CbteAsoc> / <Tipo> / <PtoVta> / <Nro> / <Cuit> / <CbteFch>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito, la fecha del comprobante asociado tiene que ser igual o menor a la fecha del comprobante que se está autorizando"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10160,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc> / <Tipo> / <PtoVta> / <Nro> / <Cuit> / <CbteFch>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito, el comprobante debe existir autorizado en las bases de esta Administración con la misma fecha informada en el asociado."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10161,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FECAEDetRequest><DocTipo><DocNro>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), el receptor del comprobante debe tener habilitado el domicilio fiscal electrónico"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10162,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) es obligatorio informar <Opcionales>"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10163,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FchVtoPago>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Tipo 201 - FACTURA DE CREDITO ELECTRONICA MiPyMEs (FCE) A / 206 - FACTURA DE CREDITO ELECTRONICA MiPyMEs (FCE) B / 211 - FACTURA DE CREDITO ELECTRONICA MiPyMEs (FCE) C, es obligatorio informar FchVtoPago"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10164,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FchVtoPago> / <FECAEDetRequest><CbteFch>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), la fecha de vencimiento de pago <FchVtoPago> debe ser posterior o igual a la fecha de emisión <CbteFch> o fecha de presentación (fecha actual), la que sea posterior"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10165,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa opcionales, el valor correcto para el código 2101 es un CBU numérico de 22 caracteres."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10166,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa opcionales, el valor correcto para el código 2102 es un ALIAS alfanumérico de 6 a 20 caracteres."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10167,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa opcionales, el valor correcto para el código 22 es “S” o “N”: S = Es de Anulación N = No es de Anulación"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10168,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es Factura (201, 206, 211) del tipo MiPyMEs (FCE), informa opcionales, es obligatorio informar CBU."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10169,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando NO es MiPyMEs (FCE), no informar los códigos 2101, 2102, 22, 27"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10170,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es obligatorio informar al menos uno de los sig. códigos 2101, 22, 27."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10171,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Factura (201, 206, 211), no informar Código de Anulación"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10172,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Debito (202, 207, 212) o Crédito (203, 208, 213) No informar CBU, ALIAS y Transferencia."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10173,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Debito (202, 207, 212) o Crédito (203, 208, 213) informar Código de Anulación"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10174,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es factura MiPyMEs (FCE), el CBU debe estar registrado en las bases de esta administración, vigente y pertenecer al emisor del comprobante."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10175,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FchVtoPago>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), el campo “fecha de vencimiento para el pago” <FchVtoPago> no debe informarse si NO es Factura de Crédito. En el caso de ser Débito o Crédito, solo puede informarse si es de Anulación."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10176,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteTipo> / <DocNro>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), el campo DocNro para comprobantes deberá ser un valor registrado en el padrón de arca, en condición activa."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10177,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteTipo> / <DocNro>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) del tipo A, el receptor del comprobante informado en DocTipo y DocNro debe corresponder a un contribuyente activo en el Impuesto al Valor Agregado. Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) del tipo B, el receptor del comprobante informado en DocTipo y DocNro debe corresponder a un contribuyente activo en el Impuesto Iva, Monotributo o Exento. Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) del tipo C, el receptor del comprobante informado en DocTipo y DocNro debe corresponder a un contribuyente activo en el Impuesto Iva, Monotributo o Exento."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10178,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteTipo> / <DocNro>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) no se permite informar DocNro 23000000000 (No Categorizado)"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10180,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteTipo> / <DocNro>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), el receptor del comprobante informado en DocTipo y DocNro debe corresponder a un contribuyente caracterizado como GRANDE o que opto por PYME. Su activida principal debe corresponderse con alguna de las alcanzadas por el régimen."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10181,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/<MonId> <CbteAsoc>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), débito o crédito, el mismo debe tener la misma moneda que el comprobante asociado o Pesos para ajuste en las diferencias de cambio (post aceptación/rechazo)"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10183,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FECAEDetRequest><DocTipo><DocNro>/ <CbteAsoc>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es débito o crédito, deben coincidir emisores y receptores. Si el comprobante ES de anulación, para autorizar un débito, el tipo de comprobante a asociar debe ser crédito y para autorizar un crédito, el tipo de comprobante a asociar debe ser una factura o un débito."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10184,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/<MonId> <CbteAsoc>/ <FeCabReq><ImpTotal>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es crédito el monto del comprobante a autorizar no puede ser mayor o igual al saldo actual de la cuenta corriente. Ver micrositio factura de crédito"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10186,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc>/",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es crédito o débito A, de anulación, solo se encuentra habilitado asociar un comprobante de crédito A. Utilizar debito para anular crédito o utilizar crédito para anular débito o factura."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10187,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc>/",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es crédito o débito B, de anulación, solo se encuentra habilitado asociar un comprobante de crédito B. Utilizar debito para anular crédito o utilizar crédito para anular débito o factura."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10189,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Puede identificar una o varias Referencias Comerciales según corresponda. Informar bajo el código 23. Campo alfanumérico de 50 caracteres como máximo."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10190,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si informa opcionales con más de un identificador 23 – Referencia Comercial, no repetir el valor."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10192,
+   "kind": "Rechazo",
+   "field": "<Auth><Cuit>/ <FeCabReq><CbteTipo>/ <FECAEDetRequest><DocNro>/ <FECAEDetRequest><ImpTotal> / <FECAEDetRequest><MonCotiz> / Tope",
+   "manualText": "Según la categorización de las CUITs emisora y receptora y el monto facturado debe realizar una factura de crédito electrónica MiPyMEs (FCE). Ver micrositio."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10193,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc>/",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es crédito o débito C, de anulación, solo se encuentra habilitado asociar un comprobante de crédito C. Utilizar debito para anular crédito o utilizar crédito para anular débito o factura."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10194,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Compradores>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), no se encuentra habilitado informar compradores."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10195,
+   "kind": "Rechazo",
+   "field": "<DocTipo>/ <DocNro>/",
+   "manualText": "Si el tipo de documento del receptor del comprobante que está autorizando es CUIT (código Tipo de Documento 80) y la CUIT se encuentra inactiva por haber sido incluida en la consulta de facturas apócrifas."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10196,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FECAEDetRequest><PeriodoAsoc>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), no se encuentra habilitado informar PeriodoAsoc."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10197,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FECAEDetRequest><CbtesAsoc>/ <FECAEDetRequest><PeriodoAsoc>",
+   "manualText": "Si el comprobante es Debito o Credito, se deberá informar de forma obligatoria los campos Fecha Comprobantes Asociados Desde/Hasta, o al menos un comprobante asociado."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10198,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FECAEDetRequest><PeriodoAsoc>",
+   "manualText": "Si el comprobante es Factura no se deberá informar los campos Fecha Comprobantes Asociados Desde/Hasta"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10199,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><PeriodoAsoc><FchDesde>",
+   "manualText": "Si envía estructura <PeriodoAsoc> es obligatorio enviar <FchDesde>."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10203,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><PeriodoAsoc><FchHasta>",
+   "manualText": "Si envía estructura <PeriodoAsoc> es obligatorio enviar <FchHasta>."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10204,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><PeriodoAsoc><FchDesde>",
+   "manualText": "El campo <PeriodoAsoc> <FchDesde> debe corresponder a una fecha valida con formato YYYYMMDD"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10205,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><PeriodoAsoc><FchHasta>",
+   "manualText": "El campo PeriodoAsoc.FchHasta debe corresponder a una fecha valida con formato YYYYMMDD"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10206,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><PeriodoAsoc><FchDesde>/ <FECAEDetRequest><PeriodoAsoc><FchHasta>",
+   "manualText": "Las fechas informadas en <PeriodoAsoc> deben ser superiores a 01/01/2006"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10207,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><PeriodoAsoc><FchDesde>/ <FECAEDetRequest><PeriodoAsoc><FchHasta>",
+   "manualText": "Las fechas informadas en <PeriodoAsoc>,<FchHasta> debe ser superior o igual a <FchDesde>."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10208,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><PeriodoAsoc><FchHasta>",
+   "manualText": "Las fecha informada en <PeriodoAsoc>.<FchHasta> debe ser anterior o igual a la fecha de emisión del comprobante que estamos autorizando"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10210,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><CbteFch>/ <FECAEDetRequest><CbtesAsoc><CbteFch>",
+   "manualText": "Si el comprobante asociado se autorizó de forma electrónica y tiene una fecha de emisión posterior a la fecha de emisión del comprobante por el cual se está solicitando la autorización, ambos deberán ser del mismo mes/año."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10211,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><CbtesAsoc><CbteFch>",
+   "manualText": "Informar de forma obligatoria la fecha de Emisión del comprobante asociado si el punto de venta del comprobante asociado es Controlador Fiscal o FactuWeb y el tipo de Comprobante asociado es Factura, Recibo, Nota de Débito/Nota de Crédito"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10212,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><CbtesAsoc><CbteFch>",
+   "manualText": "De informar fecha de Emisión del comprobante asociado y el punto de venta del comprobante asociado es Controlador Fiscal o FactuWeb, la fecha no puede ser posterior al día de hoy."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10213,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><CbtesAsoc><CbteFch>",
+   "manualText": "Si se informan deben tener el siguiente formato yyyymmdd."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10214,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa opcionales, el tipo de dato correcto para el código 27 es un alfanumérico de 3 caracteres."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10215,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa opcionales y el código es 27, los valores posibles son: SCA = \"TRANSFERENCIA AL SISTEMA DE CIRCULACION ABIERTA\" ADC = \"AGENTE DE DEPOSITO COLECTIVO\""
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10216,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es Factura del tipo MiPyMEs (201, 206, 211), es obligatorio informar <Opcionales> con id = 27. Los valores posibles son SCA o ADC."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10218,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><Actividades><Actividad>",
+   "manualText": "Si envía estructura de Actividades, Actividad es obligatorio enviarlo."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10219,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><Actividades><Actividad><Id>",
+   "manualText": "Si envía estructura de Actividades, Actividad es obligatorio enviarlo y no debe estar vacío."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10220,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><Actividades><Actividad><Id>",
+   "manualText": "El identificador de actividad informado tiene que ser una de las actividades habilitadas. Consultar método FEParamGetActividades."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10221,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><Actividades><Actividad><Id>",
+   "manualText": "De enviarse el tag Actividades, las actividades no deben repetirse."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10222,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><Actividades><Actividad><Id>",
+   "manualText": "De enviarse actividades, las mismas no deben corresponder a distintos grupos según RG. Es decir, si informa actividades Cárnicas, no pueden estar combinadas con actividades Harineras, de Tabaco, etc."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10223,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><Actividades><Actividad><Id>",
+   "manualText": "De enviarse actividades, las mismas deben encontrarse activas para el emisor del comprobante. Ver método FEParamGetActividades."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10224,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><Actividades><Actividad><Id> / <Concepto>",
+   "manualText": "De enviarse actividades pertenecientes al grupo de actividades Cárnicas, las mismas deben enviarse con comprobantes con Concepto del tipo Producto o Productos y Servicios."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10225,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><Actividades><Actividad><Id> /<CbtesAsoc><CbteAsoc><Tipo>",
+   "manualText": "Si las actividades informadas corresponden a actividades Cárnicas, informar remito asociado 995 - Remito Electrónico Cárnico."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10226,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><Actividades><Actividad><Id> /<CbtesAsoc><CbteAsoc><Tipo>",
+   "manualText": "Si las actividades informadas corresponden a actividades Harinas, informar remito asociado 993 - Remito Electrónico Harinero - Automotor o 994 - Remito Electrónico Harinero - Ferroviario."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10227,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><Actividades><Actividad><Id> /<CbtesAsoc><CbteAsoc><Tipo>",
+   "manualText": "Si las actividades informadas corresponden a actividades Tabaco en Hebras, informar remito asociado 88 - Remito Electrónico de Tabaco Acondicionado."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10228,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><Actividades><Actividad><Id> /<CbtesAsoc><CbteAsoc><Tipo>",
+   "manualText": "Si informa remito 995 - Remito Electrónico Cárnico, es obligatorio informar una actividad Cárnica."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10229,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><Actividades><Actividad><Id> /<CbtesAsoc><CbteAsoc><Tipo>",
+   "manualText": "Si informa remito 993 - Remito Electrónico Harinero - Automotor o 994 - Remito Electrónico Harinero – Ferroviario, es obligatorio informar una actividad Harinera."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10230,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><Actividades><Actividad><Id> /<CbtesAsoc><CbteAsoc><Tipo>",
+   "manualText": "Si informa remito 88 - Remito Electrónico de Tabaco Acondicionado., es obligatorio informar una actividad correspondiente a Tabaco Acondicionado."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10231,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest><Actividades><Actividad><Id> /<CbtesAsoc><CbteAsoc",
+   "manualText": "Si informa actividades indicadas en la RG, es obligatorio informar comprobantes asociados."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10232,
+   "kind": "Rechazo",
+   "field": "<CbteAsoc><Tipo> / <CbteAsoc><PtoVta> / <CbteAsoc><Nro>",
+   "manualText": "Si informa comprobantes asociados, y sus códigos corresponden a 91, 88, 988, 990, 991, 993, 994, 995, 996, 997, los mismos no deben encontrarse asociado a otro comprobante."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10239,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest> / <CanMisMonExt>",
+   "manualText": "Si informa el campo CanMisMonExt, los valores posibles son S o N y no debe quedar vacio."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10240,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest> / <CanMisMonExt>",
+   "manualText": "Si informa el campo MonCotiz, el mismo no podra superar en 1 a la cotizacion oficial. Ver Metodo FEParamGetCotizacion."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10241,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest> / <CanMisMonExt>",
+   "manualText": "Si informa MonId = PES, el campo CanMisMonExt no debe informarse o informarse con el valor N."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10242,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest> / <CondicionIVAReceptorId>",
+   "manualText": "El campo de identificación de la Condición de IVA del receptor no es un valor permitido. Para mayor detalle consular el método FEParamGetCondicionIvaReceptor."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10243,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest> / <CondicionIVAReceptorId>",
+   "manualText": "El campo de identificación de Condición de IVA del receptor no es valido para la clase de comprobante informado. Para mas detalle consultar el Método: FEParamGetCondicionIvaReceptor"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10246,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest> / <CondicionIVAReceptorId>",
+   "manualText": "Campo Condición Frente al IVA del receptor es obligatorio conforme a lo reglamentado por la Resolución General N° 5616. Para mas información consular método FEParamGetCondicionIvaReceptor."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10247,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest> / <DocNro>",
+   "manualText": "La CUIT receptora informada está inactiva o es inválida. Esta validación es excluyente salvo si el tipo de comprobante informado es Nota de Crédito."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10248,
+   "kind": "Rechazo",
+   "field": "<FECAEDetRequest> / <DocNro>",
+   "manualText": "La CUIT receptora se encuentra limitada por haber sido caracterizada como sujeto no confiable en materia de Seguridad Social. Esta validación es excluyente salvo si el tipo de comprobante informado es Nota de Crédito."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10251,
+   "kind": "Rechazo",
+   "field": "<Cuit> / <FeCabReq><CbteTipo>",
+   "manualText": "Por las Condiciones de la CUIT Emisora, No corresponde realizar el Comprobante. Las entidades financieras no pueden emitir comprobantes del tipo MiPyMEs (FCE)."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10270,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <DocTipo> / <DocNro>",
+   "manualText": "Por las condiciones de la CUIT emisora, no corresponde la utilización del tipo de documento ( DocTipo) = 31. El mismo solo esta destinado a entidades financieras."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10271,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <DocTipo> / <DocNro>",
+   "manualText": "El campo DocNro es invalido. Si informa DocTipo = 31, el numero de documento debe ser numérico hasta 4 dígitos"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10272,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <DocTipo> / <CondicionIVAReceptorId>",
+   "manualText": "Campo Condición IVA receptor no permitido. Para entidades financieras, si selecciona TipoDoc=31, el campo Condición Frente al IVA del Receptor debe completarse con el valor = 15 (IVA No Alcanzado)"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10273,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>",
+   "manualText": "Opcionales. Id 2901 , solo se encuentran disponibles para los comprobantes que tipo 'A' (1, 2, 3) o 'B' (6, 7, 8), siempre y cuando el emisor corresponda a contribuyente de Seguros de Caución y use un Punto de Venta SEGWS."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10274,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Opcionales. Id 2901 - La póliza ingresada en el campo VALOR no es valido. Se espera un alfanumérico de 30 caracteres como máximo (el valor no puede ser vacío)"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10275,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>",
+   "manualText": "Opcionales. Id 2902 , solo se encuentran disponibles para los comprobantes que tipo 'A' (1, 2, 3) o 'B' (6, 7, 8), siempre y cuando el emisor corresponda a contribuyente de Seguros de Caución y use un Punto de Venta SEGWS"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10276,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Opcionales. Id 2902 - El endoso ingresado en el campo VALOR no es valido. Se espera un alfanumérico de 30 caracteres como máximo (el valor no puede ser vacío)"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10277,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si esta empadronado como emisor de Seguros de Caución, y utiliza puntos de venta SEGWS, deben informarse obligatoriamente los identificadores 2901 y 2902."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10278,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Para emisores de Seguros de Caución, si utiliza punto de venta del tipo SEGWS, deben informarse obligatoriamente los identificadores 2901 y 2902."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10279,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Los identificadores 2901 / 2902 solo deben informarse si el emisor corresponde a Seguros de Caución, si utiliza punto de venta del tipo SEGWS."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10280,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "De informar los identificadores 2901 y 2902, no se deben informar mas de 6000 opcionales (no informar mas de 3000 combinaciones de póliza/endoso)."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10281,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Opcionales Póliza/Endoso - La cantidad de identificadores 2901 deben ser iguales a la cantidad de identificadores 2902."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10282,
+   "kind": "Rechazo",
+   "field": "<Cuit> / <PtoVta>",
+   "manualText": "Si utiliza punto de venta del tipo SEGWS, la CUIT emisora debe pertenecer a la nomina de Seguros de Caucion."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10284,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <DocTipo> / <DocNro>",
+   "manualText": "El número de documento receptor informado no corresponde al Tipo de Documento receptor indicado (CUIT)."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10017,
+   "kind": "Observacion",
+   "field": "<CbteTipo> / <DocNro>",
+   "manualText": "El campo DocNro para comprobantes Tipo “A” y “A con leyenda operación sujeta a retención” deberá ser un valor registrado en el padrón de ARCA, en condición activa."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10041,
+   "kind": "Observacion",
+   "field": "<CbteAsoc><Tipo> / <CbteAsoc><PtoVta> / <CbteAsoc><Nro>",
+   "manualText": "Si el punto de venta del comprobante asociado (campo <PtoVta> de <CbtesAsoc>) es electrónico, el número de comprobante debe obrar en las bases del organismo para el punto de venta y tipo de comprobante informado."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10063,
+   "kind": "Observacion",
+   "field": "DocTipo / DocNro",
+   "manualText": "Para comprobantes Clase “A” y “A con leyenda operación sujeta a retención” el receptor del comprobante informado en <DocTipo> y <DocNro> debe corresponder a un contribuyente activo en el Impuesto al Valor Agregado o Responsable Monotributo."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10188,
+   "kind": "Observacion",
+   "field": "<Auth><Cuit>/ <DocTipo>/ <DocNro>/",
+   "manualText": "Si el tipo de comprobante que está autorizando es 1 - Factura A o 4 - Recibo A o 6 - Factura B o 9 - Recibo B o 11 - Factura C o 15 - Recibo C, por la categorización de las cuits emisora y receptora, se deberia realizar una factura de crédito electrónica."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10209,
+   "kind": "Observacion",
+   "field": "<FECAEDetRequest><Tributos><Id>/ <FECAEDetRequest><PeriodoAsoc><FchDesde>/ <FECAEDetRequest><PeriodoAsoc><FchHasta>",
+   "manualText": "Si en la estructura Tributos informa percepciones, <PeriodoAsoc>.<FchDesde> y <PeriodoAsoc>.<FchHasta> deben corresponder al mismo Mes/Anio"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10217,
+   "kind": "Observacion",
+   "field": "<CbteTipo> / <DocNro>",
+   "manualText": "Para comprobantes Clase “A” y “A con leyenda operación sujeta a retención”, donde el receptor del comprobante informado en <DocTipo> y <DocNro> se encuentra activo en el Impuesto Responsable Monotributo, “El crédito fiscal discriminado en el presente comprobante solo podrá ser computado a efectos del Procedimiento permanente de transición al Régimen General.”"
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10234,
+   "kind": "Observacion",
+   "field": "<CbteTipo> / <DocNro>",
+   "manualText": "Para comprobantes Clase “A” y “A con leyenda operación sujeta a retención”, se ha detectado que esta pendiente de presentación el formulario de habilitación de comprobantes o su fecha de presentación es anterior a la fecha de alta en IVA. Para el caso que el comprobante no sea una Nota de Crédito, se debe proceder a anular la operación clase “A” o “A con leyenda operación sujeta a retención” emitida, mediante una Nota de Crédito."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10235,
+   "kind": "Observacion",
+   "field": "<CbteTipo> / <DocNro> / <FECAEDetRequest> / ImpTotal",
+   "manualText": "El monto total del comprobante emitido, excede el límite establecido para la categoría máxima de Monotributo. Por tal motivo, quedarías excluido automáticamente teniendo que solicitar el alta de los tributos (impositivos y de los recursos de la seguridad social) en el régimen general de acuerdo con tu actividad."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10236,
+   "kind": "Observacion",
+   "field": "<CbteTipo> / <DocNro> / <FECAEDetRequest> / ImpTotal",
+   "manualText": "El monto del comprobante emitido, excede el límite establecido para su categoría de Monotributo. Tenelo en cuenta para la próxima recategorización."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10237,
+   "kind": "Observacion",
+   "field": "<FECAEDetRequest> / ImpTotal / <CbteAsoc>",
+   "manualText": "El importe de la nota de crédito supera el monto del comprobante asociado que estás ajustando. Verificá los montos ingresados y de tratarse de un error, tenés que efectuar el ajuste o anulación de la operación según corresponda."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10238,
+   "kind": "Observacion",
+   "field": "<FECAEDetRequest> / <DocNro>",
+   "manualText": "La CUIT receptora ingresada no existe."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10245,
+   "kind": "Observacion",
+   "field": "<FECAEDetRequest> / <CondicionIVAReceptorId>",
+   "manualText": "El campo Condición Frente al IVA del receptor resultará obligatorio conforme lo reglamentado por la Resolución General N° 5616. Para mas información consular método FEParamGetCondicionIvaReceptor."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10249,
+   "kind": "Observacion",
+   "field": "<FECAEDetRequest> / <DocNro>",
+   "manualText": "El número de documento informado para el sujeto receptor corresponde a un sujeto fallecido, sin sucesión indivisa registrada."
+  },
+  {
+   "method": "FECAESolicitar",
+   "group": "Controles aplicados al objeto <FeDetReq>",
+   "code": 10283,
+   "kind": "Observacion",
+   "field": "<DocTipo> / <DocNro> / <Tributo>",
+   "manualText": "Falta informar en la sección Otros Tributos el tributo con ID = 13 – Percepción de IVA No Categorizado según la RG 2126/2006. Si <CbteTipo> es igual a 6, 7 u 8, <DocTipo> es 80 (CUIT), <DocNro> es 23000000000 (No Categorizado), la suma de ImpNeto + ImpIVA es mayor a 0 (cero), y el campo ImpTrib > 0, debe informar el ID “13 – Percepción de IVA No Categorizado“ en el array de tributos con un importe mayor a 0 (cero)"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles aplicados al objeto <Auth>",
+   "code": 10000,
+   "kind": "Rechazo",
+   "field": "<Auth><Cuit>",
+   "manualText": "La CUIT del emisor debe estar registrada y activa en las bases de la Administración."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles aplicados al objeto <FeCabReq>",
+   "code": 10001,
+   "kind": "Rechazo",
+   "field": "<CantReg>",
+   "manualText": "Cantidad de registros de detalle del comprobante o lote de comprobantes de ingreso <CantReg> debe estar comprendido entre 1 y 9998"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles aplicados al objeto <FeCabReq>",
+   "code": 10002,
+   "kind": "Rechazo",
+   "field": "<CantReg>",
+   "manualText": "La cantidad de registros del detalle del comprobante o lote de comprobantes de ingreso debe ser igual a lo informado en cabecera del comprobante o lote de comprobantes de ingreso <CantReg>."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles aplicados al objeto <FeCabReq>",
+   "code": 10003,
+   "kind": "Rechazo",
+   "field": "Cantidad de registros incluidos",
+   "manualText": "La cantidad de registros en detalle debe ser menor igual al valor permitido. Consulte método FECompTotXRequest para obtener cantidad máxima de registros por cada requerimiento. Para comprobantes del tipo MiPyMEs (FCE), la cantidad habilitada es 1 comprobante por request"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles aplicados al objeto <FeCabReq>",
+   "code": 700,
+   "kind": "Rechazo",
+   "field": "CbteTipo",
+   "manualText": "Obligatorio. Valores permitidos: 1: Factura A 2: Nota de Débito A 3: Nota de Crédito A 4: Recibo A 6: Factura B 7: Nota de Débito B 8: Nota de Crédito B 9: Recibo B 11: Factura C 12: Nota de Débito C 13: Nota de Crédito C 15: Recibo C 51: Factura “A con leyenda operación sujeta a retención” (CAEA observa comprobante) 52: Nota de Débito “A con leyenda operación sujeta a retención” (CAEA observa comprobante) 53: Nota de Crédito “A con leyenda operación sujeta a retención” (CAEA observa comprobante) 54: Recibo “A con leyenda operación sujeta a retención” 63: Liquidaciones A 64: Liquidaciones B 201: Factura de Crédito electrónica MiPyMEs (FCE) A 202: Nota de Débito electrónica MiPyMEs (FCE) A 203: Nota de Crédito electrónica MiPyMEs (FCE) A 206: Factura de Crédito electrónica MiPyMEs (FCE) B 207: Nota de Débito electrónica MiPyMEs (FCE) B 208: Nota de Crédito electrónica MiPyMEs (FCE) B 211: Factura de Crédito electrónica MiPyMEs (FCE) C 212: Nota de Débito electrónica MiPyMEs (FCE) C 213: Nota de Crédito electrónica MiPyMEs (FCE) C Consultar método FEParamGetTiposCbte"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles aplicados al objeto <FeCabReq>",
+   "code": 1300,
+   "kind": "Rechazo",
+   "field": "PtoVta",
+   "manualText": "Campo PtoVta debe estar comprendido entre 1 y 99998."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles aplicados al objeto <FeCabReq>",
+   "code": 701,
+   "kind": "Rechazo",
+   "field": "PtoVta",
+   "manualText": "El punto de Venta debe ser del tipo habilitado para CAEA - Fact. Elect. (RECE) - RI IVA / CAEA – Fact. Elect. (RECE) - Contingencias / CAEA – Fact. Elect. (RECE) - Exento en IVA - Contingencias / CAEA – Fact. Elect. (RECE) - Monotributo - Contingencias y no debe estar bloqueado a la fecha en que se emitió el comprobante. Consultar método FEParamGetPtosVenta."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 702,
+   "kind": "Rechazo",
+   "field": "CbteFch",
+   "manualText": "Debe estar comprendida dentro de la fecha desde y fecha hasta de vigencia del CAEA"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 703,
+   "kind": "Rechazo",
+   "field": "CbteDesde / CbteHasta / PtoVta / CbteTipo",
+   "manualText": "El número de comprobante informado debe ser mayor en 1 al último informado para igual punto de venta y tipo de comprobante. Consultar método FECompUltimoAutorizado"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 704,
+   "kind": "Rechazo",
+   "field": "CbteFch / PtoVta / CbteTipo",
+   "manualText": "La fecha del comprobante debe ser mayor o igual a la fecha del último comprobante informado para igual tipo de comprobante y punto de venta."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 705,
+   "kind": "Rechazo",
+   "field": "CAEA",
+   "manualText": "Debe corresponder a la CUIT que está informando"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1414,
+   "kind": "Rechazo",
+   "field": "Fecha de envío de la solicitud",
+   "manualText": "Al informar un comprobante con la modalidad CAEA, la fecha en la que se informa el comprobante debe ser mayor a la fecha de entrada en vigencia del CAEA vinculado"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 709,
+   "kind": "Rechazo",
+   "field": "CAEA / PtoVta",
+   "manualText": "La fecha de alta del punto de venta deberá ser menor o igual a la fecha de vigencia “hasta” del CAEA"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1401,
+   "kind": "Rechazo",
+   "field": "MonId",
+   "manualText": "El campo MonId es obligatorio y debe corresponder a algún valor devuelto por el método FEParamGetTiposMonedas."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 713,
+   "kind": "Rechazo",
+   "field": "Concepto",
+   "manualText": "Valores permitidos: 1 Productos 2 Servicios 3 Productos y Servicios Consultar método FEParamGetTiposConcepto"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 715,
+   "kind": "Rechazo",
+   "field": "ImpIVA / Iva / AlicIva",
+   "manualText": "Si ImpIVA es igual a 0 los objetos Iva y AlicIva solo deben informarse con ImpIVA = 3 (iva 0) Si ImpIVA es mayor a 0 el objeto Iva y AlicIva son obligatorios. El objeto AlicIva es obligatorio y no debe ser nulo si ingresa Iva."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 717,
+   "kind": "Rechazo",
+   "field": "<ImpTotConc>",
+   "manualText": "El campo ImpTotConc (Importe neto no gravado) no puede ser menor a cero (0). El campo ImpTotConc soporta 13 números para la parte entera y 2 para los decimales."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 718,
+   "kind": "Rechazo",
+   "field": "<ImpOpEx>",
+   "manualText": "El campo ImpOpEx soporta 13 números para la parte entera y 2 para los decimales. El campo ImpOpEx (importe exento) no puede ser menor a cero (0)."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 719,
+   "kind": "Rechazo",
+   "field": "<ImpNeto>",
+   "manualText": "El campo ImpNeto (Importe neto gravado) no puede ser menor a cero (0) El campo ImpNeto soporta 13 números para la parte entera y 2 para los decimales."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 723,
+   "kind": "Rechazo",
+   "field": "<ImpTrib>",
+   "manualText": "El campo ImpTrib (Importe de tributos) no puede ser menor a cero (0). El campo ImpTrib soporta 13 números para la parte entera y 2 para los decimales."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1407,
+   "kind": "Rechazo",
+   "field": "<ImpIVA>",
+   "manualText": "El campo ImpIVA (Importe de IVA) no puede ser menor a cero (0). El campo ImpIVA soporta 13 números para la parte entera y 2 para los decimales."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 726,
+   "kind": "Rechazo",
+   "field": "<MonCotiz>",
+   "manualText": "El campo MonCotiz es obligatorio y mayor a 0 Debe ser igual a 1 (uno) si <MonId> es igual a PES. Si <MonId> es diferente a PES que <MonCotiz> sea Mayor a 0. El campo MonCotiz es opcional si informa el campo CanMisMonExt con el valor S y el tipo de comprobante es factura y la moneda tiene cotización en Banco Nación. El campo MonCotiz soporta 4 números para la parte entera y 6 para los decimales."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 780,
+   "kind": "Rechazo",
+   "field": "CAEA",
+   "manualText": "Deberá corresponder a un CAEA registrado en las bases de la Administración"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 781,
+   "kind": "Rechazo",
+   "field": "PtoVta / CbteFch",
+   "manualText": "La fecha de alta del punto de venta deberá ser menor o igual a la fecha del comprobante"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 782,
+   "kind": "Rechazo",
+   "field": "CAEA",
+   "manualText": "Obligatorio, numérico de 14 posiciones"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 783,
+   "kind": "Rechazo",
+   "field": "CbteFch",
+   "manualText": "Obligatorio, formato yyyymmdd"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 784,
+   "kind": "Rechazo",
+   "field": "CbteDesde / CbteHasta",
+   "manualText": "Obligatorio, entero; valores comprendidos entre 1 y 99999999."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1416,
+   "kind": "Rechazo",
+   "field": "<CbteHasta> / <CbteDesde>",
+   "manualText": "Para comprobantes tipo B, <CbteHasta> sea mayor o igual a <CbteDesde>"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1415,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <CbteDesde> / <CbteHasta>",
+   "manualText": "Para comprobantes tipo B (CbteDesde distinto a CbteHasta) y el resultado de la operación ImpTotal / (CbteHasta – CbteDesde + 1 ) < monto en pesos resultante según RG4444, el campo DocNro deberá ser cero (0) y el campo DocTipo 99."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1417,
+   "kind": "Rechazo",
+   "field": "DocTipo / DocNro / CbteDesde / CbteHasta",
+   "manualText": "Para comprobantes B o C (CbteDesde igual a CbteHasta) mayor o igual a monto en pesos resultante según RG4444, DocTipo debe ser uno de los valores devueltos por el método FEParamGetTiposDoc distinto a 99 y DocNro deberá ser mayor a 0."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1418,
+   "kind": "Rechazo",
+   "field": "DocTipo / DocNro / CbteDesde / CbteHasta",
+   "manualText": "Para comprobantes B o C (CbteDesde igual a CbteHasta) menor a monto en pesos resultante según RG4444, si DocTipo = 99 DocNro debe ser igual a 0."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1419,
+   "kind": "Rechazo",
+   "field": "DocTipo / DocNro / CbteDesde / CbteHasta",
+   "manualText": "Para comprobantes B o C (CbteDesde igual a CbteHasta) menor a monto en pesos resultante según RG4444, si DocTipo es distinto a 99, DocNro debe ser mayor a 0."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1422,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <CbteDesde> / <CbteHasta>",
+   "manualText": "Para comprobantes tipo B, <CbteDesde> distinto a <CbteHasta> el resultado de la operación ImpTotal / (CbteHasta – CbteDesde + 1 ) < monto en pesos resultante según RG4444."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 711,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <CbteDesde> / <CbteHasta>",
+   "manualText": "Para comprobantes clase A y comprobantes MiPyMEs (FCE) el campo CbteDesde debe ser igual al campo CbteHasta"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1403,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <DocTipo>",
+   "manualText": "Para comprobantes clase A el campo DocTipo debe ser igual a 80 (CUIT)"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1409,
+   "kind": "Rechazo",
+   "field": "<ImpTotal>",
+   "manualText": "El campo ImpTotal no puede ser menor a cero (0). El campo ImpTotal soporta 13 números para la parte entera y 2 para los decimales."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1404,
+   "kind": "Rechazo",
+   "field": "<DocTipo> / <DocNro>",
+   "manualText": "Para comprobantes tipo B o tipo C, si informa <DocTipo> y <DocNro>, <DocTipo> debe ser un valor devuelto por el método FEParamGetTiposDoc."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1405,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <DocNro>",
+   "manualText": "Para comprobantes tipo B o tipo C el campo DocNro debe ser un valor comprendido entre 0 y 99999999999"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1421,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <DocNro>",
+   "manualText": "Para comprobantes tipo A el campo DocNro debe ser un valor comprendido entre 20000000000 y 60000000000"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 788,
+   "kind": "Rechazo",
+   "field": "DocTipo / DocNro",
+   "manualText": "Cuando se informa tipo de comprobante 80, el documento informado no puede ser el mismo al ingresado en el campo <Auth><Cuit>"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1423,
+   "kind": "Rechazo",
+   "field": "<ImpTrib> / <Tributos> / <Tributo>",
+   "manualText": "Si ImpTrib es igual a 0 el objeto Tributos y Tributo no deben informarse. Si ImpTrib es mayor a 0 el objeto Tributos y Tributo son obligatorios. Si ImpTrib mayor a 0, Tributos y Tributo no pueden venir vacíos."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1426,
+   "kind": "Rechazo",
+   "field": "<Opcionales><CbteTipo>",
+   "manualText": "El array <Opcionales> no es obligatorio. Solo puede informarse si <CbteTipo> es 1, 2, 3, 4, 5, 6, 7, 8, 34, 39, 60, 63, 64, 201, 202, 203, 206, 207, 208, 211, 212, 213"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1432,
+   "kind": "Rechazo",
+   "field": "<Compradores>",
+   "manualText": "No se encuentra habilitado informar compradores en el régimen de información para la modalidad CAEA."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1433,
+   "kind": "Rechazo",
+   "field": "<CbteTipo>/ <CbteDesde>/ <CbteHasta>",
+   "manualText": "Para comprobantes tipo C <CbteHasta> debe ser igual a <CbteDesde>."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1434,
+   "kind": "Rechazo",
+   "field": "<CbteTipo>/ <ImpTotConc>",
+   "manualText": "Para comprobantes tipo C, el campo “Importe neto no gravado” <ImpTotConc> debe ser igual a cero (0)."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1435,
+   "kind": "Rechazo",
+   "field": "<CbteTipo>/ <ImpOpEx>",
+   "manualText": "Para comprobantes tipo C, el campo <ImpOpEx> debe ser igual a cero (0)."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1436,
+   "kind": "Rechazo",
+   "field": "<CbteTipo>/ <ImpNeto>",
+   "manualText": "Para comprobantes tipo C el campo <ImpNeto> corresponde al Importe del Sub Total."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1437,
+   "kind": "Rechazo",
+   "field": "<CbteTipo>/ <ImpTrib>",
+   "manualText": "Para comprobantes tipo C, el campo “Importe de tributos” <ImpTrib>. No puede ser menor a cero (0)."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1438,
+   "kind": "Rechazo",
+   "field": "<CbteTipo>/ <ImpIVA>",
+   "manualText": "Para comprobantes tipo C, el campo “Importe de IVA” < ImpIVA> debe ser igual a cero (0)."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1439,
+   "kind": "Rechazo",
+   "field": "<CbteTipo>/ <ImpTotal>/ <ImpNeto> / <ImpTrib> /",
+   "manualText": "Para comprobantes tipo C, el campo “Importe Total” <ImpTotal>, debe ser igual a la suma de ImpNeto + ImpTrib. Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1440,
+   "kind": "Rechazo",
+   "field": "<CbteFchHsGen>",
+   "manualText": "Si el punto de venta es para CONTINGENCIAS CAEA el campo es obligatorio informarlo"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1441,
+   "kind": "Rechazo",
+   "field": "<CbteFchHsGen>",
+   "manualText": "Si informa el campo, el mismo tiene que contener un valor según lo definido en la estructura. Formato yyyymmddhhmiss"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1443,
+   "kind": "Rechazo",
+   "field": "<Iva>",
+   "manualText": "Si el tipo de comprobante es C, el array de IVA no debe informarse."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1444,
+   "kind": "Rechazo",
+   "field": "<PtoVta> /<CbteTipo>",
+   "manualText": "Si el comprobante es tipo “A”, “B”, “A con leyenda operación sujeta a retención” los puntos de venta habilitados son CAEA - Fact. Elect. (RECE) - RI IVA / CAEA - Fact. Elect. (RECE) - RI IVA - Contingencias. Si el comprobante es tipo C, los puntos de venta habilitados son CAEA - Fact. Elect. (RECE) - Exento en IVA – Contingencias / CAEA - Fact. Elect. (RECE) - Monotributo - Contingencias"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1445,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo> / <CbteTipo> / <DocNro>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), el campo DocNro para comprobantes deberá ser un valor registrado en el padrón de arca, en condición activa."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1446,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <DocNro>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), el campo DocNro para comprobantes deberá ser un valor registrado en el padrón de arca, en condición activa."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1450,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FECAEDetRequest><CbtesAsoc>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) y corresponde a un comprobante de débito o crédito, es obligatorio informar comprobantes asociados."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1451,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc><Tipo><PtoVta><Nro><Cuit>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) y corresponde a un comprobante de débito o crédito. Tener en cuenta que: - sí el comprobante asociado se encuentra rechazado por el comprador hay que informar el código de anulación correspondiente sobre el campo \"Adicionales por RG\", códigos 22 - Anulación. Valor “S” - sí el comprobante asociado no se encuentra rechazado por el comprador hay que informar el código de no anulación correspondiente sobre el campo \"Adicionales por RG\", códigos 22 - Anulación. Valor “N”"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1452,
+   "kind": "Rechazo",
+   "field": "<Auth><Cuit> <FeCabReq><CbteTipo>/ <CbteAsoc><Cuit>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), el CUIT del emisor del comprobante asociado debe coincidir con el CUIT del emisor del comprobante a autorizar."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1453,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc><Tipo>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito sin código de Anulación siempre debe asociar 1 solo comprobante tipo factura."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1454,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc><Tipo>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito sin código de Anulación solo puede asociar: Para comprobantes A, asociar 201 o (91, 88, 988, 990, 991, 993, 994, 995, 996, 997). Para comprobantes B, asociar 206 o (91, 88, 988, 990, 991, 993, 994, 995, 996, 997). Para comprobantes C, asociar 211 o (91, 88, 988, 990, 991, 993, 994, 995, 996, 997)."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1455,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc> / <Tipo> / <PtoVta> / <Nro> / <Cuit> / <CbteFch>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito, es obligatorio informar la fecha del comprobante asociado"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1456,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FeDetReq>/<CbteFch>/ <CbteAsoc> / <Tipo> / <PtoVta> / <Nro> / <Cuit> / <CbteFch>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito, la fecha del comprobante asociado tiene que ser igual o menor a la fecha del comprobante que se está autorizando"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1457,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc> / <Tipo> / <PtoVta> / <Nro> / <Cuit> / <CbteFch>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito, el comprobante debe existir autorizado en las bases de esta Administración con la misma fecha informada en el asociado."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1458,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FECAEDetRequest><DocTipo><DocNro>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), el receptor del comprobante debe tener habilitado el domicilio fiscal electrónico"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1459,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) es obligatorio informar <Opcionales>"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1460,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FchVtoPago>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Tipo 201 - FACTURA DE CREDITO ELECTRONICA MiPyMEs (FCE) A / 206 - FACTURA DE CREDITO ELECTRONICA MiPyMEs (FCE) B / 211 - FACTURA DE CREDITO ELECTRONICA MiPyMEs (FCE) C, es obligatorio informar FchVtoPago"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1461,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FchVtoPago> / <FECAEDetRequest><CbteFch>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), la fecha de vencimiento de pago (FchVtoPago) debe ser posterior o igual a la fecha de emisión (CbteFch) o fecha de presentación (fecha actual), la que sea posterior"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1462,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa opcionales, el valor correcto para el código 2101 es un CBU numérico de 22 caracteres."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1463,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa opcionales, el valor correcto para el código 2102 es un ALIAS alfanumérico de 6 a 20 caracteres."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1464,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa opcionales, el valor correcto para el código 22 es “S” o “N”: S = Es de Anulación N = No es de Anulación"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1465,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es Factura (201, 206, 211) del tipo MiPyMEs (FCE), informa opcionales, es obligatorio informar CBU."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1466,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando NO es MiPyMEs (FCE), no informar los códigos 2101, 2102, 22, 27"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1467,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es obligatorio informar al menos uno de los sig. códigos 2101, 22, 27"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1468,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Factura (201, 206, 211), no informar Código de Anulación"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1469,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Debito (202, 207, 212) o Crédito (203, 208, 213) No informar CBU y ALIAS."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1470,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Debito (202, 207, 212) o Crédito (203, 208, 213) informar Código de Anulación"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1471,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es factura MiPyMEs (FCE), el CBU debe estar registrado en las bases de esta administración, vigente y pertenecer al emisor del comprobante."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1472,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FchVtoPago>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), el campo “fecha de vencimiento para el pago” <FchVtoPago> no debe informarse si NO es Factura de Crédito. En el caso de ser Débito o Crédito, solo puede informarse si es de Anulación."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1474,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteTipo> / <DocNro>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) del tipo A, el receptor del comprobante informado en DocTipo y DocNro debe corresponder a un contribuyente activo en el Impuesto al Valor Agregado o Responsable Monotributo. Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) del tipo B, el receptor del comprobante informado en DocTipo y DocNro debe corresponder a un contribuyente activo en el Impuesto Iva, Monotributo o Exento. Si el tipo de comprobante que esta autorizando es MiPyMEs (FCE) del tipo C, el receptor del comprobante informado en DocTipo y DocNro debe corresponder a un contribuyente activo en el Impuesto Iva, Monotributo o Exento."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1475,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteTipo> / <DocNro>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) no se permite informar DocNro 23000000000 (No Categorizado)"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1476,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteTipo> / <DocNro>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), el receptor del comprobante informado en DocTipo y DocNro debe corresponder a un contribuyente caracterizado como GRANDE o que opto por PYME. Su activida principal debe corresponderse con alguna de las alcanzadas por el régimen."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1477,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <MonId> <CbteAsoc>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), débito o crédito, el mismo debe tener la misma moneda que el comprobante asociado o Pesos para ajuste en las diferencias de cambio (post aceptación/rechazo)"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1478,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FECAEDetRequest><DocTipo><DocNro>/ <CbteAsoc>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es débito o crédito, deben coincidir emisores y receptores. Si el comprobante ES de anulación, para autorizar un débito, el tipo de comprobante a asociar debe ser crédito y para autorizar un crédito, el tipo de comprobante a asociar debe ser una factura o un débito."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1479,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <MonId> <CbteAsoc>/ <FeCabReq><ImpTotal>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es crédito el monto del comprobante a autorizar no puede ser mayor o igual al saldo actual de la cuenta corriente. Ver micrositio factura de crédito"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1480,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc>/",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es crédito o débito A, de anulación, solo se encuentra habilitado asociar un comprobante de crédito A. Utilizar debito para anular crédito o utilizar crédito para anular débito o factura."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1481,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc>/",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es crédito o débito B, de anulación, solo se encuentra habilitado asociar un comprobante de crédito B. Utilizar debito para anular crédito o utilizar crédito para anular débito o factura."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1482,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Puede identificar una o varias Referencias Comerciales según corresponda. Informar bajo el código 23. Campo alfanumérico de 50 caracteres como máximo."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1483,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si informa opcionales con más de un identificador 23 – Referencia Comercial, no repetir el valor."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1486,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc>/",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es crédito o débito C, de anulación, solo se encuentra habilitado asociar un comprobante de crédito C. Utilizar debito para anular crédito o utilizar crédito para anular débito o factura."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1487,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <DocTipo> / <DocNro>",
+   "manualText": "Para comprobantes MiPyMEs (FCE) el documento del receptor debe ser 80 CUIT."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1488,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <CbteAsoc> / <Tipo> / <PtoVta> / <Nro> / <Cuit> / <CbteFch>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito, el comprobante debe existir autorizado en las bases de esta Administración."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1490,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FECAEADetRequest><PeriodoAsoc>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), no se encuentra habilitado informar PeriodoAsoc."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1491,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FECAEADetRequest><CbtesAsoc>/ <FECAEADetRequest><PeriodoAsoc>",
+   "manualText": "Si el comprobante es Debito o Crédito, se deberá informar de forma obligatoria los campos Fecha Comprobantes Asociados Desde/Hasta, o al menos un comprobante asociado."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1492,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <FECAEADetRequest><PeriodoAsoc>",
+   "manualText": "Si el comprobante es Factura no se deberá informar los campos Fecha Comprobantes Asociados Desde/Hasta"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1493,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest><PeriodoAsoc><FchDesde>",
+   "manualText": "Si envía estructura PeriodoAsoc es obligatorio enviar FchDesde."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1494,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest><PeriodoAsoc><FchHasta>",
+   "manualText": "Si envía estructura PeriodoAsoc es obligatorio enviar FchHasta."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1495,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest><PeriodoAsoc><FchDesde>",
+   "manualText": "El campo PeriodoAsoc.FchDesde debe corresponder a una fecha valida con formato YYYYMMDD"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1496,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest><PeriodoAsoc><FchHasta>",
+   "manualText": "El campo PeriodoAsoc.FchHasta debe corresponder a una fecha valida con formato YYYYMMDD"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1497,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest><PeriodoAsoc><FchDesde>/ <FECAEADetRequest><PeriodoAsoc><FchHasta>",
+   "manualText": "Las fechas informadas en PeriodoAsoc deben ser superiores a 01/01/2006"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1498,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest><PeriodoAsoc><FchDesde>/ <FECAEADetRequest><PeriodoAsoc><FchHasta>",
+   "manualText": "Las fechas informadas en PeriodoAsoc , FchHasta debe ser superior o igual a FchDesde."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1499,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest><PeriodoAsoc><FchHasta>",
+   "manualText": "Las fecha informada en PeriodoAsoc.FchHasta debe ser anterior o igual a la fecha de emisión del comprobante que estamos autorizando"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1502,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest><CbtesAsoc><CbteFch>",
+   "manualText": "Informar de forma obligatoria la fecha de Emisión del comprobante asociado si el punto de venta del comprobante asociado es Controlador Fiscal o FactuWeb y el tipo de Comprobante asociado es Factura, Recibo, Nota de Débito/Nota de Crédito"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1503,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest><CbtesAsoc><CbteFch>",
+   "manualText": "De informar fecha de Emisión del comprobante asociado y el punto de venta es Controlador Fiscal o FactuWeb, la fecha no puede ser posterior al día de hoy."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1504,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest><CbtesAsoc><CbteFch>",
+   "manualText": "Si se informan deben tener el siguiente formato yyyymmdd."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1505,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id>/<CbteTipo>",
+   "manualText": "Si el comprobante es del tipo A (1, 2, 3, 4, 5, 34, 39, 60, 63) e intenta informar datos opcionales según Resolución General 3668, los valores posibles para los identificadores son 5, 61, 62, 7."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1506,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 5, el valor ingresado no puede ser blanco y debe ser alfanumérico de 2 caracteres."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1507,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 5, el contenido del campo <Valor> debe corresponder a un código de EXCEPCION válido comprendido por alguno de los sig: 01 – Locador / Prestador del mismo 02 – Congresos / Eventos 03 – Operación contemplada en RG 74 04 – Bienes de Cambio 05 – Ropa de trabajo 06 – Intermediario"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1508,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 61, el valor ingresado no puede ser blanco y debe ser numérico de 2 caracteres."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1509,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 61, el contenido del campo <Valor> debe corresponder a un código que represente el tipo de documento del firmante. Ver método FEParamGetTiposDoc."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1510,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 62, el valor ingresado no puede ser blanco y debe ser numérico de 11 caracteres como máximo."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1511,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 7, el valor ingresado no puede ser blanco y debe ser numérico de 2 caracteres."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1512,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id>/ <Opcionales><Valor>",
+   "manualText": "Si informa Id = 7, el contenido del campo <Valor> debe corresponder a un código de carácter firmante válido comprendido por alguno de los sig: 01 – Titular 02 – Director / Presidente 03 – Apoderado 04 – Empleado"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1513,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa opcionales, el tipo de dato correcto para el código 27 es un alfanumérico de 3 caracteres."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1514,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa opcionales y el código es 27, los valores posibles son: SCA = \"TRANSFERENCIA AL SISTEMA DE CIRCULACION ABIERTA\" ADC = \"AGENTE DE DEPOSITO COLECTIVO\""
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1515,
+   "kind": "Rechazo",
+   "field": "<FeCabReq><CbteTipo>/ <Opcionales><Id><Valor>",
+   "manualText": "Si el tipo de comprobante que está autorizando es Factura del tipo MiPyMEs (201, 206, 211), es obligatorio informar <Opcionales> con id = 27. Los valores posibles son SCA o ADC."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1517,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id>",
+   "manualText": "Si el comprobante es del tipo B e intenta informar datos opcionales según Resolución General 4004- E, los valores posibles para los identificadores son 17, 1801, 1802."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1518,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id><Valor>",
+   "manualText": "Si informa id = 17 (RG 4004-E Locación de inmuebles destino \"casa-habitación\"), el valor ingresado no puede ser blanco y debe ser un numérico de 1 carácter: 1 (uno) = facturación a través de intermediario 2 (dos) = facturación directa"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1519,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id><Valor>",
+   "manualText": "Si informa Id = 1801 (RG 4004-E Locación de inmuebles destino \"casa-habitación\") con un CUIT propietario/locador no repetirlo dentro de la lista de propietarios/locadores"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1520,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id><Valor>",
+   "manualText": "Si informa Id = 1802 (RG 4004-E Locación de inmuebles destino \"casa-habitación\") el valor ingresadono puede ser un blanco y debe ser un alfanumérico de 100 caracteres como máximo que representa el Nombre y Apellido propietario/locador."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1521,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id><Valor>",
+   "manualText": "Si informa id 17 con valor 1 (Intermediario) (RG 4004-E Locación de inmuebles destino \"casahabitación\"), deben informarse obligatoriamente los identificadores 1801 y 1802. Si informa id 17 con valor 2 (Directo) (RG 4004-E Locación de inmuebles destino \"casa-habitación\"), pueden no informarse los identificadores 1801, 1802. Solo informarlos cuando hay otro/s propietarios/locadores"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1522,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id><Valor>",
+   "manualText": "Si informa id = 1801 (RG 4004-E Locación de inmuebles destino \"casa-habitación\"), el valor ingresado no puede ser blanco y debe corresponder al CUIT del propietario/locador. Numérico de 11 caracteres."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1523,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id><Valor>",
+   "manualText": "Si informa Id = 1801 (RG 4004-E Locación de inmuebles destino \"casa-habitación\"), verificar que el número consignado se encuentra en los padrones de ARCA."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1524,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id><Valor>",
+   "manualText": "Si informa Id = 1801 (RG 4004-E Locación de inmuebles destino \"casa-habitación\") con un CUIT propietario/locador no puede ser el mismo que el emisor del comprobante."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1525,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id><Valor>",
+   "manualText": "Si informa id 1801 y id 1802 (RG 4004-E Locación de inmuebles destino \"casa-habitación\"), la cantidad de opcionales con id 1801 y 1802 deben ser iguales."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1526,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest>/ <Opcionales><Id><Valor>",
+   "manualText": "Si informa id 1801 y id 1802 (RG 4004-E Locación de inmuebles destino \"casa-habitación\"), es obligatorio informar el id 17 con valor 1 (Intermediario) o 2 (Directo)"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 820,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest> / <CanMisMonExt>",
+   "manualText": "Si informa el campo CanMisMonExt, los valores posibles son S o N y no debe quedar vacío."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 823,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest> / <CondicionIVAReceptorId>",
+   "manualText": "El campo de identificación de la Condición de IVA del receptor no es un valor permitido. Para mayor detalle consular el método FEParamGetCondicionIvaReceptor."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 826,
+   "kind": "Rechazo",
+   "field": "<FECAEADetRequest> / <CondicionIVAReceptorId>",
+   "manualText": "Campo Condición Frente al IVA del receptor es obligatorio conforme a lo reglamentado por la Resolución General N° 5616. Para mas información consular método FEParamGetCondicionIvaReceptor."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1528,
+   "kind": "Rechazo",
+   "field": "<CbteTipo> / <DocTipo> / <DocNro>",
+   "manualText": "El número de documento receptor informado no corresponde al Tipo de Documento receptor indicado (CUIT)"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 708,
+   "kind": "Observacion",
+   "field": "<CbteTipo> / <DocNro>",
+   "manualText": "El campo DocNro para comprobantes Tipo A deberá ser un valor registrado y ACTIVO en el padrón de arca."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 724,
+   "kind": "Observacion",
+   "field": "<ImpTotConc> / <ImpOpEx> / <ImpNeto> / <ImpTrib> / <ImpIVA> / <ImpTotal>",
+   "manualText": "El campo “Importe Total” <ImpTotal>, debe ser igual a la suma de ImpTotConc + ImpNeto + ImpOpEx + ImpTrib + ImpIVA Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 728,
+   "kind": "Observacion",
+   "field": "FchServHasta",
+   "manualText": "Debe informarse solo si <Concepto> es igual a 2 ó 3. En otro caso no corresponde."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 725,
+   "kind": "Observacion",
+   "field": "<ImpIVA>",
+   "manualText": "Debe ser igual a la sumatoria de la totalidad de los campos <importe> (dentro de <AlicIVA>) Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01 * cantidad de alícuotas de IVA ingresadas*"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1402,
+   "kind": "Observacion",
+   "field": "<CbteTipo> / <DocTipo> / <DocNro>",
+   "manualText": "Para comprobantes Tipo A deberá encontrarse registrado en condición activa en el Impuesto al Valor Agregado o Responsable Monotributo."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 727,
+   "kind": "Observacion",
+   "field": "<FchServDesde>",
+   "manualText": "FchServDesde debe informarse solo si Concepto es igual a 2 o 3. En otro caso no corresponde."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1420,
+   "kind": "Observacion",
+   "field": "<CbteTipo> / <DocTipo> / <DocNro>",
+   "manualText": "Para comprobantes tipo B o C (CbteDesde igual a CbteHasta) y DocTipo 80, 86, 87, DocNro deberá ser un valor registrado en el padrón de arca. Si DocTipo es 80 y DocNro es 23000000000 (No Categorizado) esta validación no se tendrá en cuenta."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1408,
+   "kind": "Observacion",
+   "field": "<ImpNeto> / <AlicIva> <BaseImp>",
+   "manualText": "La suma de los campos <BaseImp> en <AlicIva> debe ser igual al valor ingresado en ImpNeto. Esta validación no deberá ser tenida en cuenta, cuando el <CbteTipo> sea 02, 03, 07, 08. Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01 * cantidad de alícuotas de IVA ingresadas *"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1411,
+   "kind": "Observacion",
+   "field": "FchVtoPago",
+   "manualText": "Debe ser mayor o igual a la fecha del comprobante."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 729,
+   "kind": "Observacion",
+   "field": "FchVtoPago",
+   "manualText": "Debe informarse solo si <Concepto> es igual a 2 ó 3. En otro caso no corresponde."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1412,
+   "kind": "Observacion",
+   "field": "<FchServDesde>/ <FchServHasta>",
+   "manualText": "<FchServDesde> no puede ser posterior al campo <FchServHasta>."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1406,
+   "kind": "Observacion",
+   "field": "<ImpTrib>",
+   "manualText": "Debe ser igual a la sumatoria de la totalidad de los campos <Importe> (dentro de <Tributos>). Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01 * cantidad de tributos *"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1424,
+   "kind": "Observacion",
+   "field": "CAEA / <PtoVta>",
+   "manualText": "El CAEA y punto de venta no debe estar informado sin movimientos."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1425,
+   "kind": "Observacion",
+   "field": "<ImpTrib> <DocTipo><DocNro>",
+   "manualText": "Falta informar en la sección Otros Tributos el tributo con ID = 13 – Percepción de IVA No Categorizado según la RG 2126/2006. Si <CbteTipo> es igual a 6, 7 u 8, <DocTipo> es 80 (CUIT), <DocNro> es 23000000000 (No Categorizado), la suma de ImpNeto + ImpIVA es mayor a 0 (cero), y el campo ImpTrib = 0, debe informar el ID “13 – Percepción de IVA No Categorizado“ en el array de tributos con un importe mayor a 0 (cero)"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1413,
+   "kind": "Observacion",
+   "field": "<FchServDesde>/ <FchServHasta>/ <FchVtoPago>",
+   "manualText": "Si se informan deben tener el siguiente formato yyyymmdd."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1427,
+   "kind": "Observacion",
+   "field": "<ImpNeto>/ <Iva>.<AlicIva>",
+   "manualText": "Si ImpNeto es mayor a 0, el objeto AlicIva es obligatorio y no debe ser nulo."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1429,
+   "kind": "Observacion",
+   "field": "<Auth><Cuit> / <CbteTipo> / <CbteFch>",
+   "manualText": "No se encuentra habilitado a emitir comprobantes “A” a la fecha de emisión del comprobante. El comprobante queda observado."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1431,
+   "kind": "Observacion",
+   "field": "<Auth><Cuit> / <CbteTipo> / <CbteFch>",
+   "manualText": "Al momento de emitir el comprobante, debe estar dado de alta en el Impuesto."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1442,
+   "kind": "Observacion",
+   "field": "<CbteFchHsGen>",
+   "manualText": "Si el punto de venta informado no es para CONTINGENCIA no informar el campo <CbteFchHsGen>"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1445,
+   "kind": "Observacion",
+   "field": "<CbteFch>/ <CbteFchHsGen>/ <Concepto>",
+   "manualText": "El campo <CbteFch> podrá estar comprendido en el rango N-5 y N+5 siendo N la fecha CbteFchHsGen (contingencia) para Concepto= 01 Productos. - Para Concepto 02, 03 el campo CbteFch debe estar comprendido en el rango N-10 y N+10 siendo N la fecha CbteFchHsGen (contingencia)."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1485,
+   "kind": "Observacion",
+   "field": "<Auth><Cuit>/ <FeCabReq><CbteTipo>/ <FECAEDetRequest><DocNro>/ <FECAEDetRequest><ImpTotal> / <FECAEDetRequest><MonCotiz> / Tope",
+   "manualText": "Según la categorización de las CUITs emisora y receptora y el monto facturado debe realizar una factura de crédito electrónica MiPyMEs (FCE). Ver micrositio."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1489,
+   "kind": "Observacion",
+   "field": "<DocTipo>/ <DocNro>/",
+   "manualText": "Si el tipo de documento del receptor del comprobante que está autorizando es CUIT (código Tipo de Documento 80) y la CUIT se encuentra inactiva por haber sido incluida en la consulta de facturas apócrifas, no podrá computarse el crédito fiscal."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1500,
+   "kind": "Observacion",
+   "field": "<FECAEADetRequest><Tributos><Id>/ <FECAEADetRequest><PeriodoAsoc><FchDesde>/ <FECAEADetRequest><PeriodoAsoc><FchHasta>",
+   "manualText": "Si en la estructura Tributos informa percepciones, PeriodoAsoc.FchDesde y PeriodoAsoc.FchHasta deben corresponder al mismo Mes/Anio"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1501,
+   "kind": "Observacion",
+   "field": "<FECAEADetRequest><CbteFch>/ <FECAEADetRequest><CbtesAsoc><CbteFch>",
+   "manualText": "Si el comprobante asociado se autorizó de forma electrónica y tiene una fecha de emisión posterior a la fecha de emisión del comprobante por el cual se está solicitando la autorización, ambos deberán ser del mismo mes/año."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 1516,
+   "kind": "Observacion",
+   "field": "<CbteTipo> / <DocNro>",
+   "manualText": "Para comprobantes Clase “A” y “A con leyenda operación sujeta a retención”, donde el receptor del comprobante informado en <DocTipo> y <DocNro> se encuentra activo en el Impuesto Responsable Monotributo, “El crédito fiscal discriminado en el presente comprobante solo podrá ser computado a efectos del Procedimiento permanente de transición al Régimen General.”"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 814,
+   "kind": "Observacion",
+   "field": "<CbteTipo> / <DocNro>",
+   "manualText": "Para comprobantes Clase “A” y “A con leyenda operación sujeta a retención”, se ha detectado que esta pendiente de presentación el formulario de habilitación de comprobantes o su fecha de presentación es anterior a la fecha de alta en IVA. Para el caso que el comprobante no sea una Nota de Crédito, se debe proceder a anular la operación clase “A” y “A con leyenda operación sujeta a retención” emitida, mediante una Nota de Crédito."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 815,
+   "kind": "Observacion",
+   "field": "<CbteTipo> / <DocNro> / <FECAEADetRequest><CbteFch>/",
+   "manualText": "A la fecha de emisión del comprobante, no te encontrabas habilitado a la emisión de comprobantes clase “A” / “A con leyenda operación sujeta a retención”. Tenés que proceder a emitir la Nota de Crédito, o anular la operación, según corresponda."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 816,
+   "kind": "Observacion",
+   "field": "<CbteTipo> / <DocNro> / <FECAEADetRequest> / ImpTotal",
+   "manualText": "El monto total del comprobante emitido, excede el límite establecido para la categoría máxima de Monotributo. Por tal motivo, quedarías excluido automáticamente teniendo que solicitar el alta de los tributos (impositivos y de los recursos de la seguridad social) en el régimen general de acuerdo con tu actividad."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 817,
+   "kind": "Observacion",
+   "field": "<CbteTipo> / <DocNro> / <FECAEADetRequest> / ImpTotal",
+   "manualText": "El monto del comprobante emitido, excede el límite establecido para su categoría de Monotributo. Tenelo en cuenta para la próxima recategorización."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 818,
+   "kind": "Observacion",
+   "field": "<FECAEADetRequest> / ImpTotal / <CbteAsoc>",
+   "manualText": "El importe de la nota de crédito supera el monto del comprobante asociado que estás ajustando. Verificá los montos ingresados y de tratarse de un error, tenés que efectuar el ajuste o anulación de la operación según corresponda."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 819,
+   "kind": "Observacion",
+   "field": "<FECAEADetRequest> / <DocNro>",
+   "manualText": "La CUIT receptora ingresada no existe."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 821,
+   "kind": "Observacion",
+   "field": "<FECAEADetRequest> / <CanMisMonExt>",
+   "manualText": "Si informa el campo MonCotiz, el mismo no podrá superar en 1 a la cotizacion oficial. Ver Método FEParamGetCotizacion."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 822,
+   "kind": "Observacion",
+   "field": "<FECAEADetRequest> / <CanMisMonExt>",
+   "manualText": "Si informa MonId = PES, el campo CanMisMonExt no debe informarse o informarse con el valor N."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 824,
+   "kind": "Observacion",
+   "field": "<FECAEADetRequest> / <CondicionIVAReceptorId>",
+   "manualText": "El campo de identificación de Condición de IVA del receptor no es valido para la clase de comprobante informado. Para mas detalle consultar el Método: FEParamGetCondicionIvaReceptor"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 825,
+   "kind": "Observacion",
+   "field": "<FECAEADetRequest> / <CondicionIVAReceptorId>",
+   "manualText": "El campo Condición Frente al IVA del receptor resultará obligatorio conforme lo reglamentado por la Resolución General N° 5616. Para mas información consular método FEParamGetCondicionIvaReceptor."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 827,
+   "kind": "Observacion",
+   "field": "<FECAEADetRequest> / <DocNro>",
+   "manualText": "La CUIT receptora informada está inactiva o es inválida. Se bebe emitir una Nota de Crédito o anular la operación, según corresponda."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 828,
+   "kind": "Observacion",
+   "field": "<FECAEADetRequest> / <DocNro>",
+   "manualText": "La CUIT receptora se encuentra limitada por haber sido caracterizada como sujeto no confiable en materia de Seguridad Social. Se bebe emitir una Nota de Crédito o anular la operación, según corresponda."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <FECAEADetRequest>",
+   "code": 829,
+   "kind": "Observacion",
+   "field": "<FECAEADetRequest> / <DocNro>",
+   "manualText": "El número de documento informado para el sujeto receptor corresponde a un sujeto fallecido, sin sucesión indivisa registrada. Se debe emitir una Nota de Crédito o anular la operación, según corresponda."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <CbtesAsoc>",
+   "code": 800,
+   "kind": "Rechazo",
+   "field": "CbtesAsoc",
+   "manualText": "Si envía CbtesAsoc, CbteAsoc es obligatorio y no debe estar vacío."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <CbtesAsoc>",
+   "code": 802,
+   "kind": "Rechazo",
+   "field": "PtoVta",
+   "manualText": "De enviarse el tag CbtesAsoc, CbteAsoc debe enviarse con PtoVta mayor a 0 y < a 99999"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <CbtesAsoc>",
+   "code": 803,
+   "kind": "Rechazo",
+   "field": "Nro",
+   "manualText": "De enviarse el tag CbtesAsoc, CbteAsoc debe enviarse con Nro mayor a 0 y menor a 99999999"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <CbtesAsoc>",
+   "code": 804,
+   "kind": "Rechazo",
+   "field": "Tipo / PtoVta / Nro",
+   "manualText": "Los comprobantes informados no podrán repetirse."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <CbtesAsoc>",
+   "code": 805,
+   "kind": "Rechazo",
+   "field": "Tipo",
+   "manualText": "De enviarse el tag CbtesAsoc, CbteAsoc debe enviarse con Tipo mayor a 0"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <CbtesAsoc>",
+   "code": 807,
+   "kind": "Rechazo",
+   "field": "CbteTipo / CbtesAsoc",
+   "manualText": "CbtesAsoc es opcional, solamente podrá informarse si CbteTipo es igual a 1, 2, 3, 6, 7, 8, 12, 13, 51, 52, 53, 63, 64, 201, 202, 203, 206, 207, 208, 211, 212, 213."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <CbtesAsoc>",
+   "code": 808,
+   "kind": "Rechazo",
+   "field": "<CbteAsoc><Cuit>",
+   "manualText": "Si informa Cuit en comprobantes asociados, no informar en blanco, el mismo debe ser un valor de 11 caracteres numericos. Para comprobante del tipo MiPyMEs (FCE) del tipo débito o crédito es obligatorio informar el campo."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <CbtesAsoc>",
+   "code": 812,
+   "kind": "Rechazo",
+   "field": "CbteTipo / CbtesAsoc",
+   "manualText": "Para comprobantes MiPyMEs (FCE) 201, 206 o 211 puede asociarse los comprobantes (91, 990, 991, 993, 994, 995). Para comprobantes MiPyMEs (FCE) A 202 y 203, puede asociar 201,202 o 203. Para comprobantes MiPyMEs (FCE) B 207, 208 puede asociar 206, 207, 208. Para comprobantes MiPyMEs (FCE) C 212, 213 puede asociarse 211, 212, 213."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <CbtesAsoc>",
+   "code": 813,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Id>",
+   "manualText": "Si intenta informar datos opcionales según Resolución General, recordar que en un mismo comprobante solo puede informar identificadores opcionales para solo 1 resolución por comprobante."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <CbtesAsoc>",
+   "code": 806,
+   "kind": "Observacion",
+   "field": "Tipo",
+   "manualText": "Obligatorio. Deberá ser igual a 1, 2, 3, 04, 05, 34, 39, 60, 63, 88 o 991 si el tipo de comprobante que se informa es igual a 2 ó 3. Deberá ser igual a 6, 7, 8, 09, 10, 35, 40, 61, 64 ,88 o 991 si el tipo de comprobante que se informa es igual a 7 ú 8. Deberá ser igual a 11, 12, 13, 15 si el tipo de comprobante que informa es igual a 12 o 13 Deberá ser igual a 51, 52, 53, 54 si el tipo de comprobante que se informa es igual a 52 o 53. Deberá ser 91, 88, 988, 990, 991, 993, 994, 995, 996, 997 si el tipo de comprobante que se informa es 1, 6 o 51"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <CbtesAsoc>",
+   "code": 801,
+   "kind": "Observacion",
+   "field": "Tipo/ PtoVta / Nro",
+   "manualText": "Si el punto de venta del comprobante asociado (campo PtoVta de CbtesAsoc) es electrónico, el número de comprobante debe obrar en las bases del organismo para el punto de venta y tipo de comprobante informado."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <CbtesAsoc>",
+   "code": 809,
+   "kind": "Observacion",
+   "field": "<CbteAsoc><Tipo> / <CbteAsoc><PtoVta> / <CbteAsoc><Nro>",
+   "manualText": "Si informa comprobantes asociados, y sus códigos son 91, 88, 988, 990, 991, 993, 994, 995, 996, 997, los mismos deben encontrarse registrados."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <CbtesAsoc>",
+   "code": 810,
+   "kind": "Observacion",
+   "field": "<CbteAsoc><Tipo> / <CbteAsoc><PtoVta> / <CbteAsoc><Nro>",
+   "manualText": "Si informa comprobantes asociados, y sus códigos son 91, 88, 988, 990, 991, 993, 994, 995, 996, 997, los mismos deben encontrarse confirmados."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Verificaciones que se realizan sobre el elemento <CbtesAsoc>",
+   "code": 811,
+   "kind": "Observacion",
+   "field": "<DocTipo> / <DocNro> <CbteAsoc><Cuit>",
+   "manualText": "Si informa comprobantes asociados y sus códigos son 91, 88, 988, 990, 991, 993, 994, 995, 996, 997, el receptor del comprobante debe ser igual al receptor del comprobante asociado."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Tributo>",
+   "code": 900,
+   "kind": "Rechazo",
+   "field": "Id",
+   "manualText": "Obligatorio. Valores permitidos: consultar método FEParamGetTiposTributos"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Tributo>",
+   "code": 908,
+   "kind": "Rechazo",
+   "field": "Desc",
+   "manualText": "Opcional. Debe informarse si <codigo> es igual a 99."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Tributo>",
+   "code": 907,
+   "kind": "Rechazo",
+   "field": "Importe",
+   "manualText": "El valor informado debe ser mayor o igual a 0. El campo Importe de Tributos soporta 13 números para la parte entera y 2 para los decimales."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Tributo>",
+   "code": 905,
+   "kind": "Rechazo",
+   "field": "BaseImp",
+   "manualText": "El campo BaseImp en Tributo es obligatorio, mayor o igual 0 cero. El campo BaseImp de Tributos soporta 13 números para la parte entera y 2 para los decimales."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Tributo>",
+   "code": 906,
+   "kind": "Rechazo",
+   "field": "Alic",
+   "manualText": "El campo Alic en Tributo es obligatorio, mayor o igual 0 cero. El campo Alic de Tributos soporta 3 números para la parte entera y 2 para los decimales."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <IVA>",
+   "code": 1000,
+   "kind": "Rechazo",
+   "field": "Id",
+   "manualText": "Consultar el método FEParamGetTiposIva. Es opcional para comprobantes 2, 3, 7, 8."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <IVA>",
+   "code": 1003,
+   "kind": "Rechazo",
+   "field": "Id",
+   "manualText": "El campo Id en AlicIVA no debe repetirse. Deberá totalizarse por alícuota."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <IVA>",
+   "code": 1008,
+   "kind": "Rechazo",
+   "field": "Importe",
+   "manualText": "El campo Importe en AlicIVA es obligatorio , mayor o igual 0 cero. El campo Importe de AlicIva soporta 13 números para la parte entera y 2 para los decimales."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <IVA>",
+   "code": 1009,
+   "kind": "Rechazo",
+   "field": "BaseImp",
+   "manualText": "El campo BaseImp en AlicIVA es obligatorio y debe ser mayor a 0 cero. Excepto para comprobantes 2, 3, 7, 8 que puede ser cero o no ser informado. El campo BaseImp de AlicIva soporta 13 números para la parte entera y 2 para los decimales."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <IVA>",
+   "code": 1006,
+   "kind": "Observacion",
+   "field": "Importe / AlicIva / BaseImp",
+   "manualText": "Los importes informados en AlicIVA no se corresponden con los porcentajes. Excepto para comprobantes 2, 3, 7, 8 que puede ser cero o no ser informado. Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01"
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Opcionales>",
+   "code": 1100,
+   "kind": "Rechazo",
+   "field": "Id",
+   "manualText": "El campo Id en Opcionales es obligatorio y debe ser igual a 2 (Régimen de Promoción Industrial)."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Opcionales>",
+   "code": 1101,
+   "kind": "Rechazo",
+   "field": "Id",
+   "manualText": "El campo Id en Opcionales es obligatorio y no debe repetirse."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Opcionales>",
+   "code": 1105,
+   "kind": "Rechazo",
+   "field": "Valor",
+   "manualText": "El campo Valor en Opcionales es obligatorio."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Opcionales>",
+   "code": 1103,
+   "kind": "Rechazo",
+   "field": "<Opcionales><Opcional><Id><Valor>",
+   "manualText": "Si envía Opcionales, Opcional, Id y Valor son obligatorios."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Opcionales>",
+   "code": 1104,
+   "kind": "Rechazo",
+   "field": "Valor",
+   "manualText": "Si selecciona Id = 2 el valor ingresado debe ser un numérico de 8 (ocho) dígitos mayor o igual a 0 (cero)."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Opcionales>",
+   "code": 1106,
+   "kind": "Observacion",
+   "field": "Valor",
+   "manualText": "Si Id = 2 y el comprobante corresponde a una actividad alcanzada por el beneficio de Promoción Industrial en el campo <Valor> se deberá informar el número identificatorio del proyecto (el mismo deberá corresponder a la cuit emisora del comprobante), si no corresponde a una actividad alcanzada por el beneficio el campo <Valor> deberá ser 0 (cero)."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Actividades>",
+   "code": 16000,
+   "kind": "Rechazo",
+   "field": "<FeCAEARegInfReq><Actividades><Actividad>",
+   "manualText": "Si envía estructura de Actividades, Actividad es obligatorio enviarlo."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Actividades>",
+   "code": 16001,
+   "kind": "Rechazo",
+   "field": "<FeCAEARegInfReq><Actividades><Actividad><Id>",
+   "manualText": "Si envía estructura de Actividades, Actividad es obligatorio enviarlo y no debe estar vacío."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Actividades>",
+   "code": 16002,
+   "kind": "Rechazo",
+   "field": "<FeCAEARegInfReq><Actividades><Actividad><Id>",
+   "manualText": "El identificador de actividad informado tiene que ser una de las actividades habilitadas. Consultar método FEParamGetActividades."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Actividades>",
+   "code": 16003,
+   "kind": "Rechazo",
+   "field": "<FeCAEARegInfReq><Actividades><Actividad><Id>",
+   "manualText": "De enviarse el tag Actividades, las actividades no deben repetirse."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Actividades>",
+   "code": 16004,
+   "kind": "Rechazo",
+   "field": "<FeCAEARegInfReq><Actividades><Actividad><Id>",
+   "manualText": "De enviarse actividades, las mismas no deben corresponder a distintos grupos según RG. Es decir, si informa actividades Cárnicas, no pueden estar combinadas con actividades Harineras, de Tabaco, etc."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Actividades>",
+   "code": 16005,
+   "kind": "Rechazo",
+   "field": "<FeCAEARegInfReq><Actividades><Actividad><Id>",
+   "manualText": "De enviarse actividades, las mismas deben encontrarse activas para el emisor del comprobante. Ver método FEParamGetActividades."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Actividades>",
+   "code": 16006,
+   "kind": "Rechazo",
+   "field": "<FeCAEARegInfReq><Actividades><Actividad><Id> / <Concepto>",
+   "manualText": "De enviarse actividades pertenecientes al grupo de actividades Cárnicas, las mismas deben enviarse con comprobantes con Concepto del tipo Producto o Productos y Servicios."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Actividades> y <CbtesAsoc>",
+   "code": 16007,
+   "kind": "Rechazo",
+   "field": "<FeCAEARegInfReq><Actividades><Actividad><Id> /<CbtesAsoc><CbteAsoc><Tipo>",
+   "manualText": "Si las actividades informadas corresponden a actividades Cárnicas, informar remito asociado 995 - Remito Electrónico Cárnico."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Actividades> y <CbtesAsoc>",
+   "code": 16008,
+   "kind": "Rechazo",
+   "field": "<FeCAEARegInfReq><Actividades><Actividad><Id> /<CbtesAsoc><CbteAsoc><Tipo>",
+   "manualText": "Si las actividades informadas corresponden a actividades Harinas, informar remito asociado 993 - Remito Electrónico Harinero - Automotor o 994 - Remito Electrónico Harinero - Ferroviario."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Actividades> y <CbtesAsoc>",
+   "code": 16009,
+   "kind": "Rechazo",
+   "field": "<FeCAEARegInfReq><Actividades><Actividad><Id> /<CbtesAsoc><CbteAsoc><Tipo>",
+   "manualText": "Si las actividades informadas corresponden a actividades Tabaco en Hebras, informar remito asociado 88 - Remito Electrónico de Tabaco Acondicionado."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Actividades> y <CbtesAsoc>",
+   "code": 16010,
+   "kind": "Rechazo",
+   "field": "<FeCAEARegInfReq><Actividades><Actividad><Id> /<CbtesAsoc><CbteAsoc><Tipo>",
+   "manualText": "Si informa remito 995 - Remito Electrónico Cárnico, es obligatorio informar una actividad Cárnica."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Actividades> y <CbtesAsoc>",
+   "code": 16011,
+   "kind": "Rechazo",
+   "field": "<FeCAEARegInfReq><Actividades><Actividad><Id> /<CbtesAsoc><CbteAsoc><Tipo>",
+   "manualText": "Si informa remito 993 - Remito Electrónico Harinero - Automotor o 994 - Remito Electrónico Harinero – Ferroviario, es obligatgorio informar una actividad Harinera."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Actividades> y <CbtesAsoc>",
+   "code": 16012,
+   "kind": "Rechazo",
+   "field": "<FeCAEARegInfReq><Actividades><Actividad><Id> /<CbtesAsoc><CbteAsoc><Tipo>",
+   "manualText": "Si informa remito 88 - Remito Electrónico de Tabaco Acondicionado., es obligatorio informar una actividad correspondiente a Tabaco Acondicionado."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Actividades> y <CbtesAsoc>",
+   "code": 16013,
+   "kind": "Rechazo",
+   "field": "<FeCAEARegInfReq><Actividades><Actividad><Id> /<CbtesAsoc><CbteAsoc",
+   "manualText": "Si informa actividades indicadas en la RG, es obligatorio informar comprobantes asociados."
+  },
+  {
+   "method": "FECAEARegInformativo",
+   "group": "Controles que se realizan sobre el elemento <Actividades> y <CbtesAsoc>",
+   "code": 16014,
+   "kind": "Rechazo",
+   "field": "<CbteAsoc><Tipo> / <CbteAsoc><PtoVta> / <CbteAsoc><Nro>",
+   "manualText": "Si informa comprobantes asociados, y sus códigos corresponden a 91, 88, 988, 990, 991, 993, 994, 995, 996, 997, los mismos no deben encontrarse asociado a otro comprobante."
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15000,
+   "kind": "Rechazo",
+   "field": "<Cuit>",
+   "manualText": "Campo CUIT: Debe encontrarse activa en el Sistema Registral."
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15001,
+   "kind": "Rechazo",
+   "field": "<Cuit>",
+   "manualText": "Campo CUIT: Deberá estar registrado como Autoimpresor. Se informa que esta validación quedará fuera de vigencia a partir del 01/06/2026."
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15003,
+   "kind": "Rechazo",
+   "field": "<Cuit>",
+   "manualText": "Campo CUIT: Deberá poseer al menos un punto de venta activo correspondiente al régimen CAEA"
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15004,
+   "kind": "Rechazo",
+   "field": "<Periodo>",
+   "manualText": "Campo Periodo: Debe tener el formato AAAAMM, donde AAAA indica el año y MM el mes en números."
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15005,
+   "kind": "Rechazo",
+   "field": "<Orden>",
+   "manualText": "Campo Orden: Debe ser igual a 1 ó 2."
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15006,
+   "kind": "Rechazo",
+   "field": "Fecha de envío",
+   "manualText": "Al momento de solicitar CAEA, la fecha de envío podrá ser desde 5 (cinco) días corridos anteriores al inicio de cada quincena hasta el último día de la misma quincena."
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15008,
+   "kind": "Rechazo",
+   "field": "<Periodo> / <Orden>",
+   "manualText": "No debe existir un CAEA otorgado para la CUIT solicitante con igual periodo y orden."
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15009,
+   "kind": "Rechazo",
+   "field": "<Cuit>",
+   "manualText": "Campo CUIT: Registra problemas de domicilio"
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15010,
+   "kind": "Rechazo",
+   "field": "<Cuit>",
+   "manualText": "Campo CUIT: Deberá estar inscripto en alguno de los sig. impuestos: 20 - MONOTRIBUTO 30 - IVA 32 - IVA EXENTO"
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15011,
+   "kind": "Rechazo",
+   "field": "<Cuit>",
+   "manualText": "Campo CUIT: Deberá tener al menos una actividad económica declarada"
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15012,
+   "kind": "Rechazo",
+   "field": "<Cuit>",
+   "manualText": "Campo CUIT: Deberá estar empadronado en el régimen de emisión de comprobantes electrónicos"
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15016,
+   "kind": "Rechazo",
+   "field": "<Cuit>",
+   "manualText": "Se recuerda que según la RG 5782/2025 el régimen de CAEA se aplica exclusivamente a situaciones de contingencia, motivo por el cual solo se permitirá su uso en domicilios que cuenten con al menos un punto de venta activo bajo la modalidad CAE o Controlador Fiscal de Nueva Tecnología como modalidad principal."
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15014,
+   "kind": "Observacion",
+   "field": "<Cuit>/ <Periodo> / <Orden>",
+   "manualText": "El contribuyente registra incumplimientos en la rendición del régimen CAEA. La CUIT adeuda la presentación de 2 quincenas consecutivas o 4 alternadas. Retornará el listado de las rendiciones pendientes con el siguiente formato \"periodo;orden;puntoVenta\"."
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15015,
+   "kind": "Observacion",
+   "field": "<Cuit>",
+   "manualText": "Campo CUIT: Registra problemas en el domicilio fiscal electrónico. No se encuentra adherido."
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15017,
+   "kind": "Observacion",
+   "field": "<Cuit>",
+   "manualText": "Existen Puntos de Venta CAEA que no comparten domicilio con algún Punto de Venta CAE o Controlador Fiscal que actúe como modalidad principal. Se detallara un listado de puntos de venta CAEA sin vinculación con un domicilio de factura electrónica (CAE o Controlador Fiscal de Nueva Tecnología)."
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 15018,
+   "kind": "Observacion",
+   "field": "<Cuit> / CbteFchHsGen",
+   "manualText": "Se recuerda que según la RG 5782/2025 el régimen de CAEA resulta aplicable exclusivamente como modalidad de emisión ante contingencias y las operaciones realizadas deberán ser informadas, con indicación de la fecha y hora de generación de los comprobantes emitidos."
+  },
+  {
+   "method": "FECAEASolicitar",
+   "group": "Controles aplicados al elemento <FeCAEAReq>",
+   "code": 1527,
+   "kind": "Observacion",
+   "field": "<DocTipo> / <DocNro> / <Tributo>",
+   "manualText": "Falta informar en la sección Otros Tributos el tributo con ID = 13 – Percepción de IVA No Categorizado según la RG 2126/2006. Si <CbteTipo> es igual a 6, 7 u 8, <DocTipo> es 80 (CUIT), <DocNro> es 23000000000 (No Categorizado), la suma de ImpNeto + ImpIVA es mayor a 0 (cero), y el campo ImpTrib > 0, debe informar el ID “13 – Percepción de IVA No Categorizado“ en el array de tributos con un importe mayor a 0 (cero)"
+  },
+  {
+   "method": "FECAEAConsultar",
+   "group": "Controles aplicados al objeto <FECAEAConsultar>",
+   "code": 15004,
+   "kind": "Rechazo",
+   "field": "<Periodo>",
+   "manualText": "El valor indicado en el campo <Periodo> es obligatorio.. Debe tener formato AAAAMM, donde AAAA indica el año y MM el mes en números."
+  },
+  {
+   "method": "FECAEAConsultar",
+   "group": "Controles aplicados al objeto <FECAEAConsultar>",
+   "code": 15005,
+   "kind": "Rechazo",
+   "field": "<Orden>",
+   "manualText": "El valor indicado en el campo <Orden> es obligatorio. Valores permitidos 1 o 2."
+  },
+  {
+   "method": "FECAEASinMovimientoInformar",
+   "group": "Controles aplicados",
+   "code": 1200,
+   "kind": "Rechazo",
+   "field": "<CAEA>",
+   "manualText": "El código de CAEA que se está informando debe ser del tipo de código de autorización CAEA"
+  },
+  {
+   "method": "FECAEASinMovimientoInformar",
+   "group": "Controles aplicados",
+   "code": 1201,
+   "kind": "Rechazo",
+   "field": "<CUIT>",
+   "manualText": "Corresponda a la CUIT del Emisor indicada en <Auth><Cuit>"
+  },
+  {
+   "method": "FECAEASinMovimientoInformar",
+   "group": "Controles aplicados",
+   "code": 1202,
+   "kind": "Rechazo",
+   "field": "<CAEA> / <PtoVta>",
+   "manualText": "Que el CAEA / PtoVta no esté informado como utilizado en algún comprobante"
+  },
+  {
+   "method": "FECAEASinMovimientoInformar",
+   "group": "Controles aplicados",
+   "code": 1203,
+   "kind": "Rechazo",
+   "field": "Fecha de envío de la solicitud",
+   "manualText": "La fecha de envío de la solicitud debe ser mayor a la fecha de inicio de vigencia del CAEA que se está informando."
+  },
+  {
+   "method": "FECAEASinMovimientoInformar",
+   "group": "Controles aplicados",
+   "code": 1204,
+   "kind": "Rechazo",
+   "field": "<PtoVta>",
+   "manualText": "El PtoVta debe corresponder a un punto de venta habilitado para el régimen CAEA"
+  },
+  {
+   "method": "FECAEASinMovimientoInformar",
+   "group": "Controles aplicados",
+   "code": 1205,
+   "kind": "Rechazo",
+   "field": "<PtoVta>",
+   "manualText": "El punto de venta deberá haber estado activo durante la vigencia del CAEA"
+  },
+  {
+   "method": "FECAEASinMovimientoInformar",
+   "group": "Controles aplicados",
+   "code": 1206,
+   "kind": "Rechazo",
+   "field": "<PtoVta>",
+   "manualText": "El punto de venta deberá haber estar comprendido entre 1 y 99998"
+  },
+  {
+   "method": "FECAEASinMovimientoInformar",
+   "group": "Controles aplicados",
+   "code": 1207,
+   "kind": "Rechazo",
+   "field": "<CAEA>",
+   "manualText": "CAEA y formato válido"
+  },
+  {
+   "method": "FECAEASinMovimientoInformar",
+   "group": "Controles aplicados",
+   "code": 1209,
+   "kind": "Rechazo",
+   "field": "PtoVta",
+   "manualText": "El punto de venta informado como sin movimiento ya fue notificado"
+  },
+  {
+   "method": "FECAEASinMovimientoConsultar",
+   "group": "Controles aplicados",
+   "code": 10100,
+   "kind": "Rechazo",
+   "field": "CAEA",
+   "manualText": "No ingreso el CAEA o el formato es inválido."
+  },
+  {
+   "method": "FECAEASinMovimientoConsultar",
+   "group": "Controles aplicados",
+   "code": 10101,
+   "kind": "Rechazo",
+   "field": "PtoVta",
+   "manualText": "No ingreso el Punto de Venta o el formato es inválido."
+  },
+  {
+   "method": "FECAEASinMovimientoConsultar",
+   "group": "Controles aplicados",
+   "code": 10102,
+   "kind": "Rechazo",
+   "field": "CAEA",
+   "manualText": "El CAEA informado no se encuentra registrado en las bases de la Administración como sin movimientos."
+  },
+  {
+   "method": "FECAEASinMovimientoConsultar",
+   "group": "Controles aplicados",
+   "code": 10105,
+   "kind": "Rechazo",
+   "field": "CAEA / PtoVta",
+   "manualText": "El punto de venta ingresado registra comprobantes informados"
+  },
+  {
+   "method": "FECompUltimoAutorizado",
+   "group": "Controles aplicados",
+   "code": 11000,
+   "kind": "Rechazo",
+   "field": "<PtoVta>",
+   "manualText": "El PtoVta debe ser válido comprendido entre 1 y 99998"
+  },
+  {
+   "method": "FECompUltimoAutorizado",
+   "group": "Controles aplicados",
+   "code": 11001,
+   "kind": "Rechazo",
+   "field": "<CbteTipo>",
+   "manualText": "Debe de ser algunos de los habilitados en este WS. Consultar método FEParamGetTiposCbte"
+  },
+  {
+   "method": "FECompUltimoAutorizado",
+   "group": "Controles aplicados",
+   "code": 11002,
+   "kind": "Rechazo",
+   "field": "<PtoVta>",
+   "manualText": "Debe ser un punto de venta habilitado en este WS. Consultar método FEParamGetPtosVenta"
+  },
+  {
+   "method": "FECompConsultar",
+   "group": "Controles aplicados",
+   "code": 10200,
+   "kind": "Rechazo",
+   "field": "PtoVta",
+   "manualText": "No ingreso el Punto de Venta o el formato es inválido."
+  },
+  {
+   "method": "FECompConsultar",
+   "group": "Controles aplicados",
+   "code": 10201,
+   "kind": "Rechazo",
+   "field": "CbteTipo",
+   "manualText": "No ingreso el Tipo de Comprobante, o el tipo de comprobante es inválido."
+  },
+  {
+   "method": "FECompConsultar",
+   "group": "Controles aplicados",
+   "code": 10104,
+   "kind": "Rechazo",
+   "field": "PtoVta",
+   "manualText": "El punto de venta ingresado no se encuentra registrado."
+  },
+  {
+   "method": "FECompConsultar",
+   "group": "Controles aplicados",
+   "code": 10202,
+   "kind": "Rechazo",
+   "field": "CbteNro",
+   "manualText": "No ingreso el número de comprobante o el formato es inválido."
+  },
+  {
+   "method": "FEParamGetCotizacion",
+   "group": "Validaciones que se aplican sobre el objeto <FEParamGetCotizacion>",
+   "code": 12000,
+   "kind": "Rechazo",
+   "field": "MonId",
+   "manualText": "Campo <MonId> debe ser algunos de los habilitados en el presente WS. Para consultar los valores posible utilizar el método FEParamGetTiposMonedas"
+  },
+  {
+   "method": "FEParamGetCotizacion",
+   "group": "Validaciones que se aplican sobre el objeto <FEParamGetCotizacion>",
+   "code": 12001,
+   "kind": "Rechazo",
+   "field": "MonId",
+   "manualText": "Campo <MonId> es obligatorio ingresarlo."
+  },
+  {
+   "method": "FEParamGetCotizacion",
+   "group": "Validaciones que se aplican sobre el objeto <FEParamGetCotizacion>",
+   "code": 12002,
+   "kind": "Rechazo",
+   "field": "FchCotiz",
+   "manualText": "Campo FchCotiz No corresponde a una fecha valida con formato YYYYMMDD"
+  },
+  {
+   "method": "FEParamGetCondicionIvaReceptor",
+   "group": "Validaciones que se aplican sobre el objeto <FEParamGetCondicionIvaReceptor>",
+   "code": 10244,
+   "kind": "Rechazo",
+   "field": "Cmp_Clase",
+   "manualText": "El valor del campo <Cmp_Clase> ingresado para la clase de comprobante no es valido. La clase de Comprobante es opcional, de ingresar un valor solo puede ser A, B, C, ALEY (A con leyenda ‘operación sujeta a retención’) o 49 (Bienes Usados),"
+  }
+ ]
+}

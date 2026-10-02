@@ -1,0 +1,6 @@
+.git
+**/bin
+**/obj
+src/ArcaSim.Api/data
+tests
+.config

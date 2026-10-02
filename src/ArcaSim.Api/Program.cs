@@ -1,0 +1,85 @@
+using System.Text.Json.Serialization;
+using ArcaSim.Api.Admin;
+using ArcaSim.Api.Soap;
+using ArcaSim.Application;
+using ArcaSim.Application.Wsaa;
+using ArcaSim.Application.Wsfe;
+using ArcaSim.Domain;
+using ArcaSim.Infrastructure.InMemory;
+using ArcaSim.Infrastructure.Postgres;
+using ArcaSim.Infrastructure.Security;
+using Npgsql;
+
+var builder = WebApplication.CreateBuilder(args);
+var options = builder.Configuration.GetSection("ArcaSim");
+
+builder.Services.ConfigureHttpJsonOptions(json => json.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<SimulatedClock>();
+builder.Services.AddSingleton<IClock>(sp => sp.GetRequiredService<SimulatedClock>());
+builder.Services.AddSingleton(_ => new SimulationSettings
+{
+    Environment = options.GetValue("Environment", ArcaEnvironment.Homologacion),
+    ReplayWindowEnabled = options.GetValue("ReplayWindowEnabled", true),
+});
+
+var dataDirectory = options["DataDirectory"] ?? Path.Combine(builder.Environment.ContentRootPath, "data");
+builder.Services.AddSingleton(_ => new KeyMaterial(Path.Combine(dataDirectory, "keys")));
+builder.Services.AddSingleton<ITrustStore>(sp => sp.GetRequiredService<KeyMaterial>());
+builder.Services.AddSingleton<ITokenSigner>(sp => sp.GetRequiredService<KeyMaterial>());
+
+// Memory for an application's tests (starts in milliseconds, gone with the process);
+// Postgres for an ArcaSim several developers or a CI share.
+if (string.Equals(options["Storage"], "Postgres", StringComparison.OrdinalIgnoreCase))
+{
+    var connection = builder.Configuration.GetConnectionString("ArcaSim")
+        ?? throw new InvalidOperationException("ArcaSim:Storage is Postgres but ConnectionStrings:ArcaSim is missing.");
+    builder.Services.AddSingleton(_ => NpgsqlDataSource.Create(connection));
+    builder.Services.AddSingleton<PostgresStore>();
+    AddStore<PostgresStore>(builder.Services);
+}
+else
+{
+    builder.Services.AddSingleton<InMemoryStore>();
+    AddStore<InMemoryStore>(builder.Services);
+}
+
+builder.Services.AddSingleton(_ => ValidationCatalog.Load());
+builder.Services.AddSingleton(_ => ParameterTables.Load());
+builder.Services.AddSingleton<IAuthorizationCodes, RandomAuthorizationCodes>();
+builder.Services.AddSingleton<SequenceLocks>();
+builder.Services.AddSingleton<TokenValidator>();
+builder.Services.AddSingleton<VoucherValidator>();
+builder.Services.AddSingleton<WsfeService>();
+builder.Services.AddSingleton<WsaaService>();
+builder.Services.AddSingleton<WsfeEndpoint>();
+builder.Services.AddSingleton<WsaaEndpoint>();
+
+var app = builder.Build();
+
+if (app.Services.GetService<PostgresStore>() is { } postgres) await postgres.EnsureSchemaAsync();
+
+app.UseDefaultFiles();
+app.UseStaticFiles();
+WsaaEndpoint.Map(app);
+WsfeEndpoint.Map(app);
+AdminApi.Map(app);
+app.MapGet("/", () => Results.Redirect("/arcasim/"));
+
+app.Run();
+
+static void AddStore<TStore>(IServiceCollection services)
+    where TStore : class, ISimulatorStore
+{
+    services.AddSingleton<IAccessRepository>(sp => sp.GetRequiredService<TStore>());
+    services.AddSingleton<ITicketLog>(sp => sp.GetRequiredService<TStore>());
+    services.AddSingleton<ITaxpayerRepository>(sp => sp.GetRequiredService<TStore>());
+    services.AddSingleton<IVoucherStore>(sp => sp.GetRequiredService<TStore>());
+    services.AddSingleton<ICaeaStore>(sp => sp.GetRequiredService<TStore>());
+    services.AddSingleton<IExchangeRates>(sp => sp.GetRequiredService<TStore>());
+    services.AddSingleton<IResettable>(sp => sp.GetRequiredService<TStore>());
+}
+
+/// <summary>Entry point, visible to the tests' WebApplicationFactory.</summary>
+public partial class Program;

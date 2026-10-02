@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2F67DFC2-9629-499B-9DF7-74D9915BF49C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArcaSim.Domain", "src\ArcaSim.Domain\ArcaSim.Domain.csproj", "{6CAA85F9-3BD1-4548-86C5-BDAF4F56D188}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArcaSim.Application", "src\ArcaSim.Application\ArcaSim.Application.csproj", "{17ADA8F9-6840-47AB-9D62-62D4B0F717AC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArcaSim.Infrastructure", "src\ArcaSim.Infrastructure\ArcaSim.Infrastructure.csproj", "{3F5EAA70-730C-4E68-A2B4-EC3F15DC852F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArcaSim.Api", "src\ArcaSim.Api\ArcaSim.Api.csproj", "{0A09A57C-CAF1-4E4D-A9E4-148A2FB515DE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arca.Client", "src\Arca.Client\Arca.Client.csproj", "{BBD48506-7C36-41A6-AF20-D80374A9737F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{76C1FB9A-D247-47D8-ACBF-E35153BC7511}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArcaSim.Tests", "tests\ArcaSim.Tests\ArcaSim.Tests.csproj", "{C8C8F90C-183C-4949-AE13-702B6E373D22}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6CAA85F9-3BD1-4548-86C5-BDAF4F56D188}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6CAA85F9-3BD1-4548-86C5-BDAF4F56D188}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6CAA85F9-3BD1-4548-86C5-BDAF4F56D188}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6CAA85F9-3BD1-4548-86C5-BDAF4F56D188}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17ADA8F9-6840-47AB-9D62-62D4B0F717AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17ADA8F9-6840-47AB-9D62-62D4B0F717AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17ADA8F9-6840-47AB-9D62-62D4B0F717AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17ADA8F9-6840-47AB-9D62-62D4B0F717AC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F5EAA70-730C-4E68-A2B4-EC3F15DC852F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F5EAA70-730C-4E68-A2B4-EC3F15DC852F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F5EAA70-730C-4E68-A2B4-EC3F15DC852F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F5EAA70-730C-4E68-A2B4-EC3F15DC852F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A09A57C-CAF1-4E4D-A9E4-148A2FB515DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A09A57C-CAF1-4E4D-A9E4-148A2FB515DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A09A57C-CAF1-4E4D-A9E4-148A2FB515DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A09A57C-CAF1-4E4D-A9E4-148A2FB515DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBD48506-7C36-41A6-AF20-D80374A9737F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBD48506-7C36-41A6-AF20-D80374A9737F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBD48506-7C36-41A6-AF20-D80374A9737F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBD48506-7C36-41A6-AF20-D80374A9737F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8C8F90C-183C-4949-AE13-702B6E373D22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8C8F90C-183C-4949-AE13-702B6E373D22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8C8F90C-183C-4949-AE13-702B6E373D22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8C8F90C-183C-4949-AE13-702B6E373D22}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6CAA85F9-3BD1-4548-86C5-BDAF4F56D188} = {2F67DFC2-9629-499B-9DF7-74D9915BF49C}
+		{17ADA8F9-6840-47AB-9D62-62D4B0F717AC} = {2F67DFC2-9629-499B-9DF7-74D9915BF49C}
+		{3F5EAA70-730C-4E68-A2B4-EC3F15DC852F} = {2F67DFC2-9629-499B-9DF7-74D9915BF49C}
+		{0A09A57C-CAF1-4E4D-A9E4-148A2FB515DE} = {2F67DFC2-9629-499B-9DF7-74D9915BF49C}
+		{BBD48506-7C36-41A6-AF20-D80374A9737F} = {2F67DFC2-9629-499B-9DF7-74D9915BF49C}
+		{C8C8F90C-183C-4949-AE13-702B6E373D22} = {76C1FB9A-D247-47D8-ACBF-E35153BC7511}
+	EndGlobalSection
+EndGlobal

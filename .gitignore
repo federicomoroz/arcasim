@@ -1,0 +1,9 @@
+bin/
+obj/
+.vs/
+*.user
+*.pfx
+*.key
+!tests/**/fixtures/**/*.key
+/data/
+src/ArcaSim.Api/data/

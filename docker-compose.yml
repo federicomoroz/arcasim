@@ -1,0 +1,34 @@
+# ArcaSim with PostgreSQL, for a team or a CI that shares one simulator:
+#   docker compose up -d     ->  http://localhost:7080/arcasim/
+# For an application's own tests, the image alone (in memory) is enough.
+services:
+  arcasim:
+    build: .
+    ports:
+      - "7080:8080"
+    environment:
+      ArcaSim__Storage: Postgres
+      ArcaSim__Environment: Homologacion
+      ConnectionStrings__ArcaSim: Host=postgres;Database=arcasim;Username=arcasim;Password=arcasim
+    volumes:
+      - arcasim-keys:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: arcasim
+      POSTGRES_USER: arcasim
+      POSTGRES_PASSWORD: arcasim
+    volumes:
+      - arcasim-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arcasim"]
+      interval: 2s
+      retries: 30
+
+volumes:
+  arcasim-keys:
+  arcasim-db:

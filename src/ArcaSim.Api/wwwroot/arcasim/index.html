@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ArcaSim</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%223%22 fill=%22%234ea1ff%22/%3E%3C/svg%3E">
+<link rel="stylesheet" href="panel.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <strong>ArcaSim</strong>
+    <span class="muted">Doble de los web services de ARCA para desarrollo y pruebas. No es ARCA y no emite comprobantes válidos.</span>
+  </div>
+  <div class="clock">
+    <span id="now" class="mono">—</span>
+    <span id="frozen" class="tag" hidden>reloj detenido</span>
+  </div>
+</header>
+
+<main class="grid">
+  <section class="card">
+    <h2>Simulación</h2>
+    <form id="settings" class="rows">
+      <label>Ambiente
+        <select name="environment">
+          <option value="Homologacion">Homologación</option>
+          <option value="Produccion">Producción</option>
+        </select>
+      </label>
+      <label>Versión del manual
+        <select name="manual">
+          <option value="calendar">Según la fecha (4.8 desde el 01/12/2026)</option>
+          <option value="V4_7">4.7: falta de condición IVA observa (10245)</option>
+          <option value="V4_8">4.8: falta de condición IVA rechaza (10246)</option>
+        </select>
+      </label>
+      <label>Umbral para identificar al consumidor final
+        <input name="threshold" type="number" step="0.01">
+      </label>
+      <label class="check"><input name="replay" type="checkbox"> Ventana anti-repetición de WSAA</label>
+      <button>Guardar</button>
+    </form>
+    <h3>Reloj</h3>
+    <div class="buttons">
+      <button data-advance="60">+1 h</button>
+      <button data-advance="780">+13 h</button>
+      <button data-advance="1440">+1 día</button>
+      <button id="clock-reset" class="ghost">Hora real</button>
+    </div>
+    <form id="freeze" class="inline">
+      <input name="at" type="datetime-local" step="1">
+      <button>Detener en</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Contribuyentes</h2>
+    <table id="taxpayers"><thead><tr><th>CUIT</th><th>Razón social</th><th>IVA</th><th>Puntos de venta</th></tr></thead><tbody></tbody></table>
+    <form id="taxpayer" class="rows">
+      <div class="pair">
+        <label>CUIT <input name="cuit" required pattern="\d{11}" placeholder="20111111112"></label>
+        <label>Razón social <input name="name" required></label>
+      </div>
+      <label>Condición frente al IVA
+        <select name="vatCondition">
+          <option value="ResponsableInscripto">Responsable Inscripto</option>
+          <option value="Monotributo">Monotributo</option>
+          <option value="Exento">Exento</option>
+          <option value="ConsumidorFinal">Consumidor Final</option>
+        </select>
+      </label>
+      <div class="pair">
+        <label>Punto de venta <input name="point" type="number" min="1" max="99998" placeholder="1"></label>
+        <label>Tipo
+          <select name="kind">
+            <option value="WebServiceCae">Web service CAE (RECE)</option>
+            <option value="WebServiceCaea">Web service CAEA</option>
+            <option value="Other">Otro (no web service)</option>
+          </select>
+        </label>
+      </div>
+      <button>Guardar contribuyente</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Certificados</h2>
+    <p class="muted">Lo que en ARCA hace WSASS: el certificado sale con el DN <span class="mono">SERIALNUMBER=CUIT n, CN=alias</span> y el alias queda autorizado para los servicios elegidos.</p>
+    <form id="certificate" class="rows">
+      <div class="pair">
+        <label>CUIT <input name="cuit" required pattern="\d{11}"></label>
+        <label>Alias <input name="alias" required value="facturacion"></label>
+      </div>
+      <label>Servicios <input name="services" value="wsfe"></label>
+      <label>Contraseña del PFX <input name="password" type="password"></label>
+      <label>CSR (opcional: si lo pegás, se firma ese pedido en lugar de generar la clave)
+        <textarea name="csr" rows="3" placeholder="-----BEGIN CERTIFICATE REQUEST-----"></textarea>
+      </label>
+      <button>Emitir</button>
+    </form>
+    <pre id="certificate-out" class="out" hidden></pre>
+    <p><a href="/arcasim/api/ca" download="arcasim-ca.crt">Descargar la autoridad certificante de ArcaSim</a></p>
+    <h3>Autorizaciones</h3>
+    <table id="authorizations"><thead><tr><th>CUIT</th><th>Alias</th><th>Representada</th><th>Servicio</th></tr></thead><tbody></tbody></table>
+  </section>
+
+  <section class="card">
+    <h2>Fallas</h2>
+    <p class="muted">Lo que con ARCA real es difícil de provocar.</p>
+    <form id="chaos" class="rows">
+      <label>Servicio
+        <select name="service"><option value="wsfe">WSFEv1</option><option value="wsaa">WSAA</option></select>
+      </label>
+      <label class="check"><input name="down" type="checkbox"> Caído</label>
+      <label>Demora (ms) <input name="delay" type="number" min="0" value="0"></label>
+      <label class="check"><input name="drop" type="checkbox"> Otorgar el próximo CAE y cortar la conexión antes de responder</label>
+      <label>Rechazar el próximo comprobante con el código <input name="reject" type="number" placeholder="10016"></label>
+      <button>Aplicar</button>
+    </form>
+    <pre id="chaos-state" class="out mono"></pre>
+  </section>
+
+  <section class="card">
+    <h2>Cotizaciones</h2>
+    <p class="muted">ArcaSim no tiene las de ARCA. Sin cotización cargada, se omiten las validaciones que dependen de ella.</p>
+    <form id="rate" class="rows">
+      <div class="pair">
+        <label>Moneda <input name="currency" value="DOL" maxlength="3"></label>
+        <label>Día <input name="day" type="date" required></label>
+      </div>
+      <label>Cotización <input name="rate" type="number" step="0.000001" required></label>
+      <button>Cargar</button>
+    </form>
+  </section>
+
+  <section class="card wide">
+    <div class="head">
+      <h2>Comprobantes emitidos</h2>
+      <div class="buttons"><button id="refresh" class="ghost">Actualizar</button><button id="reset" class="danger">Reiniciar todo</button></div>
+    </div>
+    <table id="vouchers"><thead><tr><th>Procesado</th><th>CUIT</th><th>PV</th><th>Tipo</th><th>Número</th><th>Fecha</th><th>Total</th><th>Receptor</th><th>Autorización</th><th>Observaciones</th></tr></thead><tbody></tbody></table>
+  </section>
+
+</main>
+<div id="toast" class="toast" hidden></div>
+<script src="panel.js"></script>
+</body>
+</html>

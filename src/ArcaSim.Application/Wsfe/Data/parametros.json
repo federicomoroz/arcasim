@@ -1,0 +1,2455 @@
+{
+ "voucherTypes": [
+  {
+   "id": 1,
+   "desc": "Factura A",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "A",
+   "kind": "Invoice",
+   "fce": false
+  },
+  {
+   "id": 2,
+   "desc": "Nota de Débito A",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "A",
+   "kind": "DebitNote",
+   "fce": false
+  },
+  {
+   "id": 3,
+   "desc": "Nota de Crédito A",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "A",
+   "kind": "CreditNote",
+   "fce": false
+  },
+  {
+   "id": 6,
+   "desc": "Factura B",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "B",
+   "kind": "Invoice",
+   "fce": false
+  },
+  {
+   "id": 7,
+   "desc": "Nota de Débito B",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "B",
+   "kind": "DebitNote",
+   "fce": false
+  },
+  {
+   "id": 8,
+   "desc": "Nota de Crédito B",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "B",
+   "kind": "CreditNote",
+   "fce": false
+  },
+  {
+   "id": 4,
+   "desc": "Recibos A",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "A",
+   "kind": "Receipt",
+   "fce": false
+  },
+  {
+   "id": 5,
+   "desc": "Notas de Venta al contado A",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "A",
+   "kind": "Other",
+   "fce": false
+  },
+  {
+   "id": 9,
+   "desc": "Recibos B",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "B",
+   "kind": "Receipt",
+   "fce": false
+  },
+  {
+   "id": 10,
+   "desc": "Notas de Venta al contado B",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "B",
+   "kind": "Other",
+   "fce": false
+  },
+  {
+   "id": 63,
+   "desc": "Liquidacion A",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "A",
+   "kind": "Other",
+   "fce": false
+  },
+  {
+   "id": 64,
+   "desc": "Liquidacion B",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "B",
+   "kind": "Other",
+   "fce": false
+  },
+  {
+   "id": 34,
+   "desc": "Cbtes. A del Anexo I, Apartado A,inc.f),R.G.Nro. 1415",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "A",
+   "kind": "Other",
+   "fce": false
+  },
+  {
+   "id": 35,
+   "desc": "Cbtes. B del Anexo I,Apartado A,inc. f),R.G. Nro. 1415",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "B",
+   "kind": "Other",
+   "fce": false
+  },
+  {
+   "id": 39,
+   "desc": "Otros comprobantes A que cumplan con R.G.Nro. 1415",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "A",
+   "kind": "Other",
+   "fce": false
+  },
+  {
+   "id": 40,
+   "desc": "Otros comprobantes B que cumplan con R.G.Nro. 1415",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "B",
+   "kind": "Other",
+   "fce": false
+  },
+  {
+   "id": 60,
+   "desc": "Cta de Vta y Liquido prod. A",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "A",
+   "kind": "Other",
+   "fce": false
+  },
+  {
+   "id": 61,
+   "desc": "Cta de Vta y Liquido prod. B",
+   "from": "20100917",
+   "to": "NULL",
+   "class": "B",
+   "kind": "Other",
+   "fce": false
+  },
+  {
+   "id": 11,
+   "desc": "Factura C",
+   "from": "20110330",
+   "to": "NULL",
+   "class": "C",
+   "kind": "Invoice",
+   "fce": false
+  },
+  {
+   "id": 12,
+   "desc": "Nota de Débito C",
+   "from": "20110330",
+   "to": "NULL",
+   "class": "C",
+   "kind": "DebitNote",
+   "fce": false
+  },
+  {
+   "id": 13,
+   "desc": "Nota de Crédito C",
+   "from": "20110330",
+   "to": "NULL",
+   "class": "C",
+   "kind": "CreditNote",
+   "fce": false
+  },
+  {
+   "id": 15,
+   "desc": "Recibo C",
+   "from": "20110330",
+   "to": "NULL",
+   "class": "C",
+   "kind": "Receipt",
+   "fce": false
+  },
+  {
+   "id": 49,
+   "desc": "Comprobante de Compra de Bienes Usados a Consumidor Final",
+   "from": "20130401",
+   "to": "NULL",
+   "class": "49",
+   "kind": "Invoice",
+   "fce": false
+  },
+  {
+   "id": 51,
+   "desc": "Factura M",
+   "from": "20150522",
+   "to": "NULL",
+   "class": "ALEY",
+   "kind": "Invoice",
+   "fce": false
+  },
+  {
+   "id": 52,
+   "desc": "Nota de Débito M",
+   "from": "20150522",
+   "to": "NULL",
+   "class": "ALEY",
+   "kind": "DebitNote",
+   "fce": false
+  },
+  {
+   "id": 53,
+   "desc": "Nota de Crédito M",
+   "from": "20150522",
+   "to": "NULL",
+   "class": "ALEY",
+   "kind": "CreditNote",
+   "fce": false
+  },
+  {
+   "id": 54,
+   "desc": "Recibo M",
+   "from": "20150522",
+   "to": "NULL",
+   "class": "ALEY",
+   "kind": "Receipt",
+   "fce": false
+  },
+  {
+   "id": 201,
+   "desc": "Factura de Crédito electrónica MiPyMEs (FCE) A",
+   "from": "20181226",
+   "to": "NULL",
+   "class": "A",
+   "kind": "Invoice",
+   "fce": true
+  },
+  {
+   "id": 202,
+   "desc": "Nota de Débito electrónica MiPyMEs (FCE) A",
+   "from": "20181226",
+   "to": "NULL",
+   "class": "A",
+   "kind": "DebitNote",
+   "fce": true
+  },
+  {
+   "id": 203,
+   "desc": "Nota de Crédito electrónica MiPyMEs (FCE) A",
+   "from": "20181226",
+   "to": "NULL",
+   "class": "A",
+   "kind": "CreditNote",
+   "fce": true
+  },
+  {
+   "id": 206,
+   "desc": "Factura de Crédito electrónica MiPyMEs (FCE) B",
+   "from": "20181226",
+   "to": "NULL",
+   "class": "B",
+   "kind": "Invoice",
+   "fce": true
+  },
+  {
+   "id": 207,
+   "desc": "Nota de Débito electrónica MiPyMEs (FCE) B",
+   "from": "20181226",
+   "to": "NULL",
+   "class": "B",
+   "kind": "DebitNote",
+   "fce": true
+  },
+  {
+   "id": 208,
+   "desc": "Nota de Crédito electrónica MiPyMEs (FCE) B",
+   "from": "20181226",
+   "to": "NULL",
+   "class": "B",
+   "kind": "CreditNote",
+   "fce": true
+  },
+  {
+   "id": 211,
+   "desc": "Factura de Crédito electrónica MiPyMEs (FCE) C",
+   "from": "20181226",
+   "to": "NULL",
+   "class": "C",
+   "kind": "Invoice",
+   "fce": true
+  },
+  {
+   "id": 212,
+   "desc": "Nota de Débito electrónica MiPyMEs (FCE) C",
+   "from": "20181226",
+   "to": "NULL",
+   "class": "C",
+   "kind": "DebitNote",
+   "fce": true
+  },
+  {
+   "id": 213,
+   "desc": "Nota de Crédito electrónica MiPyMEs (FCE) C",
+   "from": "20181226",
+   "to": "NULL",
+   "class": "C",
+   "kind": "CreditNote",
+   "fce": true
+  }
+ ],
+ "documentTypes": [
+  {
+   "id": 80,
+   "desc": "CUIT",
+   "from": "20080725",
+   "to": "NULL"
+  },
+  {
+   "id": 86,
+   "desc": "CUIL",
+   "from": "20080725",
+   "to": "NULL"
+  },
+  {
+   "id": 87,
+   "desc": "CDI",
+   "from": "20080725",
+   "to": "NULL"
+  },
+  {
+   "id": 89,
+   "desc": "LE",
+   "from": "20080725",
+   "to": "NULL"
+  },
+  {
+   "id": 90,
+   "desc": "LC",
+   "from": "20080725",
+   "to": "NULL"
+  },
+  {
+   "id": 91,
+   "desc": "CI Extranjera",
+   "from": "20080725",
+   "to": "NULL"
+  },
+  {
+   "id": 92,
+   "desc": "en trámite",
+   "from": "20080725",
+   "to": "NULL"
+  },
+  {
+   "id": 93,
+   "desc": "Acta Nacimiento",
+   "from": "20080725",
+   "to": "NULL"
+  },
+  {
+   "id": 95,
+   "desc": "CI Bs. As. RNP",
+   "from": "20080725",
+   "to": "NULL"
+  },
+  {
+   "id": 96,
+   "desc": "DNI",
+   "from": "20080725",
+   "to": "NULL"
+  },
+  {
+   "id": 94,
+   "desc": "Pasaporte",
+   "from": "20080725",
+   "to": "NULL"
+  },
+  {
+   "id": 0,
+   "desc": "CI Policía Federal",
+   "from": "20080725",
+   "to": "NULL"
+  },
+  {
+   "id": 1,
+   "desc": "CI Buenos Aires",
+   "from": "20080725",
+   "to": "NULL"
+  },
+  {
+   "id": 2,
+   "desc": "CI Catamarca",
+   "from": "20080725",
+   "to": "NULL"
+  },
+  {
+   "id": 3,
+   "desc": "CI Córdoba",
+   "from": "20080725",
+   "to": "NULL"
+  },
+  {
+   "id": 4,
+   "desc": "CI Corrientes",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 5,
+   "desc": "CI Entre Ríos",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 6,
+   "desc": "CI Jujuy",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 7,
+   "desc": "CI Mendoza",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 8,
+   "desc": "CI La Rioja",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 9,
+   "desc": "CI Salta",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 10,
+   "desc": "CI San Juan",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 11,
+   "desc": "CI San Luis",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 12,
+   "desc": "CI Santa Fe",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 13,
+   "desc": "CI Santiago del Estero",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 14,
+   "desc": "CI Tucumán",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 16,
+   "desc": "CI Chaco",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 17,
+   "desc": "CI Chubut",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 18,
+   "desc": "CI Formosa",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 19,
+   "desc": "CI Misiones",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 20,
+   "desc": "CI Neuquén",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 21,
+   "desc": "CI La Pampa",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 22,
+   "desc": "CI Río Negro",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 23,
+   "desc": "CI Santa Cruz",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 24,
+   "desc": "CI Tierra del Fuego",
+   "from": "20080728",
+   "to": "NULL"
+  },
+  {
+   "id": 99,
+   "desc": "Doc. (Otro)",
+   "from": "20080728",
+   "to": "NULL"
+  }
+ ],
+ "concepts": [
+  {
+   "id": 1,
+   "desc": "Producto",
+   "from": "20100917",
+   "to": "NULL"
+  },
+  {
+   "id": 2,
+   "desc": "Servicios",
+   "from": "20100917",
+   "to": "NULL"
+  },
+  {
+   "id": 3,
+   "desc": "Productos y Servicios",
+   "from": "20100917",
+   "to": "NULL"
+  }
+ ],
+ "vatRates": [
+  {
+   "id": "3",
+   "desc": "0%",
+   "from": "20090220",
+   "to": "NULL",
+   "rate": 0
+  },
+  {
+   "id": "4",
+   "desc": "10.5%",
+   "from": "20090220",
+   "to": "NULL",
+   "rate": 0.105
+  },
+  {
+   "id": "5",
+   "desc": "21%",
+   "from": "20090220",
+   "to": "NULL",
+   "rate": 0.21
+  },
+  {
+   "id": "6",
+   "desc": "27%",
+   "from": "20090220",
+   "to": "NULL",
+   "rate": 0.27
+  },
+  {
+   "id": "8",
+   "desc": "5%",
+   "from": "20141020",
+   "to": "NULL",
+   "rate": 0.05
+  },
+  {
+   "id": "9",
+   "desc": "2.5%",
+   "from": "20141020",
+   "to": "NULL",
+   "rate": 0.025
+  }
+ ],
+ "currencies": [
+  {
+   "id": "PES",
+   "desc": "Pesos Argentinos",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "DOL",
+   "desc": "Dólar Estadounidense",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "002",
+   "desc": "Dólar Libre EEUU",
+   "from": "20090416",
+   "to": "NULL"
+  },
+  {
+   "id": "007",
+   "desc": "Florines Holandeses",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "010",
+   "desc": "Pesos Mejicanos",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "011",
+   "desc": "Pesos Uruguayos",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "014",
+   "desc": "Coronas Danesas",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "015",
+   "desc": "Coronas Noruegas",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "016",
+   "desc": "Coronas Suecas",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "018",
+   "desc": "Dólar Canadiense",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "019",
+   "desc": "Yens",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "021",
+   "desc": "Libra Esterlina",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "023",
+   "desc": "Bolívar Venezolano",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "024",
+   "desc": "Corona Checa",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "025",
+   "desc": "Dinar Yugoslavo",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "026",
+   "desc": "Dólar Australiano",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "027",
+   "desc": "Dracma Griego",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "028",
+   "desc": "Florín (Antillas Holandesas)",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "029",
+   "desc": "Güaraní",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "031",
+   "desc": "Peso Boliviano",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "032",
+   "desc": "Peso Colombiano",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "033",
+   "desc": "Peso Chileno",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "034",
+   "desc": "Rand Sudafricano",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "036",
+   "desc": "Sucre Ecuatoriano",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "051",
+   "desc": "Dólar de Hong Kong",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "052",
+   "desc": "Dólar de Singapur",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "053",
+   "desc": "Dólar de Jamaica",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "054",
+   "desc": "Dólar de Taiwan",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "055",
+   "desc": "Quetzal Guatemalteco",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "056",
+   "desc": "Forint (Hungría)",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "057",
+   "desc": "Baht (Tailandia)",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "059",
+   "desc": "Dinar Kuwaiti",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "012",
+   "desc": "Real",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "030",
+   "desc": "Shekel (Israel)",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "035",
+   "desc": "Nuevo Sol Peruano",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "060",
+   "desc": "Euro",
+   "from": "20090403",
+   "to": "NULL"
+  },
+  {
+   "id": "040",
+   "desc": "Lei Rumano",
+   "from": "20090415",
+   "to": "NULL"
+  },
+  {
+   "id": "042",
+   "desc": "Peso Dominicano",
+   "from": "20090415",
+   "to": "NULL"
+  },
+  {
+   "id": "043",
+   "desc": "Balboas Panameñas",
+   "from": "20090415",
+   "to": "NULL"
+  },
+  {
+   "id": "044",
+   "desc": "Córdoba Nicaragüense",
+   "from": "20090415",
+   "to": "NULL"
+  },
+  {
+   "id": "045",
+   "desc": "Dirham Marroquí",
+   "from": "20090415",
+   "to": "NULL"
+  },
+  {
+   "id": "046",
+   "desc": "Libra Egipcia",
+   "from": "20090415",
+   "to": "NULL"
+  },
+  {
+   "id": "047",
+   "desc": "Riyal Saudita",
+   "from": "20090415",
+   "to": "NULL"
+  },
+  {
+   "id": "061",
+   "desc": "Zloty Polaco",
+   "from": "20090415",
+   "to": "NULL"
+  },
+  {
+   "id": "062",
+   "desc": "Rupia Hindú",
+   "from": "20090415",
+   "to": "NULL"
+  },
+  {
+   "id": "063",
+   "desc": "Lempira Hondureña",
+   "from": "20090415",
+   "to": "NULL"
+  },
+  {
+   "id": "064",
+   "desc": "Yuan (Rep. Pop. China)",
+   "from": "20090415",
+   "to": "NULL"
+  },
+  {
+   "id": "009",
+   "desc": "Franco Suizo",
+   "from": "20091110",
+   "to": "NULL"
+  },
+  {
+   "id": "041",
+   "desc": "Derechos Especiales de Giro",
+   "from": "20100125",
+   "to": "NULL"
+  },
+  {
+   "id": "049",
+   "desc": "Gramos de Oro Fino",
+   "from": "20100125",
+   "to": "NULL"
+  }
+ ],
+ "taxes": [
+  {
+   "id": 1,
+   "desc": "Impuestos nacionales",
+   "from": "20100917",
+   "to": "NULL"
+  },
+  {
+   "id": 2,
+   "desc": "Impuestos provinciales",
+   "from": "20100917",
+   "to": "NULL"
+  },
+  {
+   "id": 3,
+   "desc": "Impuestos municipales",
+   "from": "20100917",
+   "to": "NULL"
+  },
+  {
+   "id": 4,
+   "desc": "Impuestos Internos",
+   "from": "20100917",
+   "to": "NULL"
+  },
+  {
+   "id": 99,
+   "desc": "Otro",
+   "from": "20100917",
+   "to": "NULL"
+  },
+  {
+   "id": 5,
+   "desc": "IIBB",
+   "from": "20170719",
+   "to": "NULL"
+  },
+  {
+   "id": 6,
+   "desc": "Percepción de IVA",
+   "from": "20170719",
+   "to": "NULL"
+  },
+  {
+   "id": 7,
+   "desc": "Percepción de IIBB",
+   "from": "20170719",
+   "to": "NULL"
+  },
+  {
+   "id": 8,
+   "desc": "Percepciones por Impuestos Municipales",
+   "from": "20170719",
+   "to": "NULL"
+  },
+  {
+   "id": 9,
+   "desc": "Otras Percepciones",
+   "from": "20170719",
+   "to": "NULL"
+  },
+  {
+   "id": 13,
+   "desc": "Percepción de IVA a no Categorizado",
+   "from": "20170719",
+   "to": "NULL"
+  }
+ ],
+ "optionals": [
+  {
+   "id": "2",
+   "desc": "RG Empresas Promovidas - Indentificador de proyecto vinculado a Régimen de Promoción Industrial",
+   "from": "20100917",
+   "to": "NULL"
+  },
+  {
+   "id": "91",
+   "desc": "RG Bienes Usados 3411 - Nombre y Apellido o Denominación del vendedor del bien usado.",
+   "from": "20130401",
+   "to": "NULL"
+  },
+  {
+   "id": "92",
+   "desc": "RG Bienes Usados 3411 - Nacionalidad del vendedor del bien usado.",
+   "from": "20130401",
+   "to": "NULL"
+  },
+  {
+   "id": "93",
+   "desc": "RG Bienes Usados 3411 - Domicilio del vendedor del bien usado.",
+   "from": "20130401",
+   "to": "NULL"
+  },
+  {
+   "id": "5",
+   "desc": "Excepcion computo IVA Credito Fiscal",
+   "from": "20141016",
+   "to": "NULL"
+  },
+  {
+   "id": "61",
+   "desc": "RG 3668 Impuesto al Valor Agregado - Art.12 IVA Firmante Doc Tipo",
+   "from": "20141016",
+   "to": "NULL"
+  },
+  {
+   "id": "62",
+   "desc": "RG 3668 Impuesto al Valor Agregado - Art.12 IVA Firmante Doc Nro",
+   "from": "20141016",
+   "to": "NULL"
+  },
+  {
+   "id": "7",
+   "desc": "RG 3668 Impuesto al Valor Agregado - Art.12 IVA Carácter del Firmante",
+   "from": "20141016",
+   "to": "NULL"
+  },
+  {
+   "id": "10",
+   "desc": "RG 3.368 Establecimientos de educación pública de gestión privada - Actividad Comprendida",
+   "from": "20150605",
+   "to": "NULL"
+  },
+  {
+   "id": "1011",
+   "desc": "RG 3.368 Establecimientos de educación pública de gestión privada - Tipo de Documento",
+   "from": "20150605",
+   "to": "NULL"
+  },
+  {
+   "id": "1012",
+   "desc": "RG 3.368 Establecimientos de educación pública de gestión privada - Número de Documento",
+   "from": "20150605",
+   "to": "NULL"
+  },
+  {
+   "id": "11",
+   "desc": "RG 2.820 Operaciones económicas vinculadas con bienes inmuebles - Actividad Comprendida",
+   "from": "20150605",
+   "to": "NULL"
+  },
+  {
+   "id": "12",
+   "desc": "RG 3.687 Locación temporaria de inmuebles con fines turísticos - Actividad Comprendida",
+   "from": "20150605",
+   "to": "NULL"
+  },
+  {
+   "id": "13",
+   "desc": "RG 2.863 Representantes de Modelos",
+   "from": "20160101",
+   "to": "NULL"
+  },
+  {
+   "id": "14",
+   "desc": "RG 2.863 Agencias de publicidad",
+   "from": "20160101",
+   "to": "NULL"
+  },
+  {
+   "id": "15",
+   "desc": "RG 2.863 Personas físicas que desarrollen actividad de modelaje",
+   "from": "20160101",
+   "to": "NULL"
+  },
+  {
+   "id": "17",
+   "desc": "RG 4004-E Locación de inmuebles destino 'casa-habitación'. Dato 2 (dos) = facturación directa / Dato 1 (uno) = facturación a través de intermediario",
+   "from": "20170309",
+   "to": "NULL"
+  },
+  {
+   "id": "1801",
+   "desc": "RG 4004-E Locación de inmuebles destino 'casa-habitación'. Clave Única de Identificación Tributaria (CUIT).",
+   "from": "20170309",
+   "to": "NULL"
+  },
+  {
+   "id": "1802",
+   "desc": "RG 4004-E Locación de inmuebles destino 'casa-habitación'. Apellido y nombres, denominación y/o razón social.",
+   "from": "20170309",
+   "to": "NULL"
+  },
+  {
+   "id": "2101",
+   "desc": "Factura de Crédito Electrónica MiPyMEs (FCE) - CBU del Emisor",
+   "from": "20181226",
+   "to": "NULL"
+  },
+  {
+   "id": "2102",
+   "desc": "Factura de Crédito Electrónica MiPyMEs (FCE) - Alias del Emisor",
+   "from": "20181226",
+   "to": "NULL"
+  },
+  {
+   "id": "22",
+   "desc": "Factura de Crédito Electrónica MiPyMEs (FCE) - Anulación",
+   "from": "20181226",
+   "to": "NULL"
+  },
+  {
+   "id": "23",
+   "desc": "Factura de Crédito Electrónica MiPyMEs (FCE) - Referencia Comercial",
+   "from": "20190308",
+   "to": "NULL"
+  },
+  {
+   "id": "27",
+   "desc": "Factura de Credito Electronica MiPyMEs (FCE) - Transferencia",
+   "from": "20201126",
+   "to": "NULL"
+  }
+ ],
+ "receiverVatConditions": [
+  {
+   "id": 1,
+   "desc": "IVA Responsable Inscripto",
+   "classes": [
+    "A",
+    "C"
+   ]
+  },
+  {
+   "id": 4,
+   "desc": "IVA Sujeto Exento",
+   "classes": [
+    "B",
+    "C"
+   ]
+  },
+  {
+   "id": 5,
+   "desc": "Consumidor Final",
+   "classes": [
+    "B",
+    "C",
+    "49"
+   ]
+  },
+  {
+   "id": 6,
+   "desc": "Responsable Monotributo",
+   "classes": [
+    "A",
+    "C"
+   ]
+  },
+  {
+   "id": 7,
+   "desc": "Sujeto No Categorizado",
+   "classes": [
+    "B",
+    "C"
+   ]
+  },
+  {
+   "id": 8,
+   "desc": "Proveedor del Exterior",
+   "classes": [
+    "B",
+    "C"
+   ]
+  },
+  {
+   "id": 9,
+   "desc": "Cliente del Exterior",
+   "classes": [
+    "B",
+    "C"
+   ]
+  },
+  {
+   "id": 10,
+   "desc": "IVA Liberado – Ley N° 19.640",
+   "classes": [
+    "B",
+    "C"
+   ]
+  },
+  {
+   "id": 13,
+   "desc": "Monotributista Social",
+   "classes": [
+    "A",
+    "C"
+   ]
+  },
+  {
+   "id": 15,
+   "desc": "IVA No Alcanzado",
+   "classes": [
+    "B",
+    "C"
+   ]
+  },
+  {
+   "id": 16,
+   "desc": "Monotributo Trabajador Independiente Promovido",
+   "classes": [
+    "A",
+    "C"
+   ]
+  }
+ ],
+ "countries": [
+  {
+   "id": 101,
+   "desc": "BURKINA FASO"
+  },
+  {
+   "id": 102,
+   "desc": "ARGELIA"
+  },
+  {
+   "id": 103,
+   "desc": "BOTSWANA"
+  },
+  {
+   "id": 104,
+   "desc": "BURUNDI"
+  },
+  {
+   "id": 105,
+   "desc": "CAMERUN"
+  },
+  {
+   "id": 107,
+   "desc": "REP. CENTROAFRICANA."
+  },
+  {
+   "id": 108,
+   "desc": "CONGO"
+  },
+  {
+   "id": 109,
+   "desc": "REP. DEMOCRAT.DEL CONGO EX ZAIRE"
+  },
+  {
+   "id": 110,
+   "desc": "COSTA DE MARFIL"
+  },
+  {
+   "id": 111,
+   "desc": "CHAD"
+  },
+  {
+   "id": 112,
+   "desc": "BENIN"
+  },
+  {
+   "id": 113,
+   "desc": "EGIPTO"
+  },
+  {
+   "id": 115,
+   "desc": "GABON"
+  },
+  {
+   "id": 116,
+   "desc": "GAMBIA"
+  },
+  {
+   "id": 117,
+   "desc": "GHANA"
+  },
+  {
+   "id": 118,
+   "desc": "GUINEA"
+  },
+  {
+   "id": 119,
+   "desc": "GUINEA ECUATORIAL"
+  },
+  {
+   "id": 120,
+   "desc": "KENYA"
+  },
+  {
+   "id": 121,
+   "desc": "LESOTHO"
+  },
+  {
+   "id": 122,
+   "desc": "LIBERIA"
+  },
+  {
+   "id": 123,
+   "desc": "LIBIA"
+  },
+  {
+   "id": 124,
+   "desc": "MADAGASCAR"
+  },
+  {
+   "id": 125,
+   "desc": "MALAWI"
+  },
+  {
+   "id": 126,
+   "desc": "MALI"
+  },
+  {
+   "id": 127,
+   "desc": "MARRUECOS"
+  },
+  {
+   "id": 128,
+   "desc": "MAURICIO"
+  },
+  {
+   "id": 129,
+   "desc": "MAURITANIA"
+  },
+  {
+   "id": 130,
+   "desc": "NIGER"
+  },
+  {
+   "id": 131,
+   "desc": "NIGERIA"
+  },
+  {
+   "id": 132,
+   "desc": "ZIMBABWE"
+  },
+  {
+   "id": 133,
+   "desc": "RWANDA"
+  },
+  {
+   "id": 134,
+   "desc": "SENEGAL"
+  },
+  {
+   "id": 135,
+   "desc": "SIERRA LEONA"
+  },
+  {
+   "id": 136,
+   "desc": "SOMALIA"
+  },
+  {
+   "id": 137,
+   "desc": "SWAZILANDIA"
+  },
+  {
+   "id": 139,
+   "desc": "TANZANIA"
+  },
+  {
+   "id": 140,
+   "desc": "TOGO"
+  },
+  {
+   "id": 141,
+   "desc": "TUNEZ"
+  },
+  {
+   "id": 142,
+   "desc": "UGANDA"
+  },
+  {
+   "id": 144,
+   "desc": "ZAMBIA"
+  },
+  {
+   "id": 145,
+   "desc": "TERRIT.VINCULADOS AL R UNIDO"
+  },
+  {
+   "id": 146,
+   "desc": "TERRIT.VINCULADOS A ESPAÑA"
+  },
+  {
+   "id": 147,
+   "desc": "TERRIT.VINCULADOS A FRANCIA"
+  },
+  {
+   "id": 149,
+   "desc": "ANGOLA"
+  },
+  {
+   "id": 150,
+   "desc": "CABO VERDE"
+  },
+  {
+   "id": 151,
+   "desc": "MOZAMBIQUE"
+  },
+  {
+   "id": 152,
+   "desc": "SEYCHELLES"
+  },
+  {
+   "id": 153,
+   "desc": "DJIBOUTI"
+  },
+  {
+   "id": 155,
+   "desc": "COMORAS"
+  },
+  {
+   "id": 156,
+   "desc": "GUINEA BISSAU"
+  },
+  {
+   "id": 157,
+   "desc": "STO.TOME Y PRINCIPE"
+  },
+  {
+   "id": 158,
+   "desc": "NAMIBIA"
+  },
+  {
+   "id": 159,
+   "desc": "SUDAFRICA"
+  },
+  {
+   "id": 160,
+   "desc": "ERITREA"
+  },
+  {
+   "id": 161,
+   "desc": "ETIOPIA"
+  },
+  {
+   "id": 162,
+   "desc": "SUDAN"
+  },
+  {
+   "id": 163,
+   "desc": "SUDAN DEL SUR"
+  },
+  {
+   "id": 197,
+   "desc": "RESTO (AFRICA)"
+  },
+  {
+   "id": 198,
+   "desc": "INDETERMINADO (AFRICA)"
+  },
+  {
+   "id": 200,
+   "desc": "ARGENTINA"
+  },
+  {
+   "id": 201,
+   "desc": "BARBADOS"
+  },
+  {
+   "id": 202,
+   "desc": "BOLIVIA"
+  },
+  {
+   "id": 203,
+   "desc": "BRASIL"
+  },
+  {
+   "id": 204,
+   "desc": "CANADA"
+  },
+  {
+   "id": 205,
+   "desc": "COLOMBIA"
+  },
+  {
+   "id": 206,
+   "desc": "COSTA RICA"
+  },
+  {
+   "id": 207,
+   "desc": "CUBA"
+  },
+  {
+   "id": 208,
+   "desc": "CHILE"
+  },
+  {
+   "id": 209,
+   "desc": "REPÚBLICA DOMINICANA"
+  },
+  {
+   "id": 210,
+   "desc": "ECUADOR"
+  },
+  {
+   "id": 211,
+   "desc": "EL SALVADOR"
+  },
+  {
+   "id": 212,
+   "desc": "ESTADOS UNIDOS"
+  },
+  {
+   "id": 213,
+   "desc": "GUATEMALA"
+  },
+  {
+   "id": 214,
+   "desc": "GUYANA"
+  },
+  {
+   "id": 215,
+   "desc": "HAITI"
+  },
+  {
+   "id": 216,
+   "desc": "HONDURAS"
+  },
+  {
+   "id": 217,
+   "desc": "JAMAICA"
+  },
+  {
+   "id": 218,
+   "desc": "MEXICO"
+  },
+  {
+   "id": 219,
+   "desc": "NICARAGUA"
+  },
+  {
+   "id": 220,
+   "desc": "PANAMA"
+  },
+  {
+   "id": 221,
+   "desc": "PARAGUAY"
+  },
+  {
+   "id": 222,
+   "desc": "PERU"
+  },
+  {
+   "id": 223,
+   "desc": "PUERTO RICO"
+  },
+  {
+   "id": 224,
+   "desc": "TRINIDAD Y TOBAGO"
+  },
+  {
+   "id": 225,
+   "desc": "URUGUAY"
+  },
+  {
+   "id": 226,
+   "desc": "VENEZUELA"
+  },
+  {
+   "id": 227,
+   "desc": "TERRIT.VINCULADO AL R.UNIDO"
+  },
+  {
+   "id": 228,
+   "desc": "TER.VINCULADOS A DINAMARCA"
+  },
+  {
+   "id": 229,
+   "desc": "TERRIT.VINCULADOS A FRANCIA AMERIC."
+  },
+  {
+   "id": 230,
+   "desc": "TERRIT. HOLANDESES"
+  },
+  {
+   "id": 231,
+   "desc": "TER.VINCULADOS A ESTADOS UNIDOS"
+  },
+  {
+   "id": 232,
+   "desc": "SURINAME"
+  },
+  {
+   "id": 233,
+   "desc": "DOMINICA"
+  },
+  {
+   "id": 234,
+   "desc": "SANTA LUCIA"
+  },
+  {
+   "id": 235,
+   "desc": "SAN VICENTE Y LAS GRANADINAS"
+  },
+  {
+   "id": 236,
+   "desc": "BELICE"
+  },
+  {
+   "id": 237,
+   "desc": "ANTIGUA Y BARBUDA"
+  },
+  {
+   "id": 238,
+   "desc": "S.CRISTOBAL Y NEVIS"
+  },
+  {
+   "id": 239,
+   "desc": "BAHAMAS"
+  },
+  {
+   "id": 240,
+   "desc": "GRANADA"
+  },
+  {
+   "id": 241,
+   "desc": "ANTILLAS HOLANDESAS"
+  },
+  {
+   "id": 242,
+   "desc": "ARUBA"
+  },
+  {
+   "id": 243,
+   "desc": "BONAIRE"
+  },
+  {
+   "id": 244,
+   "desc": "CURAZAO"
+  },
+  {
+   "id": 245,
+   "desc": "SAN MARTIN (PARTE HOLANDESA)"
+  },
+  {
+   "id": 250,
+   "desc": "AAE Tierra del Fuego - ARGENTINA"
+  },
+  {
+   "id": 251,
+   "desc": "ZF La Plata - ARGENTINA"
+  },
+  {
+   "id": 252,
+   "desc": "ZF Justo Daract - ARGENTINA"
+  },
+  {
+   "id": 253,
+   "desc": "ZF Río Gallegos - ARGENTINA"
+  },
+  {
+   "id": 254,
+   "desc": "ISLAS MALVINAS - ARGENTINA"
+  },
+  {
+   "id": 255,
+   "desc": "ZF Tucumán - ARGENTINA"
+  },
+  {
+   "id": 256,
+   "desc": "ZF Córdoba - ARGENTINA"
+  },
+  {
+   "id": 257,
+   "desc": "ZF Mendoza - ARGENTINA"
+  },
+  {
+   "id": 258,
+   "desc": "ZF General Pico - ARGENTINA"
+  },
+  {
+   "id": 259,
+   "desc": "ZF Comodoro Rivadavia - ARGENTINA"
+  },
+  {
+   "id": 260,
+   "desc": "ZF Iquique"
+  },
+  {
+   "id": 261,
+   "desc": "ZF Punta Arenas"
+  },
+  {
+   "id": 262,
+   "desc": "ZF Salta - ARGENTINA"
+  },
+  {
+   "id": 263,
+   "desc": "ZF Paso de los Libres - ARGENTINA"
+  },
+  {
+   "id": 264,
+   "desc": "ZF Puerto Iguazú - ARGENTINA"
+  },
+  {
+   "id": 265,
+   "desc": "SECTOR ANTARTICO ARG."
+  },
+  {
+   "id": 266,
+   "desc": "ZF Coronel Rosales - ARGENTINA"
+  },
+  {
+   "id": 267,
+   "desc": "ZF Concepción Del Uruguay - ARGENTINA"
+  },
+  {
+   "id": 268,
+   "desc": "ZF Villa Constitución - ARGENTINA"
+  },
+  {
+   "id": 269,
+   "desc": "ZF Puerto Galván - ARGENTINA"
+  },
+  {
+   "id": 270,
+   "desc": "ZF Colón - REPÚBLICA DE PANAMÁ"
+  },
+  {
+   "id": 271,
+   "desc": "ZF Winner (Sta. C. de la Sierra) - BOLIVIA"
+  },
+  {
+   "id": 272,
+   "desc": "ZF PACIFICO"
+  },
+  {
+   "id": 273,
+   "desc": "ZF COYOL ALAJUELA"
+  },
+  {
+   "id": 274,
+   "desc": "ZF PERICO"
+  },
+  {
+   "id": 280,
+   "desc": "ZF Colonia - URUGUAY"
+  },
+  {
+   "id": 281,
+   "desc": "ZF Florida - URUGUAY"
+  },
+  {
+   "id": 282,
+   "desc": "ZF Libertad - URUGUAY"
+  },
+  {
+   "id": 283,
+   "desc": "ZF Zonamerica - URUGUAY"
+  },
+  {
+   "id": 284,
+   "desc": "ZF Nueva Helvecia - URUGUAY"
+  },
+  {
+   "id": 285,
+   "desc": "ZF Nueva Palmira - URUGUAY"
+  },
+  {
+   "id": 286,
+   "desc": "ZF Río Negro - URUGUAY"
+  },
+  {
+   "id": 287,
+   "desc": "ZF Rivera - URUGUAY"
+  },
+  {
+   "id": 288,
+   "desc": "ZF San José - URUGUAY"
+  },
+  {
+   "id": 289,
+   "desc": "ZF PUNTA PEREIRA"
+  },
+  {
+   "id": 290,
+   "desc": "ZF PARQUE DE LAS CIENCIAS"
+  },
+  {
+   "id": 291,
+   "desc": "ZF Manaos - BRASIL"
+  },
+  {
+   "id": 295,
+   "desc": "MAR ARG ZONA ECO.EX"
+  },
+  {
+   "id": 296,
+   "desc": "RIOS ARG NAVEG INTER"
+  },
+  {
+   "id": 297,
+   "desc": "RESTO AMERICA"
+  },
+  {
+   "id": 298,
+   "desc": "INDETERMINADO (AMERICA)"
+  },
+  {
+   "id": 301,
+   "desc": "AFGANISTAN"
+  },
+  {
+   "id": 302,
+   "desc": "ARABIA SAUDITA"
+  },
+  {
+   "id": 303,
+   "desc": "BAHREIN"
+  },
+  {
+   "id": 304,
+   "desc": "MYANMAR (EX-BIRMANIA)"
+  },
+  {
+   "id": 305,
+   "desc": "BUTAN"
+  },
+  {
+   "id": 306,
+   "desc": "CAMBODYA (EX-KAMPUCHE)"
+  },
+  {
+   "id": 307,
+   "desc": "SRI LANKA"
+  },
+  {
+   "id": 308,
+   "desc": "COREA DEMOCRATICA"
+  },
+  {
+   "id": 309,
+   "desc": "COREA REPUBLICANA"
+  },
+  {
+   "id": 310,
+   "desc": "CHINA"
+  },
+  {
+   "id": 312,
+   "desc": "FILIPINAS"
+  },
+  {
+   "id": 313,
+   "desc": "TAIWAN"
+  },
+  {
+   "id": 315,
+   "desc": "INDIA"
+  },
+  {
+   "id": 316,
+   "desc": "INDONESIA"
+  },
+  {
+   "id": 317,
+   "desc": "IRAK"
+  },
+  {
+   "id": 318,
+   "desc": "IRAN"
+  },
+  {
+   "id": 319,
+   "desc": "ISRAEL"
+  },
+  {
+   "id": 320,
+   "desc": "JAPON"
+  },
+  {
+   "id": 321,
+   "desc": "JORDANIA"
+  },
+  {
+   "id": 322,
+   "desc": "QATAR"
+  },
+  {
+   "id": 323,
+   "desc": "KUWAIT"
+  },
+  {
+   "id": 324,
+   "desc": "LAOS"
+  },
+  {
+   "id": 325,
+   "desc": "LIBANO"
+  },
+  {
+   "id": 326,
+   "desc": "MALASIA"
+  },
+  {
+   "id": 327,
+   "desc": "MALDIVAS ISLAS"
+  },
+  {
+   "id": 328,
+   "desc": "OMAN"
+  },
+  {
+   "id": 329,
+   "desc": "MONGOLIA"
+  },
+  {
+   "id": 330,
+   "desc": "NEPAL"
+  },
+  {
+   "id": 331,
+   "desc": "EMIRATOS ARABES UNIDOS"
+  },
+  {
+   "id": 332,
+   "desc": "PAKISTÁN"
+  },
+  {
+   "id": 333,
+   "desc": "SINGAPUR"
+  },
+  {
+   "id": 334,
+   "desc": "SIRIA"
+  },
+  {
+   "id": 335,
+   "desc": "THAILANDIA"
+  },
+  {
+   "id": 337,
+   "desc": "VIETNAM"
+  },
+  {
+   "id": 341,
+   "desc": "HONG KONG"
+  },
+  {
+   "id": 344,
+   "desc": "MACAO"
+  },
+  {
+   "id": 345,
+   "desc": "BANGLADESH"
+  },
+  {
+   "id": 346,
+   "desc": "BRUNEI"
+  },
+  {
+   "id": 348,
+   "desc": "REPUBLICA DE YEMEN"
+  },
+  {
+   "id": 349,
+   "desc": "ARMENIA"
+  },
+  {
+   "id": 350,
+   "desc": "AZERBAIJAN"
+  },
+  {
+   "id": 351,
+   "desc": "GEORGIA"
+  },
+  {
+   "id": 352,
+   "desc": "KAZAJSTAN"
+  },
+  {
+   "id": 353,
+   "desc": "KIRGUIZISTAN"
+  },
+  {
+   "id": 354,
+   "desc": "TAYIKISTAN"
+  },
+  {
+   "id": 355,
+   "desc": "TURKMENISTAN"
+  },
+  {
+   "id": 356,
+   "desc": "UZBEKISTAN"
+  },
+  {
+   "id": 357,
+   "desc": "ESTADO DE PALESTINA"
+  },
+  {
+   "id": 358,
+   "desc": "REPUBLICA DEMOCRATICA DE TIMOR ORIENTAL"
+  },
+  {
+   "id": 397,
+   "desc": "RESTO DE ASIA"
+  },
+  {
+   "id": 398,
+   "desc": "INDET.(ASIA)"
+  },
+  {
+   "id": 401,
+   "desc": "ALBANIA"
+  },
+  {
+   "id": 404,
+   "desc": "ANDORRA"
+  },
+  {
+   "id": 405,
+   "desc": "AUSTRIA"
+  },
+  {
+   "id": 406,
+   "desc": "BELGICA"
+  },
+  {
+   "id": 407,
+   "desc": "BULGARIA"
+  },
+  {
+   "id": 409,
+   "desc": "DINAMARCA"
+  },
+  {
+   "id": 410,
+   "desc": "ESPAÑA"
+  },
+  {
+   "id": 411,
+   "desc": "FINLANDIA"
+  },
+  {
+   "id": 412,
+   "desc": "FRANCIA"
+  },
+  {
+   "id": 413,
+   "desc": "GRECIA"
+  },
+  {
+   "id": 414,
+   "desc": "HUNGRIA"
+  },
+  {
+   "id": 415,
+   "desc": "IRLANDA"
+  },
+  {
+   "id": 416,
+   "desc": "ISLANDIA"
+  },
+  {
+   "id": 417,
+   "desc": "ITALIA"
+  },
+  {
+   "id": 418,
+   "desc": "LIECHTENSTEIN"
+  },
+  {
+   "id": 419,
+   "desc": "LUXEMBURGO"
+  },
+  {
+   "id": 420,
+   "desc": "MALTA"
+  },
+  {
+   "id": 421,
+   "desc": "MONACO"
+  },
+  {
+   "id": 422,
+   "desc": "NORUEGA"
+  },
+  {
+   "id": 423,
+   "desc": "PAISES BAJOS"
+  },
+  {
+   "id": 424,
+   "desc": "POLONIA"
+  },
+  {
+   "id": 425,
+   "desc": "PORTUGAL"
+  },
+  {
+   "id": 426,
+   "desc": "REINO UNIDO"
+  },
+  {
+   "id": 427,
+   "desc": "RUMANIA"
+  },
+  {
+   "id": 428,
+   "desc": "SAN MARINO"
+  },
+  {
+   "id": 429,
+   "desc": "SUECIA"
+  },
+  {
+   "id": 430,
+   "desc": "SUIZA"
+  },
+  {
+   "id": 431,
+   "desc": "VATICANO(SANTA SEDE)"
+  },
+  {
+   "id": 433,
+   "desc": "POS.BRIT.(EUROPA)"
+  },
+  {
+   "id": 435,
+   "desc": "CHIPRE"
+  },
+  {
+   "id": 436,
+   "desc": "TURQUIA"
+  },
+  {
+   "id": 438,
+   "desc": "ALEMANIA,REP.FED."
+  },
+  {
+   "id": 439,
+   "desc": "BIELORRUSIA"
+  },
+  {
+   "id": 440,
+   "desc": "ESTONIA"
+  },
+  {
+   "id": 441,
+   "desc": "LETONIA"
+  },
+  {
+   "id": 442,
+   "desc": "LITUANIA"
+  },
+  {
+   "id": 443,
+   "desc": "MOLDAVIA"
+  },
+  {
+   "id": 444,
+   "desc": "RUSIA"
+  },
+  {
+   "id": 445,
+   "desc": "UCRANIA"
+  },
+  {
+   "id": 446,
+   "desc": "BOSNIA HERZEGOVINA"
+  },
+  {
+   "id": 447,
+   "desc": "CROACIA"
+  },
+  {
+   "id": 448,
+   "desc": "ESLOVAQUIA"
+  },
+  {
+   "id": 449,
+   "desc": "ESLOVENIA"
+  },
+  {
+   "id": 450,
+   "desc": "MACEDONIA"
+  },
+  {
+   "id": 451,
+   "desc": "REP. CHECA"
+  },
+  {
+   "id": 453,
+   "desc": "MONTENEGRO"
+  },
+  {
+   "id": 454,
+   "desc": "SERBIA"
+  },
+  {
+   "id": 497,
+   "desc": "RESTO EUROPA"
+  },
+  {
+   "id": 498,
+   "desc": "INDET.(EUROPA)"
+  },
+  {
+   "id": 501,
+   "desc": "AUSTRALIA"
+  },
+  {
+   "id": 503,
+   "desc": "NAURU"
+  },
+  {
+   "id": 504,
+   "desc": "NUEVA ZELANDIA"
+  },
+  {
+   "id": 505,
+   "desc": "VANATU"
+  },
+  {
+   "id": 506,
+   "desc": "SAMOA OCCIDENTAL"
+  },
+  {
+   "id": 507,
+   "desc": "TERRITORIO VINCULADOS A AUSTRALIA"
+  },
+  {
+   "id": 508,
+   "desc": "TERRITORIOS VINCULADOS AL R. UNIDO"
+  },
+  {
+   "id": 509,
+   "desc": "TERRITORIOS VINCULADOS A FRANCIA"
+  },
+  {
+   "id": 510,
+   "desc": "TER VINCULADOS A NUEVA. ZELANDA"
+  },
+  {
+   "id": 511,
+   "desc": "TER. VINCULADOS A ESTADOS UNIDOS"
+  },
+  {
+   "id": 512,
+   "desc": "FIJI, ISLAS"
+  },
+  {
+   "id": 513,
+   "desc": "PAPUA NUEVA GUINEA"
+  },
+  {
+   "id": 514,
+   "desc": "KIRIBATI, ISLAS"
+  },
+  {
+   "id": 515,
+   "desc": "MICRONESIA,EST.FEDER"
+  },
+  {
+   "id": 516,
+   "desc": "PALAU"
+  },
+  {
+   "id": 517,
+   "desc": "TUVALU"
+  },
+  {
+   "id": 518,
+   "desc": "SALOMON,ISLAS"
+  },
+  {
+   "id": 519,
+   "desc": "TONGA"
+  },
+  {
+   "id": 520,
+   "desc": "MARSHALL,ISLAS"
+  },
+  {
+   "id": 521,
+   "desc": "MARIANAS,ISLAS"
+  },
+  {
+   "id": 597,
+   "desc": "RESTO OCEANIA"
+  },
+  {
+   "id": 598,
+   "desc": "INDET.(OCEANIA)"
+  },
+  {
+   "id": 652,
+   "desc": "ANGUILA (TERRITORIO NO AUTONOMO DEL R. UNIDO)"
+  },
+  {
+   "id": 653,
+   "desc": "ARUBA (TERRITORIO DE PAISES BAJOS)"
+  },
+  {
+   "id": 654,
+   "desc": "ISLA DE COOK (TERRITORIO AUTONOMO ASOCIADO A NUEVA ZELANDA)"
+  },
+  {
+   "id": 655,
+   "desc": "PATAU"
+  },
+  {
+   "id": 656,
+   "desc": "POLINESIA FRANCESA (TERRITORIO DE ULTRAMAR DE FRANCIA)"
+  },
+  {
+   "id": 659,
+   "desc": "ANTILLAS HOLANDESAS (TERRITORIO DE PAISES BAJOS)"
+  },
+  {
+   "id": 662,
+   "desc": "ASCENCION"
+  },
+  {
+   "id": 663,
+   "desc": "BERMUDAS (TERRITORIO NO AUTONOMO DEL R. UNIDO)"
+  },
+  {
+   "id": 664,
+   "desc": "CAMPIONE DITALIA"
+  },
+  {
+   "id": 665,
+   "desc": "COLONIA DE GIBRALTAR"
+  },
+  {
+   "id": 666,
+   "desc": "GROENLANDIA"
+  },
+  {
+   "id": 667,
+   "desc": "GUAM (TERRITORIO NO AUTONOMO DE LOS ESTADOS UNIDOS)"
+  },
+  {
+   "id": 668,
+   "desc": "HONG KONG (TERRITORIO DE CHINA)"
+  },
+  {
+   "id": 669,
+   "desc": "ISLAS AZORES"
+  },
+  {
+   "id": 670,
+   "desc": "ISLAS DEL CANAL (GUERNESEY, JERSEY, ALDERNEY, G.STARK, L.SARK, ETC)"
+  },
+  {
+   "id": 671,
+   "desc": "ISLAS CAIMAN (TERRITORIO NO AUTONOMO DEL R UNIDO)"
+  },
+  {
+   "id": 672,
+   "desc": "ISLA CHRISTMAS"
+  },
+  {
+   "id": 673,
+   "desc": "ISLA DE COCOS O KEELING"
+  },
+  {
+   "id": 676,
+   "desc": "ISLA DE MAN (TERRITORIO DEL REINO UNIDO)"
+  },
+  {
+   "id": 677,
+   "desc": "ISLA DE NORFOLK (TERRITORIO DEL REINO UNIDO)"
+  },
+  {
+   "id": 678,
+   "desc": "ISLAS TURCAS Y CAICOS (TERRITORIO NO AUTONOMO DEL REINO UNIDO)"
+  },
+  {
+   "id": 679,
+   "desc": "ISLAS PACIFICO"
+  },
+  {
+   "id": 680,
+   "desc": "ISLAS DE SAN PEDRO Y MIGUELON"
+  },
+  {
+   "id": 681,
+   "desc": "ISLA QESHM"
+  },
+  {
+   "id": 682,
+   "desc": "ISLAS VIRGENES BRITANICAS (TERRITORIO NO AUTONOMO DEL REINO UNIDO)"
+  },
+  {
+   "id": 683,
+   "desc": "ISLAS VIRGENES DE ESTADOS UNIDOS DE AMERICA"
+  },
+  {
+   "id": 684,
+   "desc": "LABUAM"
+  },
+  {
+   "id": 685,
+   "desc": "MADEIRA (TERRITORIO DE PORTUGAL)"
+  },
+  {
+   "id": 686,
+   "desc": "MONSERRAT (TERRITORIO NO AUTONOMO DEL REINO UNIDO)"
+  },
+  {
+   "id": 687,
+   "desc": "NIUE"
+  },
+  {
+   "id": 690,
+   "desc": "PITCAIRN"
+  },
+  {
+   "id": 693,
+   "desc": "REGIMEN APLICABLE A LAS SA FINANCIERAS (LEY 11073 DE LA ROU)"
+  },
+  {
+   "id": 694,
+   "desc": "SANTA ELENA"
+  },
+  {
+   "id": 695,
+   "desc": "SAMOA AMERICANA"
+  },
+  {
+   "id": 696,
+   "desc": "ARCHIPIELAGO DE SVBALBARD"
+  },
+  {
+   "id": 697,
+   "desc": "TRISTAN DA CUNHA"
+  },
+  {
+   "id": 698,
+   "desc": "TRIESTE (ITALIA)"
+  },
+  {
+   "id": 699,
+   "desc": "TOKELAU"
+  },
+  {
+   "id": 700,
+   "desc": "ZONA LIBRE DE OSTRAVA (CIUDAD DE LA ANTIGUA CHECOSLOVAQUIA)"
+  },
+  {
+   "id": 997,
+   "desc": "RESTO CONTINENTE"
+  },
+  {
+   "id": 998,
+   "desc": "INDET.(CONTINENTE)"
+  }
+ ]
+}
