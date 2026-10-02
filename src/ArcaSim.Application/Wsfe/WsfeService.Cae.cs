@@ -20,7 +20,7 @@ public sealed partial class WsfeService
         var details = request.FeCAEReq?.FeDetReq ?? [];
         var today = clock.Today();
         var type = tables.VoucherType(header.CbteTipo);
-        var issuer = await taxpayers.FindAsync(auth.Cuit, ct);
+        var issuer = await IssuerAsync(auth.Cuit, header.PtoVta, PointOfSaleKind.WebServiceCae, type?.Class, ct);
         var forced = settings.ChaosFor(Name).TryTakeForcedRejection(out var forcedCode) ? forcedCode : (int?)null;
 
         var errors = HeaderErrors(RuleCodes.Cae, header, details.Length, type, issuer, today, PointOfSaleKind.WebServiceCae);

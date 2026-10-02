@@ -18,9 +18,9 @@ public sealed partial class WsfeService
         if (auth.Failed) return new FECAEAGetResponse { Errors = [auth.Error!] };
 
         var errors = new List<Err>();
-        var issuer = await taxpayers.FindAsync(auth.Cuit, ct);
+        var issuer = await IssuerAsync(auth.Cuit, null, PointOfSaleKind.WebServiceCaea, null, ct);
         if (issuer is not { Active: true }) errors.Add(catalog.For(method, 15000).ToErr());
-        else
+        else if (!settings.OpenAccess)
         {
             var today = clock.Today();
             bool Active(PointOfSale p, PointOfSaleKind kind) => p.Kind == kind && !p.Blocked && !(p.DeactivatedOn <= today);
@@ -76,7 +76,7 @@ public sealed partial class WsfeService
         var details = request.FeCAEARegInfReq?.FeDetReq ?? [];
         var today = clock.Today();
         var type = tables.VoucherType(header.CbteTipo);
-        var issuer = await taxpayers.FindAsync(auth.Cuit, ct);
+        var issuer = await IssuerAsync(auth.Cuit, header.PtoVta, PointOfSaleKind.WebServiceCaea, type?.Class, ct);
         var errors = HeaderErrors(method, header, details.Length, type, issuer, today, PointOfSaleKind.WebServiceCaea);
 
         var response = new FECAEAResponse
@@ -206,7 +206,7 @@ public sealed partial class WsfeService
         else if (caea.Cuit != auth.Cuit) errors.Add(catalog.For(method, 1201).ToErr());
         else
         {
-            var issuer = await taxpayers.FindAsync(auth.Cuit, ct);
+            var issuer = await IssuerAsync(auth.Cuit, request.PtoVta, PointOfSaleKind.WebServiceCaea, null, ct);
             if (issuer?.FindPointOfSale(request.PtoVta) is not { Kind: PointOfSaleKind.WebServiceCaea }) errors.Add(catalog.For(method, 1204).ToErr());
             if (clock.Today() <= caea.ValidFrom) errors.Add(catalog.For(method, 1203).ToErr());
             if (await vouchers.AnyWithCaeaAsync(auth.Cuit, caea.Code, request.PtoVta, ct)) errors.Add(catalog.For(method, 1202).ToErr());

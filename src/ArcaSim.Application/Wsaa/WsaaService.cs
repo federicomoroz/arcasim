@@ -74,8 +74,11 @@ public sealed partial class WsaaService(
         if (certificate.NotBefore.ToUniversalTime() > now.UtcDateTime) return LoginResult.Fail(WsaaFault.CertificateNotYetValid);
         if (certificate.NotAfter.ToUniversalTime() < now.UtcDateTime) return LoginResult.Fail(WsaaFault.CertificateExpired);
 
-        // 6. Trust, before the TRA is even read.
-        if (!IsTrusted(certificate, now)) return LoginResult.Fail(WsaaFault.CertificateUntrusted);
+        // 6. Trust, before the TRA is even read. With open access any certificate that names
+        //    its CUIT will do: the one WSASS issued for homologación, or a self-signed one.
+        var clientCuit = DistinguishedNames.CuitOf(certificate.SubjectName);
+        var openTrust = settings.OpenAccess && clientCuit is not null;
+        if (!openTrust && !IsTrusted(certificate, now)) return LoginResult.Fail(WsaaFault.CertificateUntrusted);
 
         // 7. The TRA.
         var parsed = ParseTra(cms.ContentInfo.Content);
@@ -96,11 +99,13 @@ public sealed partial class WsaaService(
         var service = WebService.Find(tra.Service);
         if (service is null) return LoginResult.Fail(WsaaFault.ServiceNotFound);
 
-        var clientCuit = DistinguishedNames.CuitOf(certificate.SubjectName);
-        var alias = DistinguishedNames.CommonNameOf(certificate.SubjectName);
-        var authorizations = clientCuit is null || alias is null
+        var alias = DistinguishedNames.CommonNameOf(certificate.SubjectName) ?? "";
+        var authorizations = clientCuit is null
             ? []
             : await access.AuthorizationsForAsync(clientCuit.Value, alias, service.Id, ct);
+        // With open access, a certificate nobody authorized acts for its own CUIT, on every service.
+        if (authorizations.Count == 0 && openTrust)
+            authorizations = [new ServiceAuthorization(clientCuit!.Value, alias, clientCuit.Value, service.Id)];
         if (authorizations.Count == 0) return LoginResult.Fail(WsaaFault.NotAuthorized);
 
         if (settings.ReplayWindowEnabled)

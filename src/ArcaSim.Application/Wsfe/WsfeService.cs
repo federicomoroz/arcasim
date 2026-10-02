@@ -47,7 +47,7 @@ public sealed partial class WsfeService(
         if (tables.VoucherType(request.CbteTipo) is null) errors.Add(catalog.For(method, 11001).ToErr());
         if (errors.Count == 0)
         {
-            var issuer = await taxpayers.FindAsync(auth.Cuit, ct);
+            var issuer = await IssuerAsync(auth.Cuit, request.PtoVta, PointOfSaleKind.WebServiceCae, tables.VoucherType(request.CbteTipo)?.Class, ct);
             if (issuer?.FindPointOfSale(request.PtoVta) is not { Kind: PointOfSaleKind.WebServiceCae or PointOfSaleKind.WebServiceCaea })
                 errors.Add(catalog.For(method, 11002).ToErr());
         }
@@ -73,7 +73,7 @@ public sealed partial class WsfeService(
         if (query.PtoVta is < 1 or > 99_998) errors.Add(catalog.For(method, 10200).ToErr());
         if (tables.VoucherType(query.CbteTipo) is null) errors.Add(catalog.For(method, 10201).ToErr());
         if (query.CbteNro is < 1 or > 99_999_999) errors.Add(catalog.For(method, 10202).ToErr());
-        if (errors.Count == 0 && (await taxpayers.FindAsync(auth.Cuit, ct))?.FindPointOfSale(query.PtoVta) is null)
+        if (errors.Count == 0 && !settings.OpenAccess && (await taxpayers.FindAsync(auth.Cuit, ct))?.FindPointOfSale(query.PtoVta) is null)
             errors.Add(catalog.For(method, 10104).ToErr());
         if (errors.Count > 0) return new FECompConsultaResponse { Errors = [.. errors] };
 
@@ -231,6 +231,34 @@ public sealed partial class WsfeService(
             _ => "Monotributo",
         };
         return kind == PointOfSaleKind.WebServiceCaea ? $"CAEA - {regime}" : $"CAE - {regime}";
+    }
+
+    /// <summary>
+    /// The issuer, as ArcaSim knows it. With open access, a CUIT it has not seen
+    /// is created on the spot (Monotributo if its first voucher is class C,
+    /// Responsable Inscripto otherwise), and so is the point of sale it uses,
+    /// so an application needs nothing but ARCA's endpoints.
+    /// </summary>
+    private async Task<Taxpayer?> IssuerAsync(long cuit, int? pointOfSale, PointOfSaleKind kind, VoucherClass? firstClass, CancellationToken ct)
+    {
+        var issuer = await taxpayers.FindAsync(cuit, ct);
+        if (!settings.OpenAccess) return issuer;
+
+        var changed = false;
+        if (issuer is null)
+        {
+            if (!Cuits.IsValid(cuit)) return null;
+            var condition = firstClass == VoucherClass.C ? VatCondition.Monotributo : VatCondition.ResponsableInscripto;
+            issuer = new Taxpayer(cuit, $"Contribuyente {cuit}", condition);
+            changed = true;
+        }
+        if (pointOfSale is >= 1 and <= 99_998 && issuer.FindPointOfSale(pointOfSale.Value) is null)
+        {
+            issuer.AddPointOfSale(new PointOfSale(pointOfSale.Value, kind));
+            changed = true;
+        }
+        if (changed) await taxpayers.SaveAsync(issuer, ct);
+        return issuer;
     }
 
     /// <summary>The issuer's checks behind code 10000 (wsfev1-codigos.md §4.1), with the manual's numbered messages.</summary>

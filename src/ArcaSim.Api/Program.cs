@@ -22,6 +22,7 @@ builder.Services.AddSingleton(_ => new SimulationSettings
 {
     Environment = options.GetValue("Environment", ArcaEnvironment.Homologacion),
     ReplayWindowEnabled = options.GetValue("ReplayWindowEnabled", true),
+    OpenAccess = !string.Equals(options["Access"], "Strict", StringComparison.OrdinalIgnoreCase),
 });
 
 var dataDirectory = options["DataDirectory"] ?? Path.Combine(builder.Environment.ContentRootPath, "data");

@@ -52,11 +52,13 @@ public sealed class ArcaSimHarness : IAsyncDisposable
     public static Uri WsfeUrl => new("http://localhost/wsfev1/service.asmx");
 
     /// <param name="postgres">A connection string to run on PostgreSQL instead of memory.</param>
-    public static ArcaSimHarness Start(string? postgres = null)
+    /// <param name="open">Open access, as ArcaSim starts by default. The suite runs strict unless a test asks.</param>
+    public static ArcaSimHarness Start(string? postgres = null, bool open = false)
     {
         var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(host =>
         {
             host.UseSetting("ArcaSim:DataDirectory", KeysDirectory);
+            host.UseSetting("ArcaSim:Access", open ? "Open" : "Strict");
             host.UseSetting("ArcaSim:ReplayWindowEnabled", "false");
             if (postgres is null) return;
             host.UseSetting("ArcaSim:Storage", "Postgres");

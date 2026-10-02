@@ -17,6 +17,7 @@ public static class AdminApi
         ManualVersion? ManualVersion,
         bool? FollowCalendar,
         bool? ReplayWindowEnabled,
+        bool? OpenAccess,
         decimal? FinalConsumerIdentificationThreshold,
         int? MaxRecordsPerRequest,
         int? CaeLifetimeDays);
@@ -45,6 +46,7 @@ public static class AdminApi
             if (body.FollowCalendar == true) settings.ManualVersionOverride = null;
             else if (body.ManualVersion is { } version) settings.ManualVersionOverride = version;
             if (body.ReplayWindowEnabled is { } replay) settings.ReplayWindowEnabled = replay;
+            if (body.OpenAccess is { } open) settings.OpenAccess = open;
             if (body.FinalConsumerIdentificationThreshold is { } threshold) settings.FinalConsumerIdentificationThreshold = threshold;
             if (body.MaxRecordsPerRequest is { } max) settings.MaxRecordsPerRequest = max;
             if (body.CaeLifetimeDays is { } days) settings.CaeLifetimeDays = days;
@@ -173,6 +175,7 @@ public static class AdminApi
             ManualVersion = settings.ManualVersionOn(DateOnly.FromDateTime(now.DateTime)) == ManualVersion.V4_8 ? "4.8" : "4.7",
             FollowsCalendar = settings.ManualVersionOverride is null,
             settings.ReplayWindowEnabled,
+            settings.OpenAccess,
             settings.FinalConsumerIdentificationThreshold,
             settings.MaxRecordsPerRequest,
             settings.CaeLifetimeDays,

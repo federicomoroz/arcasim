@@ -41,8 +41,15 @@ public sealed class SimulationSettings
     /// <summary>CAEFchVto is the voucher's date plus this many days: what every observed CAE shows (wsfev1.md §6.2).</summary>
     public int CaeLifetimeDays { get; set; } = 10;
 
-    /// <summary>Also trust ARCA's homologación certification authority, so a WSASS certificate works against ArcaSim.</summary>
-    public bool TrustArcaHomologacionCa { get; set; }
+    /// <summary>
+    /// ArcaSim used only through ARCA's endpoints, with nothing set up first.
+    /// Any certificate with a CUIT in its DN logs in (the one WSASS issued, or a
+    /// self-signed one), its CUIT is authorized for every service, and an issuer
+    /// or point of sale ArcaSim has not seen is created the first time it is used.
+    /// Off, ArcaSim asks for what ARCA asks for: a certificate from its own
+    /// authority, an authorization, and a registered issuer and point of sale.
+    /// </summary>
+    public bool OpenAccess { get; set; } = true;
 
     public ManualVersion ManualVersionOn(DateOnly day) =>
         ManualVersionOverride ?? (day >= new DateOnly(2026, 12, 1) ? ManualVersion.V4_8 : ManualVersion.V4_7);

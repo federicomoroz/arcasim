@@ -65,6 +65,7 @@ async function loadStatus() {
   settings.manual.value = status.followsCalendar ? "calendar" : status.manualVersion === "4.8" ? "V4_8" : "V4_7";
   settings.threshold.value = status.finalConsumerIdentificationThreshold;
   settings.replay.checked = status.replayWindowEnabled;
+  settings.open.checked = status.openAccess;
   $("#chaos-state").textContent = Object.keys(status.chaos).length === 0
     ? "Sin fallas activas."
     : Object.entries(status.chaos).map(([service, c]) =>
@@ -116,6 +117,7 @@ $("#settings").addEventListener("submit", run(async (event) => {
       manualVersion: values.manual === "calendar" ? null : values.manual,
       finalConsumerIdentificationThreshold: Number(values.threshold),
       replayWindowEnabled: event.target.replay.checked,
+      openAccess: event.target.open.checked,
     },
   });
   await loadStatus();
