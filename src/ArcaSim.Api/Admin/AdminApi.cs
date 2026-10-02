@@ -1,4 +1,5 @@
 using ArcaSim.Application;
+using ArcaSim.Application.Traffic;
 using ArcaSim.Application.Wsfe;
 using ArcaSim.Domain;
 using ArcaSim.Infrastructure.Security;
@@ -119,6 +120,25 @@ public static class AdminApi
             return Status(settings, clock);
         });
 
+        api.MapGet("/traffic", (TrafficGate gate) => gate.Snapshot().Select(t => new
+        {
+            t.Service,
+            t.Limits,
+            t.InFlight,
+            t.Queued,
+            LastMinute = new { t.Requests, t.Admitted, t.Refused, t.AverageMilliseconds, t.P95Milliseconds },
+            t.SaturationPercent,
+            t.LoadPercent,
+        }));
+
+        api.MapPut("/traffic/{service}", (string service, TrafficLimits limits, TrafficGate gate) =>
+        {
+            if (limits.RequestsPerMinute < 0 || limits.Capacity < 0 || limits.ServiceTimeMilliseconds < 0 || limits.QueueLimit < 0)
+                return Results.BadRequest(new { error = "Los límites no pueden ser negativos." });
+            gate.SetLimits(service, limits);
+            return Results.Ok(limits);
+        });
+
         api.MapPost("/clock", (ClockBody body, SimulationSettings settings, SimulatedClock clock) =>
         {
             if (body.FreezeAt is { } at) clock.Freeze(at);
@@ -157,8 +177,9 @@ public static class AdminApi
             return Results.Ok(body);
         });
 
-        api.MapPost("/reset", async (IEnumerable<IResettable> stores, SimulationSettings settings, SimulatedClock clock, CancellationToken ct) =>
+        api.MapPost("/reset", async (IEnumerable<IResettable> stores, SimulationSettings settings, SimulatedClock clock, TrafficGate traffic, CancellationToken ct) =>
         {
+            traffic.Reset();
             foreach (var store in stores) await store.ResetAsync(ct);
             settings.ResetChaos();
             clock.Reset();

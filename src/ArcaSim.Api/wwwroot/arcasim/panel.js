@@ -211,5 +211,71 @@ $("#reset").addEventListener("click", run(async () => {
   toast("ArcaSim quedó vacío.");
 }));
 
+// The meter, ported from rate-guardian's dashboard: a half dial, green to 50, amber to 80, red after.
+function gauge(percent) {
+  const pct = Math.max(0, Math.min(100, percent));
+  const cx = 120, cy = 110, r = 80;
+  const point = (p) => {
+    const a = ((-180 + p * 1.8) * Math.PI) / 180;
+    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  };
+  const arc = (from, to, color) => {
+    const [x1, y1] = point(from), [x2, y2] = point(to);
+    return `<path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r} ${r} 0 ${to - from > 50 ? 1 : 0} 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${color}" stroke-width="10" fill="none" stroke-linecap="round"/>`;
+  };
+  const color = pct < 50 ? "#3ccf91" : pct < 80 ? "#ffcf5c" : "#ff6b6b";
+  const [nx, ny] = point(pct);
+  return `<svg width="240" height="148" viewBox="0 0 240 148" role="img" aria-label="Saturación ${pct.toFixed(1)}%">
+    <path d="M 40 110 A 80 80 0 0 1 200 110" stroke="#262b36" stroke-width="12" fill="none" stroke-linecap="round"/>
+    ${arc(0, 50, "#1f6b4c")}${arc(50, 80, "#7a6324")}${arc(80, 100, "#7a2c2c")}
+    <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="5" fill="${color}"/>
+    <text x="120" y="140" fill="${color}" font-family="ui-monospace, monospace" font-size="14" text-anchor="middle">${pct.toFixed(1)}%</text>
+  </svg>`;
+}
+
+async function loadTraffic() {
+  const services = await api("/traffic");
+  const names = { wsfe: "WSFEv1", wsaa: "WSAA" };
+  const box = $("#meters");
+  box.replaceChildren(...services.map((t) => {
+    const el = document.createElement("div");
+    el.className = "meter";
+    const m = t.lastMinute;
+    el.innerHTML = `<h3>${names[t.service] ?? t.service}</h3>${gauge(t.saturationPercent)}
+      <dl>
+        <dt>Pedidos (1 min)</dt><dd>${m.requests}</dd>
+        <dt>Rechazados</dt><dd>${m.refused}</dd>
+        <dt>Atendiendo / en cola</dt><dd>${t.inFlight} / ${t.queued}</dd>
+        <dt>Promedio / p95</dt><dd>${m.averageMilliseconds} / ${m.p95Milliseconds} ms</dd>
+      </dl>`;
+    return el;
+  }));
+  const form = $("#traffic");
+  const current = services.find((t) => t.service === form.service.value);
+  if (current && !form.contains(document.activeElement)) {
+    for (const key of ["requestsPerMinute", "capacity", "serviceTimeMilliseconds", "queueLimit"]) form[key].value = current.limits[key];
+  }
+}
+
+$("#traffic").addEventListener("submit", run(async (event) => {
+  const values = form(event.target);
+  await api(`/traffic/${values.service}`, {
+    method: "PUT",
+    body: {
+      requestsPerMinute: Number(values.requestsPerMinute),
+      capacity: Number(values.capacity),
+      serviceTimeMilliseconds: Number(values.serviceTimeMilliseconds),
+      queueLimit: Number(values.queueLimit),
+    },
+  });
+  await loadTraffic();
+  toast("Límites de tráfico aplicados.");
+}));
+
+$("#traffic").service.addEventListener("change", () => loadTraffic().catch(() => {}));
+
 run(reloadAll)();
+run(loadTraffic)();
 setInterval(() => loadStatus().catch(() => {}), 5000);
+setInterval(() => loadTraffic().catch(() => {}), 1000);

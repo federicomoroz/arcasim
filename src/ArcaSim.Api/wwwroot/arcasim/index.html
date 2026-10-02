@@ -123,6 +123,28 @@
     <pre id="chaos-state" class="out mono"></pre>
   </section>
 
+  <section class="card wide">
+    <h2>Tráfico</h2>
+    <p class="muted">Saturación y cuellos de botella sobre las mismas URL de ARCA. Lo que no entra recibe HTTP 503, como un balanceador saturado. El medidor marca rechazados sobre total en el último minuto.</p>
+    <div class="traffic">
+      <div id="meters" class="meters"></div>
+      <form id="traffic" class="rows">
+        <label>Servicio
+          <select name="service"><option value="wsfe">WSFEv1</option><option value="wsaa">WSAA</option></select>
+        </label>
+        <div class="pair">
+          <label>Pedidos por minuto (0 = sin límite) <input name="requestsPerMinute" type="number" min="0" value="0"></label>
+          <label>Atendidos a la vez (0 = sin límite) <input name="capacity" type="number" min="0" value="0"></label>
+        </div>
+        <div class="pair">
+          <label>Tiempo de cada pedido (ms) <input name="serviceTimeMilliseconds" type="number" min="0" value="0"></label>
+          <label>Lugares en la cola <input name="queueLimit" type="number" min="0" value="0"></label>
+        </div>
+        <button>Aplicar</button>
+      </form>
+    </div>
+  </section>
+
   <section class="card">
     <h2>Cotizaciones</h2>
     <p class="muted">ArcaSim no tiene las de ARCA. Sin cotización cargada, se omiten las validaciones que dependen de ella.</p>

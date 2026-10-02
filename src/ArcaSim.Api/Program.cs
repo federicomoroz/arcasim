@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using ArcaSim.Api.Admin;
 using ArcaSim.Api.Soap;
 using ArcaSim.Application;
+using ArcaSim.Application.Traffic;
 using ArcaSim.Application.Wsaa;
 using ArcaSim.Application.Wsfe;
 using ArcaSim.Domain;
@@ -50,6 +51,7 @@ builder.Services.AddSingleton(_ => ValidationCatalog.Load());
 builder.Services.AddSingleton(_ => ParameterTables.Load());
 builder.Services.AddSingleton<IAuthorizationCodes, RandomAuthorizationCodes>();
 builder.Services.AddSingleton<SequenceLocks>();
+builder.Services.AddSingleton<TrafficGate>();
 builder.Services.AddSingleton<TokenValidator>();
 builder.Services.AddSingleton<VoucherValidator>();
 builder.Services.AddSingleton<WsfeService>();
@@ -61,6 +63,7 @@ var app = builder.Build();
 
 if (app.Services.GetService<PostgresStore>() is { } postgres) await postgres.EnsureSchemaAsync();
 
+TrafficMiddleware.Use(app);
 app.UseDefaultFiles();
 app.UseStaticFiles();
 WsaaEndpoint.Map(app);
