@@ -4,6 +4,8 @@
 
 ArcaSim habla el mismo protocolo que ARCA: los mismos WSDL, las mismas operaciones, los mismos errores con sus textos reales. Un cliente generado del WSDL oficial funciona contra ArcaSim sin tocarlo.
 
+**[English version](README.en.md)**
+
 > ArcaSim no tiene relación con ARCA. Los CAE que otorga no tienen validez fiscal y sus tickets de acceso solo sirven contra ArcaSim.
 
 ![El panel de ArcaSim: simulación, contribuyentes ficticios, certificados, fallas y los comprobantes emitidos](docs/media/panel.png)
@@ -17,6 +19,8 @@ ArcaSim habla el mismo protocolo que ARCA: los mismos WSDL, las mismas operacion
 | **Contribuyentes ficticios** | Emisores con su condición frente al IVA y sus puntos de venta, y receptores. Lo que en ARCA hace WSASS lo hace el panel: emite el certificado con el DN que pide ARCA y autoriza el servicio. |
 | **Fallas a pedido** | Lo que con ARCA real es difícil de provocar: el servicio caído, una demora, rechazar el próximo comprobante con un código dado, u otorgar el CAE y cortar la conexión antes de responder, para probar la recuperación. |
 | **Reloj propio** | Detenerlo o adelantarlo: vencer un ticket, salir del rango de fechas de un comprobante o cruzar el 01/12/2026, cuando la condición frente al IVA del receptor pasa a ser obligatoria. |
+
+![Cambiar ArcaSim por ARCA, en cinco pasos: la aplicación pide el ticket de acceso y el CAE a ArcaSim, el panel provoca fallas y mueve el reloj, y para producción se cambian dos direcciones y el certificado](docs/media/modulo.gif)
 
 ## Cómo se usa desde una aplicación
 
@@ -49,6 +53,8 @@ Para pasar a homologación o a producción se cambian `WsaaUrl`, `WsfeUrl` y el 
 | ArcaSim | `https://<host>/ws/services/LoginCms` | `https://<host>/wsfev1/service.asmx` |
 | Homologación | `https://wsaahomo.afip.gov.ar/ws/services/LoginCms` | `https://wswhomo.afip.gov.ar/wsfev1/service.asmx` |
 | Producción | `https://wsaa.afip.gov.ar/ws/services/LoginCms` | `https://servicios1.afip.gov.ar/wsfev1/service.asmx` |
+
+![Si la respuesta se pierde, en seis pasos: el cliente pide el CAE del 42, ARCA lo otorga pero la conexión se corta, reenviar daría 10016, así que consulta el 42 con FECompConsultar y recupera el CAE](docs/media/recuperacion.gif)
 
 Si la respuesta a un pedido de CAE se pierde, `AuthorizeNextAsync` consulta con `FECompConsultar` si el número quedó autorizado antes de dar el error, que es el procedimiento que indica ARCA: reenviar a ciegas devolvería «número no correlativo».
 

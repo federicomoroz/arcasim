@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ArcaSim · Cambiar ArcaSim por ARCA</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; background: #171c22; }
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  svg { width: 100%; max-width: 1200px; height: auto; display: block; font-family: "Archivo", "Segoe UI", system-ui, sans-serif; }
+  .frame { fill: #171c22; }
+  .kicker { fill: #ebe6dc; font-size: 22px; font-weight: 800; letter-spacing: 0.14em; }
+  .meta { fill: #848d98; font: 15px Consolas, "JetBrains Mono", monospace; }
+  .rule { stroke: #c07a45; stroke-width: 2; opacity: 0.55; }
+  .num-box { fill: rgba(255, 182, 72, 0.10); stroke: #ffb648; stroke-width: 2; }
+  .num { fill: #ffb648; font-size: 38px; font-weight: 800; }
+  .step-title { fill: #ebe6dc; font-size: 34px; font-weight: 800; }
+  .body { fill: #a3abb5; font-size: 19px; }
+  .box { fill: #262d36; stroke: #4a5461; stroke-width: 1.2; }
+  .group { fill: #1f252d; stroke: #6e4a31; stroke-width: 1.4; stroke-dasharray: 6 5; }
+  .glow { fill: rgba(255, 182, 72, 0.07); stroke: #ffb648; stroke-width: 2; opacity: 0; }
+  .title { fill: #ebe6dc; font-size: 18px; font-weight: 700; }
+  .group-title { fill: #c07a45; font-size: 14px; font-weight: 800; letter-spacing: 0.12em; }
+  .sub { fill: #848d98; font: 13.5px Consolas, "JetBrains Mono", monospace; }
+  .wire { fill: none; stroke: #4a5461; stroke-width: 1.6; }
+  .current { fill: none; stroke: #c07a45; stroke-width: 1.6; stroke-dasharray: 3 9; animation: flow 0.8s linear infinite; opacity: 0.8; }
+  @keyframes flow { to { stroke-dashoffset: -12; } }
+  .packet-text { font: 700 13px Consolas, "JetBrains Mono", monospace; }
+  .badge-text { font: 600 13.5px Consolas, "JetBrains Mono", monospace; }
+  .dot { fill: #4a5461; }
+  .foot { fill: #a3abb5; font-size: 17px; }
+  .foot-band { fill: #1f252d; }
+  .foot-edge { fill: #c07a45; }
+    @keyframes g-app { 0% { opacity: 0; } 0.000% { opacity: 0; } 0.600% { opacity: 1; } 19.400% { opacity: 1; } 20.000% { opacity: 0; } 19.990% { opacity: 0; } 20.600% { opacity: 1; } 39.400% { opacity: 1; } 40.000% { opacity: 0; } 79.990% { opacity: 0; } 80.600% { opacity: 1; } 99.400% { opacity: 1; } 100.000% { opacity: 0; } 100% { opacity: 0; } }
+  #glow-app { animation: g-app 14.0s linear infinite; }
+  @keyframes g-wsaa { 0% { opacity: 0; } 0.000% { opacity: 0; } 0.600% { opacity: 1; } 19.400% { opacity: 1; } 20.000% { opacity: 0; } 59.990% { opacity: 0; } 60.600% { opacity: 1; } 79.400% { opacity: 1; } 80.000% { opacity: 0; } 100% { opacity: 0; } }
+  #glow-wsaa { animation: g-wsaa 14.0s linear infinite; }
+  @keyframes g-wsfe { 0% { opacity: 0; } 19.990% { opacity: 0; } 20.600% { opacity: 1; } 39.400% { opacity: 1; } 40.000% { opacity: 0; } 39.990% { opacity: 0; } 40.600% { opacity: 1; } 59.400% { opacity: 1; } 60.000% { opacity: 0; } 59.990% { opacity: 0; } 60.600% { opacity: 1; } 79.400% { opacity: 1; } 80.000% { opacity: 0; } 100% { opacity: 0; } }
+  #glow-wsfe { animation: g-wsfe 14.0s linear infinite; }
+  @keyframes g-panel { 0% { opacity: 0; } 39.990% { opacity: 0; } 40.600% { opacity: 1; } 59.400% { opacity: 1; } 60.000% { opacity: 0; } 59.990% { opacity: 0; } 60.600% { opacity: 1; } 79.400% { opacity: 1; } 80.000% { opacity: 0; } 100% { opacity: 0; } }
+  #glow-panel { animation: g-panel 14.0s linear infinite; }
+  @keyframes g-arca { 0% { opacity: 0; } 79.990% { opacity: 0; } 80.600% { opacity: 1; } 99.400% { opacity: 1; } 100.000% { opacity: 0; } 100% { opacity: 0; } }
+  #glow-arca { animation: g-arca 14.0s linear infinite; }
+  @keyframes p1 { 0% { opacity: 0; transform: translate(280px, 405px); } 0.400% { opacity: 1; transform: translate(280px, 405px); } 10.265% { opacity: 1; transform: translate(480px, 405px); } 11.400% { opacity: 1; transform: translate(480px, 382px); } 12.600% { opacity: 1; transform: translate(480px, 382px); } 14.200% { opacity: 0; transform: translate(480px, 382px); } 100% { opacity: 0; transform: translate(480px, 382px); } }
+  @keyframes b2 { 0% { opacity: 0; } 0.600% { opacity: 1; } 19.400% { opacity: 1; } 20.000% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes p3 { 0% { opacity: 0; transform: translate(280px, 405px); } 19.990% { opacity: 0; transform: translate(280px, 405px); } 20.400% { opacity: 1; transform: translate(280px, 405px); } 30.772% { opacity: 1; transform: translate(660px, 405px); } 31.400% { opacity: 1; transform: translate(660px, 382px); } 32.600% { opacity: 1; transform: translate(660px, 382px); } 34.200% { opacity: 0; transform: translate(660px, 382px); } 100% { opacity: 0; transform: translate(660px, 382px); } }
+  @keyframes b4 { 0% { opacity: 0; } 19.990% { opacity: 0; } 20.600% { opacity: 1; } 39.400% { opacity: 1; } 40.000% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes b5 { 0% { opacity: 0; } 39.990% { opacity: 0; } 40.600% { opacity: 1; } 59.400% { opacity: 1; } 60.000% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes b6 { 0% { opacity: 0; } 59.990% { opacity: 0; } 60.600% { opacity: 1; } 79.400% { opacity: 1; } 80.000% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes p7 { 0% { opacity: 0; transform: translate(165px, 460px); } 79.990% { opacity: 0; transform: translate(165px, 460px); } 80.400% { opacity: 1; transform: translate(165px, 460px); } 81.806% { opacity: 1; transform: translate(165px, 606px); } 89.994% { opacity: 1; transform: translate(1015px, 606px); } 91.400% { opacity: 1; transform: translate(1015px, 460px); } 92.600% { opacity: 1; transform: translate(1015px, 460px); } 94.200% { opacity: 0; transform: translate(1015px, 460px); } 100% { opacity: 0; transform: translate(1015px, 460px); } }
+  @keyframes b8 { 0% { opacity: 0; } 79.990% { opacity: 0; } 80.600% { opacity: 1; } 99.200% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes h9 { 0% { opacity: 0; } 0.600% { opacity: 1; } 19.400% { opacity: 1; } 20.000% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes d9 { 0% { fill: #4a5461; } 0.000% { fill: #4a5461; } 0.100% { fill: #ffb648; } 20.000% { fill: #ffb648; } 20.100% { fill: #4a5461; } 100% { fill: #4a5461; } }
+  @keyframes h10 { 0% { opacity: 0; } 19.990% { opacity: 0; } 20.600% { opacity: 1; } 39.400% { opacity: 1; } 40.000% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes d10 { 0% { fill: #4a5461; } 20.000% { fill: #4a5461; } 20.100% { fill: #ffb648; } 40.000% { fill: #ffb648; } 40.100% { fill: #4a5461; } 100% { fill: #4a5461; } }
+  @keyframes h11 { 0% { opacity: 0; } 39.990% { opacity: 0; } 40.600% { opacity: 1; } 59.400% { opacity: 1; } 60.000% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes d11 { 0% { fill: #4a5461; } 40.000% { fill: #4a5461; } 40.100% { fill: #ffb648; } 60.000% { fill: #ffb648; } 60.100% { fill: #4a5461; } 100% { fill: #4a5461; } }
+  @keyframes h12 { 0% { opacity: 0; } 59.990% { opacity: 0; } 60.600% { opacity: 1; } 79.400% { opacity: 1; } 80.000% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes d12 { 0% { fill: #4a5461; } 60.000% { fill: #4a5461; } 60.100% { fill: #ffb648; } 80.000% { fill: #ffb648; } 80.100% { fill: #4a5461; } 100% { fill: #4a5461; } }
+  @keyframes h13 { 0% { opacity: 0; } 79.990% { opacity: 0; } 80.600% { opacity: 1; } 99.200% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes d13 { 0% { fill: #4a5461; } 80.000% { fill: #4a5461; } 80.100% { fill: #ffb648; } 100.000% { fill: #ffb648; } 100.000% { fill: #4a5461; } 100% { fill: #4a5461; } }
+  @media (prefers-reduced-motion: reduce) {
+    .current { animation: none; }
+  }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 1200 750" role="img" aria-label="Cambiar ArcaSim por ARCA">
+  <rect width="1200" height="750" class="frame"/>
+  <rect x="56" y="38" width="10" height="10" fill="#ffb648"/>
+  <text x="78" y="50" class="kicker">CAMBIAR ARCASIM POR ARCA</text>
+  <text x="1144" y="50" class="meta" text-anchor="end">ArcaSim · .NET 8 · SOAP · PostgreSQL</text>
+  <line x1="56" y1="74" x2="1144" y2="74" class="rule"/>
+  <g style="animation: h9 14.0s linear infinite; opacity: 0;"><rect x="56" y="98" width="76" height="76" rx="10" class="num-box"/><text x="94" y="149" class="num" text-anchor="middle">1</text><text x="160" y="134" class="step-title">El ticket de acceso</text><text x="160" y="170" class="body">La aplicación firma el pedido con su certificado, como lo haría con ARCA. ArcaSim</text><text x="160" y="197" class="body">lo valida en el mismo orden y entrega un ticket por 12 horas.</text></g><g style="animation: h10 14.0s linear infinite; opacity: 0;"><rect x="56" y="98" width="76" height="76" rx="10" class="num-box"/><text x="94" y="149" class="num" text-anchor="middle">2</text><text x="160" y="134" class="step-title">El CAE</text><text x="160" y="170" class="body">Mismas operaciones, mismos códigos de error y los mismos textos que devuelve ARCA.</text><text x="160" y="197" class="body">El comprobante queda numerado y se puede consultar después.</text></g><g style="animation: h11 14.0s linear infinite; opacity: 0;"><rect x="56" y="98" width="76" height="76" rx="10" class="num-box"/><text x="94" y="149" class="num" text-anchor="middle">3</text><text x="160" y="134" class="step-title">Las fallas, a pedido</text><text x="160" y="170" class="body">Lo que con ARCA real es difícil de provocar: el servicio caído, una demora, un</text><text x="160" y="197" class="body">rechazo con el código que se elija o la respuesta que no llega.</text></g><g style="animation: h12 14.0s linear infinite; opacity: 0;"><rect x="56" y="98" width="76" height="76" rx="10" class="num-box"/><text x="94" y="149" class="num" text-anchor="middle">4</text><text x="160" y="134" class="step-title">El reloj de ArcaSim</text><text x="160" y="170" class="body">Detenerlo o adelantarlo: vencer el ticket, salirse del rango de fechas o cruzar el</text><text x="160" y="197" class="body">01/12/2026, cuando la condición frente al IVA pasa a ser obligatoria.</text></g><g style="animation: h13 14.0s linear infinite; opacity: 0;"><rect x="56" y="98" width="76" height="76" rx="10" class="num-box"/><text x="94" y="149" class="num" text-anchor="middle">5</text><text x="160" y="134" class="step-title">A producción, la misma aplicación</text><text x="160" y="170" class="body">Se cambian las dos direcciones y el certificado por el de ARCA. El código no se</text><text x="160" y="197" class="body">toca: las llamadas son las mismas.</text></g>
+  <polyline points="280,405 480,405 480,382" class="wire"/><polyline points="280,405 480,405 480,382" class="current"/><polyline points="480,405 660,405 660,382" class="wire"/><polyline points="480,405 660,405 660,382" class="current"/><polyline points="165,460 165,606 1015,606 1015,460" class="wire"/><polyline points="165,460 165,606 1015,606 1015,460" class="current"/><rect x="50" y="330" width="230" height="130" rx="8" class="box"/><rect id="glow-app" x="50" y="330" width="230" height="130" rx="8" class="glow"/><text x="165.0" y="382.0" class="title" text-anchor="middle">Tu aplicación</text><text x="165.0" y="404.0" class="sub" text-anchor="middle">Arca.Client</text><text x="165.0" y="421.0" class="sub" text-anchor="middle">certificado + CUIT</text><rect x="380" y="262" width="380" height="296" rx="8" class="group"/><rect id="glow-arcasim" x="380" y="262" width="380" height="296" rx="8" class="glow"/><text x="396" y="288" class="group-title" text-anchor="start">ARCASIM</text><text x="744" y="288" class="sub" text-anchor="end">desarrollo y pruebas</text><rect x="400" y="302" width="160" height="80" rx="8" class="box"/><rect id="glow-wsaa" x="400" y="302" width="160" height="80" rx="8" class="glow"/><text x="480.0" y="337.5" class="title" text-anchor="middle">WSAA</text><text x="480.0" y="359.5" class="sub" text-anchor="middle">loginCms</text><rect x="580" y="302" width="160" height="80" rx="8" class="box"/><rect id="glow-wsfe" x="580" y="302" width="160" height="80" rx="8" class="glow"/><text x="660.0" y="337.5" class="title" text-anchor="middle">WSFEv1</text><text x="660.0" y="359.5" class="sub" text-anchor="middle">22 operaciones</text><rect x="400" y="432" width="340" height="106" rx="8" class="box"/><rect id="glow-panel" x="400" y="432" width="340" height="106" rx="8" class="glow"/><text x="570.0" y="480.5" class="title" text-anchor="middle">Panel /arcasim/</text><text x="570.0" y="502.5" class="sub" text-anchor="middle">contribuyentes · reloj · fallas</text><rect x="880" y="330" width="270" height="130" rx="8" class="box"/><rect id="glow-arca" x="880" y="330" width="270" height="130" rx="8" class="glow"/><text x="1015.0" y="382.0" class="title" text-anchor="middle">ARCA</text><text x="1015.0" y="404.0" class="sub" text-anchor="middle">homologación</text><text x="1015.0" y="421.0" class="sub" text-anchor="middle">producción</text><g class="packet" style="animation: p1 14.0s linear infinite;"><rect x="-56.099999999999994" y="-13" width="112.19999999999999" height="26" rx="13" fill="#171c22" stroke="#ffb648" stroke-width="1.6"/><circle cx="-43.099999999999994" cy="0" r="4" fill="#ffb648"/><text x="-33.099999999999994" y="4.5" class="packet-text" fill="#ffb648">TRA firmado</text></g><g style="animation: b2 14.0s linear infinite; opacity: 0;"><rect x="100.0" y="477" width="130.0" height="32" rx="6" fill="#171c22" stroke="#6fd08c" stroke-width="1.2"/><text x="165.0" y="493" class="badge-text" fill="#6fd08c" text-anchor="middle">ticket · 12 h</text></g><g class="packet" style="animation: p3 14.0s linear infinite;"><rect x="-47.9" y="-13" width="95.8" height="26" rx="13" fill="#171c22" stroke="#ffb648" stroke-width="1.6"/><circle cx="-34.9" cy="0" r="4" fill="#ffb648"/><text x="-24.9" y="4.5" class="packet-text" fill="#ffb648">Factura B</text></g><g style="animation: b4 14.0s linear infinite; opacity: 0;"><rect x="64.0" y="477" width="202.0" height="32" rx="6" fill="#171c22" stroke="#6fd08c" stroke-width="1.2"/><text x="165.0" y="493" class="badge-text" fill="#6fd08c" text-anchor="middle">A · CAE 71263951827464</text></g><g style="animation: b5 14.0s linear infinite; opacity: 0;"><rect x="357.0" y="575" width="426.0" height="32" rx="6" fill="#171c22" stroke="#ec6a5e" stroke-width="1.2"/><text x="570.0" y="591" class="badge-text" fill="#ec6a5e" text-anchor="middle">caído · demora · rechazo 10016 · respuesta cortada</text></g><g style="animation: b6 14.0s linear infinite; opacity: 0;"><rect x="361.0" y="575" width="418.0" height="32" rx="6" fill="#171c22" stroke="#4dd0e1" stroke-width="1.2"/><text x="570.0" y="591" class="badge-text" fill="#4dd0e1" text-anchor="middle">+13 h: ticket vencido · 01/12/2026: rechazo 10246</text></g><g class="packet" style="animation: p7 14.0s linear infinite;"><rect x="-72.5" y="-13" width="145.0" height="26" rx="13" fill="#171c22" stroke="#6fd08c" stroke-width="1.6"/><circle cx="-59.5" cy="0" r="4" fill="#6fd08c"/><text x="-49.5" y="4.5" class="packet-text" fill="#6fd08c">mismas llamadas</text></g><g style="animation: b8 14.0s linear infinite; opacity: 0;"><rect x="76.0" y="285" width="178.0" height="32" rx="6" fill="#171c22" stroke="#ffb648" stroke-width="1.2"/><text x="165.0" y="301" class="badge-text" fill="#ffb648" text-anchor="middle">2 URL + certificado</text></g><circle cx="556.0" cy="646" r="4" style="animation: d9 14.0s linear infinite;"/><circle cx="578.0" cy="646" r="4" style="animation: d10 14.0s linear infinite;"/><circle cx="600.0" cy="646" r="4" style="animation: d11 14.0s linear infinite;"/><circle cx="622.0" cy="646" r="4" style="animation: d12 14.0s linear infinite;"/><circle cx="644.0" cy="646" r="4" style="animation: d13 14.0s linear infinite;"/>
+  <rect x="0" y="666" width="1200" height="84" class="foot-band"/>
+  <rect x="0" y="666" width="5" height="84" class="foot-edge"/>
+  <text x="56" y="698" class="foot">La aplicación usa su cliente real de ARCA desde el primer día. Pasar de ArcaSim a homologación o a producción es</text><text x="56" y="722" class="foot">configuración, no código.</text>
+</svg>
+</body>
+</html>
