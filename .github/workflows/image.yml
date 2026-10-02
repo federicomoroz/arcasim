@@ -1,0 +1,35 @@
+# Tests, then the public image at ghcr.io/federicomoroz/arcasim, on every push to main.
+name: image
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Tests
+        run: dotnet test --configuration Release
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/federicomoroz/arcasim:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/federicomoroz/arcasim
+            org.opencontainers.image.description=ARCA's web services (WSAA + WSFEv1) for development and testing
