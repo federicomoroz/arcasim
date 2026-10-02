@@ -1,0 +1,234 @@
+[
+  {
+    "operation": "*",
+    "code": 500,
+    "kind": "infraestructura",
+    "field": null,
+    "text": "Error interno de aplicación.",
+    "page": 5
+  },
+  {
+    "operation": "*",
+    "code": 501,
+    "kind": "infraestructura",
+    "field": null,
+    "text": "Error interno de base de datos.",
+    "page": 5
+  },
+  {
+    "operation": "*",
+    "code": 502,
+    "kind": "infraestructura",
+    "field": null,
+    "text": "Error interno – Autorizador - Transacción Activa",
+    "page": 5
+  },
+  {
+    "operation": "*",
+    "code": 1000,
+    "kind": "auth",
+    "field": "Auth",
+    "text": "Usuario no autorizado a realizar esta operación",
+    "page": 11
+  },
+  {
+    "operation": "*",
+    "code": 1001,
+    "kind": "auth",
+    "field": "Auth/Cuit",
+    "text": "Cuit solicitante no se encuentra entre sus representados",
+    "page": 11
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": null,
+    "text": "Tipo de dato y longitud de cada campo",
+    "page": 11
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Id",
+    "text": "Identificador del requerimiento sea mayor que 0.",
+    "page": 11
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Punto_vta",
+    "text": "Campo punto_vta se encuentre entre 1 y 99998 y que sea único para el requerimiento.",
+    "page": 11
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Tipo_cbte",
+    "text": "Tipo de comprobante inválido.",
+    "page": 11
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Cbte_nro",
+    "text": "Campo cbte_nro esté entre 1 y 99999999.",
+    "page": 11
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Tipo_doc",
+    "text": "El tipo de documento debe ser igual a 80 (CUIT) en comprobantes tipo A.",
+    "page": 11
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Fecha_cbte",
+    "text": "No es una fecha valida. Debe ser numérico de 8 con formato (yyyymmdd).",
+    "page": 11
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Fecha_cbte",
+    "text": "No podrá exceder el mes de la fecha de envío del pedido de autorización.",
+    "page": 11
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Fecha_cbte",
+    "text": "La fecha debe estar incluida en el periodo +- 5 días de la fecha de presentación.",
+    "page": 11
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Items",
+    "text": "Se valida que la suma de importes de los ítems sea menor igual a los importes totales del comprobante.",
+    "page": 11
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Imp_op_ex",
+    "text": "Se valida que el importe de operaciones exentas sea mayor a 0 en los casos donde exista alguna item de factura con Iva exento",
+    "page": 12
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Imp_moneda_ctz",
+    "text": "El tipo de cambio no podrá ser inferior al 20% ni superior en un 100% del que suministra AFIP como orientativo de acuerdo a la cotización oficial.",
+    "page": 12
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": null,
+    "text": "Valor inválido en campo (a este código se le agregará una descripción detallada del origen del error (nombre de campo y causa))",
+    "page": 12
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1030,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc",
+    "text": "Si envía CbtesAsoc, CbteAsoc es obligatorio y no puede estar vacío",
+    "page": 12
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1031,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "De enviarse el tag CbteAsoc debe enviarse <CbteAsoc><Tipo>mayor a 0",
+    "page": 12
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1032,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Punto_vta",
+    "text": "De enviarse el tag CbteAsoc debe enviarse <CbteAsoc><PtoVta> mayor a 0 y menor a 99998.",
+    "page": 12
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1033,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Cbte_nro",
+    "text": "De enviarse el tag CbteAsoc debe enviarse <CbteAsoc><Nro> > a 0 y < a 99999999.",
+    "page": 12
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1034,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc",
+    "text": "De enviarse el tag CbteAsoc, los comprobantes no deben repetirse.",
+    "page": 12
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1035,
+    "kind": "error",
+    "field": "Cmp/Tipo_cbte",
+    "text": "De enviarse el tag <CbtesAsoc>, entonces el campo tipo de comprobante <Cmp><Tipo_cbte> a autorizar tiene que ser 01, 02, 03, 06, 07, 08",
+    "page": 12
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1036,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para <Cmp><Tipo_cbte> 01 o 06 solo puede asociarse el tipo de comprobante <CbtesAsoc><Tipo_cbte> 91.",
+    "page": 12
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1037,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para <Cmp><Tipo_cbte> 02 o 03 pueden asociarse los tipos de comprobante <CbtesAsoc><Tipo_cbte> 01, 02, 03, 91.",
+    "page": 12
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1038,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para <Cmp><Tipo_cbte> 07 u 08 pueden asociarse los tipos de comprobante <CbtesAsoc><Tipo_cbte> 06, 07, 08, 91.",
+    "page": 12
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1039,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Cbte_nro",
+    "text": "Si el punto de venta del comprobante asociado (CbtesAsoc.Punto_vta) es electrónico y del tipo Bonos, el número de comprobante debe obrar en las bases del organismo para el punto de venta y tipo de comprobante informado.",
+    "page": 12
+  },
+  {
+    "operation": "BFEGetCMP",
+    "code": 1020,
+    "kind": "error",
+    "field": "Cmp",
+    "text": "Comprobante inexistente",
+    "page": 15
+  }
+]

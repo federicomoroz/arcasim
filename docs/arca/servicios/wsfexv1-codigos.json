@@ -1,0 +1,2063 @@
+[
+ {
+  "operation": "FEXAuthorize",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetCMP",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetCMP",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetCMP",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetCMP",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetLast_ID",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetLast_ID",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetLast_ID",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetLast_ID",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetLast_CMP",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetLast_CMP",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetLast_CMP",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetLast_CMP",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_MON",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_MON",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_MON",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_MON",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Cbte_Tipo",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Cbte_Tipo",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Cbte_Tipo",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Cbte_Tipo",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Tipo_Expo",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Tipo_Expo",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Tipo_Expo",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Tipo_Expo",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_UMed",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_UMed",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_UMed",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_UMed",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Idiomas",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Idiomas",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Idiomas",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Idiomas",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_DST_pais",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_DST_pais",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_DST_pais",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_DST_pais",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Incoterms",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Incoterms",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Incoterms",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Incoterms",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_DST_CUIT",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_DST_CUIT",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_DST_CUIT",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_DST_CUIT",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Ctz",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Ctz",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Ctz",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Ctz",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_PtoVenta",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_PtoVenta",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_PtoVenta",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_PtoVenta",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Opcionales",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Opcionales",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Opcionales",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Opcionales",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXCheck_Permiso",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXCheck_Permiso",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXCheck_Permiso",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXCheck_Permiso",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_MON_CON_COTIZACION",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_MON_CON_COTIZACION",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_MON_CON_COTIZACION",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_MON_CON_COTIZACION",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Actividades",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Actividades",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Actividades",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Actividades",
+  "code": 505,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno – Autorizador - Transacción Activa (el manual lo lista como \"502/505\")",
+  "page": 9,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 17,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 17,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1002,
+  "kind": "Error",
+  "field": "Cuit solicitante sea valida",
+  "text": "Debe ser un valor numerico mayor a 0.",
+  "page": 17,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1014,
+  "kind": "Error",
+  "field": "Identificador del requerimiento sea válido.",
+  "text": "Debe ser un valor numerico mayor o igual a 0.",
+  "page": 17,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1500,
+  "kind": "Error",
+  "field": "Fecha_cbte",
+  "text": "Nulo, o comprendido entre N-5 y N+5 siendo N la Fecha de envío. Para el caso de comprobantes de servicios de exportación, la fecha de emisión del comprobante no puede ser posterior al mes en curso según normativa vigente",
+  "page": 17,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1510,
+  "kind": "Error",
+  "field": "Punto_vta",
+  "text": "Valor comprendido entre 1 – 99998 y dado de alta como punto de venta “Comprobantes de Exportación - Web Services” (Código FEEWS) Consultar método: FEXGetPARAM_PtoVenta",
+  "page": 17,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1520,
+  "kind": "Error",
+  "field": "Cbte_nro",
+  "text": "Comprendido entre 1 y 99999999.",
+  "page": 17,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1530,
+  "kind": "Error",
+  "field": "Cbte_Tipo",
+  "text": "Los posibles tipo de comprobantes son: 19, 20, 21 19 – Factura de Exportación “E” 20 – Nota de Débito por operaciones con el Exterior 21 – Nota de Crédito por operaciones con el Exterior Ver método FEXGetPARAM_Cbte_Tipo",
+  "page": 17,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1535,
+  "kind": "Error",
+  "field": "Fecha_cbte Punto_vta Cbte_nro Cbte_Tipo",
+  "text": "Verifica que el comprobante ingresado corresponde en secuencia al próximo inmediato a autorizar.",
+  "page": 17,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1540,
+  "kind": "Error",
+  "field": "Tipo_expo",
+  "text": "Deberá ser algunos de los valores permitidos. Valores Permitidos: 1, 2, 4 1= Exportación definitiva de bienes 2= Servicios 4= Otros Ver método FEXGetPARAM_Tipo_Expo",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1550,
+  "kind": "Error",
+  "field": "Permiso_existente",
+  "text": "Valores posibles: S, N o “vacío” “S” si ya se dispone del despacho de exportación. “N” si aún no se dispone del despacho de exportación. “vacío” si el campo Cbte_Tipo es 20 ó 21 o si Cbte_Tipo es igual a 19 y el campo Tipo_expo es igual a 2 ó 4.",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1560,
+  "kind": "Error",
+  "field": "Dst_cmp",
+  "text": "Obligatorio. Deberá ser algunos de los valores permitidos. Ver método FEXGetPARAM_DST_pais",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1570,
+  "kind": "Error",
+  "field": "Cuit_pais_cliente",
+  "text": "Deberá ser algunos de los valores permitidos. Ver método FEXGetPARAM_DST_CUIT",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1580,
+  "kind": "Error",
+  "field": "ID_impositivo / Cuit pais cliente",
+  "text": "Se deberá consignar al menos un campo.",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1590,
+  "kind": "Error",
+  "field": "Moneda_Id",
+  "text": "Deberá ser algunos de los valores permitidos. Ver método FEXGetPARAM_MON. Para el caso de estar autorizando comprobantes de Servicio (Tipo_expo=2) se deben informar solo monedas que tengan cotización al cierre del día hábil anterior (Para este caso ver método FEXGetPARAM_MON_CON_COTIZACION).",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1600,
+  "kind": "Error",
+  "field": "Moneda_ctz",
+  "text": "Deberá ser mayor a 0, hasta 4 enteros y 6 decimales",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1601,
+  "kind": "Error",
+  "field": "Moneda_Id /Moneda_ctz",
+  "text": "Moneda_ctz deberá ser igual a 1 cuando de indique Moneda_Id = PES",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1602,
+  "kind": "Error",
+  "field": "Moneda_ctz",
+  "text": "El campo Moneda_ctz es obligatorio si no informa el campo CanMisMonExt con el valor S, y debe ser mayor a 0",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1603,
+  "kind": "Error",
+  "field": "CanMisMonExt",
+  "text": "Si informa el campo CanMisMonExt, los valores posibles son S o N y no debe quedar vacío.",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1604,
+  "kind": "Error",
+  "field": "Moneda_Id /Moneda_ctz",
+  "text": "Si informa el campo MonCotiz, el mismo no podrá superar en 1 a la cotización oficial. Ver Método FEXGetPARAM_Ctz",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1605,
+  "kind": "Error",
+  "field": "Moneda_Id / CanMisMonExt",
+  "text": "Si informa Tipo Cbte 19 y MonID = PES, o Tipo Cbte 20 y 21 el campo CanMisMonExt no debe informarse",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1610,
+  "kind": "Error",
+  "field": "Imp_total",
+  "text": "Deberá ser mayor igual a cero e igual a la suma de los campos Item.Pro_total_item Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01 * cantidad de ítems ingresados",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1620,
+  "kind": "Error",
+  "field": "Forma_pago",
+  "text": "Obligatorio si el tipo de comprobantes es 19",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1630,
+  "kind": "Error",
+  "field": "Idioma_cbte",
+  "text": "Obligatorio. Deberá ser algunos de los valores permitidos. Valores posibles: 1, 2, 3 1: Español 2: Inglés 3: Portugués Ver método FEXGetPARAM_Idiomas",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1640,
+  "kind": "Error",
+  "field": "Incoterms",
+  "text": "Obligatorio en el caso que el tipo de comprobante sea igual a 19 y tipo de operación sea igual a 1 (Productos). Para el resto de los casos es opcional. Para obtener los valores permitidos consultar el método FEXGetPARAM_Incoterms",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1641,
+  "kind": "Error",
+  "field": "Incoterms_Ds",
+  "text": "Si se ingresó un valor, el campo Incoterms no puede estar vacío.",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1642,
+  "kind": "Error",
+  "field": "Incoterms_Ds",
+  "text": "Longitud máxima es de 20 caracteres.",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1650,
+  "kind": "Error",
+  "field": "Cliente",
+  "text": "Campo Obligatorio, no podrá estar vacío.",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1651,
+  "kind": "Error",
+  "field": "Cliente",
+  "text": "Longitud máxima es de 200 caracteres",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1660,
+  "kind": "Error",
+  "field": "Domicilio_cliente",
+  "text": "Campo Obligatorio, no podrá estar vacío",
+  "page": 18,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1661,
+  "kind": "Error",
+  "field": "Domicilio_cliente",
+  "text": "Longitud máxima es de 300 caracteres",
+  "page": 19,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1665,
+  "kind": "Error",
+  "field": "Obs/Obs_comerciales",
+  "text": "Opcionales. El campo Obs la longitud máxima es 1000 y para el campo Obs_comerciales la longitud máxima es 4000",
+  "page": 19,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1667,
+  "kind": "Error",
+  "field": "Moneda_Id /Moneda_ctz",
+  "text": "Si Moneda_Id <> PES, el campo Moneda_ctz no puede ser superior en un 400% ni inferior al 2% de la cotización oficial (ver método FEXGetPARAM_Ctz)",
+  "page": 19,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1668,
+  "kind": "Error",
+  "field": "<Auth><Cuit> <Cmp><Tipo_expo>",
+  "text": "Si el tipo de exportación corresponde al concepto (Tipo_expo=1) Expor tación definitiva de bienes. Deberá estar registrado como exportador.",
+  "page": 19,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2053,
+  "kind": "Error",
+  "field": "Moneda_ctz / Moneda_ctz",
+  "text": "Para el caso de Factura, si está autorizando un comprobante de Servi cio (Tipo_expo=2) y la moneda es diferente de PES, la cotización debe ser la del día hábil anterior (divisa vendedor) de la fecha de emisión de la factura. En caso que la solicitud sea con fecha anterior a la de la fac tura, deberá ser igual a la del día hábil anterior de la solicitud. Para el caso de Nota de Débito o Nota de Crédito de Servicio (Tipo_expo=2), la cotización informada debe ser la misma que la del comproban te asociado.",
+  "page": 19,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1671,
+  "kind": "Error",
+  "field": "<Cmp><Fecha_pago>",
+  "text": "Si informa fecha de pago <Cmp><Fecha_pago> debe tener formato váli do YYYYMMDD.",
+  "page": 19,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1672,
+  "kind": "Error",
+  "field": "<Cmp><Cbte_Tipo>/ <Cmp><Tipo_expo>/ <Cmp><Fecha_pago>",
+  "text": "Para comprobantes del tipo “19 - Facturas de Exportación” donde el tipo de exportación es “2 – Servicios / 4 - Otros” la fecha de pago <Cmp><Fecha_pago> es obligatoria.",
+  "page": 19,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1673,
+  "kind": "Error",
+  "field": "<Cmp><Cbte_Tipo>/ <Cmp><Tipo_expo>/ <Cmp><Fecha_pago>",
+  "text": "Para comprobantes que no son tipo “19 - Facturas de Exportación” la fe cha de pago <Cmp><Fecha_pago> no debe informarse.",
+  "page": 19,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1674,
+  "kind": "Error",
+  "field": "<Cmp><Cbte_Tipo>/ <Cmp><Tipo_expo>/ <Cmp><Fecha_pago>/ <Cmp>< Fecha_cbte>",
+  "text": "Para comprobantes del tipo “19 - Facturas de Exportación” donde el tipo de exportación es “2 – Servicios / 4 - Otros”, la fecha de pago debe ser igual o posterior a la fecha de emisión del comprobante.",
+  "page": 19,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1670,
+  "kind": "Error",
+  "field": "Cbte_tipo /Cbte pun to vta / Cbte_nro",
+  "text": "Si alguno de estos campos no está vació entonces ninguno de estos debe estar vacío. Es decir si se informó el tipo de comprobante (Cbte_tipo) entonces se deben informar los campos punto de venta y número de comprobante (Cbte_punto_vta / Cbte_nro)",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1680,
+  "kind": "Error",
+  "field": "Cbte_tipo",
+  "text": "Los posibles tipo de comprobantes son: 19, 20, 21, 88, 89 19 – Factura de Exportación “E” 20 – Nota de Débito por operaciones con el Exterior 21 – Nota de Crédito por operaciones con el Exterior 88 -Remito Electrónico de Tabaco Acondicionado 89 - Resumen de Datos de Exportación de Tabaco Acondicionado 91 - Remito R 993 - Remito Electrónico Harinero - Automotor 994 - Remito Electrónico Harinero – Ferroviario Ver método FEXGetPARAM_Cbte_Tipo",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1690,
+  "kind": "Error",
+  "field": "Cbte_punto_vta",
+  "text": "De informarse deberá estar comprendido entre 1 – 99998.",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1700,
+  "kind": "Error",
+  "field": "Cbte_nro",
+  "text": "De informarse podrá tomar los valores desde 1 hasta 999999999",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1749,
+  "kind": "Error",
+  "field": "Cbte_tipo /Cbte pun to vta / Cbte_nro",
+  "text": "Si el tipo de comprobante asociado (Cbte_tipo) es igual a 19, 20 o 21 y el punto de venta informado es electrónico, el punto de venta deberá corresponder a alguno de los tipos de puntos de venta habilitados para Comprobantes de Exportación. Si se cumple, el tipo y número de comprobante informado deberá estar autorizado.",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1754,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "No se puede informar más de 1 comprobante asociado, excepto que los mismos sean 88 u 89.",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1755,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "No se pueden informar comprobantes asociados cuando el tipo de comprobante a autorizar es 19 (Factura E), excepto que los mismos sean del tipo 89, 88, 91, 993, 994",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1818,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si el tipo de comprobante asociado Cbte_tipo es igual 89, 88, 993, o 994, entonces éste deberá estar registrado.",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1819,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si el tipo de comprobante asociado Cbte_tipo es igual a 89, 88, 993, o 994, y el emisor (Cbte_cuit) es distinto al emisor del comprobante que se solicita autorización (<Cuit>) entonces, el comprobante asociado deberá estar registrado como confirmado.",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1820,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si envía Cmps_asoc, Cmp_asoc es obligatorio",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1821,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si informa comprobante asociado y sus códigos (Cbte_tipo) son 89, 88, 993, o 994, entonces el receptor del comprobante a autorizar debe ser igual al receptor del comprobante asociado.",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1822,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si informa comprobante asociados y sus códigos (Cbte_tipo) corresponden a 89, 88, 993, o 994, los mismos no deben encontrarse asociado a otro comprobante.",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1823,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si informa comprobante asociados y sus códigos (Cbte_tipo) corresponden a 89, 88, 993, o 994, tanto el comprobante a autorizar como el comprobante asociado deben corresponder a comprobantes del tipo exportación.",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2040,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si esta autorizando una N.D. de Servicio (Tipo_expo=2), no se puede asociar mas de una Factura como comprobante asociado (Cmp.Cmps_asoc).",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2041,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si esta autorizando una N.D. de Servicio (Tipo_expo=2), el comprobante asociado no puede ser del tipo Nota de Debito (Cmp.Cmps_asoc).",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2042,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si esta autorizando una N.D. de Servicio (Tipo_expo=2), el comprobante asociado no puede ser del tipo Nota de Credito (Cmp.Cmps_asoc).",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2043,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si esta autorizando una N.C. de Servicio (Tipo_expo=2), no se puede asociar mas de una Factura como comprobante asociado (Cmp.Cmps_asoc).",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2044,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si esta autorizando una N.C. de Servicio (Tipo_expo=2), no se puede asociar mas de una Nota de Debito como comprobante asociado (Cmp.Cmps_asoc).",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2045,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si esta autorizando una N.C. de Servicio (Tipo_expo=2), el comprobante asociado no puede ser del tipo Nota de Credito (Cmp.Cmps_asoc).",
+  "page": 20,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2046,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si esta autorizando una N.C. de Servicio (Tipo_expo=2), no puede ingresar como comprobantes asociados una Factura mas una Nota de Debito (Cmp.Cmps_asoc). Ingrese uno y solo uno de los tipos de comprobantes.",
+  "page": 21,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2047,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si esta autorizando una N.D. o N.C. comprobante de Servicio (Tipo=2), el campo Cmp.Cmps_asoc es de caracter obligatorio.",
+  "page": 21,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2048,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si esta autorizando un comprobante de Servicio (Tipo_expo=2), el comprobante asociado debe ser electrónico y existir en las bases del organismo (ARCA).",
+  "page": 21,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2049,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si esta autorizando un comprobante de Servicio (Tipo_expo=2), el comprobante asociado tambien debe ser de Servicio.",
+  "page": 21,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2050,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si esta autorizando un comprobante de Servicio (Tipo_expo=2), el pais de destino debe ser el mismo que el comprobante asociado.",
+  "page": 21,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2051,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si esta autorizando un comprobante de Servicio (Tipo_expo=2), la moneda debe ser la misma que el comprobante asociado o emitirse en PESOS.",
+  "page": 21,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2052,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Si esta autorizando un comprobante de Servicio (Tipo_expo=2), la fecha del comprobante debe ser igual o posterior a la fecha del comprobante asociado.",
+  "page": 21,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2055,
+  "kind": "Error",
+  "field": "Cmps_asoc",
+  "text": "Para comprobante de Servicio (Tipo_expo=2), la Nota de Debito asocia da que informa debe tener una FACTURA (Cbte_tipo=19) de servicio (Tipo_expo=2) asociada.",
+  "page": 21,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1720,
+  "kind": "Error",
+  "field": "Permisos / Id_permiso",
+  "text": "- Obligatorio para Tipo_expo = 1 Cmp.Cbte_Tipo = 19 y Cmp.Permiso_existente = “S” - Enviado. El mismo no debe enviarse cuando Cmp.Permiso_existente = “N\" - Obligatorio (tag Permisos), Si envía <Permisos>, <Permiso> es obligatorio.",
+  "page": 21,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1730,
+  "kind": "Error",
+  "field": "Id_permiso / Dst_merc",
+  "text": "Si se informó el campo Id_permiso deberá informase el campo Dst_merc, como así también si se informó el campo Dst_merc deberá informarse el campo Id_permiso.",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1736,
+  "kind": "Error",
+  "field": "Tipo_expo / Permisos",
+  "text": "No es posible informar estos campos con tipo expo = 2 ó 4.",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1740,
+  "kind": "Error",
+  "field": "Id_permiso",
+  "text": "Deberá ser un permiso válido, formato 99999AAXX999999A (donde XX podrán ser números o letras). Ver método FEXCHECK_PERMISO. Importante: la combinación Id_permiso y Dst_merc no pueden repetirse dentro del array de <Permisos>.",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1750,
+  "kind": "Error",
+  "field": "Dst_merc",
+  "text": "Para los posibles valores consultar método FEXGetPARAM_DST_pais. El destino de la mercadería debe corresponder a un país del permiso de embarque (código despacho) asignado al campo Id_permiso. Se puede validar la existencia de un permiso de embarque / destino de la mercadería mediante el método: FEXCHECK_PERMISO",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1760,
+  "kind": "Error",
+  "field": "Pro_codigo",
+  "text": "No podrá superar longitud de 50 caracteres",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1770,
+  "kind": "Error",
+  "field": "Pro_ds",
+  "text": "Campo obligatorio. No podrá exceder los 4000 caracteres de longitud.",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1775,
+  "kind": "Error",
+  "field": "Pro_qty/ Pro_umed/ Pro_precio_uni/ Pro_bonificacion",
+  "text": "Si Pro_umed es igual a 0, 97 ó 99 deberán informar Item.Pro_qty, Item.Pro_precio_uni y Pro_bonificacion igual a 0 ó no informarse.",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1780,
+  "kind": "Error",
+  "field": "Pro_qty",
+  "text": "Es obligatorio si se informa el precio unitario (Pro_precio_uni) o si Pro_umed es distinto a 0, 97 y 99. De ingresarse valor deberá ser mayor a cero.",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1813,
+  "kind": "Error",
+  "field": "Pro_qty",
+  "text": "Valor máximo permitido 12 enteros y 6 decimales.",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1790,
+  "kind": "Error",
+  "field": "Pro_umed",
+  "text": "Valores posible Ver Método FEXGetPARAM_UMed",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1800,
+  "kind": "Error",
+  "field": "Pro_precio_uni",
+  "text": "Es obligatorio si se informa la cantidad (Pro_qty) o si Pro_umed es distinto a 0, 97 y 99. De ingresarse valor deberá ser mayor o igual a cero.",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1814,
+  "kind": "Error",
+  "field": "Pro_precio_uni",
+  "text": "Valor máximo permitido 12 enteros y 6 decimales.",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1810,
+  "kind": "Error",
+  "field": "Pro_total_item",
+  "text": "Obligatorio. Si Pro_umed es distinto a 97 y 99, el valor deber ser mayor o igual a 0. Si Pro_umed = 97, sin restricción, el valor puede ser menor, igual o mayor a cero. Si Pro_umed = 99, el valor debe ser menor a 0.",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1815,
+  "kind": "Error",
+  "field": "Pro_total_item",
+  "text": "Si Pro_umed es distinto a 0, 97 ó 99 deberá ser igual a <Pro_precio_uni> * <Pro_qty> - Pro_bonificacion Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1816,
+  "kind": "Error",
+  "field": "Pro_total_item",
+  "text": "Valor máximo permitido 13 enteros y 2 decimales.",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1811,
+  "kind": "Error",
+  "field": "Pro_bonificacion",
+  "text": "Si Pro_umed es distinto de 97, 99 y 0, entonces el valor informado para Pro_bonificacion debe ser mayor o igual a 0",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1812,
+  "kind": "Error",
+  "field": "Pro_bonificacion",
+  "text": "Si es mayor a 0 debe ser menor o igual a Pro_precio_uni * Pro_qty.",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1817,
+  "kind": "Error",
+  "field": "Pro_bonificacion",
+  "text": "Valor máximo permitido 12 enteros y 6 decimales.",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1666,
+  "kind": "Error",
+  "field": "Items",
+  "text": "La estructura <Items> es inválida, ya sea porque no se ingresó, o bien porque posee 0 ítems, o bien porque supera los 9999 ítems.",
+  "page": 22,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2001,
+  "kind": "Error",
+  "field": "<Opcionales>/<Opcional>",
+  "text": "Si envía opcionales, opcional es obligatorio informarlo.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2002,
+  "kind": "Error",
+  "field": "<Opcionales>/<Opcional>",
+  "text": "Si envía opcionales, opcional es obligatorio y no debe estar vacío.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2003,
+  "kind": "Error",
+  "field": "<Opcionales>/ <Opcional><Id>",
+  "text": "El campo Id en Opcionales es obligatorio y debe ser alguno de los devueltos por el método FEXGetPARAM_Opcionales.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2004,
+  "kind": "Error",
+  "field": "<Opcionales>/ <Opcional><Id>",
+  "text": "El campo Id en Opcionales es obligatorio y no debe repetirse.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2005,
+  "kind": "Error",
+  "field": "<Opcionales>/ <Opcional><Id> <Opcional><Valor>",
+  "text": "Si envía opcionales con el identificador 2401, el campo valor es obligatorio informarlo.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2006,
+  "kind": "Error",
+  "field": "<Opcionales>/ <Opcional><Id> <Opcional><Valor>",
+  "text": "Si envía opcionales con el identificador 2401, el campo valor debe contener el documento de exportación. Alfanumérico de 11 caracteres",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2007,
+  "kind": "Error",
+  "field": "<Opcionales>/ <Opcional><Id> <Opcional><Valor>",
+  "text": "Si envía opcionales con el identificador 2402, el campo valor es obligatorio informarlo.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2008,
+  "kind": "Error",
+  "field": "<Opcionales>/ <Opcional><Id> <Opcional><Valor>",
+  "text": "Si envía opcionales con el identificador 2402, el campo valor debe representar al monto FOB. Se espera un numérico de 13 valores enteros y 2 decimales. Separador de decimales usar el punto.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2010,
+  "kind": "Error",
+  "field": "<Cbte_Tipo>/ <Opcionales>/ <Opcional>",
+  "text": "Si informa opcionales para el régimen de exportación simplificada es obligatorio informar: - para “19 – Facturas” el documento de exportación simplificada y el monto FOB con valor mayor o igual a 0. - para “20 - Nota de Débito” y “21 – Nota de Crédito” solo informar el monto FOB.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2011,
+  "kind": "Error",
+  "field": "<Tipo_expo>/ <Opcionales>",
+  "text": "Si informa opcionales para el régimen de exportación simplificada, solo se encuentra habilitada para el tipo de exportación 1 – PRODUCTO.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2016,
+  "kind": "Error",
+  "field": "<Opcionales>/ <Moneda_Id>",
+  "text": "Si envía opcionales para el régimen de exportación simplificada, solo se permite moneda en DOLARES, Moneda_Id = DOL.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2020,
+  "kind": "Error",
+  "field": "<Opcionales> <Opcional><Id> <Opcional><Valor>",
+  "text": "Si envía opcionales para el régimen de exportación simplificada e informa el monto FOB, el mismo no puede superar el monto máximo habilitado a informar por comprobante.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2021,
+  "kind": "Error",
+  "field": "<Opcionales> <Opcional><Id> <Opcional><Valor>/ <Cmp><Imp_total>",
+  "text": "Si envía opcionales para el régimen de exportación simplificada e informa el monto FOB, el mismo no puede superar el monto total del comprobante.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2022,
+  "kind": "Error",
+  "field": "<Opcionales> <Opcional><Id> <Opcional><Valor>/ <Cmp><Cbte_Tipo>",
+  "text": "Si envía opcionales para el régimen de exportación simplificada e informa el monto FOB y el tipo de comprobante es Factura, el valor informado debe ser igual al monto FOB del Permiso de Embarque.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2023,
+  "kind": "Error",
+  "field": "<Opcionales> <Opcional><Id> <Opcional><Valor>/ <Cmp><Cbte_Tipo>",
+  "text": "Si envía opcionales para el régimen de exportación simplificada, informa el monto FOB y el tipo de comprobante es Nota de Crédito o Débito, el valor informado debe ser menor o igual al monto FOB original informado junto al Permiso de Embarque.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2026,
+  "kind": "Error",
+  "field": "<Opcionales> <Opcional><Id> <Opcional><Valor>/ <Cmp><Fecha_cbte>",
+  "text": "Si envía opcionales para el régimen de exportación simplificada, evaluar que el exportador tenga saldo disponible acorde con el tipo de operación para el periodo identificado en la fecha del comprobante.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2027,
+  "kind": "Error",
+  "field": "<Auth><Cuit>",
+  "text": "Si el comprobante es del tipo exportación simplificada, el emisor del comprobante debe encontrarse habilitado.",
+  "page": 23,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2028,
+  "kind": "Error",
+  "field": "<Auth><Cuit>/ <Cmp><Cbte_Tipo>/ <Opcionales> <Opcional><Id> <Opcional><Valor>/ <Cmps_asoc>",
+  "text": "Si el comprobante es Nota de Crédito o Débito, de exportación simple, es obligatorio informar comprobantes asociados.",
+  "page": 24,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2029,
+  "kind": "Error",
+  "field": "<Auth><Cuit>/ <Cmp><Cbte_Tipo>/ <Opcionales> <Opcional><Id> <Opcional><Valor>/ <Cmps_asoc>",
+  "text": "Si el comprobante es Nota de Crédito o Débito, de exportación simple, el comprobante asociado debe ser un comprobante de exportación simplificada Autorizado perteneciente al emisor.",
+  "page": 24,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2031,
+  "kind": "Error",
+  "field": "<Auth><Cuit> <Cmp_asoc><Cbte_tipo> <Cmp_asoc><Cbte_cuit>",
+  "text": "Si el tipo de comprobante asociado Cbte_tipo es distinto a 88 u 89 e informa el cuit del emisor del comprobante asociado (Cbte_cuit), no puede ser distinto al emisor del comprobante que se solicita autorización (<Cuit>).",
+  "page": 24,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2032,
+  "kind": "Error",
+  "field": "<Cmp><Cbte_Tipo>/ <Cmp_asoc> <Opcionales>",
+  "text": "Si el comprobante es 20 - Nota de Débito o 21 - Nota de Crédito e intenta autorizar un comprobante del tipo exportación simplificada es obligatorio informar comprobante asociado del tipo exportación simplificada y datos opcionales del tipo exportación simplificada.",
+  "page": 24,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2056,
+  "kind": "Error",
+  "field": "<Opcionales> <Opcional><Id> <Opcional><Valor>/ <Permisos><Permiso>",
+  "text": "Si envía opcionales para el régimen de exportación simplificada no informar <Permios><Permiso>",
+  "page": 24,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2057,
+  "kind": "Error",
+  "field": "<Cmp><Cbte_Tipo>/ <Opcionales> <Opcional><Id> <Opcional><Valor>",
+  "text": "Si el comprobante es 20 - Nota de Débito o 21 - Nota de Crédito e intenta autorizar un comprobante del tipo exportación simplificada no informar el documento de exportación simplificada",
+  "page": 24,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2058,
+  "kind": "Error",
+  "field": "<Cmp><Cbte_Tipo>/ <Opcionales> <Opcional><Id> <Opcional><Valor>",
+  "text": "Si el comprobante es 20 - Nota de Débito o 21 - Nota de Crédito e intenta autorizar un comprobante del tipo exportación simplificada es obligatorio informar el monto FOB.",
+  "page": 24,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2059,
+  "kind": "Error",
+  "field": "<Opcionales> <Opcional><Id> <Opcional><Valor>",
+  "text": "El documento de exportación simplificado informado no se encuentra registrado o tiene diferencias con el registrado.",
+  "page": 24,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2060,
+  "kind": "Error",
+  "field": "<Opcionales> <Opcional><Id> <Opcional><Valor>",
+  "text": "El documento de exportación simplificado informado no se encuentra registrado o tiene diferencias en el monto FOB.",
+  "page": 24,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 2061,
+  "kind": "Error",
+  "field": "<Auth><Cuit>/ <Cmp_asoc>/ <Opcionales>/ <Opcional><Id> <Opcional><Valor>",
+  "text": "Según los datos del comprobante asociado, no se puede autorizar el comprobante actual, el saldo FOB es inferior a 0 o superior al disponible por comprobante.",
+  "page": 24,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 14,
+  "kind": "Observacion",
+  "field": "<Cuit> / <Cbte_Tipo> / <Imp_total> / <Moneda_ctz>",
+  "text": "Si el emisor es monotributista, e informa una factura o nota de débito, se valida que el importe total en pesos no exceda el importe límite establecido para la categoría máxima de Monotributo. Por tal motivo, quedarías excluido automáticamente teniendo que solicitar el alta de los tributos (impositivos y de los recursos de la seguridad social) en el régimen general de acuerdo con la actividad.",
+  "page": 26,
+  "donde": "FEXResultAuth/Motivos_Obs"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 15,
+  "kind": "Observacion",
+  "field": "<Cuit> / <Cbte_Tipo> / <Imp_total> / <Moneda_ctz>",
+  "text": "Si el emisor es monotributista, e informa una factura o nota de crédito, se valida que el importe total en pesos no exceda el importe límite establecido para la categoría de Monotributo. Tenerlo en cuenta para la próxima recategorización.",
+  "page": 26,
+  "donde": "FEXResultAuth/Motivos_Obs"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 16,
+  "kind": "Observacion",
+  "field": "<Cuit> / Punto_vta / Dst_cmp",
+  "text": "Si el comprobante fue emitido a un destino del tipo Zona Franca, es necesario que exista el receptor en los padrones de ARCA",
+  "page": 26,
+  "donde": "FEXResultAuth/Motivos_Obs"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 17,
+  "kind": "Observacion",
+  "field": "<Cuit> / <Cbte_Tipo> / <Imp_total> / <Moneda_ctz>",
+  "text": "El importe de la nota de crédito supera el monto del comprobante asociado que estás ajustando. Verificá los montos ingresados y de tratarse de un error, tenés que efectuar el ajuste o anulación de la operación según corresponda.",
+  "page": 26,
+  "donde": "FEXResultAuth/Motivos_Obs"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 21,
+  "kind": "Rechazo",
+  "field": "<Cuit>",
+  "text": "La CUIT receptora se encuentra inactiva por haber sido incluida en la consulta de facturas apócrifas.",
+  "page": 26,
+  "donde": "FEXResultAuth/Motivos_Obs"
+ },
+ {
+  "operation": "FEXGetCMP",
+  "code": 1020,
+  "kind": "Error",
+  "field": "",
+  "text": "Comprobante inexistente",
+  "page": 34,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetLast_ID",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 36,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetLast_ID",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 36,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetLast_CMP",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 37,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetLast_CMP",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 37,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetLast_CMP",
+  "code": 1606,
+  "kind": "Error",
+  "field": "Verificación del campo Cbte_Tipo",
+  "text": "Campo Cbte_Tipo no se corresponde con alguno de los comprobantes habilitados. Recuerde que los valores son 19, 20 o 21",
+  "page": 37,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetLast_CMP",
+  "code": 1607,
+  "kind": "Error",
+  "field": "Verificación del campo Pto_venta",
+  "text": "Campo Pto_venta no es valido o no esta dado de alta como punto de venta de 'Comprobantes de Exportación - Web Services'",
+  "page": 37,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_MON",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 39,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_MON",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 39,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Cbte_Tipo",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 40,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Cbte_Tipo",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 40,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Tipo_Expo",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 42,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Tipo_Expo",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 42,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_UMed",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 43,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_UMed",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 43,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Idiomas",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 45,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Idiomas",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 45,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_DST_pais",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 46,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_DST_pais",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 46,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Incoterms",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 48,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Incoterms",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 48,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_DST_CUIT",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 49,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_DST_CUIT",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 49,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Ctz",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 51,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Ctz",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 51,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Ctz",
+  "code": 1003,
+  "kind": "Error",
+  "field": "FchCotiz",
+  "text": "De informar el campo, el mismo debe tener el sig. formato YYYY-MM-DD",
+  "page": 51,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_PtoVenta",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 52,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_PtoVenta",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 52,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Opcionales",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 54,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Opcionales",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 54,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXCheck_Permiso",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 55,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXCheck_Permiso",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 55,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXCheck_Permiso",
+  "code": 1810,
+  "kind": "Error",
+  "field": "Campo mandatario + Relación Permiso/Pais",
+  "text": "En caso de omisión de alguno de los campos de ingreso. En caso de no existir el país registrado en nuestras bases.",
+  "page": 55,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_MON_CON_COTIZACION",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 58,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_MON_CON_COTIZACION",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 58,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_MON_CON_COTIZACION",
+  "code": 2054,
+  "kind": "Error",
+  "field": "Verificacion del campo Fecha_CTZ",
+  "text": "El campo Fecha_CTZ es de integración obligatoria y debe tener el siguiente formato: YYYYMMDD",
+  "page": 58,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Actividades",
+  "code": 1000,
+  "kind": "Error",
+  "field": "Verificación de Token y Firma",
+  "text": "Usuario no autorizado a realizar esta operación",
+  "page": 59,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXGetPARAM_Actividades",
+  "code": 1001,
+  "kind": "Error",
+  "field": "Cuit solicitante se encuentra entre sus representados",
+  "text": "Cuit solicitante no se encuentra entre sus representados",
+  "page": 59,
+  "donde": "FEXErr"
+ },
+ {
+  "operation": "FEXAuthorize",
+  "code": 1014,
+  "kind": "Error",
+  "field": "(otros)",
+  "text": "Los mensajes de error no contemplados en este documento salen por código 1014 incluyendo un texto que explica la causa exacta del error.",
+  "page": 26,
+  "donde": "FEXErr"
+ }
+]

@@ -1,0 +1,674 @@
+[
+  {
+    "operation": "*",
+    "code": "wscommon_007",
+    "kind": "auth",
+    "field": "authRequest",
+    "text": "[wscommon_007] La firma no corresponde al token enviado.",
+    "page": 6
+  },
+  {
+    "operation": "*",
+    "code": "BL",
+    "kind": "infraestructura",
+    "field": null,
+    "text": "BL<n> <aaaa-mm-dd hh:mm:ss> 500",
+    "page": null
+  },
+  {
+    "operation": "*",
+    "code": "cvc-datatype-valid.1.2.1",
+    "kind": "error",
+    "field": null,
+    "text": "'?' no es un valor válido para un tipo de dato entero.",
+    "page": 7
+  },
+  {
+    "operation": "*",
+    "code": "cvc-type.3.1.3",
+    "kind": "error",
+    "field": "cuitTitularMercaderia",
+    "text": "El valor '?' en el elemento ' cuitTitularMercaderia' no es válido.",
+    "page": 7
+  },
+  {
+    "operation": "*",
+    "code": "cvc-complex-type.2.4.d",
+    "kind": "error",
+    "field": "idCtaCte",
+    "text": "Contenido inválido se encontró al comienzo del elemento 'idFactura'. No se esperan hijos en este punto.",
+    "page": 8
+  },
+  {
+    "operation": "*",
+    "code": 1000,
+    "kind": "error",
+    "field": "cuitRepresentada",
+    "text": "LA CUIT NO SE ENCUENTRA ACTIVA EN EL PUC",
+    "page": 17
+  },
+  {
+    "operation": "*",
+    "code": 1001,
+    "kind": "error",
+    "field": "cuitRepresentada",
+    "text": "LA CUIT REGISTRA INCONVENIENTES. DEBERÁ DIRIGIRSE A LA DEPENDENCIA EN LA CUAL SE ENCUENTRA INSCRIPTO",
+    "page": 17
+  },
+  {
+    "operation": "*",
+    "code": 1002,
+    "kind": "error",
+    "field": "cuitRepresentada",
+    "text": "LA CUIT NO REGISTRA ALTA EN IVA o Monotributo o IVA Exento",
+    "page": 17
+  },
+  {
+    "operation": "*",
+    "code": 1003,
+    "kind": "error",
+    "field": "cuitRepresentada",
+    "text": "LA CUIT NO REGISTRA ALTA EN NINGUNA ACTIVIDAD",
+    "page": 17
+  },
+  {
+    "operation": "*",
+    "code": 1004,
+    "kind": "error",
+    "field": "cuitRepresentada",
+    "text": "LA CUIT NO SE ENCUENTRA CON ALTA EN EL DOMICILIO FISCAL ELECTRÓNICO O REGISTRA INCONVENIENTES EN EL MISMO. Sólo puede consultar en este sistema.",
+    "page": 17
+  },
+  {
+    "operation": "*",
+    "code": 1100,
+    "kind": "error",
+    "field": "idCtaCte",
+    "text": "Ud no puede operar sobre la cuenta corriente indicada",
+    "page": 18
+  },
+  {
+    "operation": "*",
+    "code": 1101,
+    "kind": "error",
+    "field": "idCtaCte",
+    "text": "Ud no puede realizar esa operación en la cuenta corriente indicada",
+    "page": 18
+  },
+  {
+    "operation": "*",
+    "code": 1102,
+    "kind": "error",
+    "field": "idCtaCte",
+    "text": "No existe la cuenta corriente indicada",
+    "page": 18
+  },
+  {
+    "operation": "*",
+    "code": 1103,
+    "kind": "error",
+    "field": null,
+    "text": "La operación no pudo realizarse, reinténtelo más tarde",
+    "page": 18
+  },
+  {
+    "operation": "*",
+    "code": 1104,
+    "kind": "error",
+    "field": "idCtaCte",
+    "text": "La cuenta corriente fue recientemente modificada, actualice",
+    "page": 18
+  },
+  {
+    "operation": "*",
+    "code": 1105,
+    "kind": "error",
+    "field": "idComprobante",
+    "text": "No existe el comprobante indicado",
+    "page": 18
+  },
+  {
+    "operation": "*",
+    "code": 1106,
+    "kind": "error",
+    "field": "idCtaCte",
+    "text": "Debe aguardar hasta la hora 24 del día siguiente de la fecha de puesta a disposición en DFE para operar con esta cuenta corriente.",
+    "page": 18
+  },
+  {
+    "operation": "*",
+    "code": 1107,
+    "kind": "error",
+    "field": "idCtaCte",
+    "text": "Ha excedido el plazo que le permite realizar esta operación.",
+    "page": 18
+  },
+  {
+    "operation": "*",
+    "code": 1108,
+    "kind": "error",
+    "field": "idCtaCte",
+    "text": "El estado actual no le permite realizar esta operación.",
+    "page": 18
+  },
+  {
+    "operation": "*",
+    "code": 10000,
+    "kind": "error",
+    "field": null,
+    "text": "Error interno de la aplicación",
+    "page": 19
+  },
+  {
+    "operation": "*",
+    "code": 32767,
+    "kind": "observacion",
+    "field": null,
+    "text": "La búsqueda no ha arrojado resultados con los filtros indicados.",
+    "page": 19
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2000,
+    "kind": "error",
+    "field": "arrayConfirmarNotasDC",
+    "text": "Falta informar la aceptación de una Nota de Débito/Crédito",
+    "page": 23
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2001,
+    "kind": "error",
+    "field": "arrayConfirmarNotasDC",
+    "text": "Debe rechazar la Nota de Débito/Crédito individualmente si desea rechazarla",
+    "page": 23
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2002,
+    "kind": "error",
+    "field": "arrayConfirmarNotasDC",
+    "text": "Informa aceptar una Nota de Débito/Crédito que fue rechazada",
+    "page": 23
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2003,
+    "kind": "error",
+    "field": "arrayRetenciones",
+    "text": "Número de jurisdicción de retención inválido o repetido.",
+    "page": 23
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2004,
+    "kind": "error",
+    "field": "arrayRetenciones",
+    "text": "Debe justificar si modifica el porcentaje de retención normado",
+    "page": 23
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2005,
+    "kind": "error",
+    "field": "arrayRetenciones",
+    "text": "El importe retenido no coincide con nuestros cálculos a partir del saldo de la factura de crédito",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2006,
+    "kind": "error",
+    "field": "cotizacionMonedaUlt",
+    "text": "Debe indicar una cotización al aceptar",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2007,
+    "kind": "error",
+    "field": "cotizacionMonedaUlt, codMoneda",
+    "text": "La cotización para PESOS debe ser 1.0",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2008,
+    "kind": "error",
+    "field": "saldoAceptado",
+    "text": "El saldo aceptado informado no coincide con nuestros cálculos a partir del saldo de la factura de crédito",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2009,
+    "kind": "error",
+    "field": "cotizacionMonedaUlt",
+    "text": "El tipo de cambio no podrá ser inferior al 2% ni superior en un 400% del que suministra AFIP como orientativo de acuerdo a la cotización oficial",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2010,
+    "kind": "error",
+    "field": "importeCancelado, importeTotalRetPesos, importeEmbargoPesos",
+    "text": "Informa un importe de negativo, lo que no es válido. ",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2011,
+    "kind": "error",
+    "field": "cotizacionMonedaUlt, arrayAjustesOperacion",
+    "text": "La cotización informada difiere con la de la Factura, debe informar ajuste por tipo de cambio. ",
+    "page": 84
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2012,
+    "kind": "error",
+    "field": "cotizacionMonedaUlt, arrayAjustesOperacion",
+    "text": "La cotización informada coincide con la de la Factura, no debe informar ajuste por tipo de cambio. ",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2013,
+    "kind": "error",
+    "field": "arrayAjustesOperacion",
+    "text": "Tipo de Ajuste de operación no válido o informado repetido.",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2014,
+    "kind": "error",
+    "field": "CBUComprador",
+    "text": "No corresponde informar CBU cuando la opción de transferencia no es Sistema de Circulación Abierta.",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2015,
+    "kind": "error",
+    "field": "CBUComprador",
+    "text": "La CBU no es válida para la CUIT compradora.",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2016,
+    "kind": "error",
+    "field": "CBUComprador",
+    "text": "No corresponde informar CBU cuando el comprobante quedará cancelado totalmente (el saldo aceptado es 0).",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2017,
+    "kind": "error",
+    "field": "codMoneda, informaCBU, CBUComprador",
+    "text": "No corresponde informar CBU cuando la moneda de la factura es distinta a pesos o dólares",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 2018,
+    "kind": "error",
+    "field": "CBUComprador",
+    "text": "La moneda de la cuenta de la CBU indicada no coincide con la moneda de la factura",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 12000,
+    "kind": "error",
+    "field": "cotizacionMonedaUlt, codMoneda",
+    "text": "Informa una cotización para pesos distinta de 1.",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 12001,
+    "kind": "error",
+    "field": "codMoneda",
+    "text": "Informa una moneda distinta a la de la Factura de Crédito.",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 12002,
+    "kind": "error",
+    "field": "saldoAceptado",
+    "text": "El saldo aceptado que informa no coincide por el calculado por nuestros registros, verifique sus cuentas.",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 12003,
+    "kind": "error",
+    "field": "arrayConfirmarNotasDC",
+    "text": "Falta indicar su informe de confirmación de aceptación de al menos una Nota de Débito/Crédito de la cuenta corriente que se encuentra registrada",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 12004,
+    "kind": "error",
+    "field": "arrayConfirmarNotasDC",
+    "text": "No coincide su informe de confirmación de aceptación de las Nota de Débito/Crédito de la cuenta corriente con el estado en el cual se encuentran registradas",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 12005,
+    "kind": "error",
+    "field": "arrayRetenciones, importeTotalRetPesos",
+    "text": "Tiene diferencias entre el total y los parciales de los importes de retenciones informadas",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 12006,
+    "kind": "error",
+    "field": "arrayRetenciones",
+    "text": "Al informar un porcentaje de retención distinto a lo normado, debe informar una justificación.",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 12007,
+    "kind": "error",
+    "field": "arrayRetenciones, importeTotalRetPesos",
+    "text": "La información de retenciones está incompleta. De informar retenciones debe informar importe mayor a 0 y al menos una retención",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 12008,
+    "kind": "error",
+    "field": "arrayFormasCancelacion, tipoCancelacion, importeCancelado",
+    "text": "La información de cancelación está incompleta. De informar cancelación debe informar importe mayor a 0, al menos una forma de cancelación y el tipo (si es parcial o total)",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 12009,
+    "kind": "error",
+    "field": "arrayRetenciones",
+    "text": "El código de la retención es inválido (consultarTiposRetenciones).",
+    "page": 24
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 12010,
+    "kind": "error",
+    "field": "arrayAjustesOperacion",
+    "text": "Sólo puede informar ajustes de operación para moneda extranjera.",
+    "page": 25
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 12012,
+    "kind": "error",
+    "field": "informaCBU",
+    "text": "No debe informar CBU Comprador con Cancelación Total.",
+    "page": 25
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 12013,
+    "kind": "error",
+    "field": "informaCBU, CBUComprador",
+    "text": "Si indica que informa CBU debe enviarla y viceversa.",
+    "page": 25
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 12014,
+    "kind": "error",
+    "field": "informaCBU",
+    "text": "Debe indicar si desea informar la CBU comprador al aceptar una factura con opcion de transferencia de Sistema de Circulacion Abierta",
+    "page": 25
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 12015,
+    "kind": "error",
+    "field": "informaCBU",
+    "text": "No debe indicar si desea informar la CBU comprador al aceptar una factura con opcion de transferencia distinta de Sistema de Circulacion Abierta",
+    "page": 25
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 4000,
+    "kind": "error",
+    "field": "importeCancelado, tipoCancelacion",
+    "text": "El monto informado no cancela totalmente el saldo de la FECRED",
+    "page": 25
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 4001,
+    "kind": "error",
+    "field": "arrayFormasCancelacion",
+    "text": "Falta informar al menos una forma de cancelación",
+    "page": 25
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 4002,
+    "kind": "error",
+    "field": "arrayFormasCancelacion",
+    "text": "Código de forma de cancelación inválido o repetido. ",
+    "page": 25
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 4003,
+    "kind": "error",
+    "field": "arrayFormasCancelacion",
+    "text": "Las formas de cancelación \"Cesión\" y “Locación de Bienes Inmuebles” deben ser usadas para cancelación total y sin informar otro tipo de forma de cancelación entre los usados",
+    "page": 25
+  },
+  {
+    "operation": "aceptarFECred",
+    "code": 9000,
+    "kind": "observacion",
+    "field": "CBUComprador",
+    "text": "La CBU no pudo validarse.",
+    "page": 25
+  },
+  {
+    "operation": "rechazarFECred",
+    "code": 3000,
+    "kind": "error",
+    "field": "descMotivo",
+    "text": "Debe indicar una justificación por el rechazo",
+    "page": 27
+  },
+  {
+    "operation": "rechazarFECred",
+    "code": 3001,
+    "kind": "error",
+    "field": "codMotivo",
+    "text": "Código de motivo de rechazo inválido o repetido. ",
+    "page": 27
+  },
+  {
+    "operation": "rechazarNotaDC",
+    "code": 5000,
+    "kind": "error",
+    "field": null,
+    "text": "El rechazo de esta nota no puede realizarse, deja el saldo de la operación inválido (cero o negativo) ",
+    "page": 29
+  },
+  {
+    "operation": "rechazarNotaDC",
+    "code": 15000,
+    "kind": "error",
+    "field": "idComprobante",
+    "text": "Ud no puede realizar esa operación en el comprobante en el estado en el que se encuentra",
+    "page": 29
+  },
+  {
+    "operation": "rechazarNotaDC",
+    "code": 3000,
+    "kind": "error",
+    "field": "arrayMotivosRechazo",
+    "text": "Debe indicar una justificación por el rechazo",
+    "page": 29
+  },
+  {
+    "operation": "rechazarNotaDC",
+    "code": 3001,
+    "kind": "error",
+    "field": "arrayMotivosRechazo",
+    "text": "Código de motivo de rechazo inválido o repetido. ",
+    "page": 29
+  },
+  {
+    "operation": "informarFacturaAgtDptoCltv",
+    "code": 6000,
+    "kind": "error",
+    "field": "idCtaCte",
+    "text": "La factura ya fue informada al agente de depósito colectivo",
+    "page": 31
+  },
+  {
+    "operation": "informarFacturaAgtDptoCltv",
+    "code": 6001,
+    "kind": "error",
+    "field": "idCtaCte",
+    "text": "La factura ya fue informada al agente de depósito colectivo y se encuentra pendiente de confirmación de recepción",
+    "page": 31
+  },
+  {
+    "operation": "informarFacturaAgtDptoCltv",
+    "code": 6002,
+    "kind": "error",
+    "field": "ctaAgente",
+    "text": "Los datos de la cuenta en el agente no son válidos para la CUIT representada",
+    "page": 31
+  },
+  {
+    "operation": "informarFacturaAgtDptoCltv",
+    "code": 6003,
+    "kind": "error",
+    "field": null,
+    "text": "Problema con método de envío al agente de depósito colectivo",
+    "page": 31
+  },
+  {
+    "operation": "informarFacturaAgtDptoCltv",
+    "code": 6004,
+    "kind": "error",
+    "field": "idCtaCte",
+    "text": "Esta factura de crédito no constituye un “título ejecutivo y valor no cartular” por la fecha de vencimiento de pago con la cual fue emitida (Ley 27440 - Art 4)",
+    "page": 31
+  },
+  {
+    "operation": "informarFacturaAgtDptoCltv",
+    "code": 6005,
+    "kind": "error",
+    "field": "idCtaCte",
+    "text": "Debe aguardar al fin del plazo de aceptación para poder solicitar el informe al agente de depósito colectivo, por la fecha de vencimiento de pago con la cual fue emitida (Ley 27440 - Art 4 inc. d -2do párrafo)",
+    "page": 31
+  },
+  {
+    "operation": "informarFacturaAgtDptoCltv",
+    "code": 6006,
+    "kind": "error",
+    "field": "idCtaCte",
+    "text": "Debe aguardar a que se cumpla la fecha de vencimiento de pago para solicitar el informe a caja de valores (Ley 27.400 - Art 18)",
+    "page": 31
+  },
+  {
+    "operation": "informarFacturaAgtDptoCltv",
+    "code": 6007,
+    "kind": "error",
+    "field": "idCtaCte",
+    "text": "La factura se encuentra a la espera de la lectura del agente de depósito colectivo",
+    "page": 31
+  },
+  {
+    "operation": "informarCancelacionTotalFECred",
+    "code": 4000,
+    "kind": "error",
+    "field": "importeCancelacion",
+    "text": "El monto informado no cancela totalmente el saldo de la FECRED",
+    "page": 33
+  },
+  {
+    "operation": "informarCancelacionTotalFECred",
+    "code": 4001,
+    "kind": "error",
+    "field": "arrayFormasCancelacion",
+    "text": "Falta informar al menos una forma de cancelación",
+    "page": 33
+  },
+  {
+    "operation": "informarCancelacionTotalFECred",
+    "code": 4002,
+    "kind": "error",
+    "field": "arrayFormasCancelacion",
+    "text": "Código de forma de cancelación inválido o repetido. ",
+    "page": 33
+  },
+  {
+    "operation": "modificarOpcionTransferencia",
+    "code": 7000,
+    "kind": "error",
+    "field": "opcionTransferencia",
+    "text": "Indica la misma opción de transferencia ya elegida",
+    "page": 35
+  },
+  {
+    "operation": "consultarComprobantes",
+    "code": 32767,
+    "kind": "observacion",
+    "field": "arrayObservaciones",
+    "text": "La búsqueda no ha arrojado resultados con los filtros indicados",
+    "page": 38
+  },
+  {
+    "operation": "consultarComprobantes",
+    "code": 12011,
+    "kind": "error",
+    "field": "nroPagina",
+    "text": "El número de página solicitado debe ser mayor a cero.",
+    "page": 38
+  },
+  {
+    "operation": "consultarCtasCtes",
+    "code": 32767,
+    "kind": "observacion",
+    "field": "arrayObservaciones",
+    "text": "La búsqueda no ha arrojado resultados con los filtros indicados",
+    "page": 41
+  },
+  {
+    "operation": "consultarCtasCtes",
+    "code": 12011,
+    "kind": "error",
+    "field": "nroPagina",
+    "text": "El número de página solicitado debe ser mayor a cero.",
+    "page": 41
+  },
+  {
+    "operation": "consultarCuentasEnAgtDptoCltv",
+    "code": 32767,
+    "kind": "observacion",
+    "field": "arrayObservacion",
+    "text": "La búsqueda no ha arrojado resultados con los filtros indicados",
+    "page": 45
+  },
+  {
+    "operation": "consultarFacturasAgtDptoCltv",
+    "code": 32767,
+    "kind": "observacion",
+    "field": "arrayObservaciones",
+    "text": "La búsqueda no ha arrojado resultados con los filtros indicados",
+    "page": 51
+  }
+]

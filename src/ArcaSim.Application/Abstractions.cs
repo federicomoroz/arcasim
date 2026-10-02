@@ -68,4 +68,4 @@ public interface IResettable
 /// <summary>Every port ArcaSim keeps state behind, as one provider (memory or PostgreSQL) implements them.</summary>
 public interface ISimulatorStore :
     IAccessRepository, ITicketLog, ITaxpayerRepository, IResettable,
-    Wsfe.IVoucherStore, Wsfe.ICaeaStore, Wsfe.IExchangeRates;
+    Wsfe.IVoucherStore, Wsfe.ICaeaStore, Wsfe.IExchangeRates, Contracts.IDocumentStore;

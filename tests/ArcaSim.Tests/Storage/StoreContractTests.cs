@@ -31,6 +31,31 @@ public abstract class StoreContractTests
         Assert.Null(await store.FindAsync(30000000007));
     }
 
+    private sealed record Liquidation(long Coe, string State, List<int> Items);
+
+    [Fact]
+    public async Task Documents_are_kept_as_written_listed_by_key_prefix_and_counted()
+    {
+        var store = await CreateAsync();
+        await store.PutAsync("wslpg", "20111111112/0002", new Liquidation(2, "AC", [1, 2]));
+        await store.PutAsync("wslpg", "20111111112/0001", new Liquidation(1, "AC", [1]));
+        await store.PutAsync("wslpg", "20111111112/0001", new Liquidation(1, "AN", [1]));
+        await store.PutAsync("wslpg", "30000000007/0001", new Liquidation(9, "AC", []));
+        await store.PutAsync("wscpe", "20111111112/0001", new Liquidation(5, "AC", []));
+
+        var one = await store.GetAsync<Liquidation>("wslpg", "20111111112/0001");
+        var mine = await store.ListAsync<Liquidation>("wslpg", "20111111112/");
+        var deleted = await store.DeleteAsync("wslpg", "30000000007/0001");
+        var first = await store.NextAsync("wslpg.coe");
+        var second = await store.NextAsync("wslpg.coe");
+
+        Assert.Equal("AN", one!.State);
+        Assert.Equal([1L, 2L], mine.Select(l => l.Coe));
+        Assert.True(deleted);
+        Assert.Null(await store.GetAsync<Liquidation>("wslpg", "30000000007/0001"));
+        Assert.Equal((1L, 2L), (first, second));
+    }
+
     [Fact]
     public async Task Authorizations_are_found_by_alias_and_service_regardless_of_case()
     {

@@ -1,0 +1,418 @@
+[
+  {
+    "operation": "*",
+    "code": 500,
+    "kind": "infraestructura",
+    "field": null,
+    "text": "Error interno de aplicación.",
+    "page": 7
+  },
+  {
+    "operation": "*",
+    "code": 501,
+    "kind": "infraestructura",
+    "field": null,
+    "text": "Error interno de base de datos.",
+    "page": 7
+  },
+  {
+    "operation": "*",
+    "code": 502,
+    "kind": "infraestructura",
+    "field": null,
+    "text": "Error interno – Autorizador - Transacción Activa",
+    "page": 7
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1000,
+    "kind": "auth",
+    "field": "Auth",
+    "text": "Usuario no autorizado a realizar esta operación",
+    "page": 13
+  },
+  {
+    "operation": "SEGGetPARAM_MON",
+    "code": 1000,
+    "kind": "auth",
+    "field": "auth",
+    "text": "Usuario no autorizado a realizar esta operación",
+    "page": 21
+  },
+  {
+    "operation": "SEGGetPARAM_Tipo_Cbte",
+    "code": 1000,
+    "kind": "auth",
+    "field": "auth",
+    "text": "Usuario no autorizado a realizar esta operación",
+    "page": 22
+  },
+  {
+    "operation": "SEGGetPARAM_Tipo_IVA",
+    "code": 1000,
+    "kind": "auth",
+    "field": "auth",
+    "text": "Usuario no autorizado a realizar esta operación",
+    "page": 24
+  },
+  {
+    "operation": "SEGGetCondicionIvaReceptor",
+    "code": 1000,
+    "kind": "auth",
+    "field": "Auth",
+    "text": "Usuario no autorizado a realizar esta operación",
+    "page": 26
+  },
+  {
+    "operation": "SEGGetPARAM_Ctz",
+    "code": 1000,
+    "kind": "auth",
+    "field": "auth",
+    "text": "Usuario no autorizado a realizar esta operación",
+    "page": 28
+  },
+  {
+    "operation": "*",
+    "code": 1000,
+    "kind": "auth",
+    "field": "Token",
+    "text": "Usuario no autorizado a realizar esta operacion. ValidacionDeToken: Error al verificar hash: VerificacionDeHash: Error al convertir de Base64 al token: <token>",
+    "page": null
+  },
+  {
+    "operation": "*",
+    "code": 1000,
+    "kind": "auth",
+    "field": "Token",
+    "text": "Usuario no autorizado a realizar esta operacion. ValidacionDeToken: Error al verificar hash: VerificacionDeHash: No validó la firma digital. ",
+    "page": null
+  },
+  {
+    "operation": "*",
+    "code": 1000,
+    "kind": "auth",
+    "field": "Auth",
+    "text": "Usuario no autorizado a realizar esta operacion. ",
+    "page": null
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1001,
+    "kind": "auth",
+    "field": "Cuit",
+    "text": "CUIT solicitante no se encuentra entre sus representados",
+    "page": 13
+  },
+  {
+    "operation": "SEGGetPARAM_MON",
+    "code": 1001,
+    "kind": "auth",
+    "field": "Cuit",
+    "text": "CUIT solicitante no se encuentra entre sus representados",
+    "page": 21
+  },
+  {
+    "operation": "SEGGetPARAM_Tipo_Cbte",
+    "code": 1001,
+    "kind": "auth",
+    "field": "Cuit",
+    "text": "Cuit solicitante no se encuentra entre sus representados",
+    "page": 22
+  },
+  {
+    "operation": "SEGGetPARAM_Tipo_IVA",
+    "code": 1001,
+    "kind": "auth",
+    "field": "Cuit",
+    "text": "Cuit solicitante no se encuentra entre sus representados",
+    "page": 24
+  },
+  {
+    "operation": "SEGGetCondicionIvaReceptor",
+    "code": 1001,
+    "kind": "auth",
+    "field": "Cuit",
+    "text": "Cuit solicitante no se encuentra entre sus representados",
+    "page": 26
+  },
+  {
+    "operation": "SEGGetPARAM_Ctz",
+    "code": 1001,
+    "kind": "auth",
+    "field": "Cuit",
+    "text": "Cuit solicitante no se encuentra entre sus representados",
+    "page": 28
+  },
+  {
+    "operation": "SEGGetCondicionIvaReceptor",
+    "code": 1002,
+    "kind": "error",
+    "field": "ClaseCmp",
+    "text": "El valor ingresado para la clase de comprobante no es valido. La clase de Comprobante es opcional, de ingresar un valor solo puede ser A o B,",
+    "page": 26
+  },
+  {
+    "operation": "SEGGetPARAM_Ctz",
+    "code": 1003,
+    "kind": "error",
+    "field": "MonId",
+    "text": "El código de moneda ingresado es invalido. Verificar los codigos mediante el método SEGGetPARAM_MON",
+    "page": 28
+  },
+  {
+    "operation": "SEGGetPARAM_Ctz",
+    "code": 1004,
+    "kind": "error",
+    "field": "MonId",
+    "text": "No ingreso el código de moneda. Ingresar un valor valido. Ver método SEGGetPARAM_MON",
+    "page": 28
+  },
+  {
+    "operation": "SEGGetPARAM_Ctz",
+    "code": 1005,
+    "kind": "error",
+    "field": "FchCotiz",
+    "text": "Campo FchCotiz No corresponde a una fecha valida con formato YYYYMMDD",
+    "page": 28
+  },
+  {
+    "operation": "SEGGetPARAM_Ctz",
+    "code": 1006,
+    "kind": "error",
+    "field": null,
+    "text": "Sin Resultados: - Método SEGGetPARAM_Ctz",
+    "page": 28
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": null,
+    "text": "Tipo de dato y longitud de cada campo",
+    "page": 13
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Id",
+    "text": "Identificador del requerimiento sea mayor que 0.",
+    "page": 13
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Punto_vta",
+    "text": "Campo punto_vta se encuentre entre 1 y 99998 y que sea único para el requerimiento.",
+    "page": 13
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Tipo_cbte",
+    "text": "Tipo de comprobante inválido.",
+    "page": 13
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Cbte_nro",
+    "text": "Campo cbte_nro esté entre 1 y 99999999.",
+    "page": 13
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Tipo_doc",
+    "text": "El tipo de documento debe ser igual a 80 (CUIT) en comprobantes tipo A.",
+    "page": 13
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Fecha_cbte",
+    "text": "No es una fecha valida. Debe ser numérico de 8 con formato (yyyymmdd).",
+    "page": 13
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Fecha_cbte",
+    "text": "No podrá exceder el mes de la fecha de envío del pedido de autorización.",
+    "page": 13
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Fecha_cbte",
+    "text": "La fecha debe estar incluida en el periodo +- 5 días de la fecha de presentación.",
+    "page": 13
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Imp_op_ex|Imp_perc|Imp_iibb|Imp_perc_mun|Imp_internos|Items",
+    "text": "Se valida que la suma de importes de los ítems sea menor igual a los importes totales del comprobante.",
+    "page": 14
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Imp_op_ex",
+    "text": "Se valida que el importe de operaciones exentas sea mayor a 0 en los casos donde exista alguna item de factura con Iva exento",
+    "page": 14
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Imp_moneda_Id|Imp_moneda_ctz",
+    "text": "El tipo de cambio no podrá ser inferior al 20% ni superior en un 200% del que suministra ARCA como orientativo de acuerdo a la cotización oficial.",
+    "page": 14
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Imp_moneda_Id|Imp_moneda_ctz|CanMisMonExt",
+    "text": "El campo <Imp_moneda_ctz> es obligatorio si no informa el campo CanMisMonExt = S, y de informarse debe ser mayor a 0. Si se indica que el pago del comprobante se realiza en la misma moneda extranjera que la factura, la cotización de la moneda provista debe coincidir exactamente con la registrada en las bases de ARCA para el día hábil anterior a la fecha de emisión del comprobante, si esta es anterior a la fecha actual, o bien con la registrada para el día hábil anterior a la fecha actual, si la fecha de emisión es posterior a esta. En caso contrario, se puede omitir el campo de Cotización de Moneda.",
+    "page": 14
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": null,
+    "text": "Valor inválido en campo (a este código se le agregará una descripción detallada del origen del error (nombre de campo y causa))",
+    "page": 15
+  },
+  {
+    "operation": "SEGGetCMP",
+    "code": 1020,
+    "kind": "error",
+    "field": "Cmp",
+    "text": "Comprobante inexistente",
+    "page": 19
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1030,
+    "kind": "error",
+    "field": "Cmp/CondicionIVAReceptorId",
+    "text": "El campo Condición IVA receptor no es un valor permitido. Para mas información consular método SEGGetCondicionIvaReceptor",
+    "page": 14
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1031,
+    "kind": "error",
+    "field": "Cmp/CondicionIVAReceptorId",
+    "text": "El campo Condición IVA receptor no es valido para la clase de comprobante informado. Para mas información consular método SEGGetCondicionIvaReceptor",
+    "page": 14
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1032,
+    "kind": "error",
+    "field": "Cmp/CondicionIVAReceptorId",
+    "text": "El campo Condición Frente al IVA del receptor resultara obligatorio conforme lo reglamentado por la Resolución General N° 5616. Para mas información consular método SEGGetCondicionIvaReceptor",
+    "page": 14
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1033,
+    "kind": "error",
+    "field": "Cmp/CanMisMonExt",
+    "text": "Si informa el campo CanMisMonExt, los valores posibles son S o N y no debe quedar vacío,",
+    "page": 14
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1034,
+    "kind": "error",
+    "field": "Cmp/Imp_moneda_ctz",
+    "text": "Si informa el campo Imp_moneda_ctz, el mismo no podrá superar en 1 a la cotizacion oficial. Ver Método SEGGetPARAM_Ctz..",
+    "page": 14
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 1035,
+    "kind": "error",
+    "field": "Cmp/CanMisMonExt",
+    "text": "Si informa Imp_moneda_Id = PES, el campo CanMisMonExt no debe informarse o informarse con el valor N.",
+    "page": 15
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 21,
+    "kind": "observacion",
+    "field": "Cmp/Nro_doc",
+    "text": "LA CUIT RECEPTORA SE ENCUENTRA INACTIVA POR HABER SIDO INCLUÍDA EN LA CONSULTA DE FACTURAS APÓCRIFAS. NO PODRÁ COMPUTARSE EL CRÉDITO FISCAL",
+    "page": 12
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 22,
+    "kind": "observacion",
+    "field": "Cmp/Nro_doc",
+    "text": "La CUIT RECEPTORA INGRESADA NO EXISTE. Para el caso de Facturas y Notas de Débito, emitir una Nota de Crédito o anular la operación, según corresponda.",
+    "page": 12
+  },
+  {
+    "operation": "SEGAuthorize",
+    "code": 23,
+    "kind": "observacion",
+    "field": "Cmp/CondicionIVAReceptorId",
+    "text": "El campo Condición Frente al IVA del receptor resultará obligatorio conforme lo reglamentado por la Resolución General N° 5616. Para mas información consultar el método “SEGGetCondicionIvaReceptor” o la tabla “Condición frente al IVA del receptor”. Ver Anexo",
+    "page": 13
+  },
+  {
+    "operation": "*",
+    "code": 39,
+    "kind": "evento",
+    "field": null,
+    "text": "IMPORTANTE: Por motivos de mantenimiento, el servicio estara fuera de linea el domingo 14 de junio desde las 21:00 hs durante aproximadamente 3 horas. Agradecemos tu comprension y pedimos disculpas por las molestias ocasionadas.",
+    "page": null
+  },
+  {
+    "operation": "*",
+    "code": 47,
+    "kind": "evento",
+    "field": null,
+    "text": "El servicio WSSEG sera dado de baja. Cabe destacar que la Resolución General Nro 5866/2026 indica que este servicio sera reemplazado por WSFEV1 a partir del 01/01/2027. En caso de querer emitir comprobantes electrónicos de Seguros de Caución, el contribuyente podrá informarlos utilizando un Punto de Venta de tipo 'Comprobantes de Seguros de Caución - Webservices' por medio del servicio WSFEV1. En caso de requerir consultar comprobantes emitidos vía WSSEG, para tal fin se adecuó el método FECompConsultar para obtener ademas la póliza y el endoso",
+    "page": null
+  },
+  {
+    "operation": "*",
+    "code": "soap:Client",
+    "kind": "fault",
+    "field": null,
+    "text": "System.Web.Services.Protocols.SoapException: Server did not recognize the value of HTTP Header SOAPAction: <valor>.",
+    "page": null
+  },
+  {
+    "operation": "*",
+    "code": "soap:Client",
+    "kind": "fault",
+    "field": null,
+    "text": "System.Web.Services.Protocols.SoapException: Server was unable to read request. ---> System.InvalidOperationException: There is an error in XML document (<linea>, <columna>). ---> System.FormatException: Input string was not in a correct format.",
+    "page": null
+  },
+  {
+    "operation": "*",
+    "code": "HTTP 400",
+    "kind": "fault",
+    "field": null,
+    "text": "",
+    "page": null
+  }
+]

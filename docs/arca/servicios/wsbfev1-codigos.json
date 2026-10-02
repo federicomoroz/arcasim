@@ -1,0 +1,962 @@
+[
+  {
+    "operation": "*",
+    "code": 500,
+    "kind": "infraestructura",
+    "field": null,
+    "text": "Error interno de aplicación.",
+    "page": 9
+  },
+  {
+    "operation": "*",
+    "code": 501,
+    "kind": "infraestructura",
+    "field": null,
+    "text": "Error interno de base de datos.",
+    "page": 9
+  },
+  {
+    "operation": "*",
+    "code": 502,
+    "kind": "infraestructura",
+    "field": null,
+    "text": "Error interno – Autorizador - Transacción Activa",
+    "page": 9
+  },
+  {
+    "operation": "*",
+    "code": 1000,
+    "kind": "auth",
+    "field": "Auth",
+    "text": "Usuario no autorizado a realizar esta operación",
+    "page": 17
+  },
+  {
+    "operation": "*",
+    "code": 1001,
+    "kind": "auth",
+    "field": "Auth/Cuit",
+    "text": "Cuit solicitante no se encuentra entre sus representados",
+    "page": 17
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": null,
+    "text": "Tipo de dato y longitud de cada campo",
+    "page": 16
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Id",
+    "text": "Identificador del requerimiento sea mayor que 0.",
+    "page": 17
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Punto_vta",
+    "text": "Campo punto_vta se encuentre entre 1 y 99998 y que sea único para el requerimiento.",
+    "page": 17
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Tipo_cbte",
+    "text": "Tipo de comprobante inválido.",
+    "page": 17
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Cbte_nro",
+    "text": "Campo cbte_nro esté entre 1 y 99999999.",
+    "page": 17
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Tipo_doc",
+    "text": "El tipo de documento debe ser igual a 80 (CUIT) en comprobantes tipo A.",
+    "page": 17
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Fecha_cbte",
+    "text": "No es una fecha valida. Debe ser numérico de 8 con formato (yyyymmdd).",
+    "page": 17
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Fecha_cbte",
+    "text": "No podrá exceder el mes de la fecha de envío del pedido de autorización.",
+    "page": 17
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Fecha_cbte",
+    "text": "La fecha debe estar incluida en el periodo +- 5 días de la fecha de presentación.",
+    "page": 17
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Items",
+    "text": "Se valida que la suma de importes de los ítems sea menor igual a los importes totales del comprobante.",
+    "page": 17
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Imp_op_ex",
+    "text": "Se valida que el importe de operaciones exentas sea mayor a 0 en los casos donde exista alguna ítem de factura con Iva exento",
+    "page": 17
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": "Cmp/Imp_moneda_ctz",
+    "text": "El tipo de cambio no podrá ser inferior al 2% ni superior en un 400% del que suministra ARCA como orientativo de acuerdo a la cotización oficial.",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1014,
+    "kind": "error",
+    "field": null,
+    "text": "Valor inválido en campo (a este código se le agregará una descripción detallada del origen del error (nombre de campo y causa))",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1015,
+    "kind": "error",
+    "field": "Cmp/Opcionales",
+    "text": "Opcionales ->Opcional : de informar <Opcionales> debe informar de forma completa la estructura <Opcionales><Opcional><Id>",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1016,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Id",
+    "text": "El valor ingresado en <Id> debe ser alguno permitido. Consultar método BFEGetPARAM_Tipo_Opc.",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1017,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Id",
+    "text": "El campo <Id> en <Opcionales> es obligatorio y no debe repetirse.",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1018,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Valor",
+    "text": "El campo <Valor> en Opcionales es obligatorio",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1019,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Valor",
+    "text": "<Opcionales><Id><Valor>. Si selecciona Id = 2 el valor ingresado debe ser un numérico de 8 (ocho) dígitos mayor o igual a 0 (cero).",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1020,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Valor",
+    "text": "Si Id = 2 y el comprobante corresponde a una actividad alcanzada por el beneficio de Promoción Industrial en el campo <Valor> se deberá informar el número identificatorio del proyecto (el mismo deberá corresponder a la cuit emisora del comprobante), si no corresponde a una actividad alcanzada por el beneficio el campo <Valor> deberá ser 0 (cero).",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1030,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc",
+    "text": "Si envía CbtesAsoc, CbteAsoc es obligatorio y no puede estar vacío",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1031,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "De enviarse el tag CbteAsoc debe enviarse <CbteAsoc><Tipo>mayor a 0",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1032,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Punto_vta",
+    "text": "De enviarse el tag CbteAsoc debe enviarse mayor a 0 y menor a 99998.",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1033,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Cbte_nro",
+    "text": "De enviarse el tag CbteAsoc debe enviarse <CbteAsoc><Nro> > a 0 y < a 99999999.",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1034,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc",
+    "text": "De enviarse el tag CbteAsoc, los comprobantes no deben repetirse.",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1035,
+    "kind": "error",
+    "field": "Cmp/Tipo_cbte",
+    "text": "De enviarse el tag <CbtesAsoc>, entonces el campo tipo de comprobante <Cmp><Tipo_cbte> a autorizar tiene que ser 01, 02, 03, 06, 07, 08, 91, 201, 202, 203, 206, 207, 208",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1036,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para <Cmp><Tipo_cbte>01 o 06 solo puede asociarse el tipo de comprobante <CbtesAsoc><Tipo_cbte> 91.",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1037,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para <Cmp><Tipo_cbte> 02 o 03 pueden asociarse los tipos de comprobante <CbtesAsoc><Tipo_cbte> 01, 02, 03, 91.",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1038,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para <Cmp><Tipo_cbte> 07 u 08 pueden asociarse los tipos de comprobante <CbtesAsoc><Tipo_cbte> 06, 07, 08, 91.",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 1039,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Cbte_nro",
+    "text": "Si el punto de venta del comprobante asociado (CbtesAsoc.Punto_vta) es electrónico y del tipo Bonos, el número de comprobante debe obrar en las bases del organismo para el punto de venta y tipo de comprobante informado.",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4880,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Cbte_nro",
+    "text": "Si el punto de venta del comprobante asociado (campo < Punto_vta > de <CbteAsoc>) es electrónico, el número de comprobante debe obrar en las bases del organismo para el punto de venta y tipo de comprobante informado.",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4881,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Valor",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) y corresponde a un comprobante de débito o crédito, tener en cuenta que: - sí y el comprobante asociado se encuentra rechazado por el comprador hay que informar el código de anulación correspondiente sobre el campo \"Adicionales por RG\", códigos 22 - Anulación. Valor “S” (<CbteAsoc><Tipo_cbte><Punto_vta><Cbte_nro><Cuit>) - sí y el comprobante asociado se encuentra aceptado por el comprador hay que informar el código de no anulación correspondiente sobre el campo \"Adicionales por RG\", códigos 22 - Anulación. Valor “N” (<CbteAsoc><Tipo_cbte><Punto_vta><Cbte_nro><Cuit>)",
+    "page": 18
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4882,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Fecha_cbte",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito, el comprobante debe existir autorizado en las bases de esta Administración con la misma fecha informada en el asociado (<CbteAsoc><Tipo_cbte><Punto_vta><Cbte_nro><Cuit><Fecha_cbte>)",
+    "page": 19
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4883,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Cuit",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es débito o crédito, deben coincidir emisores y receptores.",
+    "page": 19
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4884,
+    "kind": "error",
+    "field": "Cmp/Imp_total",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), y es crédito y coinciden emisores y receptores el monto del comprobante a autorizar no puede ser mayor o igual al saldo actual de la cuenta corriente. Ver micro sitio factura de crédito",
+    "page": 19
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4886,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) y corresponde a un comprobante de débito o crédito, es obligatorio informar comprobantes asociados. (<BFEAuthorize><Cmp><Tipo_cbte>/ <BFEAuthorize><Cmp> /<CbtesAsoc>)",
+    "page": 19
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4887,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Cuit",
+    "text": "Si informa Cuit en comprobantes asociados, no informar en blanco, el mismo debe ser un valor de 11 caracteres numéricos. Para comprobante del tipo MiPyMEs (FCE) del tipo débito o crédito es obligatorio informar el campo (campo <CbteAsoc><Cuit>)",
+    "page": 19
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4888,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "De enviarse el tag <CbtesAsoc>, para <Tipo_cbte> comprobantes MiPyMEs (FCE) 201 o 206, solo puede asociarse comprobante 91.",
+    "page": 19
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4889,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito tipo A sin código de Anulación, siempre debe asociar 1 y solo 1 comprobante tipo factura A (201). No puede haber dos o más comprobantes tipo factura A (201) asociados a un comprobante a autorizar.",
+    "page": 19
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4890,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito tipo A, sin código de Anulación, solo puede asociar: Para comprobantes A, asociar 201 o 91 (<BFEAuthorize><Cmp><Tipo_cbte >/ <BFEAuthorize><Cmp><CbteAsoc><Tipo>)",
+    "page": 19
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4891,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para comprobante de anulación, campo CbtesAsoc con tipo invalido. Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito tipo A y el comprobante es de anulación, el campo CbtesAsoc debe contener uno de los siguientes valores: 201, 202, 203 (<CbtesAsoc> / <Tipo_cbte>). De forma complementaria se puede asociar el código 91.",
+    "page": 19
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4892,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito tipo B sin código de Anulación, siempre debe asociar 1 y solo 1 comprobante tipo factura B (206). No puede haber dos o más comprobantes tipo factura B (206) asociados a un comprobante a autorizar. De forma complementaria se puede asociar el código 91.",
+    "page": 19
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4893,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito tipo B, sin código de Anulación, solo puede asociar: Para comprobantes B, asociar 206 (<BFEAuthorize><Cmp><Tipo_cbte >/ <BFEAuthorize><Cmp><CbteAsoc><Tipo>) . De forma complementaria se puede asociar el código 91.",
+    "page": 19
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4894,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para comprobante de anulación, campo CbtesAsoc con tipo invalido. Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito tipo B y el comprobante es de anulación, el campo CbtesAsoc debe contener uno de los siguientes valores: 206, 207, 208. <CbtesAsoc> / <Tipo_cbte>",
+    "page": 19
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4895,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Fecha_cbte",
+    "text": "De informar el campo Fecha del Comprobante Asociado <Fecha_cbte>, la fecha del comprobante asociado tiene que ser igual o menor a la fecha del comprobante que se está autorizando",
+    "page": 19
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4896,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Fecha_cbte",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Débito o Crédito, es obligatorio informar la fecha del comprobante asociado",
+    "page": 19
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4897,
+    "kind": "error",
+    "field": "Cmp/Fecha_cbte",
+    "text": "Para comprobantes MiPyMEs (FCE), el campo <Fecha_cbte> podrá estar comprendido en el rango N-5 y N+1 siendo N la fecha de envío del pedido de autorización. (<Cbte_nro>/<Fecha_cbte>/<Cmp>/<Fecha_cbte>)",
+    "page": 19
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4898,
+    "kind": "error",
+    "field": "Cmp/Fecha_cbte",
+    "text": "Si informa fecha de comprobante <Fecha_cbte> para comprobante del tipo MiPyMEs (FCE) con fecha superior a la fecha de envío de autorización, el mes de la fecha del comprobante <Fecha_cbte> debe coincidir con el mes de la fecha de envío de autorización.",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4900,
+    "kind": "error",
+    "field": "Cmp/Fecha_vto_pago",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Tipo 201 - FACTURA DE CREDITO ELECTRONICA MiPyMEs (FCE) A / 206 - FACTURA DE CREDITO ELECTRONICA MiPyMEs (FCE) B , es obligatorio informar el campo Fecha_vto_pago (<Fecha_vto_pago>)",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4901,
+    "kind": "error",
+    "field": "Cmp/Fecha_vto_pago",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), la fecha de vencimiento de pago <Fecha_vto_pago> debe ser posterior o igual a la fecha de emisión (CbteFch) o fecha de presentación (fecha actual), la que sea posterior (<Fecha_vto_pago>)",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4902,
+    "kind": "error",
+    "field": "Cmp/Fecha_vto_pago",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), el campo “fecha de vencimiento para el pago” <Fecha_vto_pago> no debe informarse si NO es Factura de Crédito (Cbte_tipo 201 / 206). En el caso de ser Nota de Débito o Crédito, solo puede informarse si es de Anulación. (<Fecha_vto_pago>)",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4903,
+    "kind": "error",
+    "field": "Cmp/Imp_moneda_Id",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Nota Débito o Nota Crédito, la moneda del comprobante a autorizar debe ser igual a la moneda del comprobante asociado o Pesos para ajuste en las diferencias de cambio (post aceptación/rechazo).",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4905,
+    "kind": "error",
+    "field": "Cmp/Opcionales",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Tipo 201 - FACTURA DE CREDITO ELECTRONICA MiPyMEs (FCE) A / 206 - FACTURA DE CREDITO ELECTRONICA MiPyMEs (FCE) B, es obligatorio informar <Opcionales>",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4906,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Valor",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa opcionales, el valor correcto para el código 2101 es un CBU numérico de 22 caracteres. (<Opcionales><Id><Valor>)",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4907,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Valor",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa opcionales, el valor correcto para el código 2102 es un ALIAS alfanumérico de 6 a 20 caracteres. (<Opcionales><Id><Valor>)",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4908,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Valor",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa opcionales, el valor correcto para el código 22 es “S” o “N”: S = Es de Anulación N = No es de Anulación <Opcionales><Id><Valor>",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4909,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Id",
+    "text": "Opcionales. No informar identificadores de resoluciones distintas en un mismo comprobante.",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4910,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Id",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es obligatorio informar al menos uno de los siguientes códigos 2101, 2102, 22, 27. (<Opcionales><Id><Valor>)",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4911,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Id",
+    "text": "Si el tipo de comprobante que está autorizando es Factura (201, 206) del tipo MiPyMEs (FCE), informa opcionales, es obligatorio informar CBU. (<Opcionales><Id><Valor>)",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4912,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Id",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Factura (201 o 206), no informar Código de Anulación. (<Opcionales><Id><Valor>)",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4913,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Valor",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa CBU o Alias, el mismo debe estar registrado en las bases de esta administración, vigente y pertenecer al emisor del comprobante. (<Opcionales><Id><Valor>)",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4914,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Id",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Debito (202, 207) o Crédito (203, 208) No informar CBU o ALIAS. Solo se permite informar Código de Anulación. (<Opcionales><Id><Valor>)",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4915,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Id",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), Debito (202, 207) o Crédito (203, 208) informar Código de Anulación. (<Opcionales><Id><Valor>)",
+    "page": 20
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4916,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Id",
+    "text": "Si el tipo de comprobante que está autorizando NO es MiPyMEs (FCE), no informar los códigos 2101, 2102, 22, 27. (<Opcionales><Id><Valor>)",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4917,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Cuit",
+    "text": "Si informa el campo CbtesAsoc, el Cuit debe informarlo como numérico de 11 caracteres.",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4918,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para comprobantes MIPYMEs (FECRED), tipo cmp. N. Débito o N. Crédito A de ANULACION, no se puede informar más de una ND/NC A como Cmp. Asociado (202/203) .",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4919,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para comprobantes MIPYMEs (FECRED), tipo Nota de Debito A (202) de ANULACION, no se puede informar Factura A (201) ni Nota de Debito A (202) como CMP. Asociado",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4920,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para comprobantes MIPYMEs (FECRED), tipo Nota de Credito A (203) de ANULACION, no se puede informar una Nota de Credito A (203) como CMP. Asociado",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4921,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para comprobantes MIPYMEs (FECRED), tipo cmp. N. Débito o N. Credito B de ANULACION, no se puede informar más de una ND/NC B como Cmp. Asociado (207/208)",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4922,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para comprobantes MIPYMEs (FECRED), tipo Nota de Debito B (207) de ANULACION, no se puede informar Factura B (206) ni Nota de Debito B (207) como CMP. Asociado",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4923,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para comprobantes MIPYMEs (FECRED), tipo Nota de Credito B (208) de ANULACION, no se puede informar una Nota de Credito B (208) como CMP. Asociado",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4924,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para comprobantes MIPYMEs (FECRED), tipo Nota de Debito/Credito A (202/203) No de ANULACION, debe informarse una y solo una Factura A (201) obligatoriamente.",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4925,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Para comprobantes MIPYMEs (FECRED), tipo Nota de Debito/Credito B (207/208) No de ANULACION, debe informarse una y solo una Factura B (206) obligatoriamente.",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4926,
+    "kind": "error",
+    "field": "Cmp/Imp_total",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es crédito el monto del comprobante a autorizar no puede ser mayor o igual al saldo actual de la cuenta corriente. Ver micrositio factura de crédito",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4927,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es crédito o débito, el comprobante asociado debe estar aceptado o rechazado por el sistema de gestión de créditos. Ver micrositio factura de crédito",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4928,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es crédito o débito A, de anulación, solo se encuentra habilitado asociar un comprobante de crédito A .",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4929,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), es crédito o débito B, de anulación, solo se encuentra habilitado asociar un comprobante de crédito B.",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4931,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Valor",
+    "text": "Puede identificar una o varias Referencias Comerciales según corresponda. Informar bajo el código 23. Campo alfanumérico de 50 caracteres como máximo.",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4932,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Valor",
+    "text": "Si informa opcionales con más de un identificador 23 – Referencia Comercial, no repetir el valor.",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4933,
+    "kind": "error",
+    "field": "Cmp/Imp_total",
+    "text": "El importe Total de la Factura de Crédito (código tipo comprobante 201, 206) debe ser mayor o igual al tope establecido para emisión de factura de crédito. Ver micrositio.",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4944,
+    "kind": "error",
+    "field": "Cmp/Tipo_cbte",
+    "text": "Según la categorización de las CUITs emisora y receptora y el monto facturado debe realizar una factura de crédito electrónica MiPyMEs (FCE). Ver micrositio.",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4945,
+    "kind": "error",
+    "field": "Cmp/Nro_doc",
+    "text": "El comprobante electrónico asociado se encuentra autorizado pero los receptores no coinciden. Si está autorizando un comprobante MiPyMEs (FCE), el receptor del comprobante asociado debe ser el mismo que el receptor del comprobante que está intentando autorizar.",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4946,
+    "kind": "error",
+    "field": "Cmp/Opcionales",
+    "text": "Para Notas de Debito / Crédito del tipo MiPMEs (FCE), es obligatorio informar Opcionales - Marca de Anulación (S/N). Ver método FEParamGetTiposOpcional() para mayor información.",
+    "page": 21
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4947,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc",
+    "text": "Comprobante asociado no existe en los registros del organismo.",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4948,
+    "kind": "error",
+    "field": "Cmp/Imp_total",
+    "text": "Para comprobante MiPyMEs (FCE), del tipo Nota de Crédito, el monto del comprobante a autorizar no puede ser mayor o igual al saldo actual de la cuenta corriente.",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4949,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Valor",
+    "text": "Comprobante electrónico asociado autorizado. No es válida la marca de anulación para el estado actual del comprobante.",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4950,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Tipo de comprobante asociado invalido para comprobantes MiPyMEs (FCE) de anulación. Para comprobante MiPyMEs (FCE), del tipo Nota de Debito A con Anulación, solo informar 1 comprobante Asociado 203. Para comprobante MiPyMEs (FCE), del tipo Nota de Crédito A con Anulación, solo informar 1 comprobante Asociado 201 o 202.",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4951,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Tipo_cbte",
+    "text": "Tipo de comprobante asociado invalido para comprobantes MiPyMEs (FCE) de anulación. Para comprobante MiPyMEs (FCE), del tipo Nota de Debito B con Anulación, solo informar 1 comprobante Asociado 208. Para comprobante MiPyMEs (FCE), del tipo Nota de Crédito B con Anulación, solo informar 1 comprobante Asociado 206 o 207.",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4952,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Valor",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa opcionales, el tipo de dato correcto para el código 27 es un alfanumérico de 3 caracteres.",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4953,
+    "kind": "error",
+    "field": "Cmp/Opcionales/Opcional/Valor",
+    "text": "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE), informa opcionales y el código es 27, los valores posibles son: SCA = \"TRANSFERENCIA AL SISTEMA DE CIRCULACION ABIERTA\" ADC = \"AGENTE DE DEPOSITO COLECTIVO\"",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4954,
+    "kind": "error",
+    "field": "Cmp/Opcionales",
+    "text": "Si el tipo de comprobante que está autorizando es Factura del tipo MiPyMEs (201, 206, 211), es obligatorio informar <Opcionales> con id = 27. Los valores posibles son SCA o ADC.",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4955,
+    "kind": "error",
+    "field": "Cmp/Imp_total",
+    "text": "Si el tipo de comprobante que está autorizando es Factura del tipo MiPyMEs (201, 202, 203, 206, 207, 208), el campo <Cmp>.<Imp_total> (Importe total de la operación) deber ser igual o mayor a 0 (cero).",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4956,
+    "kind": "error",
+    "field": "Cmp/CbtesAsoc/CbteAsoc/Punto_vta",
+    "text": "Al momento de autorizar un comprobante del tipo débito o crédito, al asociar sus comprobantes, tener en cuenta que los puntos de venta deben pertenecer al mismo régimen de facturación.",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4957,
+    "kind": "error",
+    "field": "Cmp/Imp_moneda_ctz",
+    "text": "El campo Imp_moneda_ctz es obligatorio si no informa el campo CanMisMonExt con valor S o si la moneda del comprobante no tiene cotización en Banco Nación o el comprobante no es del tipo factura. El mismo debe ser mayor a 0.",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4958,
+    "kind": "error",
+    "field": "Cmp/CanMisMonExt",
+    "text": "Si informa Imp_moneda_Id = PES, el campo CanMisMonExt NO debe informarse (o informarse con el valor N)",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4959,
+    "kind": "error",
+    "field": "Cmp/CanMisMonExt",
+    "text": "Si informa el campo CanMisMonExt, los valores posibles son S o N y no debe quedar vacío.",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4960,
+    "kind": "error",
+    "field": "Cmp/Imp_moneda_ctz",
+    "text": "Si informa el campo Imp_moneda_ctz, el mismo no podra superar en 1 a la cotización oficial. Ver Método BFEGetCotizacion.",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4961,
+    "kind": "error",
+    "field": "Cmp/CondicionIVAReceptorId",
+    "text": "El campo Condición IVA receptor no es un valor permitido. Consular método BFEGetPARAM_CondicionIvaReceptor.",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4962,
+    "kind": "error",
+    "field": "Cmp/CondicionIVAReceptorId",
+    "text": "El campo Condición IVA receptor no es valido para la clase de comprobante informado. Consular método BFEGetPARAM_CondicionIvaReceptor.",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4963,
+    "kind": "error",
+    "field": "Cmp/CondicionIVAReceptorId",
+    "text": "Campo Condición Frente al IVA del receptor es obligatorio conforme a lo reglamentado por la Resolución General N° 5616. Para mas información consular método BFEGetPARAM_CondicionIvaReceptor",
+    "page": 22
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 4930,
+    "kind": "observacion",
+    "field": "Cmp/Tipo_cbte",
+    "text": "Si el tipo de comprobante que está autorizando es 1 – Factura A o 6 - Factura B, por la categorización de las cuits emisora y receptora, se debería realizar una factura de crédito electrónica.",
+    "page": 23
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 15,
+    "kind": "observacion",
+    "field": "BFEResultAuth/Obs",
+    "text": "LA CUIT INFORMADA DEL EMISOR NO CUMPLE LAS CONDICIONES SEGÚN EL RÉGIMEN FCE",
+    "page": 15
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 16,
+    "kind": "observacion",
+    "field": "BFEResultAuth/Obs",
+    "text": "LA CUIT INFORMADA DEL EMISOR NO TIENE ACTIVO EL DOMICILIO FISCAL ELECTRONICO",
+    "page": 15
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 17,
+    "kind": "observacion",
+    "field": "BFEResultAuth/Obs",
+    "text": "SI EL TIPO DE COMPROBANTE QUE ESTÁ AUTORIZANDO ES MIPYMES (FCE), EL RECEPTOR DEL COMPROBANTE INFORMADO EN DOCTIPO Y DOCNRO DEBE CORRESPONDER A UN CONTRIBUYENTE CARACTERIZADO COMO GRANDE O PYME QUE OPTÓ.",
+    "page": 15
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 18,
+    "kind": "observacion",
+    "field": "BFEResultAuth/Obs",
+    "text": "SI EL TIPO DE COMPROBANTE QUE ESTÁ AUTORIZANDO ES MIPYMES (FCE), EL RECEPTOR DEL COMPROBANTE DEBE TENER HABILITADO EL DOMICILIO FISCAL ELECTRÓNICO",
+    "page": 15
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 21,
+    "kind": "observacion",
+    "field": "BFEResultAuth/Obs",
+    "text": "LA CUIT RECEPTORA SE ENCUENTRA INACTIVA POR HABER SIDO INCLUÍDA EN LA CONSULTA DE FACTURAS APÓCRIFAS. NO PODRÁ COMPUTARSE EL CRÉDITO FISCAL",
+    "page": 16
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 22,
+    "kind": "observacion",
+    "field": "BFEResultAuth/Obs",
+    "text": "SI EL TIPO DE COMPROBANTE QUE ESTÁ AUTORIZANDO ES MIPYMES (FCE) CLASE \"B\", EL RECEPTOR DEL COMPROBANTE INFORMADO EN DOCTIPO Y DOCNRO DEBE ENCONTRARSE REGISTRADOS DE FORMA ACTIVA EN EL IMPUESTO IVA, MONOTIBUTO o EXENTO.",
+    "page": 15
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 23,
+    "kind": "observacion",
+    "field": "BFEResultAuth/Obs",
+    "text": "DETECTAMOS QUE TENES PENDIENTE DE PRESENTACIÓN EL FORMULARIO DE HABILITACIÓN DE COMPROBANTES, O SU FECHA DE PRESENTACIÓN ES ANTERIOR A TU ALTA EN IVA. Para el caso de facturas/Notas de Débito, tenés que proceder a anular la operación emitida, mediante una Nota de Crédito.",
+    "page": 16
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 24,
+    "kind": "observacion",
+    "field": "BFEResultAuth/Obs",
+    "text": "LA CUIT RECEPTORA QUE INGRESASTE NO EXISTE. Para el caso de facturas/Notas de Débito, tenés que emitir una Nota de Crédito o anular la operación, según corresponda.",
+    "page": 16
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 25,
+    "kind": "observacion",
+    "field": "BFEResultAuth/Obs",
+    "text": "El importe de la nota de crédito supera el monto del comprobante asociado que estás ajustando. Verificá los montos ingresados y de tratarse de un error, tenés que efectuar el ajuste o anulación de la operación según corresponda.",
+    "page": 16
+  },
+  {
+    "operation": "BFEAuthorize",
+    "code": 26,
+    "kind": "observacion",
+    "field": "BFEResultAuth/Obs",
+    "text": "El campo Condición Frente al IVA del receptor resultara obligatorio conforme lo reglamentado por la Resolución General Nro 5616. Para mas informacion consular método BFEGetPARAM_CondicionIvaReceptor.",
+    "page": 16
+  },
+  {
+    "operation": "BFEGetCMP",
+    "code": 1020,
+    "kind": "error",
+    "field": "Cmp",
+    "text": "Comprobante inexistente",
+    "page": 25
+  },
+  {
+    "operation": "BFEGetPARAM_CondicionIvaReceptor",
+    "code": 4967,
+    "kind": "error",
+    "field": "ClaseCmp",
+    "text": "El valor ingresado para la clase de comprobante no es valido. La clase de Comprobante es opcional, de ingresar un valor solo puede ser A o B",
+    "page": 37
+  },
+  {
+    "operation": "BFEGetCotizacion",
+    "code": 4964,
+    "kind": "error",
+    "field": null,
+    "text": "Sin Resultados. A la fecha consultada no se registran valores de cotización para la moneda indicada",
+    "page": 39
+  },
+  {
+    "operation": "BFEGetCotizacion",
+    "code": 4965,
+    "kind": "error",
+    "field": "MonId",
+    "text": "El identificador de moneda (MonId) ingresado es invalido. Este campo es obligatorio y no puede quedar vacío. Verificar los códigos mediante el metodo BFEGetPARAM_MON.",
+    "page": 39
+  },
+  {
+    "operation": "BFEGetCotizacion",
+    "code": 4966,
+    "kind": "error",
+    "field": "FchCotiz",
+    "text": "Campo FchCotiz no corresponde a una fecha valida con formato YYYYMMDD. Este campo es opcional, de informarlo la fecha debe tener el formato YYYYMMDD donde YYYY corresponde al año, MM al mes y DD al día solicitado. De no informarlo se tomara la fecha del día actual como valor por default.",
+    "page": 39
+  }
+]

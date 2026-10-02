@@ -1,0 +1,635 @@
+[
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Transacción Activa",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 503,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "No existen datos en nuestros registros.",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 600,
+  "kind": "Error",
+  "field": "<Cuit>",
+  "text": "No se corresponden token y firma. Usuario no autorizado a realizar esta operación",
+  "page": 11,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 601,
+  "kind": "Error",
+  "field": "<Cuit>",
+  "text": "CUIT representada no incluida en token.",
+  "page": 11,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 602,
+  "kind": "Error",
+  "field": "<Cuit>",
+  "text": "CUIT representada no se encuentre activa y vigente.",
+  "page": 11,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "ComprobantesModalidadConsultar",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "ComprobantesModalidadConsultar",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "ComprobantesModalidadConsultar",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Transacción Activa",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "ComprobantesModalidadConsultar",
+  "code": 503,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "No existen datos en nuestros registros.",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "ComprobantesModalidadConsultar",
+  "code": 600,
+  "kind": "Error",
+  "field": "<Cuit>",
+  "text": "No se corresponden token y firma. Usuario no autorizado a realizar esta operación",
+  "page": 11,
+  "donde": "Errors/Err",
+  "nota": "El manual lista 600-602 sólo en ComprobanteConstatar (pág. 11); en vivo el 600 también sale en ComprobantesTipoConsultar y ComprobantesModalidadConsultar (2026-10-02)."
+ },
+ {
+  "operation": "ComprobantesModalidadConsultar",
+  "code": 601,
+  "kind": "Error",
+  "field": "<Cuit>",
+  "text": "CUIT representada no incluida en token.",
+  "page": 11,
+  "donde": "Errors/Err",
+  "nota": "El manual lista 600-602 sólo en ComprobanteConstatar (pág. 11); en vivo el 600 también sale en ComprobantesTipoConsultar y ComprobantesModalidadConsultar (2026-10-02)."
+ },
+ {
+  "operation": "ComprobantesModalidadConsultar",
+  "code": 602,
+  "kind": "Error",
+  "field": "<Cuit>",
+  "text": "CUIT representada no se encuentre activa y vigente.",
+  "page": 11,
+  "donde": "Errors/Err",
+  "nota": "El manual lista 600-602 sólo en ComprobanteConstatar (pág. 11); en vivo el 600 también sale en ComprobantesTipoConsultar y ComprobantesModalidadConsultar (2026-10-02)."
+ },
+ {
+  "operation": "ComprobantesTipoConsultar",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "ComprobantesTipoConsultar",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "ComprobantesTipoConsultar",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Transacción Activa",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "ComprobantesTipoConsultar",
+  "code": 503,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "No existen datos en nuestros registros.",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "ComprobantesTipoConsultar",
+  "code": 600,
+  "kind": "Error",
+  "field": "<Cuit>",
+  "text": "No se corresponden token y firma. Usuario no autorizado a realizar esta operación",
+  "page": 11,
+  "donde": "Errors/Err",
+  "nota": "El manual lista 600-602 sólo en ComprobanteConstatar (pág. 11); en vivo el 600 también sale en ComprobantesTipoConsultar y ComprobantesModalidadConsultar (2026-10-02)."
+ },
+ {
+  "operation": "ComprobantesTipoConsultar",
+  "code": 601,
+  "kind": "Error",
+  "field": "<Cuit>",
+  "text": "CUIT representada no incluida en token.",
+  "page": 11,
+  "donde": "Errors/Err",
+  "nota": "El manual lista 600-602 sólo en ComprobanteConstatar (pág. 11); en vivo el 600 también sale en ComprobantesTipoConsultar y ComprobantesModalidadConsultar (2026-10-02)."
+ },
+ {
+  "operation": "ComprobantesTipoConsultar",
+  "code": 602,
+  "kind": "Error",
+  "field": "<Cuit>",
+  "text": "CUIT representada no se encuentre activa y vigente.",
+  "page": 11,
+  "donde": "Errors/Err",
+  "nota": "El manual lista 600-602 sólo en ComprobanteConstatar (pág. 11); en vivo el 600 también sale en ComprobantesTipoConsultar y ComprobantesModalidadConsultar (2026-10-02)."
+ },
+ {
+  "operation": "DocumentosTipoConsultar",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "DocumentosTipoConsultar",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "DocumentosTipoConsultar",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Transacción Activa",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "DocumentosTipoConsultar",
+  "code": 503,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "No existen datos en nuestros registros.",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "DocumentosTipoConsultar",
+  "code": 600,
+  "kind": "Error",
+  "field": "<Cuit>",
+  "text": "No se corresponden token y firma. Usuario no autorizado a realizar esta operación",
+  "page": 11,
+  "donde": "Errors/Err",
+  "nota": "El manual lista 600-602 sólo en ComprobanteConstatar (pág. 11); en vivo el 600 también sale en ComprobantesTipoConsultar y ComprobantesModalidadConsultar (2026-10-02)."
+ },
+ {
+  "operation": "DocumentosTipoConsultar",
+  "code": 601,
+  "kind": "Error",
+  "field": "<Cuit>",
+  "text": "CUIT representada no incluida en token.",
+  "page": 11,
+  "donde": "Errors/Err",
+  "nota": "El manual lista 600-602 sólo en ComprobanteConstatar (pág. 11); en vivo el 600 también sale en ComprobantesTipoConsultar y ComprobantesModalidadConsultar (2026-10-02)."
+ },
+ {
+  "operation": "DocumentosTipoConsultar",
+  "code": 602,
+  "kind": "Error",
+  "field": "<Cuit>",
+  "text": "CUIT representada no se encuentre activa y vigente.",
+  "page": 11,
+  "donde": "Errors/Err",
+  "nota": "El manual lista 600-602 sólo en ComprobanteConstatar (pág. 11); en vivo el 600 también sale en ComprobantesTipoConsultar y ComprobantesModalidadConsultar (2026-10-02)."
+ },
+ {
+  "operation": "OpcionalesTipoConsultar",
+  "code": 500,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de aplicación.",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "OpcionalesTipoConsultar",
+  "code": 501,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Error interno de base de datos.",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "OpcionalesTipoConsultar",
+  "code": 502,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "Transacción Activa",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "OpcionalesTipoConsultar",
+  "code": 503,
+  "kind": "Error",
+  "field": "(infraestructura)",
+  "text": "No existen datos en nuestros registros.",
+  "page": 4,
+  "donde": "Errors/Err"
+ },
+ {
+  "operation": "OpcionalesTipoConsultar",
+  "code": 600,
+  "kind": "Error",
+  "field": "<Cuit>",
+  "text": "No se corresponden token y firma. Usuario no autorizado a realizar esta operación",
+  "page": 11,
+  "donde": "Errors/Err",
+  "nota": "El manual lista 600-602 sólo en ComprobanteConstatar (pág. 11); en vivo el 600 también sale en ComprobantesTipoConsultar y ComprobantesModalidadConsultar (2026-10-02)."
+ },
+ {
+  "operation": "OpcionalesTipoConsultar",
+  "code": 601,
+  "kind": "Error",
+  "field": "<Cuit>",
+  "text": "CUIT representada no incluida en token.",
+  "page": 11,
+  "donde": "Errors/Err",
+  "nota": "El manual lista 600-602 sólo en ComprobanteConstatar (pág. 11); en vivo el 600 también sale en ComprobantesTipoConsultar y ComprobantesModalidadConsultar (2026-10-02)."
+ },
+ {
+  "operation": "OpcionalesTipoConsultar",
+  "code": 602,
+  "kind": "Error",
+  "field": "<Cuit>",
+  "text": "CUIT representada no se encuentre activa y vigente.",
+  "page": 11,
+  "donde": "Errors/Err",
+  "nota": "El manual lista 600-602 sólo en ComprobanteConstatar (pág. 11); en vivo el 600 también sale en ComprobantesTipoConsultar y ComprobantesModalidadConsultar (2026-10-02)."
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 1,
+  "kind": "Error",
+  "field": "<CbteModo>",
+  "text": "El modo indicado debe ser alfanumérico de 4 caracteres como máximo y debe ser alguno de los devueltos por el método ComprobantesModalidadConsultar()",
+  "page": 11,
+  "donde": "Errors/Err (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 2,
+  "kind": "Error",
+  "field": "<CuitEmisor>",
+  "text": "La cuit del emisor indicado debe ser numérica de 11 dígitos y debe ser valida.",
+  "page": 11,
+  "donde": "Errors/Err (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 3,
+  "kind": "Error",
+  "field": "<PtoVta>",
+  "text": "Campo <PtoVta> debe ser numérico de 5 dígitos como máximo y debe estar comprendido entre 1 y 99998.",
+  "page": 11,
+  "donde": "Errors/Err (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 4,
+  "kind": "Error",
+  "field": "<CbteTipo>",
+  "text": "El tipo de comprobante debe ser numérico de 3 dígitos como máximo y debe ser alguno de los definidos en el método ComprobantesTipoConsultar()",
+  "page": 11,
+  "donde": "Errors/Err (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 5,
+  "kind": "Error",
+  "field": "<CbteNro>",
+  "text": "Campo correspondiente al N° de comprobante, debe ser numérico de 8 dígitos como máximo y se debe encontrar entre 1 y 99999999.",
+  "page": 11,
+  "donde": "Errors/Err (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 6,
+  "kind": "Error",
+  "field": "<CbteFch>",
+  "text": "Campo correspondiente a la fecha del comprobante, debe tener el siguiente formato yyyymmdd",
+  "page": 11,
+  "donde": "Errors/Err (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 7,
+  "kind": "Error",
+  "field": "<ImpTotal>",
+  "text": "Campo correspondiente al importe total del comprobante. Debe ser numérico mayor o igual a 0 de 13 enteros y 2 decimales.",
+  "page": 11,
+  "donde": "Errors/Err (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 8,
+  "kind": "Error",
+  "field": "<DocTipoReceptor>",
+  "text": "El tipo de documento del receptor debe ser numérico de 2 dígitos y debe ser alguno de los devueltos por el método DocumentosTipoConsultar().",
+  "page": 11,
+  "donde": "Errors/Err (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 9,
+  "kind": "Error",
+  "field": "<DocNroReceptor>",
+  "text": "El número de documento del receptor, debe contener un valor numérico de 11 caracteres. Si el número del doucumento contiene letras no informarlas, solamente informar los caracteres numéricos.",
+  "page": 11,
+  "donde": "Errors/Err (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 10,
+  "kind": "Error",
+  "field": "<CodAutorizacion>",
+  "text": "Código de autorización del comprobante, debe ser de 14 caracteres numéricos.",
+  "page": 11,
+  "donde": "Errors/Err (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 100,
+  "kind": "Rechazo",
+  "field": "<CodAutorizacion>",
+  "text": "Verificar que el CAE/CAI/CAEA exista registrado y autorizado en las bases del organismo.",
+  "page": 12,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 101,
+  "kind": "Rechazo",
+  "field": "<CbteFch>",
+  "text": "La fecha del comprobante <CbteFch> no podrá ser an terior a 20130101.",
+  "page": 12,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 102,
+  "kind": "Rechazo",
+  "field": "<CodAutorizacion>/<CuitEmisor>",
+  "text": "Verifica que la CUIT del emisor informada se corresponda con la cuit registrada bajo el código de autorización <CodAutorizacion>.",
+  "page": 12,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 103,
+  "kind": "Rechazo",
+  "field": "<CodAutorizacion>/<CbteTipo>",
+  "text": "Verifica que el tipo de comprobante <CbteTipo> se corresponda con el registrado bajo el código de autorización informado <CodAutorizacion>",
+  "page": 12,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 104,
+  "kind": "Rechazo",
+  "field": "<CodAutorizacion>/<PtoVta>",
+  "text": "Verifica que el punto de venta <PtoVta> se corresponda con el punto de venta registrado bajo el código de autorización informado <CodAutorizacion>",
+  "page": 12,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 105,
+  "kind": "Rechazo",
+  "field": "<CodAutorizacion>/<CbteNro>",
+  "text": "Verifica que el Nº de comprobante <CbteNro> se corresponda con el Nº de comprobante registrado bajo el código de autorización informado <CodAutorizacion>",
+  "page": 12,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 106,
+  "kind": "Rechazo",
+  "field": "<CbteModo>/ <CodAutorizacion>/",
+  "text": "Para modo <CbteModo> = “CAEA” , en caso de no encontrar el comprobante rendido, verifica que se encuentre vigente la rendición del mismo.",
+  "page": 12,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 107,
+  "kind": "Rechazo",
+  "field": "<CbteModo>/ <CodAutorizacion>/ <CbteFch>",
+  "text": "Para modo <CbteModo> = “CAE” o <CbteModo> = “CAEA”, verifica que la fecha del comprobante <CbteFch> se corresponda con el código de autorización informado <CodAutorizacion>",
+  "page": 12,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 108,
+  "kind": "Rechazo",
+  "field": "<CbteModo>/ <CodAutorizacion>/ <CbteFch>",
+  "text": "Para modo <CbteModo> = “CAI” verifica que la fecha del comprobante <CbteFch> se encuentre dentro del rango habilitado para el código de autorización informado <CodAutorizacion>",
+  "page": 12,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 109,
+  "kind": "Rechazo",
+  "field": "<CbteModo>/ <CodAutorizacion>/ <PtoVta>",
+  "text": "Para modo <CbteModo> = “CAEA”, verifica que el punto de venta sea un punto de venta habilitado para emitir comprobantes.",
+  "page": 13,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 110,
+  "kind": "Rechazo",
+  "field": "<CbteModo>/ <CodAutorizacion>/ <ImpTotal>",
+  "text": "Verificar que el importe de la operación informado se corresponda con lo registrado en las bases del organismo. Para los tipos de comprobantes sin ImpTotal se debe informar el campo en cero. Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=1.",
+  "page": 13,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 111,
+  "kind": "Rechazo",
+  "field": "<CodAutorizacion>/<DocTipoReceptor>",
+  "text": "Verifica que el tipo de documento del receptor <DocTipoReceptor> se corresponda con el registrado bajo el código de autorización informado <CodAutorizacion>",
+  "page": 13,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 112,
+  "kind": "Rechazo",
+  "field": "<CodAutorizacion>/<DocNroReceptor>",
+  "text": "Verifica que el número de documento del receptor <DocNroReceptor> se corresponda con el registrado bajo el código de autorización informado <CodAutorizacion>",
+  "page": 13,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 113,
+  "kind": "Rechazo",
+  "field": "<CbteTipo><DocTipoReceptor>",
+  "text": "Para comprobantes tipo “A”, “A con leyenda operación sujeta a retención” o MiPyme el tipo de documento del receptor es obligatorio informarlo y debe ser CUIT (CbteTipo = 80).",
+  "page": 13,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 114,
+  "kind": "Rechazo",
+  "field": "<CbteTipo<DocNroReceptor>",
+  "text": "Para comprobantes tipo “A” o tipo “A con leyenda operación sujeta a retención”, el Nº de documento del receptor es obligatorio informarlo.",
+  "page": 13,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 115,
+  "kind": "Rechazo",
+  "field": "<CbteTipo><DocTipoReceptor>",
+  "text": "Para comprobantes tipo B, C , R, 31, 30, 37, 38, 41 y 49 el tipo de documento del receptor solo es obligatorio informarlo cuando el importe es superior a 10.000.000 pesos.",
+  "page": 13,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 116,
+  "kind": "Rechazo",
+  "field": "<CbteTipo><DocNroReceptor>",
+  "text": "Para comprobantes tipo B, C , R, 31, 30, 37, 38, 41 y 49 , el número de documento del receptor solo es obligatorio informarlo cuando el importe es superior a 10.000.000 pesos.",
+  "page": 13,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 117,
+  "kind": "Rechazo",
+  "field": "<CbteTipo><DocTipoReceptor>><DocNroReceptor>",
+  "text": "Si informa <DocTipoReceptor> o <DocNroReceptor> es obligatorio informar ambos.",
+  "page": 14,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 118,
+  "kind": "Rechazo",
+  "field": "<CbteTipo><DocTipoReceptor>",
+  "text": "Si informa comprobante del tipo T (195, 196, 197), los tipos de documento válido son 80, 91, 94, 96.",
+  "page": 14,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 150,
+  "kind": "Rechazo",
+  "field": "<Opcionales>",
+  "text": "Si envía <Opcionales>, <Opcional> es obligatorio.",
+  "page": 14,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 151,
+  "kind": "Rechazo",
+  "field": "<Opcional>",
+  "text": "El campo <Id> en <Opcionales> es obligatorio y debe ser alguno de los devueltos por el método OpcionalesTipoConsultar.",
+  "page": 14,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 152,
+  "kind": "Rechazo",
+  "field": "<Opcional>",
+  "text": "El campo <Id> en <Opcionales> es obligatorio y no debe repetirse.\"",
+  "page": 14,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 153,
+  "kind": "Rechazo",
+  "field": "<Opcional>",
+  "text": "El campo <Valor> en Opcionales es obligatorio",
+  "page": 14,
+  "donde": "Observaciones/Obs (Resultado R)"
+ },
+ {
+  "operation": "ComprobanteConstatar",
+  "code": 200,
+  "kind": "Observacion",
+  "field": "<CodAutorizacion>",
+  "text": "Para modo <CbteModo> = “CAEA” , en caso de no encontrar el comprobante rendido, verifica que se encuentre vigente la rendición del mismo. Si se encuentra en vigencia el comprobante queda observado por no encontrarse rendido.",
+  "page": 14,
+  "donde": "Observaciones/Obs (Resultado A)"
+ }
+]

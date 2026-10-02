@@ -1,0 +1,874 @@
+[
+  {
+    "operation": "*",
+    "code": 5000,
+    "kind": "infraestructura",
+    "field": null,
+    "text": "Error general de aplicación",
+    "page": 14
+  },
+  {
+    "operation": "*",
+    "code": "wscommon_007",
+    "kind": "auth",
+    "field": "authRequest",
+    "text": "[wscommon_007] La firma no corresponde al token enviado.",
+    "page": 10
+  },
+  {
+    "operation": "*",
+    "code": "wscommon_002",
+    "kind": "auth",
+    "field": "authRequest",
+    "text": "[wscommon_002] Token vencido Fecha y Hora de Vencimiento del Token Enviado: 21-06-2021 01:44:40 - Fecha y Hora Actual del Servidor: 22-07-2021 18:38:27",
+    "page": null
+  },
+  {
+    "operation": "*",
+    "code": "cvc-datatype-valid.1.2.1",
+    "kind": "error",
+    "field": "cuitRepresentada",
+    "text": "'?' no es un valor válido para un tipo de dato entero.",
+    "page": 12
+  },
+  {
+    "operation": "*",
+    "code": "cvc-type.3.1.3",
+    "kind": "error",
+    "field": "cuitRepresentada",
+    "text": "El valor '?' en el elemento 'cuitRepresentada' no es válido.",
+    "page": 12
+  },
+  {
+    "operation": "*",
+    "code": "cvc-minInclusive-valid",
+    "kind": "error",
+    "field": "numeroComprobante",
+    "text": " El valor '0' no cumple con la restricción minInclusive '1' para el tipo 'NumeroComprobanteSimpleType'.",
+    "page": null
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 100,
+    "kind": "error",
+    "field": "cuitRepresentada",
+    "text": "El emisor del comprobante debe encontrarse activo en el sistema registral.",
+    "page": 18
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 101,
+    "kind": "error",
+    "field": "cuitRepresentada",
+    "text": "El emisor del comprobante debe estar empadronado en alguna actividad de hospedaje/turismo.",
+    "page": 18
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 102,
+    "kind": "error",
+    "field": "cuitRepresentada",
+    "text": "El emisor del comprobante no debe tener domicilios con inconsistencias.",
+    "page": 18
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 103,
+    "kind": "error",
+    "field": "cuitRepresentada",
+    "text": "El emisor del comprobante debe estar registrado en el impuesto al Valor Agregado al momento de autorizar el comprobante.",
+    "page": 18
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 104,
+    "kind": "error",
+    "field": "cuitRepresentada",
+    "text": "El emisor del comprobante debe tener un punto de venta habilitado a “RECE para aplicativo y web services” o “Codificación de producto - Web services”, vigente, no bloqueado y no dado de baja.",
+    "page": 18
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 200,
+    "kind": "error",
+    "field": "codigoTipoAutorizacion",
+    "text": "Informar el campo codigoTipoAutorizacion según el tipo de autorización a efectuar. Siempre debe informarse.",
+    "page": 29
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 201,
+    "kind": "error",
+    "field": "codigoTipoAutorizacion",
+    "text": "Solo se encuentra disponible la modalidad de autorización E = CAE",
+    "page": 29
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 202,
+    "kind": "error",
+    "field": "codigoTipoAutorizacion/codigoAutorizacion",
+    "text": "Si informa <codigoTipoAutorizacion> = “E”, no informar el código de autorización.",
+    "page": 29
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 203,
+    "kind": "error",
+    "field": "codigoTipoAutorizacion/fechaVencimiento",
+    "text": "Si informa <codigoTipoAutorizacion> = “E”, no informar la fecha de vencimiento del código de autorización.",
+    "page": 29
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 300,
+    "kind": "error",
+    "field": "codigoTipoComprobante",
+    "text": "El tipo de comprobante debe corresponder a alguno de los comprobantes habilitados. Ver el método consultarTiposComprobantes().",
+    "page": 29
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 301,
+    "kind": "error",
+    "field": "numeroPuntoVenta",
+    "text": "El punto de venta debe ser un punto de venta habilitado. Consultar el método consultarPuntosVenta().",
+    "page": 29
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 302,
+    "kind": "error",
+    "field": "fechaEmision",
+    "text": "La numeración no corresponde con el próximo a autorizar. Consultar método consultarUltimoComprobanteAutorizado().",
+    "page": 30
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 303,
+    "kind": "error",
+    "field": "cuitRepresentada/codigoTipoComprobante/numeroPuntoVenta/numeroComprobante/fechaEmision",
+    "text": "Si se envía puede ser hasta 10 días anteriores o posteriores a la fecha de generación. Si no se envía se le asignará la fecha de proceso",
+    "page": 30
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 304,
+    "kind": "error",
+    "field": "codigoMoneda",
+    "text": "El tipo de moneda debe ser alguno de los tipos de moneda habilitados. Consultar el método consultarMonedas().",
+    "page": 30
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 305,
+    "kind": "error",
+    "field": "codigoMoneda/cotizacionMoneda",
+    "text": "Si el código de moneda es PES, la cotización debe ser 1.",
+    "page": 30
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 306,
+    "kind": "error",
+    "field": "codigoMoneda/cotizacionMoneda",
+    "text": "El tipo de cambio no podrá ser inferior al 2% ni superior en un 400% del que suministra ARCA como orientativo de acuerdo a la cotización oficial. Consultar método consultarCotizacion().",
+    "page": 30
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 307,
+    "kind": "error",
+    "field": "codigoPais",
+    "text": "El código de país debe ser uno de los habilitados. Consultar el método consultarPaises().",
+    "page": 30
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 308,
+    "kind": "error",
+    "field": "idImpositivo",
+    "text": "El identificador impositivo o condición de IVA del receptor debe ser uno de los habilitados. Consultar el método consultarCondicionesIVA().",
+    "page": 30
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 309,
+    "kind": "error",
+    "field": "idImpositivo/codigoTipoDocumento",
+    "text": "Cuando informa identificador impositivo “IVA Responsable Inscripto” el tipo de documento debe ser CUIT.",
+    "page": 30
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 310,
+    "kind": "error",
+    "field": "idImpositivo/codigoTipoDocumento/numeroDocumento",
+    "text": "Cuando informa identificador impositivo “IVA Responsable Inscripto”, con tipo de documento CUIT, el número de documento debe encontrarse registrado en las bases de esta administración de forma activa.",
+    "page": 31
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 311,
+    "kind": "error",
+    "field": "idImpositivo/codigoTipoDocumento",
+    "text": "Cuando informa identificador impositivo “Consumidor Final”, los tipos de documentos habilitados para informar sobre el receptor son CUIT país / CI Extranjera / Pasaporte / DNI.",
+    "page": 31
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 312,
+    "kind": "error",
+    "field": "idImpositivo/codigoTipoDocumento/numeroDocumento",
+    "text": "Cuando informa identificador impositivo “Consumidor Final”, el número de documento debe ser un valor alfanumérico.",
+    "page": 31
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 313,
+    "kind": "error",
+    "field": "idImpositivo/codigoTipoDocumento",
+    "text": "Cuando informa identificador impositivo “Cliente del Exterior”, los tipos de documentos habilitados para informar sobre el receptor son CUIT país, CI Extranjera / Pasaporte / DNI.",
+    "page": 31
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 314,
+    "kind": "error",
+    "field": "idImpositivo/codigoTipoDocumento/numeroDocumento",
+    "text": "Cuando informa identificador impositivo “Cliente del Exterior”, con tipo de documento CUIT, es obligatorio informar un CUIT País habilitado. Consultar método consultarCUITsPaises()",
+    "page": 31
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 315,
+    "kind": "error",
+    "field": "idImpositivo/codigoTipoDocumento/numeroDocumento",
+    "text": "Cuando informa identificador impositivo “Cliente del Exterior”, el número de documento debe ser un valor alfanumérico.",
+    "page": 31
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 316,
+    "kind": "error",
+    "field": "idImpositivo/codigoTipoDocumento/numeroDocumento",
+    "text": "Cuando informa identificador impositivo “IVA Responsable Inscripto”, con tipo de documento CUIT, el número de documento debe encontrarse registrado en las bases de esta en el Impuesto al Valor Agregado.",
+    "page": 31
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 317,
+    "kind": "error",
+    "field": "cotizacionMoneda",
+    "text": "Deberá debe ser mayor a cero",
+    "page": 31
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 318,
+    "kind": "error",
+    "field": "cancelaEnMismaMonedaExtranjera",
+    "text": "En caso de enviar la marca de que el pago del comprobante se realiza en la misma moneda extranjera para comprobantes que no sean facturas. Unicamente se puede utilizar con los códigos habilitados (195)",
+    "page": 32
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 319,
+    "kind": "error",
+    "field": "codigoMoneda/cancelaEnMismaMonedaExtranjera",
+    "text": "En caso de enviar la marca de que el pago de la factura se realiza en la misma moneda extranjera y enviar como código de moneda el Peso Argentino",
+    "page": 32
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 320,
+    "kind": "error",
+    "field": "codigoMoneda/cotizacionMoneda/cancelaEnMismaMonedaExtranjera",
+    "text": "En caso de enviar la marca de que el pago de la factura se realiza en la misma moneda extranjera, que codigoMoneda es del grupo de monedas con cotización del Banco de la Nación Argentina (ver Anexo Monedas BNA), que haya cotización y que la misma no coincida exactamente con el valor enviado en el campo cotizacionMoneda. En cuyo caso se podrá omitir el mismo para que la cotización de la factura sea la obtenida de los registros de ARCA",
+    "page": 32
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 321,
+    "kind": "error",
+    "field": "codigoMoneda/cotizacionMoneda/cancelaEnMismaMonedaExtranjera",
+    "text": "codigoMoneda, cotizacionMoneda, cancelaEnMismaMonedaExtranjera: Errores: 317, 318, 319, 320, 321, 322",
+    "page": 142
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 322,
+    "kind": "error",
+    "field": "cotizacionMoneda",
+    "text": "El campo es obligatorio a excepción de los casos para los cuales se envia el campo cancelaEnMismaMonedaExtranjera y se puede obtener la cotizacion asociada al codigoMoneda si esta es del grupo de monedas del Banco de la Nación Argentina (ver Anexo Monedas BNA)",
+    "page": 32
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 350,
+    "kind": "error",
+    "field": "domicilioReceptor",
+    "text": "El domicilio del receptor es obligatorio informarlo. Su dimensión máxima son 300 caracteres alfanuméricos.",
+    "page": 32
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 351,
+    "kind": "error",
+    "field": "codigoRelacionEmisorReceptor",
+    "text": "La relación entre el emisor y el receptor debe ser alguna de las habilitadas. Consultar el método consultarRelacionEmisorReceptor()",
+    "page": 32
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 352,
+    "kind": "error",
+    "field": "cuitRepresentada/codigoRelacionEmisorReceptor",
+    "text": "Si el tipo de relación Emisor Receptor seleccionada corresponde a: 1 - Alojamiento Directo a Turista No Residente 2 - Alojamiento a Agencia de Viaje Residente 3 - Alojamiento a Agencia de Viaje No Residente el emisor debe tener al menos una actividad de hospedaje vigente. Si el tipo de relación es: 4 - Agencia de Viaje Residente a Agencia de Viaje No Residente 5 - Agencia de Viaje Residente a Turista No Residente 6 - Agencia de Viaje Residente a Agencia de Viaje Residente el emisor debe estar registrado en el padrón de agencias de la secretaría de turismo.",
+    "page": 33
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 353,
+    "kind": "error",
+    "field": "codigoRelacionEmisorReceptor/codigoTipoDocumento",
+    "text": "Cuando la relación Emisor Receptor es: 1 - Alojamiento Directo a Turista No Residente / 5 - Agencia de Viaje Residente a Turista No Residente, los tipos de documentos de receptor habilitados son 80 - Cuit / 91 - CI Extranjera / 94 - Pasaporte / 96 – DNI Cuando es: 2 - Alojamiento a Agencia de Viaje Residente / 3 - Alojamiento a Agencia de Viaje No Residente / 4 - Agencia de Viaje Residente a Agencia de Viaje No Residente / 6 - Agencia de Viaje Residente a Agencia de Viaje Residente El tipo de documento habilitado es 80 – CUIT",
+    "page": 34
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 354,
+    "kind": "error",
+    "field": "cuitRepresentada/numeroDocumento",
+    "text": "Al momento de informar emisor y receptor, los mismos deben ser distintos.",
+    "page": 34
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 355,
+    "kind": "error",
+    "field": "codigoRelacionEmisorReceptor/codigoPais",
+    "text": "Si el tipo de relación Emisor Receptor seleccionada corresponde a 1,3,4 o 5, el código de país informado no podrá ser 200 – Argentina ni los sig. valores sig. valores 295, 296 y rango 250 al 265. Si el tipo de relación es 2 o 6, el código de país informado deberá ser 200 – Argentina.",
+    "page": 34
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 356,
+    "kind": "error",
+    "field": "codigoRelacionEmisorReceptor/codigoTipoDocumento",
+    "text": "Si el identificador impositivo es IVA Responsable Inscripto, la relación emisor receptor debe ser 2 o 6. Si el identificador impositivo es Consumidor final o Cliente del Exterior y el tipo de documento es 80 - CUIT, la relación debe ser 3 o 4. Si el identificador impositivo es Consumidor final o Cliente del Exterior y el tipo de documento es 91 - CI Extranjera / 94 - Pasaporte / 96 – DNI, la relación debe ser 1 o 5.",
+    "page": 35
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 360,
+    "kind": "error",
+    "field": "importeGravado",
+    "text": "Es obligatorio informarlo y debe ser mayor o igual a cero.",
+    "page": 35
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 361,
+    "kind": "error",
+    "field": "importeGravado",
+    "text": "Deberá coincidir con la sumatoria de <importeItem> menos el IVA correspondiente <importeIVA>(calculado en base al importe y la alícuota de cada ítem), para la totalidad de los ítems. Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01 * cantidad de ítems gravados *",
+    "page": 35
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 362,
+    "kind": "error",
+    "field": "importeNoGravado",
+    "text": "No informar el campo. Previsto para alícuotas de IVA futuras. Si informa el campo, el mismo debe venir en cero.",
+    "page": 35
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 363,
+    "kind": "error",
+    "field": "importeExento",
+    "text": "No informar el campo. Previsto para alícuotas de IVA futuras. Si informa el campo, el mismo debe venir en cero.",
+    "page": 35
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 364,
+    "kind": "error",
+    "field": "importeReintegro/codigoTurismo/codigoTipoComprobante",
+    "text": "El campo <importeReintegro> debe ser informado, menor o igual a cero si dentro del array de item existe al menos un item con <codigoTurismo> igual a 1 - Servicio de hotelería - alojamiento sin desayuno / 2 - Servicio de hotelería - alojamiento con desayuno.",
+    "page": 36
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 365,
+    "kind": "error",
+    "field": "importeReintegro/codigoTurismo/codigoTipoComprobante",
+    "text": "El campo <importeReintegro> no debe ser informado o ser igual a 0 por tener todos sus items con <codigoTurismo> igual a 5 - Excedente cuando el tipo de comprobante es 196 - Nota de Débito T / 197 - Nota de Crédito T",
+    "page": 36
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 366,
+    "kind": "error",
+    "field": "importeReintegro/codigoTurismo",
+    "text": "El campo <importeReintegro> debe ser igual a la sumatoria de los importes de iva de todos los ítems que tengan <codigoTurismo> igual a 1 - Servicio de hotelería - alojamiento sin desayuno / 2 - Servicio de hotelería - alojamiento con desayuno Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01 * cantidad de ítems gravados con código de turismo igual a 1 - Servicio de hotelería - alojamiento sin desayuno / 2 - Servicio de hotelería - alojamiento con desayuno *",
+    "page": 36
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 367,
+    "kind": "error",
+    "field": "importeOtrosTributos",
+    "text": "Si informa el campo, el mismo debe ser mayor o igual a cero.",
+    "page": 36
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 368,
+    "kind": "error",
+    "field": "otroTributo/importe/importeOtrosTributos",
+    "text": "La sumatoria de campos importe de otros tributos debe ser igual al campo <importeOtrosTributos>. Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01 * cantidad de tributos *",
+    "page": 37
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 369,
+    "kind": "error",
+    "field": "importeTotal",
+    "text": "El importe total debe ser igual a la sumatoria de los campos: <importeGravado>, <importeNoGravado>, <importeExento>, <importeReintegro>, <importeOtrosTributos>, sumatoria de <subtotalIVA><importe> (dentro del arraySubtotalesIVA). Margen de error: Error relativo porcentual deberá ser <= 0.01% o el error absoluto <=0.01 *",
+    "page": 37
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 400,
+    "kind": "error",
+    "field": "item/tipo",
+    "text": "Al momento de informar los ítems, el tipo de ítem debe ser alguno de los habilitados. Consultar el método consultarTiposItem()",
+    "page": 37
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 401,
+    "kind": "error",
+    "field": "item/codigoTurismo",
+    "text": "Al momento de informar los códigos de turismo, informar alguno de los habilitados. Consultar el método consultarCodigosItemTurismo()",
+    "page": 38
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 403,
+    "kind": "error",
+    "field": "item/codigoAlicuotaIVA",
+    "text": "Al momento de identificar la alícuota de IVA aplicada al ítem verificar que solo se corresponda con el código 5 - 21%",
+    "page": 38
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 404,
+    "kind": "error",
+    "field": "item/descripcion",
+    "text": "Es obligatorio identificar la descripción del ítem. Su dimensión no puede superar los 4000 caracteres alfanuméricos y no puede venir vacío.",
+    "page": 38
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 406,
+    "kind": "error",
+    "field": "item/tipo/importeItem",
+    "text": "Si el tipo de ítem es 0 - Item general el importe del item debe ser mayor o igual a 0 (cero).",
+    "page": 38
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 407,
+    "kind": "error",
+    "field": "item/tipo/importeItem",
+    "text": "Si el tipo de ítem es 97 - Anticipo se aceptan importes positivos o negativos.",
+    "page": 38
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 408,
+    "kind": "error",
+    "field": "item/tipo/importeItem",
+    "text": "Si el tipo de ítem es 99 - Descuento General, el importe deberá ser negativo.",
+    "page": 38
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 409,
+    "kind": "error",
+    "field": "item/tipo/importeIVA",
+    "text": "Si el tipo de ítem es 0 - Item general el importe IVA del ítem debe ser mayor o igual a 0 (cero).",
+    "page": 38
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 410,
+    "kind": "error",
+    "field": "item/tipo/importeIVA",
+    "text": "Si el tipo de ítem es 97 - Anticipo se aceptan importes de importe IVA positivos o negativos.",
+    "page": 38
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 411,
+    "kind": "error",
+    "field": "item/tipo/importeIVA",
+    "text": "Si el tipo de ítem es 99 - Descuento General, el importe de IVA deberá ser negativo.",
+    "page": 38
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 412,
+    "kind": "error",
+    "field": "item/codigoAlicuotaIVA",
+    "text": "La alícuota de IVA debe ser del tipo (5 - 21%).",
+    "page": 39
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 413,
+    "kind": "error",
+    "field": "item/codigoAlicuotaIVA/importeIVA/importeItem",
+    "text": "Aplicando el porcentaje de IVA al importe del ítem <importeItem>, el valor resultante debe ser igual al importe de IVA <importeIVA> informado.",
+    "page": 39
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 414,
+    "kind": "error",
+    "field": "item/importeIVA/importeItem",
+    "text": "El signo del campo <importeIVA> debe corresponder con el signo <importeItem>",
+    "page": 39
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 415,
+    "kind": "error",
+    "field": "codigoTipoComprobante/item/codigoTurismo",
+    "text": "Para comprobantes 195 - Factura T, no se permite facturar solo (codigoTurismo) 5 – Excedente.",
+    "page": 39
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 500,
+    "kind": "error",
+    "field": "arraySubtotalesIVA",
+    "text": "El array de subtotales de IVA es obligatorio informarlo",
+    "page": 39
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 501,
+    "kind": "error",
+    "field": "subtotalIVA/codigo",
+    "text": "Al momento de informar los subtotales de IVA, informar códigos habilitados. Consultar método consultarTiposIVA().",
+    "page": 39
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 502,
+    "kind": "error",
+    "field": "subtotalIVA/codigo",
+    "text": "No se permite repetir los códigos de los subtotales de IVA.",
+    "page": 40
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 503,
+    "kind": "error",
+    "field": "subtotalIVA/importe",
+    "text": "El campo importe de subtotales de IVA es obligatorio informarlo y mayor o igual a cero.",
+    "page": 40
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 504,
+    "kind": "error",
+    "field": "subtotalIVA/codigo/importe/item/codigoAlicuotaIVA/importeIVA",
+    "text": "La suma de todos importes de IVA del array de IVA para la misma alícuota debe ser igual al valor identificado en el campo importe de subtotales de IVA para la alícuota en cuestión.",
+    "page": 40
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 600,
+    "kind": "error",
+    "field": "otroTributo/codigo",
+    "text": "El código de tributo debe corresponder con alguno de los habilitados. Consultar el método consultarTiposTributo()",
+    "page": 40
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 602,
+    "kind": "error",
+    "field": "otroTributo/descripcion/codigo",
+    "text": "La descripción de otros tributos puede no informarse. Si se informa, su dimensión no puede superar los 50 caracteres alfanuméricos. Es obligatoria para <codigo> 99 – Otro.",
+    "page": 40
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 603,
+    "kind": "error",
+    "field": "otroTributo/baseImponible",
+    "text": "El campo base imponible puede no informarse. Si se informa, debe contener un valor mayor o igual a cero.",
+    "page": 41
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 604,
+    "kind": "error",
+    "field": "otroTributo/importe",
+    "text": "El campo importe debe informarse con un valor mayor o igual a cero.",
+    "page": 41
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 700,
+    "kind": "error",
+    "field": "formaPago/codigo",
+    "text": "Verificar que el código sea uno de los habilitados. Consultar el método consultarFormasPago()",
+    "page": 41
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 701,
+    "kind": "error",
+    "field": "formaPago/codigo/swiftCode",
+    "text": "Si el código de forma de pago hace referencia a Tarjeta de Débito o Crédito, no informar código SWIFT.",
+    "page": 41
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 702,
+    "kind": "error",
+    "field": "formaPago/codigo/tipoCuenta",
+    "text": "Si el código de forma de pago hace referencia a Tarjeta de Débito o Crédito, no informar tipo de cuenta.",
+    "page": 41
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 703,
+    "kind": "error",
+    "field": "formaPago/codigo/numeroCuenta",
+    "text": "Si el código de forma de pago hace referencia a Tarjeta de Débito o Crédito, no informar número de cuenta.",
+    "page": 41
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 704,
+    "kind": "error",
+    "field": "formaPago/codigo/tipoTarjeta",
+    "text": "Si el código de forma de pago hace referencia a Tarjeta de Débito o Crédito, el tipo de tarjeta es obligatorio informarlo y debe ser un tipo habilitado. Consultar el método consultarTiposTarjeta().",
+    "page": 41
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 705,
+    "kind": "error",
+    "field": "formaPago/codigo/numeroTarjeta",
+    "text": "Si el código de forma de pago hace referencia a Tarjeta de Débito o Crédito, el número de tarjeta es obligatorio informarlo y solo los primeros 6 caracteres.",
+    "page": 42
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 720,
+    "kind": "error",
+    "field": "formaPago/codigo/tipoTarjeta",
+    "text": "Si el código de forma de pago hace referencia a Transferencia Bancaria, no informar tipo de tarjeta.",
+    "page": 42
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 721,
+    "kind": "error",
+    "field": "formaPago/codigo/numeroTarjeta",
+    "text": "Si el código de forma de pago hace referencia a Transferencia Bancaria, no informar número de tarjeta",
+    "page": 42
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 722,
+    "kind": "error",
+    "field": "formaPago/codigo/tipoCuenta",
+    "text": "Si el código de forma de pago hace referencia a Transferencia Bancaria, es obligatorio informar el tipo de cuenta y debe estar habilitado. Consultar el método consultarTiposCuenta().",
+    "page": 42
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 723,
+    "kind": "error",
+    "field": "formaPago/codigo/numeroCuenta",
+    "text": "Si el código de forma de pago hace referencia a Transferencia Bancaria, informar un n° de cuenta válido.",
+    "page": 42
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 724,
+    "kind": "error",
+    "field": "formaPago/codigo/swiftCode/codigoRelacionEmisorReceptor",
+    "text": "Si el código de forma de pago hace referencia a Transferencia Bancaria e informa un código Swift, el mismo debe corresponder a un código Swift de Argentina cuando <codigoRelacionEmisorReceptor> es 2 o 6. Y del exterior cuando <codigoRelacionEmisorReceptor> es 1,3,4 o 5.",
+    "page": 42
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 730,
+    "kind": "error",
+    "field": "formaPago/codigo/tipoTarjeta/numeroTarjeta/swiftCode/tipoCuenta/numeroCuenta",
+    "text": "Si el código de forma de pago hace referencia a Cuenta Corriente no informar los tags <tipoTarjeta> <numeroTarjeta> <swiftCode> <tipoCuenta> <numeroCuenta>",
+    "page": 43
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 731,
+    "kind": "error",
+    "field": "formaPago/codigo",
+    "text": "Si el código de forma de pago hace referencia a Cuenta Corriente, solo puede informarse una sola vez en el array.",
+    "page": 43
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 732,
+    "kind": "error",
+    "field": "formaPago/codigo/codigoRelacionEmisorReceptor",
+    "text": "Si el código de forma de pago hace referencia a Cuenta Corriente, <codigoRelacionEmisorReceptor> debe ser 2 o 6",
+    "page": 43
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 800,
+    "kind": "error",
+    "field": "codigoTipoComprobante/arrayComprobantesAsociados",
+    "text": "Si el tipo de comprobante es 195 – Factura T, no asociar comprobantes. Si el tipo de comprobante a autorizar es 196 - Nota de Débito T o 197 - Nota de Crédito T es obligatorio informar comprobantes asociados.",
+    "page": 43
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 801,
+    "kind": "error",
+    "field": "comprobanteAsociado/codigoTipoComprobante",
+    "text": "Al momento de asociar un comprobante, el tipo de comprobante asociado debe ser alguno de los habilitados. Consultar método consultarTiposComprobantes().",
+    "page": 43
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 803,
+    "kind": "error",
+    "field": "comprobanteAsociado/codigoTipoComprobante/numeroPuntoVenta/numeroComprobante",
+    "text": "El comprobante asociado debe pertenecer a un comprobante registrado y autorizado en las bases de esta administración donde los emisores de ambos sean iguales. De ser electrónicos deberían ser iguales los receptores.",
+    "page": 44
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 804,
+    "kind": "error",
+    "field": "comprobanteAsociado/codigoTipoComprobante/numeroPuntoVenta/numeroComprobante",
+    "text": "No se permite informar comprobantes asociados repetidos.",
+    "page": 44
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 805,
+    "kind": "error",
+    "field": "fechaEmision/comprobanteAsociado",
+    "text": "La fecha de emisión del comprobante a autorizar debe ser mayor o igual a la fecha del comprobante asociado",
+    "page": 44
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 806,
+    "kind": "error",
+    "field": "comprobanteAsociado/codigoTipoDocumento/numeroDocumento",
+    "text": "El receptor del comprobante a autorizar debe coincidir con el receptor del comprobante asociado",
+    "page": 44
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 807,
+    "kind": "observacion",
+    "field": "codigoTipoComprobante/importeTotal",
+    "text": "Cuando se requiere autorizar un comprobante de Tipo Nota de Crédito, y el importe de la misma, supera el monto del o los comprobante/s asociado/s que esta ajustando.",
+    "page": 44
+  },
+  {
+    "operation": "autorizarComprobante",
+    "code": 900,
+    "kind": "error",
+    "field": "tipoDatoAdicional/t",
+    "text": "Si informa datos adicionales, verificar que sea uno de los datos habilitados. Consultar método consultarTiposDatosAdicionales()",
+    "page": 44
+  },
+  {
+    "operation": "consultarComprobanteTipoPVentaNro",
+    "code": 2000,
+    "kind": "error",
+    "field": "codigoTipoComprobante",
+    "text": "Evaluar que el tipo de comprobante que se está consultando sea uno habilitado a usar en el ws actual. Consultar el método consultarTiposComprobantes().",
+    "page": 52
+  },
+  {
+    "operation": "consultarComprobanteTipoPVentaNro",
+    "code": 2001,
+    "kind": "error",
+    "field": "numeroPuntoVenta",
+    "text": "Evaluar si el punto de venta se encuentra habilitado a utilizar en el servicio en cuestión.",
+    "page": 53
+  },
+  {
+    "operation": "consultarComprobanteTipoPVentaNro",
+    "code": 2002,
+    "kind": "error",
+    "field": "cuitRepresentada/numeroPuntoVenta/codigoTipoComprobante",
+    "text": "Debe tener al menos un comprobante emitido para la combinación CUIT, punto de venta y tipo de comprobante",
+    "page": 53
+  },
+  {
+    "operation": "consultarUltimoComprobanteAutorizado",
+    "code": 1000,
+    "kind": "error",
+    "field": "codigoTipoComprobante",
+    "text": "Evaluar que el tipo de comprobante que se está consultando sea uno habilitado a usar en el ws actual. Consultar el método consultarTiposComprobantes().",
+    "page": 57
+  },
+  {
+    "operation": "consultarUltimoComprobanteAutorizado",
+    "code": 1001,
+    "kind": "error",
+    "field": "numeroPuntoVenta",
+    "text": "Evaluar si el punto de venta se encuentra habilitado a utilizar en el servicio en cuestión.",
+    "page": 58
+  },
+  {
+    "operation": "consultarUltimoComprobanteAutorizado",
+    "code": 1002,
+    "kind": "error",
+    "field": "cuitRepresentada/numeroPuntoVenta/codigoTipoComprobante",
+    "text": "Debe tener al menos un comprobante emitido para la combinación CUIT, punto de venta y tipo de comprobante",
+    "page": 58
+  },
+  {
+    "operation": "consultarPuntosVenta",
+    "code": 1106,
+    "kind": "error",
+    "field": "cuitRepresentada",
+    "text": "Deberá contener al menos un punto de venta habilitado a utilizar con el presente ws",
+    "page": 63
+  },
+  {
+    "operation": "consultarCotizacion",
+    "code": 210,
+    "kind": "error",
+    "field": "codigoMoneda",
+    "text": "Deberá coincidir con alguno de los códigos de moneda disponibles. Consultar método consultarMonedas",
+    "page": 108
+  },
+  {
+    "operation": "consultarTiposTarjeta",
+    "code": 1200,
+    "kind": "error",
+    "field": "formaPago",
+    "text": "Deberá coincidir con las formas de pago posibles 1 - debito, 2 - crédito. Consultar método consultarFormasPago",
+    "page": 115
+  }
+]

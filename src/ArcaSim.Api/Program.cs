@@ -72,6 +72,10 @@ builder.Services.AddSingleton<WsfeEndpoint>();
 builder.Services.AddSingleton<WsaaEndpoint>();
 
 // The rest of ARCA's services, answered from their WSDL; IServiceBehavior adds a service's rules on top.
+// Every rule set in the Application assembly is picked up: adding a service's rules is adding a class.
+foreach (var behavior in typeof(ContractHost).Assembly.GetTypes()
+             .Where(t => t is { IsClass: true, IsAbstract: false } && typeof(IServiceBehavior).IsAssignableFrom(t)))
+    builder.Services.AddSingleton(typeof(IServiceBehavior), behavior);
 builder.Services.AddSingleton(_ => ServiceCatalog.Load(Path.Combine(AppContext.BaseDirectory, "arca-servicios.json")));
 builder.Services.AddSingleton(sp => new ContractHost(
     sp.GetRequiredService<ServiceCatalog>(), WsdlDocuments.Directory, sp.GetRequiredService<TicketReader>(),
@@ -107,6 +111,7 @@ static void AddStore<TStore>(IServiceCollection services)
     services.AddSingleton<ICaeaStore>(sp => sp.GetRequiredService<TStore>());
     services.AddSingleton<IExchangeRates>(sp => sp.GetRequiredService<TStore>());
     services.AddSingleton<IResettable>(sp => sp.GetRequiredService<TStore>());
+    services.AddSingleton<IDocumentStore>(sp => sp.GetRequiredService<TStore>());
 }
 
 /// <summary>Entry point, visible to the tests' WebApplicationFactory.</summary>

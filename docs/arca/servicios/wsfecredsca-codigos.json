@@ -1,0 +1,346 @@
+[
+ {
+  "operation": "*",
+  "code": "wscommon_007",
+  "kind": "fault",
+  "field": null,
+  "text": "[wscommon_007] La firma no corresponde al token enviado.",
+  "page": 7
+ },
+ {
+  "operation": "*",
+  "code": 1,
+  "kind": "fault",
+  "field": "Request",
+  "text": "Ocurrió un error intentando procesar el Request (1)",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 2,
+  "kind": "fault",
+  "field": "Request",
+  "text": "Ocurrió un error intentando parsear el Soap Request (1)",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 1001,
+  "kind": "fault",
+  "field": "Request",
+  "text": "El Request no Cumple con el Esquema asociado al WSDL",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 2001,
+  "kind": "error",
+  "field": "Request",
+  "text": "Ocurrió un error intentando validar el pedido",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 2002,
+  "kind": "error",
+  "field": "Cuit",
+  "text": "Formato CUIT, CUIL o CDI inválido",
+  "page": 18
+ },
+ {
+  "operation": "consultarFacturasAceptadas",
+  "code": 2003,
+  "kind": "error",
+  "field": "filtroFechas/desde,hasta",
+  "text": "Rango de Fechas inválido (2)",
+  "page": 18
+ },
+ {
+  "operation": "consultarFacturasAceptadas",
+  "code": 2004,
+  "kind": "error",
+  "field": "nroPagina",
+  "text": "Número de Página inválido",
+  "page": 18
+ },
+ {
+  "operation": "confirmarRecepcionFacturas",
+  "code": 2005,
+  "kind": "error",
+  "field": "idFactura",
+  "text": "Ocurrió un error intentando validar la factura recibida",
+  "page": 18
+ },
+ {
+  "operation": "confirmarRecepcionFacturas",
+  "code": 2006,
+  "kind": "error",
+  "field": "facturas",
+  "text": "Supera la cantidad de elementos que pueden procesarse (2)",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 501,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "Ocurrió un error intentando autenticar un request",
+  "page": 14
+ },
+ {
+  "operation": "*",
+  "code": 502,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "La Sección de Autenticación del Request no cumple con el Esquema (XSD) de Autenticación",
+  "page": 14
+ },
+ {
+  "operation": "*",
+  "code": 503,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Formato del Token es inválido",
+  "page": 14
+ },
+ {
+  "operation": "*",
+  "code": 504,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Formato de la Firma es inválida",
+  "page": 14
+ },
+ {
+  "operation": "*",
+  "code": 505,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Token no se corresponde con la Firma",
+  "page": 15
+ },
+ {
+  "operation": "*",
+  "code": 506,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Token no cumple con el Esquema (XSD) de Autenticación",
+  "page": 15
+ },
+ {
+  "operation": "*",
+  "code": 507,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Formato del Servicio asociado a Token es inválido",
+  "page": 15
+ },
+ {
+  "operation": "*",
+  "code": 508,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Servicio asociado al Token no se corresponde a este sistema",
+  "page": 15
+ },
+ {
+  "operation": "*",
+  "code": 509,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Token se encuentra Expirado",
+  "page": 15
+ },
+ {
+  "operation": "*",
+  "code": 510,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "La CUIT, CUIL o CDI en el Token es Nula, esta Vacia o tiene un Formato inválido",
+  "page": 15
+ },
+ {
+  "operation": "*",
+  "code": 511,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "La CUIT, CUIL o CDI no pudo ser encontrada",
+  "page": 15
+ },
+ {
+  "operation": "*",
+  "code": 512,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "La CUIL o CDI no esta activa",
+  "page": 15
+ },
+ {
+  "operation": "*",
+  "code": 513,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "La CUIT no esta activa",
+  "page": 15
+ },
+ {
+  "operation": "*",
+  "code": 514,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "La CUIT no tiene un domicilio activo",
+  "page": 15
+ },
+ {
+  "operation": "*",
+  "code": 515,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "La CUIT no tiene una actividad activa",
+  "page": 15
+ },
+ {
+  "operation": "*",
+  "code": 516,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Servicio de Autenticación no se encuentra Operativo",
+  "page": 15
+ },
+ {
+  "operation": "*",
+  "code": 4008,
+  "kind": "error",
+  "field": "Request",
+  "text": "Ocurrió un error intentando realizar las validaciones generales para la operacion",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 4009,
+  "kind": "error",
+  "field": "Request",
+  "text": "La CUIT no se encuentra en los Registros de AFIP",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 4001,
+  "kind": "infraestructura",
+  "field": null,
+  "text": "Ocurrió un error intentando ejecutar la operación",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 4002,
+  "kind": "infraestructura",
+  "field": null,
+  "text": "Ocurrió un error intentando ejecutar la operación",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 4003,
+  "kind": "infraestructura",
+  "field": null,
+  "text": "Ocurrió un error intentando ejecutar la operación",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 4004,
+  "kind": "infraestructura",
+  "field": null,
+  "text": "Ocurrió un error intentando ejecutar la operación",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 4005,
+  "kind": "infraestructura",
+  "field": null,
+  "text": "Ocurrió un error intentando ejecutar la operación",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 4006,
+  "kind": "infraestructura",
+  "field": null,
+  "text": "Ocurrió un error intentando ejecutar la operación",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 4007,
+  "kind": "infraestructura",
+  "field": null,
+  "text": "Ocurrió un error intentando ejecutar la operación",
+  "page": 18
+ },
+ {
+  "operation": "confirmarRecepcionFacturas",
+  "code": 4010,
+  "kind": "error",
+  "field": "facturas",
+  "text": "Ocurrió un error inesperado intentando marcar recibido el lote de Facturas Enviado",
+  "page": 31
+ },
+ {
+  "operation": "confirmarRecepcionFacturas",
+  "code": 4011,
+  "kind": "error",
+  "field": "factura",
+  "text": "No se pudo marcar como recibida la Factura.",
+  "page": 31
+ },
+ {
+  "operation": "confirmarRecepcionFacturas",
+  "code": 4012,
+  "kind": "error",
+  "field": "factura",
+  "text": "No se encontró ninguna Factura al SCA con los Datos del Comprobante Enviados que se encuentre Pendiente de Confirmar.",
+  "page": 31
+ },
+ {
+  "operation": "confirmarRecepcionFacturas",
+  "code": 4013,
+  "kind": "error",
+  "field": "factura",
+  "text": "La Factura ya fue confirmada.",
+  "page": 31
+ },
+ {
+  "operation": "confirmarRecepcionFacturas",
+  "code": 4014,
+  "kind": "error",
+  "field": "factura",
+  "text": "La Factura debe ser consultada antes de ser confirmada.",
+  "page": 31
+ },
+ {
+  "operation": "consultarFacturasAceptadas",
+  "code": 4015,
+  "kind": "error",
+  "field": "facturas",
+  "text": "Ocurrió un error inesperado intentando consultar las Facturas Aceptadas",
+  "page": 27
+ },
+ {
+  "operation": "consultarFacturasAceptadas",
+  "code": "51-53 al 1001-1017",
+  "kind": "observacion",
+  "field": "factura/errorValidacionCbu",
+  "text": "Errores Internos de AFIP: Códigos del 51-53 al 1001-1017",
+  "page": 26
+ },
+ {
+  "operation": "consultarFacturasAceptadas",
+  "code": "Coelsa",
+  "kind": "observacion",
+  "field": "factura/errorValidacionCbu",
+  "text": "Errores en el Servicio API Alias de Coelsa: Códigos propios del Servicio API Alias de Coelsa",
+  "page": 26
+ }
+]

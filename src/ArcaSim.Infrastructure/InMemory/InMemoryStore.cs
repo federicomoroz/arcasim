@@ -8,7 +8,7 @@ namespace ArcaSim.Infrastructure.InMemory;
 /// Every port in memory, behind one lock. It starts in milliseconds and is
 /// thrown away with the process: what an application's tests want.
 /// </summary>
-public sealed class InMemoryStore :
+public sealed partial class InMemoryStore :
     ISimulatorStore
 {
     private readonly object _gate = new();
@@ -33,6 +33,7 @@ public sealed class InMemoryStore :
             _caeas.Clear();
             _withoutMovement.Clear();
             _rates.Clear();
+            ClearDocuments();
         }
         return Task.CompletedTask;
     }

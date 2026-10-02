@@ -13,7 +13,7 @@ namespace ArcaSim.Infrastructure.Postgres;
 /// and that keeps its taxpayers, certificates' authorizations and vouchers
 /// across restarts. Plain SQL: eight small tables do not need an ORM.
 /// </summary>
-public sealed class PostgresStore(NpgsqlDataSource db) :
+public sealed partial class PostgresStore(NpgsqlDataSource db) :
     ISimulatorStore
 {
     private static readonly XmlSerializer DetailSerializer = new(typeof(FECAEDetRequest));
@@ -82,14 +82,14 @@ public sealed class PostgresStore(NpgsqlDataSource db) :
 
     public async Task EnsureSchemaAsync(CancellationToken ct = default)
     {
-        await using var command = db.CreateCommand(Schema);
+        await using var command = db.CreateCommand(Schema + DocumentsSchema);
         await command.ExecuteNonQueryAsync(ct);
     }
 
     public async Task ResetAsync(CancellationToken ct = default)
     {
         await using var command = db.CreateCommand(
-            "TRUNCATE aliases, authorizations, tickets, taxpayers, vouchers, caeas, caea_without_movement, exchange_rates");
+            "TRUNCATE aliases, authorizations, tickets, taxpayers, vouchers, caeas, caea_without_movement, exchange_rates, documents, counters");
         await command.ExecuteNonQueryAsync(ct);
     }
 

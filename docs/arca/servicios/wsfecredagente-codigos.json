@@ -1,0 +1,402 @@
+[
+ {
+  "operation": "*",
+  "code": 1,
+  "kind": "fault",
+  "field": "Request",
+  "text": "Ocurrió un error intentando procesar el Request",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 2,
+  "kind": "fault",
+  "field": "Request",
+  "text": "Ocurrió un error intentando parsear el Soap Request",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 1001,
+  "kind": "fault",
+  "field": "Request",
+  "text": "El Request no Cumple con el Esquema asociado al WSDL",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 2001,
+  "kind": "error",
+  "field": "Request",
+  "text": "Ocurrió un error intentando validar el pedido",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 2002,
+  "kind": "error",
+  "field": "Cuit",
+  "text": "Formato CUIT, CUIL o CDI inválido",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 2003,
+  "kind": "error",
+  "field": "filtroFechas/desde,hasta",
+  "text": "Rango de Fechas inválido (*)",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 2004,
+  "kind": "error",
+  "field": "nroPagina",
+  "text": "Número de Página inválido",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 2005,
+  "kind": "error",
+  "field": "cuentaId",
+  "text": "ID Cuenta Inválido",
+  "page": 18
+ },
+ {
+  "operation": "confirmarFacturasInformadas",
+  "code": 2006,
+  "kind": "error",
+  "field": "codRechazo",
+  "text": "Código Rechazo Inexistente o Inválido",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 2007,
+  "kind": "error",
+  "field": "codRechazo",
+  "text": "Ocurrió un error intentando validar el pedido para la cuenta",
+  "page": 18
+ },
+ {
+  "operation": "confirmarFacturasInformadas",
+  "code": 2008,
+  "kind": "error",
+  "field": "codRechazo",
+  "text": "Ocurrió un error intentando validar el pedido de confirmación para la factura",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 2009,
+  "kind": "error",
+  "field": "elementos",
+  "text": "Supera la cantidad de elementos que pueden procesarse (*)",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 501,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "Ocurrió un error intentando autenticar el pedido",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 502,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "La Sección de Autenticación del Request no cumple con el Esquema (XSD) de Autenticación",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 503,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Formato del Token es inválido",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 504,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Formato de la Firma es inválida",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 505,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Token no se corresponde con la Firma",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 506,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Token no cumple con el Esquema (XSD) de Autenticación",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 507,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Formato del Servicio asociado a Token es inválido",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 508,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Servicio asociado a Token difiere del especificado para el Sistema",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 509,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Token se encuentra Expirado",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 510,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "La CUIT, CUIL o CDI en el Token es Nula, esta Vacia o tiene un Formato inválido",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 511,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "La CUIT, CUIL o CDI no pudo ser encontrada",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 512,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "La CUIL o CDI no esta activa",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 513,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "La CUIT no esta activa",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 514,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "La CUIT no tiene un domicilio activo",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 515,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "La CUIT no tiene una actividad activa",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 516,
+  "kind": "auth",
+  "field": "autenticacion",
+  "text": "El Servicio de Autenticación no se encuentra Operativo",
+  "page": 16
+ },
+ {
+  "operation": "*",
+  "code": 4008,
+  "kind": "error",
+  "field": "Error Generico de Autorizacion",
+  "text": "Ocurrió un error intentando realizar las validaciones generales para la operacion",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 4009,
+  "kind": "error",
+  "field": "Error Agente no Habilitado para operar con el Servicio u Operacion",
+  "text": "La CUIT del Agente no se encuentra en los Registros de AFIP",
+  "page": 18
+ },
+ {
+  "operation": "*",
+  "code": 4001,
+  "kind": "infraestructura",
+  "field": null,
+  "text": "Ocurrió un error intentando ejecutar la operación",
+  "page": 19
+ },
+ {
+  "operation": "*",
+  "code": 4002,
+  "kind": "infraestructura",
+  "field": null,
+  "text": "Ocurrió un error intentando ejecutar la operación",
+  "page": 19
+ },
+ {
+  "operation": "*",
+  "code": 4003,
+  "kind": "infraestructura",
+  "field": null,
+  "text": "Ocurrió un error intentando ejecutar la operación",
+  "page": 19
+ },
+ {
+  "operation": "*",
+  "code": 4004,
+  "kind": "infraestructura",
+  "field": null,
+  "text": "Ocurrió un error intentando ejecutar la operación",
+  "page": 19
+ },
+ {
+  "operation": "*",
+  "code": 4005,
+  "kind": "infraestructura",
+  "field": null,
+  "text": "Ocurrió un error intentando ejecutar la operación",
+  "page": 19
+ },
+ {
+  "operation": "*",
+  "code": 4006,
+  "kind": "infraestructura",
+  "field": null,
+  "text": "Ocurrió un error intentando ejecutar la operación",
+  "page": 19
+ },
+ {
+  "operation": "*",
+  "code": 4007,
+  "kind": "infraestructura",
+  "field": null,
+  "text": "Ocurrió un error intentando ejecutar la operación",
+  "page": 19
+ },
+ {
+  "operation": "altaCuentasAgente",
+  "code": 4010,
+  "kind": "error",
+  "field": "cuentas",
+  "text": "Ocurrio un error inesperado intentando dar de Alta el lote de Cuentas Enviado",
+  "page": 36
+ },
+ {
+  "operation": "bajaCuentasAgente",
+  "code": 4011,
+  "kind": "error",
+  "field": "cuentaAgente",
+  "text": "Ocurrio un error inesperado intentando dar de Baja el lote de Cuentas Enviado",
+  "page": 39
+ },
+ {
+  "operation": "altaCuentasAgente",
+  "code": 4012,
+  "kind": "error",
+  "field": "cuenta",
+  "text": "Ocurrio un error intentando dar de Alta la Cuenta Enviada",
+  "page": 36
+ },
+ {
+  "operation": "bajaCuentasAgente",
+  "code": 4013,
+  "kind": "error",
+  "field": "cuentaAgente",
+  "text": "Ocurrio un error intentando dar de Baja la Cuenta Enviada",
+  "page": 39
+ },
+ {
+  "operation": "bajaCuentasAgente",
+  "code": 4014,
+  "kind": "error",
+  "field": "cuentaAgente",
+  "text": "No se encontro una Cuenta Activa asociada a los datos Enviados",
+  "page": 39
+ },
+ {
+  "operation": "bajaCuentasAgente",
+  "code": 4015,
+  "kind": "error",
+  "field": "cuitTitular",
+  "text": "El Titular con el que intenta efectuar la operación no esta asociado a la cuenta indicada",
+  "page": 39
+ },
+ {
+  "operation": "consultarCuentasAgente",
+  "code": 4016,
+  "kind": "error",
+  "field": "cuentas",
+  "text": "Ocurrio un error inesperado intentando consultar las Cuentas del Agente",
+  "page": 33
+ },
+ {
+  "operation": "confirmarFacturasInformadas",
+  "code": 4017,
+  "kind": "error",
+  "field": "facturas",
+  "text": "Ocurrió un error inesperado intentando confirmar el lote de Solicitudes de Informe Enviado",
+  "page": 30
+ },
+ {
+  "operation": "confirmarFacturasInformadas",
+  "code": 4018,
+  "kind": "error",
+  "field": "factura",
+  "text": "Ocurrió un error intentando Confirmar la Solicitud de Informe",
+  "page": 30
+ },
+ {
+  "operation": "confirmarFacturasInformadas",
+  "code": 4019,
+  "kind": "error",
+  "field": "factura",
+  "text": "No se encontró ninguna Solicitud de Informe al Agente con los Datos del Comprobante Enviados que se encuentre Pendiente de Confirmar",
+  "page": 30
+ },
+ {
+  "operation": "confirmarFacturasInformadas",
+  "code": 4020,
+  "kind": "error",
+  "field": "factura",
+  "text": "La Solicitud de Informe ya fue Aceptada por el Agente",
+  "page": 30
+ },
+ {
+  "operation": "confirmarFacturasInformadas",
+  "code": 4021,
+  "kind": "error",
+  "field": "factura",
+  "text": "La Solicitud de Informe debe ser Consultada por el Agente antes de ser enviada para Confirmar",
+  "page": 30
+ },
+ {
+  "operation": "consultarFacturasInformadas",
+  "code": 4022,
+  "kind": "error",
+  "field": "factura",
+  "text": "Ocurrio un error inesperado intentando consultar las Solicitudes de Informe",
+  "page": 27
+ }
+]
