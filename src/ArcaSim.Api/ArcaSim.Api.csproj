@@ -4,8 +4,10 @@
     <ProjectReference Include="..\ArcaSim.Infrastructure\ArcaSim.Infrastructure.csproj" />
   </ItemGroup>
 
+  <!-- ARCA's WSDL and XSD files travel next to the binary, folders included, so their relative imports resolve. -->
   <ItemGroup>
-    <EmbeddedResource Include="..\..\docs\arca\wsdl\*.wsdl" LogicalName="ArcaSim.Wsdl.%(Filename)%(Extension)" />
+    <Content Include="..\..\docs\arca\wsdl\**\*.wsdl;..\..\docs\arca\wsdl\**\*.xsd" LinkBase="arca-wsdl" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\docs\arca\servicios.json" Link="arca-servicios.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <PropertyGroup>

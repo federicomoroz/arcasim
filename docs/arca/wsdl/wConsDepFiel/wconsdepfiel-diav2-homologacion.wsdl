@@ -1,0 +1,581 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="Ar.Gob.Afip.Dga.wconsdepfiel" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" targetNamespace="Ar.Gob.Afip.Dga.wconsdepfiel" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consultas MOA con relacion a los Depositarios Fiel.</wsdl:documentation>
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="Ar.Gob.Afip.Dga.wconsdepfiel">
+      <s:element name="DepFielEstadosLegajoLista">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argDepFielEstadosLegajoLista" type="tns:DepFielEstadosLegajoListaParam" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="WSAutenticacionEmpresa">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:WSAutenticacion">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="CuitEmpresaConectada" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="TipoAgente" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="Rol" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="WSAutenticacion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Token" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Sign" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DepFielEstadosLegajoListaParam">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CuitImportadorExportador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitDeclarante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoAduana" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaDesde" nillable="true" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaHasta" nillable="true" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="IndicadorRectificacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoEstado" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="DepFielEstadosLegajoListaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DepFielEstadosLegajoListaResult" type="tns:DepFielEstadosLegajoListaRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DepFielEstadosLegajoListaRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucion">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Legajos" type="tns:ArrayOfEstadosLegajoItem" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ResultadoEjecucion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="ListaErrores" type="tns:ArrayOfDgaMensajeSistemaReducido" />
+          <s:element minOccurs="0" maxOccurs="1" name="Server" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="TimeStamp" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfDgaMensajeSistemaReducido">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="DetalleError" nillable="true" type="tns:DgaMensajeSistemaReducido" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DgaMensajeSistemaReducido">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Codigo" nillable="true" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="Descripcion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescripcionAdicional" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfEstadosLegajoItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Legajo" nillable="true" type="tns:EstadosLegajoItem" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="EstadosLegajoItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoAduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorLegajo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitImportadorExportador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitDeclarante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoEstadoLegajo" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaEstadoLegajo" nillable="true" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoMotivoDenagatoria" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescripcionCodigoMotivoDenagatoria" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Codigo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IndicadorRectificacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoAdunanDesaduanamiento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DependenciaDesaduanamiento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Observaciones" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="DepFielInhabilitarOficLista">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argDepFielEstadosLegaoLista" type="tns:DepFielInhabilitarOficListaParam" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DepFielInhabilitarOficListaParam">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CuitImportadorExportador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitDeclarante" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="DepFielInhabilitarOficListaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DepFielInhabilitarOficListaResult" type="tns:DepFielInhabilitarOficListaRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DepFielInhabilitarOficListaRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucion">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Legajos" type="tns:ArrayOfInhabilitarOficItem" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ArrayOfInhabilitarOficItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Legajo" nillable="true" type="tns:InhabilitarOficItem" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="InhabilitarOficItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorLegajo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitImportadorExportador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitDeclarante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoEstadoLegajo" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaEstadoLegajo" nillable="true" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="NumeroTicket" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaTopeRetiro" nillable="true" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaTopeDigitalizacion" nillable="true" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaTopeAvisoPSAD" nillable="true" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="DepFielRectificacionLegajosLista">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argDepFielRectificacionLegajosLista" type="tns:DepFielRectificacionLegajosListaParam" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DepFielRectificacionLegajosListaParam">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CuitImportadorExportador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitDeclarante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IndicadorRectificacion" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaDesde" nillable="true" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaHasta" nillable="true" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="DepFielRectificacionLegajosListaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DepFielRectificacionLegajosListaResult" type="tns:DepFielRectificacionLegajosListaRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DepFielRectificacionLegajosListaRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucion">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Legajos" type="tns:ArrayOfRatificacionLegajoItem" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ArrayOfRatificacionLegajoItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Legajo" nillable="true" type="tns:RatificacionLegajoItem" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="RatificacionLegajoItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorLegajo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitImportadorExportador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitDeclarante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitDepositario" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoEstadoLegajo" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaEstadoLegajo" nillable="true" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="Codigo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoDescripcion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NumeroTicket" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IndicadorRectificacion" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="DepFielDocumentacionPendienteLista">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argDepFielDocumentacionPendienteLista" type="tns:DepFielDocumentacionPendienteListaParam" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DepFielDocumentacionPendienteListaParam">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CuitDeclarante" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaDesde" nillable="true" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaHasta" nillable="true" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorLegajo" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="DepFielDocumentacionPendienteListaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DepFielDocumentacionPendienteListaResult" type="tns:DepFielDocumentacionPendienteListaRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DepFielDocumentacionPendienteListaRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucion">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Legajos" type="tns:ArrayOfDocDevPendienteItem" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ArrayOfDocDevPendienteItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Legajo" nillable="true" type="tns:DocDevPendienteItem" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DocDevPendienteItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorLegajo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Codigo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NumeroTicket" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Pedido" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Observaciones" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="DepFielDevolucionPendienteLista">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argDepFielDevolucionPendienteLista" type="tns:DepFielDevolucionPendienteListaParam" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DepFielDevolucionPendienteListaParam">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CuitDeclarante" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaDesde" nillable="true" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaHasta" nillable="true" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorLegajo" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="DepFielDevolucionPendienteListaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DepFielDevolucionPendienteListaResult" type="tns:DepFielDevolucionPendienteListaRpta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DepFielDevolucionPendienteListaRpta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucion">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Legajos" type="tns:ArrayOfDocDevPendienteItem" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="DepFielHistorialLegajoLista">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argIdentificadorLegajo" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="DepFielHistorialLegajoListaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DepFielHistorialLegajoListaResult" type="tns:DepFielHistorialLegajoListaRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DepFielHistorialLegajoListaRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucion">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Caratula" type="tns:HistorialLegajoCaratula" />
+              <s:element minOccurs="0" maxOccurs="1" name="Historial" type="tns:ArrayOfHistorialLegajoItem" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="HistorialLegajoCaratula">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoAduanaOperativa" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescCodigoAduanaOperativa" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitDesclarante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="RazonSocialDeclarante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitImportadorExportador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="RazonSocialImportadorExportador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IndicadorPSAD" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaOficializacion" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitATA" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="RazonSocialATA" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfHistorialLegajoItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="HistorialLegajoItem" nillable="true" type="tns:HistorialLegajoItem" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="HistorialLegajoItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoDocumentacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescripcionCodigoDocumentacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoEstado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescripcionCodigoEstado" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaEstado" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="IndicadorUltimoRegistro" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaAceptacionPSAD" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="NroTicket" type="s:decimal" />
+          <s:element minOccurs="0" maxOccurs="1" name="Rectificativa" type="tns:HistorialLegajoRectificativa" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="HistorialLegajoRectificativa">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IndicadorAceptacionAduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuilAgenteAduanero" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="MotivoRechazoAduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescripcionRechazoAduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorSGEA" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="Dummy">
+        <s:complexType />
+      </s:element>
+      <s:element name="DummyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DummyResult" type="tns:ResultadoEjecucionDummy" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ResultadoEjecucionDummy">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="AppServer" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DbServer" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="AuthServer" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="DepFielEstadosLegajoListaSoapIn">
+    <wsdl:part name="parameters" element="tns:DepFielEstadosLegajoLista" />
+  </wsdl:message>
+  <wsdl:message name="DepFielEstadosLegajoListaSoapOut">
+    <wsdl:part name="parameters" element="tns:DepFielEstadosLegajoListaResponse" />
+  </wsdl:message>
+  <wsdl:message name="DepFielInhabilitarOficListaSoapIn">
+    <wsdl:part name="parameters" element="tns:DepFielInhabilitarOficLista" />
+  </wsdl:message>
+  <wsdl:message name="DepFielInhabilitarOficListaSoapOut">
+    <wsdl:part name="parameters" element="tns:DepFielInhabilitarOficListaResponse" />
+  </wsdl:message>
+  <wsdl:message name="DepFielRectificacionLegajosListaSoapIn">
+    <wsdl:part name="parameters" element="tns:DepFielRectificacionLegajosLista" />
+  </wsdl:message>
+  <wsdl:message name="DepFielRectificacionLegajosListaSoapOut">
+    <wsdl:part name="parameters" element="tns:DepFielRectificacionLegajosListaResponse" />
+  </wsdl:message>
+  <wsdl:message name="DepFielDocumentacionPendienteListaSoapIn">
+    <wsdl:part name="parameters" element="tns:DepFielDocumentacionPendienteLista" />
+  </wsdl:message>
+  <wsdl:message name="DepFielDocumentacionPendienteListaSoapOut">
+    <wsdl:part name="parameters" element="tns:DepFielDocumentacionPendienteListaResponse" />
+  </wsdl:message>
+  <wsdl:message name="DepFielDevolucionPendienteListaSoapIn">
+    <wsdl:part name="parameters" element="tns:DepFielDevolucionPendienteLista" />
+  </wsdl:message>
+  <wsdl:message name="DepFielDevolucionPendienteListaSoapOut">
+    <wsdl:part name="parameters" element="tns:DepFielDevolucionPendienteListaResponse" />
+  </wsdl:message>
+  <wsdl:message name="DepFielHistorialLegajoListaSoapIn">
+    <wsdl:part name="parameters" element="tns:DepFielHistorialLegajoLista" />
+  </wsdl:message>
+  <wsdl:message name="DepFielHistorialLegajoListaSoapOut">
+    <wsdl:part name="parameters" element="tns:DepFielHistorialLegajoListaResponse" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapIn">
+    <wsdl:part name="parameters" element="tns:Dummy" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapOut">
+    <wsdl:part name="parameters" element="tns:DummyResponse" />
+  </wsdl:message>
+  <wsdl:portType name="wconsdepfielSoap">
+    <wsdl:operation name="DepFielEstadosLegajoLista">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Listado de Estados de los Legajos.</wsdl:documentation>
+      <wsdl:input message="tns:DepFielEstadosLegajoListaSoapIn" />
+      <wsdl:output message="tns:DepFielEstadosLegajoListaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="DepFielInhabilitarOficLista">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Listado de legajos que podrían inhabilitar para Oficializar.</wsdl:documentation>
+      <wsdl:input message="tns:DepFielInhabilitarOficListaSoapIn" />
+      <wsdl:output message="tns:DepFielInhabilitarOficListaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="DepFielRectificacionLegajosLista">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Listado de legajos con Rectificacion.</wsdl:documentation>
+      <wsdl:input message="tns:DepFielRectificacionLegajosListaSoapIn" />
+      <wsdl:output message="tns:DepFielRectificacionLegajosListaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="DepFielDocumentacionPendienteLista">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Pedido de Documentacion pendiente de respuesta.</wsdl:documentation>
+      <wsdl:input message="tns:DepFielDocumentacionPendienteListaSoapIn" />
+      <wsdl:output message="tns:DepFielDocumentacionPendienteListaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="DepFielDevolucionPendienteLista">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Pedido de Devolucion pendiente de respuesta.</wsdl:documentation>
+      <wsdl:input message="tns:DepFielDevolucionPendienteListaSoapIn" />
+      <wsdl:output message="tns:DepFielDevolucionPendienteListaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="DepFielHistorialLegajoLista">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Listado con el historial del Legajo.</wsdl:documentation>
+      <wsdl:input message="tns:DepFielHistorialLegajoListaSoapIn" />
+      <wsdl:output message="tns:DepFielHistorialLegajoListaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <wsdl:input message="tns:DummySoapIn" />
+      <wsdl:output message="tns:DummySoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="wconsdepfielSoap" type="tns:wconsdepfielSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="DepFielEstadosLegajoLista">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wconsdepfiel/DepFielEstadosLegajoLista" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DepFielInhabilitarOficLista">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wconsdepfiel/DepFielInhabilitarOficLista" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DepFielRectificacionLegajosLista">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wconsdepfiel/DepFielRectificacionLegajosLista" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DepFielDocumentacionPendienteLista">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wconsdepfiel/DepFielDocumentacionPendienteLista" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DepFielDevolucionPendienteLista">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wconsdepfiel/DepFielDevolucionPendienteLista" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DepFielHistorialLegajoLista">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wconsdepfiel/DepFielHistorialLegajoLista" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wconsdepfiel/Dummy" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="wconsdepfielSoap12" type="tns:wconsdepfielSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="DepFielEstadosLegajoLista">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wconsdepfiel/DepFielEstadosLegajoLista" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DepFielInhabilitarOficLista">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wconsdepfiel/DepFielInhabilitarOficLista" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DepFielRectificacionLegajosLista">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wconsdepfiel/DepFielRectificacionLegajosLista" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DepFielDocumentacionPendienteLista">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wconsdepfiel/DepFielDocumentacionPendienteLista" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DepFielDevolucionPendienteLista">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wconsdepfiel/DepFielDevolucionPendienteLista" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DepFielHistorialLegajoLista">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wconsdepfiel/DepFielHistorialLegajoLista" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wconsdepfiel/Dummy" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="wconsdepfiel">
+    <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consultas MOA con relacion a los Depositarios Fiel.</wsdl:documentation>
+    <wsdl:port name="wconsdepfielSoap" binding="tns:wconsdepfielSoap">
+      <soap:address location="https://wsaduhomoext.afip.gob.ar/diav2/wconsdepfiel/wconsdepfiel.asmx" />
+    </wsdl:port>
+    <wsdl:port name="wconsdepfielSoap12" binding="tns:wconsdepfielSoap12">
+      <soap12:address location="https://wsaduhomoext.afip.gob.ar/diav2/wconsdepfiel/wconsdepfiel.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

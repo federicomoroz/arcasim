@@ -1,0 +1,1378 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="Ar.Gob.Afip.Dga.wGesTiendasLibres" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" targetNamespace="Ar.Gob.Afip.Dga.wGesTiendasLibres" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Control de Stock Tiendas Libres de Impuestos</wsdl:documentation>
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="Ar.Gob.Afip.Dga.wGesTiendasLibres">
+      <s:element name="IngresarMercaderia">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argIngresarMercaderiaParams" type="tns:IngresarMercaderiaParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="WSAutenticacionEmpresa">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:WSAutenticacion">
+            <s:sequence>
+              <s:element minOccurs="1" maxOccurs="1" name="CuitEmpresaConectada" type="s:long" />
+              <s:element minOccurs="0" maxOccurs="1" name="TipoAgente" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="Rol" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="WSAutenticacion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Token" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Sign" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="IngresarMercaderiaParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="lugarOperativo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="idComprobante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="origen" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="comprobanteAsociado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="transaccion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="ListaMercaderiaIngresada" type="tns:ArrayOfMercaderiaIngresada" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfMercaderiaIngresada">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="MercaderiaIngresada" nillable="true" type="tns:MercaderiaIngresada" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="MercaderiaIngresada">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NCM" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="descProducto" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="cantidad" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="valorUnitarioDol" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="IngresarMercaderiaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="IngresarMercaderiaResult" type="tns:IngresarMercaderiaRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="IngresarMercaderiaRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="id" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="idMovimiento" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ResultadoEjecucionSerializable">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="ListaErrores" type="tns:ArrayOfMensaje" />
+          <s:element minOccurs="0" maxOccurs="1" name="Server" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="TimeStamp" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfMensaje">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="DetalleError" nillable="true" type="tns:Mensaje" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Mensaje">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:AbstractEntidadOfInt32">
+            <s:sequence>
+              <s:element minOccurs="1" maxOccurs="1" name="Codigo" nillable="true" type="s:int" />
+              <s:element minOccurs="0" maxOccurs="1" name="Descripcion" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="DescripcionDetallada" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="TextoAclaratorio" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="DescripcionAdicional" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="Parametros" type="tns:ArrayOfString" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="AbstractEntidadOfInt32" abstract="true">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:AbstractEntidadGenerica" />
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="AbstractEntidadGenerica" abstract="true" />
+      <s:complexType name="ArrayOfString">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="string" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="VentaMercaderia">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argVentaMercaderiaParams" type="tns:VentaMercaderiaParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="VentaMercaderiaParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="lugarOperativo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="tipoLocal" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="docIdentidad" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="nacionalidad" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="edad" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="tipoComprobante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="nroComprobante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="indContingencia" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="nroVuelo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="listaMercaderiaVendida" type="tns:ArrayOfMercaderiaVendida" />
+          <s:element minOccurs="0" maxOccurs="1" name="transaccion" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfMercaderiaVendida">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="MercaderiaVendida" nillable="true" type="tns:MercaderiaVendida" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="MercaderiaVendida">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NCM" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="descProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="origen" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="cantidad" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="valorUnitarioDol" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="VentaMercaderiaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="VentaMercaderiaResult" type="tns:VentaMercaderiaRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="VentaMercaderiaRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="idMovimiento" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="TrasladarMercaderia">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argTrasladarMercaderiaParams" type="tns:TrasladarMercaderiaParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="TrasladarMercaderiaParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="aduanaOrigen" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="lugarOperativoOrigen" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="aduanaDestino" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="lugarOperativoDestino" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="valorTotalMercaderia" type="s:decimal" />
+          <s:element minOccurs="0" maxOccurs="1" name="nroPoliza" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="nroCarro" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="tipoTraslado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="transaccion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="listaMercaderiaRETL" type="tns:ArrayOfMercaderiaRETL" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfMercaderiaRETL">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="MercaderiaRETL" nillable="true" type="tns:MercaderiaRETL" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="MercaderiaRETL">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NCM" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="descProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="origen" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="cantidad" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="TrasladarMercaderiaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="TrasladarMercaderiaResult" type="tns:TrasladarMercaderiaRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="TrasladarMercaderiaRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="IdRETL" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="idMovimiento" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="DestruirMercaderia">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argDestruirMercaderiaParams" type="tns:DestruirMercaderiaParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DestruirMercaderiaParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="lugarOperativo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="idComprobante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="listaMercaderiaDestruida" type="tns:ArrayOfMercaderiaDestruida" />
+          <s:element minOccurs="0" maxOccurs="1" name="transaccion" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfMercaderiaDestruida">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="MercaderiaDestruida" nillable="true" type="tns:MercaderiaDestruida" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="MercaderiaDestruida">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NCM" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="descProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="origen" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="cantidad" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="DestruirMercaderiaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DestruirMercaderiaResult" type="tns:DestruirMercaderiaRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DestruirMercaderiaRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="idMovimiento" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="DevolverMercaderia">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argDevolverMercaderiaParams" type="tns:DevolverMercaderiaParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DevolverMercaderiaParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="lugarOperativo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="origen" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="idComprobante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="idActa" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="listaMercaderiaDevuelta" type="tns:ArrayOfMercaderiaDevuelta" />
+          <s:element minOccurs="0" maxOccurs="1" name="transaccion" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfMercaderiaDevuelta">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="MercaderiaDevuelta" nillable="true" type="tns:MercaderiaDevuelta" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="MercaderiaDevuelta">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NCM" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="descProducto" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="cantidad" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="DevolverMercaderiaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DevolverMercaderiaResult" type="tns:DevolverMercaderiaRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DevolverMercaderiaRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="idMovimiento" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="RegistrarNotaDebitoCredito">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argRegistrarNotaDebitoCreditoParams" type="tns:RegistrarNotaDebitoCreditoParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RegistrarNotaDebitoCreditoParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="lugarOperativo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="aduanaDestino" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="lugarOperativoDestino" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="tipoComprobante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="nroComprobante" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="fechaComprobante" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="tipoComprobanteAsociado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="nroComprobanteAsociado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="tipoLocal" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="indContingencia" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="transaccion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="listaMercaderiaNotaDebitoCredito" type="tns:ArrayOfMercaderiaNotaDebitoCredito" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfMercaderiaNotaDebitoCredito">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="MercaderiaNotaDebitoCredito" nillable="true" type="tns:MercaderiaNotaDebitoCredito" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="MercaderiaNotaDebitoCredito">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NCM" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="descProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="origen" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="cantidad" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="valorUnitarioDol" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="RegistrarNotaDebitoCreditoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="RegistrarNotaDebitoCreditoResult" type="tns:RegistrarNotaDebitoCreditoRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RegistrarNotaDebitoCreditoRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="idMovimiento" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="ArmarPack">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argArmarPackParams" type="tns:ArmarPackParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ArmarPackParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="lugarOperativo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NCM" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="descProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="origen" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="cantidad" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="valorUnitarioDol" type="s:decimal" />
+          <s:element minOccurs="0" maxOccurs="1" name="transaccion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="listaItems" type="tns:ArrayOfItemPack" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfItemPack">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="ItemPack" nillable="true" type="tns:ItemPack" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ItemPack">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NCMItem" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codProductoItem" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="origenItem" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="cantidadItem" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ArmarPackResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ArmarPackResult" type="tns:ArmarPackRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ArmarPackRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="idMovimiento" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="DesarmarPack">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argDesarmarPackParams" type="tns:DesarmarPackParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DesarmarPackParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="lugarOperativo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NCM" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="origen" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="cantidad" type="s:decimal" />
+          <s:element minOccurs="0" maxOccurs="1" name="transaccion" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="DesarmarPackResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DesarmarPackResult" type="tns:DesarmarPackRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DesarmarPackRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="idMovimiento" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="CambiarCodigoProducto">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argCambiarCodigoProductoParams" type="tns:CambiarCodigoProductoParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CambiarCodigoProductoParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NCMAnterior" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codProductoAnterior" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NCMNueva" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codProductoNuevo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="descProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="transaccion" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="CambiarCodigoProductoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="CambiarCodigoProductoResult" type="tns:CambiarCodigoProductoRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CambiarCodigoProductoRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="idMovimiento" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="RegistrarJustificacionDIFE">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argRegistrarJustificacionDIFEParams" type="tns:RegistrarJustificacionDIFEParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RegistrarJustificacionDIFEParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="idDIFE" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="listaJustificacion" type="tns:ArrayOfDetalleJustificacion" />
+          <s:element minOccurs="0" maxOccurs="1" name="transaccion" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfDetalleJustificacion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="DetalleJustificacion" nillable="true" type="tns:DetalleJustificacion" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DetalleJustificacion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="codJustificacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="textoJustificacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="aduanaJustificacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="lugarOperativoJustificacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NCMJustificacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codProductoJustificacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="descProductoJustificacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="origenJustificacion" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="cantidadJustificacion" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="RegistrarJustificacionDIFEResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="RegistrarJustificacionDIFEResult" type="tns:RegistrarJustificacionDIFERta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RegistrarJustificacionDIFERta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="idMovimiento" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="ConsultarStock">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argConsultarStockParams" type="tns:ConsultarStockParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ConsultarStockParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LugarOperativo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NCM" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Origen" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultarStockResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultarStockResult" type="tns:ConsultarStockRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ConsultarStockRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="ListaStockMercaderia" type="tns:ArrayOfStockMercaderia" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ArrayOfStockMercaderia">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="StockMercaderia" nillable="true" type="tns:StockMercaderia" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="StockMercaderia">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NCM" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Origen" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Cantidad" type="s:decimal" />
+          <s:element minOccurs="0" maxOccurs="1" name="EsPack" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultarMovimientos">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argConsultarMovimientosParams" type="tns:ConsultarMovimientosParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ConsultarMovimientosParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LugarOperativo" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaDesde" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaHasta" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultarMovimientosResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultarMovimientosResult" type="tns:ConsultarMovimientosRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ConsultarMovimientosRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="ListaMovimientosMercaderia" type="tns:ArrayOfMovimientoMercaderia" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ArrayOfMovimientoMercaderia">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="MovimientoMercaderia" nillable="true" type="tns:MovimientoMercaderia" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="MovimientoMercaderia">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodMovimiento" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="fechaMovimiento" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="idMovimiento" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetMovimiento">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argConsultarMovimientosParams" type="tns:GetMovimientoParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="GetMovimientoParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LugarOperativo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdMovimiento" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetMovimientoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetMovimientoResult" type="tns:GetMovimientoRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="GetMovimientoRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="ListaDetalleMov" type="tns:ArrayOfDetalleMovimiento" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ArrayOfDetalleMovimiento">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="DetalleMovimiento" nillable="true" type="tns:DetalleMovimiento" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DetalleMovimiento">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodMovimiento" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaMovimiento" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="AduanaOrigen" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LugarOperativoOrigen" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="AduanaDestino" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LugarOperativoDestino" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdComprobante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="EstadoMovimiento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="listaDetalleMovimientoMercaderia" type="tns:ArrayOfDetalleMovimientoMercaderia" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfDetalleMovimientoMercaderia">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="DetalleMovimientoMercaderia" nillable="true" type="tns:DetalleMovimientoMercaderia" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DetalleMovimientoMercaderia">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Origen" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NCM" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NCMAnterior" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodProductoAnterior" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescProducto" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Cantidad" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="ValorUnitarioDol" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultarPack">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argConsultarPackParams" type="tns:ConsultarPackParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ConsultarPackParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodProducto" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultarPackResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultarPackResult" type="tns:ConsultarPackRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ConsultarPackRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Aduana" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="LugarOperativo" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="NCM" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="CodProducto" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="Origen" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="ListaItems" type="tns:ArrayOfItemPack" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="ConsultarDIFE">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argConsultarDIFEParams" type="tns:ConsultarDIFEParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ConsultarDIFEParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="idDIFE" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="idMovimiento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="tipoComprobante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="nroComprobante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codEstado" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="fechaDesde" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="fechaHasta" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultarDIFEResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultarDIFEResult" type="tns:ConsultarDIFERta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ConsultarDIFERta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="ListaDIFE" type="tns:ArrayOfDetalleDIFE" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ArrayOfDetalleDIFE">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="DetalleDIFE" nillable="true" type="tns:DetalleDIFE" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DetalleDIFE">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="idDIFE" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="lugarOperativo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NCM" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="descProducto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="origen" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="cantidad" type="s:decimal" />
+          <s:element minOccurs="0" maxOccurs="1" name="tipoComprobante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="nroComprobante" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="fecha" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="fechaVenc" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="codEstado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="motRechazo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="idLMAN" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="fechaCobroLMAN" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="montoLMAN" type="s:decimal" />
+          <s:element minOccurs="0" maxOccurs="1" name="dispEximicionPagoLMAN" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="observacionesRegularizacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="idMovimiento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="listaJustificacion" type="tns:ArrayOfDetalleJustificacionDIFE" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfDetalleJustificacionDIFE">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="DetalleJustificacionDIFE" nillable="true" type="tns:DetalleJustificacionDIFE" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DetalleJustificacionDIFE">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="codJustificacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="textoJustificacion" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="fecJustificacion" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="aduanaJustificacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="lugarOperativoJustificacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NCMJustificacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codProductoJustificacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="descProductoJustificacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="origenJustificacion" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="cantidadJustificacion" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SalidaParticular">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argWSAutenticacionEmpresa" type="tns:WSAutenticacionEmpresa" />
+            <s:element minOccurs="0" maxOccurs="1" name="argSalidaParticularParams" type="tns:SalidaParticularParams" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SalidaParticularParams">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="lugarOperativo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="idDeclaracion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="precinto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="contenedor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="nombrePortador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="tipoDocPortador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="nroDocPortador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="transaccion" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SalidaParticularResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SalidaParticularResult" type="tns:SalidaParticularRta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SalidaParticularRta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ResultadoEjecucionSerializable">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="nroSalida" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="Dummy">
+        <s:complexType />
+      </s:element>
+      <s:element name="DummyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DummyResult" type="tns:ResultadoEjecucionDummy" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ResultadoEjecucionDummy">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="AppServer" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DbServer" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="AuthServer" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="IngresarMercaderiaSoapIn">
+    <wsdl:part name="parameters" element="tns:IngresarMercaderia" />
+  </wsdl:message>
+  <wsdl:message name="IngresarMercaderiaSoapOut">
+    <wsdl:part name="parameters" element="tns:IngresarMercaderiaResponse" />
+  </wsdl:message>
+  <wsdl:message name="VentaMercaderiaSoapIn">
+    <wsdl:part name="parameters" element="tns:VentaMercaderia" />
+  </wsdl:message>
+  <wsdl:message name="VentaMercaderiaSoapOut">
+    <wsdl:part name="parameters" element="tns:VentaMercaderiaResponse" />
+  </wsdl:message>
+  <wsdl:message name="TrasladarMercaderiaSoapIn">
+    <wsdl:part name="parameters" element="tns:TrasladarMercaderia" />
+  </wsdl:message>
+  <wsdl:message name="TrasladarMercaderiaSoapOut">
+    <wsdl:part name="parameters" element="tns:TrasladarMercaderiaResponse" />
+  </wsdl:message>
+  <wsdl:message name="DestruirMercaderiaSoapIn">
+    <wsdl:part name="parameters" element="tns:DestruirMercaderia" />
+  </wsdl:message>
+  <wsdl:message name="DestruirMercaderiaSoapOut">
+    <wsdl:part name="parameters" element="tns:DestruirMercaderiaResponse" />
+  </wsdl:message>
+  <wsdl:message name="DevolverMercaderiaSoapIn">
+    <wsdl:part name="parameters" element="tns:DevolverMercaderia" />
+  </wsdl:message>
+  <wsdl:message name="DevolverMercaderiaSoapOut">
+    <wsdl:part name="parameters" element="tns:DevolverMercaderiaResponse" />
+  </wsdl:message>
+  <wsdl:message name="RegistrarNotaDebitoCreditoSoapIn">
+    <wsdl:part name="parameters" element="tns:RegistrarNotaDebitoCredito" />
+  </wsdl:message>
+  <wsdl:message name="RegistrarNotaDebitoCreditoSoapOut">
+    <wsdl:part name="parameters" element="tns:RegistrarNotaDebitoCreditoResponse" />
+  </wsdl:message>
+  <wsdl:message name="ArmarPackSoapIn">
+    <wsdl:part name="parameters" element="tns:ArmarPack" />
+  </wsdl:message>
+  <wsdl:message name="ArmarPackSoapOut">
+    <wsdl:part name="parameters" element="tns:ArmarPackResponse" />
+  </wsdl:message>
+  <wsdl:message name="DesarmarPackSoapIn">
+    <wsdl:part name="parameters" element="tns:DesarmarPack" />
+  </wsdl:message>
+  <wsdl:message name="DesarmarPackSoapOut">
+    <wsdl:part name="parameters" element="tns:DesarmarPackResponse" />
+  </wsdl:message>
+  <wsdl:message name="CambiarCodigoProductoSoapIn">
+    <wsdl:part name="parameters" element="tns:CambiarCodigoProducto" />
+  </wsdl:message>
+  <wsdl:message name="CambiarCodigoProductoSoapOut">
+    <wsdl:part name="parameters" element="tns:CambiarCodigoProductoResponse" />
+  </wsdl:message>
+  <wsdl:message name="RegistrarJustificacionDIFESoapIn">
+    <wsdl:part name="parameters" element="tns:RegistrarJustificacionDIFE" />
+  </wsdl:message>
+  <wsdl:message name="RegistrarJustificacionDIFESoapOut">
+    <wsdl:part name="parameters" element="tns:RegistrarJustificacionDIFEResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultarStockSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultarStock" />
+  </wsdl:message>
+  <wsdl:message name="ConsultarStockSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultarStockResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultarMovimientosSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultarMovimientos" />
+  </wsdl:message>
+  <wsdl:message name="ConsultarMovimientosSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultarMovimientosResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetMovimientoSoapIn">
+    <wsdl:part name="parameters" element="tns:GetMovimiento" />
+  </wsdl:message>
+  <wsdl:message name="GetMovimientoSoapOut">
+    <wsdl:part name="parameters" element="tns:GetMovimientoResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultarPackSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultarPack" />
+  </wsdl:message>
+  <wsdl:message name="ConsultarPackSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultarPackResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultarDIFESoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultarDIFE" />
+  </wsdl:message>
+  <wsdl:message name="ConsultarDIFESoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultarDIFEResponse" />
+  </wsdl:message>
+  <wsdl:message name="SalidaParticularSoapIn">
+    <wsdl:part name="parameters" element="tns:SalidaParticular" />
+  </wsdl:message>
+  <wsdl:message name="SalidaParticularSoapOut">
+    <wsdl:part name="parameters" element="tns:SalidaParticularResponse" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapIn">
+    <wsdl:part name="parameters" element="tns:Dummy" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapOut">
+    <wsdl:part name="parameters" element="tns:DummyResponse" />
+  </wsdl:message>
+  <wsdl:portType name="wgestiendaslibresSoap">
+    <wsdl:operation name="IngresarMercaderia">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Registro del Ingreso de Mercaderia de origen Nacional o Extranjero</wsdl:documentation>
+      <wsdl:input message="tns:IngresarMercaderiaSoapIn" />
+      <wsdl:output message="tns:IngresarMercaderiaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="VentaMercaderia">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Registro de una operacion de Venta de Mercaderia efectuada en Tiendas Libres</wsdl:documentation>
+      <wsdl:input message="tns:VentaMercaderiaSoapIn" />
+      <wsdl:output message="tns:VentaMercaderiaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="TrasladarMercaderia">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Registro del Traslado de Mercaderia entre Depositos del Permisionario RETL o VATR</wsdl:documentation>
+      <wsdl:input message="tns:TrasladarMercaderiaSoapIn" />
+      <wsdl:output message="tns:TrasladarMercaderiaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="DestruirMercaderia">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Registro de la Destruccion de Mercaderia afectada a su comercializacion en Tiendas Libres</wsdl:documentation>
+      <wsdl:input message="tns:DestruirMercaderiaSoapIn" />
+      <wsdl:output message="tns:DestruirMercaderiaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="DevolverMercaderia">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Registro de la Devolucion de Mercaderia al Proveedor</wsdl:documentation>
+      <wsdl:input message="tns:DevolverMercaderiaSoapIn" />
+      <wsdl:output message="tns:DevolverMercaderiaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="RegistrarNotaDebitoCredito">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Registro del las Notas de Credito o Debito que se generan a partir de una Venta previa en Tiendas Libres</wsdl:documentation>
+      <wsdl:input message="tns:RegistrarNotaDebitoCreditoSoapIn" />
+      <wsdl:output message="tns:RegistrarNotaDebitoCreditoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ArmarPack">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Registro del Armado de Packs de productos para su comercializacion en Tiendas Libres</wsdl:documentation>
+      <wsdl:input message="tns:ArmarPackSoapIn" />
+      <wsdl:output message="tns:ArmarPackSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="DesarmarPack">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Registro de la accion de Desarmar Packs de mercaderias no vendidos</wsdl:documentation>
+      <wsdl:input message="tns:DesarmarPackSoapIn" />
+      <wsdl:output message="tns:DesarmarPackSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="CambiarCodigoProducto">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Registro del cambio de un Código de Producto y/o Posicion Arancelaria</wsdl:documentation>
+      <wsdl:input message="tns:CambiarCodigoProductoSoapIn" />
+      <wsdl:output message="tns:CambiarCodigoProductoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="RegistrarJustificacionDIFE">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Registro de justificaciones por las DIFE emitidas por ventas de productos con stock en negativo</wsdl:documentation>
+      <wsdl:input message="tns:RegistrarJustificacionDIFESoapIn" />
+      <wsdl:output message="tns:RegistrarJustificacionDIFESoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultarStock">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta del Stock registrado para un Deposito</wsdl:documentation>
+      <wsdl:input message="tns:ConsultarStockSoapIn" />
+      <wsdl:output message="tns:ConsultarStockSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultarMovimientos">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta de los Movimientos de Mercaderia registrados en un periodo determinado</wsdl:documentation>
+      <wsdl:input message="tns:ConsultarMovimientosSoapIn" />
+      <wsdl:output message="tns:ConsultarMovimientosSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetMovimiento">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta del Detalle de un Movimiento de Mercaderia en particular</wsdl:documentation>
+      <wsdl:input message="tns:GetMovimientoSoapIn" />
+      <wsdl:output message="tns:GetMovimientoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultarPack">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta de la Mercaderia individual que conforman un Pack de productos</wsdl:documentation>
+      <wsdl:input message="tns:ConsultarPackSoapIn" />
+      <wsdl:output message="tns:ConsultarPackSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultarDIFE">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta de DIFE generadas por ventas de productos con stock en negativo</wsdl:documentation>
+      <wsdl:input message="tns:ConsultarDIFESoapIn" />
+      <wsdl:output message="tns:ConsultarDIFESoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SalidaParticular">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Salida y Control de Salida de Oficio</wsdl:documentation>
+      <wsdl:input message="tns:SalidaParticularSoapIn" />
+      <wsdl:output message="tns:SalidaParticularSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <wsdl:input message="tns:DummySoapIn" />
+      <wsdl:output message="tns:DummySoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="wgestiendaslibresSoap" type="tns:wgestiendaslibresSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="IngresarMercaderia">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/IngresarMercaderia" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="VentaMercaderia">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/VentaMercaderia" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="TrasladarMercaderia">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/TrasladarMercaderia" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DestruirMercaderia">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/DestruirMercaderia" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DevolverMercaderia">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/DevolverMercaderia" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="RegistrarNotaDebitoCredito">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/RegistrarNotaDebitoCredito" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ArmarPack">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/ArmarPack" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DesarmarPack">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/DesarmarPack" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="CambiarCodigoProducto">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/CambiarCodigoProducto" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="RegistrarJustificacionDIFE">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/RegistrarJustificacionDIFE" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultarStock">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/ConsultarStock" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultarMovimientos">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/ConsultarMovimientos" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetMovimiento">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/GetMovimiento" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultarPack">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/ConsultarPack" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultarDIFE">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/ConsultarDIFE" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SalidaParticular">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/SalidaParticular" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/Dummy" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="wgestiendaslibresSoap12" type="tns:wgestiendaslibresSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="IngresarMercaderia">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/IngresarMercaderia" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="VentaMercaderia">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/VentaMercaderia" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="TrasladarMercaderia">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/TrasladarMercaderia" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DestruirMercaderia">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/DestruirMercaderia" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DevolverMercaderia">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/DevolverMercaderia" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="RegistrarNotaDebitoCredito">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/RegistrarNotaDebitoCredito" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ArmarPack">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/ArmarPack" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DesarmarPack">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/DesarmarPack" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="CambiarCodigoProducto">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/CambiarCodigoProducto" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="RegistrarJustificacionDIFE">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/RegistrarJustificacionDIFE" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultarStock">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/ConsultarStock" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultarMovimientos">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/ConsultarMovimientos" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetMovimiento">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/GetMovimiento" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultarPack">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/ConsultarPack" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultarDIFE">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/ConsultarDIFE" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SalidaParticular">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/SalidaParticular" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap12:operation soapAction="Ar.Gob.Afip.Dga.wGesTiendasLibres/Dummy" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="wgestiendaslibres">
+    <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Control de Stock Tiendas Libres de Impuestos</wsdl:documentation>
+    <wsdl:port name="wgestiendaslibresSoap" binding="tns:wgestiendaslibresSoap">
+      <soap:address location="https://webservicesadu.afip.gob.ar/diav2/wgestiendaslibres/wgestiendaslibres.asmx" />
+    </wsdl:port>
+    <wsdl:port name="wgestiendaslibresSoap12" binding="tns:wgestiendaslibresSoap12">
+      <soap12:address location="https://webservicesadu.afip.gob.ar/diav2/wgestiendaslibres/wgestiendaslibres.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

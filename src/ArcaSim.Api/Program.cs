@@ -3,6 +3,7 @@ using ArcaSim.Api.Admin;
 using ArcaSim.Api.Soap;
 using ArcaSim.Application;
 using ArcaSim.Application.Access;
+using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Events;
 using ArcaSim.Application.Padron;
 using ArcaSim.Application.Traffic;
@@ -70,6 +71,12 @@ builder.Services.AddSingleton<WsaaService>();
 builder.Services.AddSingleton<WsfeEndpoint>();
 builder.Services.AddSingleton<WsaaEndpoint>();
 
+// The rest of ARCA's services, answered from their WSDL; IServiceBehavior adds a service's rules on top.
+builder.Services.AddSingleton(_ => ServiceCatalog.Load(Path.Combine(AppContext.BaseDirectory, "arca-servicios.json")));
+builder.Services.AddSingleton(sp => new ContractHost(
+    sp.GetRequiredService<ServiceCatalog>(), WsdlDocuments.Directory, sp.GetRequiredService<TicketReader>(),
+    sp.GetRequiredService<IClock>(), sp.GetRequiredService<EventManager>(), sp.GetServices<IServiceBehavior>()));
+
 var app = builder.Build();
 
 if (app.Services.GetService<PostgresStore>() is { } postgres) await postgres.EnsureSchemaAsync();
@@ -84,6 +91,7 @@ app.UseStaticFiles();
 WsaaEndpoint.Map(app);
 WsfeEndpoint.Map(app);
 PadronModule.Map(app);
+ContractEndpoint.Map(app, app.Services.GetRequiredService<ContractHost>());
 app.MapControllers();
 app.MapGet("/", () => Results.Redirect("/arcasim/"));
 

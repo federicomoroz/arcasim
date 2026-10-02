@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="https://serviciosnet.afip.gob.ar/miargentina-ws/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" targetNamespace="https://serviciosnet.afip.gob.ar/miargentina-ws/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="https://serviciosnet.afip.gob.ar/miargentina-ws/">
+      <s:element name="Dummy">
+        <s:complexType />
+      </s:element>
+      <s:element name="DummyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DummyResult" type="tns:DummyResponseModel" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DummyResponseModel">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="AppServer" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DBServer" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="AuthServer" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="HeaderInfo" type="tns:HeaderInfo" />
+      <s:complexType name="HeaderInfo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="ambiente" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="fechaHora" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="hostName" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="version" type="s:string" />
+        </s:sequence>
+        <s:anyAttribute />
+      </s:complexType>
+      <s:element name="ObtenerInformacionLaboral">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="credencial" type="tns:Credencial" />
+            <s:element minOccurs="1" maxOccurs="1" name="cuil" type="s:long" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="Credencial">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Token" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Sign" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="CUITrepresentada" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ObtenerInformacionLaboralResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ObtenerInformacionLaboralResult" type="tns:ItemRespuestaOfInformacionLaboralModel" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ItemRespuestaOfInformacionLaboralModel">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="EstadoTransaccion" type="tns:ItemRespuestaEstado" />
+          <s:element minOccurs="0" maxOccurs="1" name="Datos" type="tns:InformacionLaboralModel" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ItemRespuestaEstado">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Id" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Codigo" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="Descripcion" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="InformacionLaboralModel">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Cuil" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="Nombre" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Apellido" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="CodigoMensaje" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="Mensaje" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="MisAportes" type="tns:ArrayOfMisAportesModel" />
+          <s:element minOccurs="0" maxOccurs="1" name="MisAportesCasasParticulares" type="tns:ArrayOfMisAportesCasasParticularesModel" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfMisAportesModel">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Item" nillable="true" type="tns:MisAportesModel" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="MisAportesModel">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="CodigoMensaje" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="Mensaje" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Cuit" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="RazonSocial" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FechaInicioRelacionLaboral" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DomicilioLaboral" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoDomicilioLaboral" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="UltimaVezQueFuisteDeclaradoPorEsteEmpleador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="ModalidadContratacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="EstadoAportesSeguridadSocial" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="EstadoAportesObraSocial" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="EstadoContribucionesObraSocial" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfMisAportesCasasParticularesModel">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Item" nillable="true" type="tns:MisAportesCasasParticularesModel" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="MisAportesCasasParticularesModel">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="CodigoMensaje" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="Mensaje" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Cuit" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="RazonSocial" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="ObraSocial" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FechaInicioRelacionLaboral" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DomicilioLaboral" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CategoriaProfesional" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="HorasSemanales" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="ModalidadContratacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="AseguradoraDeRiesgosDelTrabajo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="UltimoPagoRegistrado" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="DummySoapIn">
+    <wsdl:part name="parameters" element="tns:Dummy" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapOut">
+    <wsdl:part name="parameters" element="tns:DummyResponse" />
+  </wsdl:message>
+  <wsdl:message name="DummyHeaderInfo">
+    <wsdl:part name="HeaderInfo" element="tns:HeaderInfo" />
+  </wsdl:message>
+  <wsdl:message name="ObtenerInformacionLaboralSoapIn">
+    <wsdl:part name="parameters" element="tns:ObtenerInformacionLaboral" />
+  </wsdl:message>
+  <wsdl:message name="ObtenerInformacionLaboralSoapOut">
+    <wsdl:part name="parameters" element="tns:ObtenerInformacionLaboralResponse" />
+  </wsdl:message>
+  <wsdl:message name="ObtenerInformacionLaboralHeaderInfo">
+    <wsdl:part name="HeaderInfo" element="tns:HeaderInfo" />
+  </wsdl:message>
+  <wsdl:portType name="serviciosSoap">
+    <wsdl:operation name="Dummy">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Prueba del servicio</wsdl:documentation>
+      <wsdl:input message="tns:DummySoapIn" />
+      <wsdl:output message="tns:DummySoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObtenerInformacionLaboral">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Obtiene la información laboral dado un CUIL</wsdl:documentation>
+      <wsdl:input message="tns:ObtenerInformacionLaboralSoapIn" />
+      <wsdl:output message="tns:ObtenerInformacionLaboralSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="serviciosSoap" type="tns:serviciosSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="Dummy">
+      <soap:operation soapAction="https://serviciosnet.afip.gob.ar/miargentina-ws/Dummy" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+        <soap:header message="tns:DummyHeaderInfo" part="HeaderInfo" use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObtenerInformacionLaboral">
+      <soap:operation soapAction="https://serviciosnet.afip.gob.ar/miargentina-ws/ObtenerInformacionLaboral" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+        <soap:header message="tns:ObtenerInformacionLaboralHeaderInfo" part="HeaderInfo" use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="serviciosSoap12" type="tns:serviciosSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="Dummy">
+      <soap12:operation soapAction="https://serviciosnet.afip.gob.ar/miargentina-ws/Dummy" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+        <soap12:header message="tns:DummyHeaderInfo" part="HeaderInfo" use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObtenerInformacionLaboral">
+      <soap12:operation soapAction="https://serviciosnet.afip.gob.ar/miargentina-ws/ObtenerInformacionLaboral" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+        <soap12:header message="tns:ObtenerInformacionLaboralHeaderInfo" part="HeaderInfo" use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="servicios">
+    <wsdl:port name="serviciosSoap" binding="tns:serviciosSoap">
+      <soap:address location="https://webserviceshomoext.afip.gob.ar/miargentina-ws/servicios.asmx" />
+    </wsdl:port>
+    <wsdl:port name="serviciosSoap12" binding="tns:serviciosSoap12">
+      <soap12:address location="https://webserviceshomoext.afip.gob.ar/miargentina-ws/servicios.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

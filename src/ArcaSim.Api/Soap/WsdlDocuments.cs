@@ -29,11 +29,12 @@ public static class WsdlDocuments
     public static bool AsksForWsdl(HttpRequest request) =>
         request.Query.Keys.Any(k => k.Equals("wsdl", StringComparison.OrdinalIgnoreCase));
 
+    /// <summary>Where the build copies docs/arca/wsdl/.</summary>
+    public static string Directory => Path.Combine(AppContext.BaseDirectory, "arca-wsdl");
+
     public static string Load(string name)
     {
-        using var stream = typeof(WsdlDocuments).Assembly.GetManifestResourceStream($"ArcaSim.Wsdl.{name}")
-                           ?? throw new InvalidOperationException($"WSDL {name} is not embedded.");
-        using var reader = new StreamReader(stream);
-        return reader.ReadToEnd();
+        var file = Path.Combine(Directory, name);
+        return File.Exists(file) ? File.ReadAllText(file) : throw new InvalidOperationException($"WSDL {name} is not next to the binary.");
     }
 }

@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="Ar.Gov.Afip.Dia.ServiciosWeb.ServiciosEnysa" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="Ar.Gov.Afip.Dia.ServiciosWeb.ServiciosEnysa" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="Ar.Gov.Afip.Dia.ServiciosWeb.ServiciosEnysa">
+      <s:element name="CargaDatosVehiculo">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="autenticacion" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="datosVehiculo" type="tns:DatosVehiculo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="Autenticacion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="tipoAgente" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="usuRol" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="usuAduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="lugOper" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="token" nillable="true" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="firma" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DatosVehiculo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="anioFabricacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="color" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="aduanaFormulario" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="anioFormulario" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="apellidoMaterno" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="apellidoPaterno" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="arrastreSiNo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codigoAduanaMovimiento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codigoPais" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codigoPaisVehiculo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codigoResguardo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="direccion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="fechaDocumentoAut" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="fechaMovimiento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="fechaOrigenDocumento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="fechaVencimiento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="marca" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="marcaModelo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="modelo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="nacionalidad" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="nombres" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="numeroChasis" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="numeroDocumento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="numeroFormulario" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="numeroMotor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="observaciones" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="pasajeros" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="patente" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="propietario" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="tipoDocumento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="tipoDocumentoAut" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="tipoVehiculo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="datosAlquiler" type="tns:DatosAlquiler" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DatosAlquiler">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="tipoContrato" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="numeroDocumentoEmpresa" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="razonSocialEmpresa" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="domicilioEmpresa" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="tipoDocumentoEmpresa" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="numeroContrato" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="fechaVencimientoContrato" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DatosConductores" type="tns:ArrayOfDatosConductor" />
+          <s:element minOccurs="0" maxOccurs="1" name="Seguros" type="tns:ArrayOfSeguro" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfDatosConductor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="DatosConductor" nillable="true" type="tns:DatosConductor" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DatosConductor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="tipoDocumentoConductor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="numeroDocumentoConductor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="nacionalidad" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="numeroLicenciaConducir" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="apellidoMaternoConductor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="apellidoPaternoConductor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="nombreConductor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="titular" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfSeguro">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Seguro" nillable="true" type="tns:Seguro" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Seguro">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="numeroSeguro" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="fechaInicio" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="fechaFin" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="razonSocialAseguradora" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="CargaDatosVehiculoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="CargaDatosVehiculoResult" type="tns:MsgError" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="MsgError">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="codigoError" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="descripcion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="descripcionAdicional" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="CargaEventoEntradaSalida">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="autenticacion" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="eventoEntradaSalida" type="tns:EventoEntradaSalida" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="EventoEntradaSalida">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="aduanaEvento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="aduanaFormulario" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="anioFormulario" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codigoAduanaMovimiento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codigoPais" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codigoResguardo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="fechaCancelacionDocumento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="fechaEvento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="fechaMovimiento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="fechaOrigenDocumento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="fechaVencimiento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="numeroDocumento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="numeroFormulario" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="pasajeros" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="patente" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="tipoTransaccion" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="CargaEventoEntradaSalidaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="CargaEventoEntradaSalidaResult" type="tns:MsgError" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="NotificaSalidaObservada">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="autenticacion" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="salidaObservada" type="tns:SalidaObservada" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SalidaObservada">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="codigoAduanaMovimiento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codigoResguardo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="fechaMovimiento" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="codigoPaisVehiculo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="patente" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="NotificaSalidaObservadaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="NotificaSalidaObservadaResult" type="tns:MsgError" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultaDatosVehiculo">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="autenticacion" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="anioFormulario" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="tipoTransaccion" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="aduanaFormulario" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="numeroFormulario" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultaDatosVehiculoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultaDatosVehiculoResult" type="tns:DatosVehiculoResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DatosVehiculoResponse">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="aduanaFormulario" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="anioFormulario" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="datosVehiculo" type="tns:DatosVehiculo" />
+          <s:element minOccurs="0" maxOccurs="1" name="msgError" type="tns:MsgError" />
+          <s:element minOccurs="0" maxOccurs="1" name="numeroFormulario" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="tipoTransaccion" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetVersion">
+        <s:complexType />
+      </s:element>
+      <s:element name="GetVersionResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetVersionResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="Dummy">
+        <s:complexType />
+      </s:element>
+      <s:element name="DummyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DummyResult" type="tns:WsDummyResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="WsDummyResponse">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="appserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="dbserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="authserver" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="CargaDatosVehiculoSoapIn">
+    <wsdl:part name="parameters" element="tns:CargaDatosVehiculo" />
+  </wsdl:message>
+  <wsdl:message name="CargaDatosVehiculoSoapOut">
+    <wsdl:part name="parameters" element="tns:CargaDatosVehiculoResponse" />
+  </wsdl:message>
+  <wsdl:message name="CargaEventoEntradaSalidaSoapIn">
+    <wsdl:part name="parameters" element="tns:CargaEventoEntradaSalida" />
+  </wsdl:message>
+  <wsdl:message name="CargaEventoEntradaSalidaSoapOut">
+    <wsdl:part name="parameters" element="tns:CargaEventoEntradaSalidaResponse" />
+  </wsdl:message>
+  <wsdl:message name="NotificaSalidaObservadaSoapIn">
+    <wsdl:part name="parameters" element="tns:NotificaSalidaObservada" />
+  </wsdl:message>
+  <wsdl:message name="NotificaSalidaObservadaSoapOut">
+    <wsdl:part name="parameters" element="tns:NotificaSalidaObservadaResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaDatosVehiculoSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultaDatosVehiculo" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaDatosVehiculoSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultaDatosVehiculoResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetVersionSoapIn">
+    <wsdl:part name="parameters" element="tns:GetVersion" />
+  </wsdl:message>
+  <wsdl:message name="GetVersionSoapOut">
+    <wsdl:part name="parameters" element="tns:GetVersionResponse" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapIn">
+    <wsdl:part name="parameters" element="tns:Dummy" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapOut">
+    <wsdl:part name="parameters" element="tns:DummyResponse" />
+  </wsdl:message>
+  <wsdl:portType name="wEnysaSoap">
+    <wsdl:operation name="CargaDatosVehiculo">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Envío de datos de un vehículo</wsdl:documentation>
+      <wsdl:input message="tns:CargaDatosVehiculoSoapIn" />
+      <wsdl:output message="tns:CargaDatosVehiculoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="CargaEventoEntradaSalida">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Envío de datos de un evento asociado a un vehículo</wsdl:documentation>
+      <wsdl:input message="tns:CargaEventoEntradaSalidaSoapIn" />
+      <wsdl:output message="tns:CargaEventoEntradaSalidaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="NotificaSalidaObservada">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Envío de datos correspondientes a la salida observada de un vehículo</wsdl:documentation>
+      <wsdl:input message="tns:NotificaSalidaObservadaSoapIn" />
+      <wsdl:output message="tns:NotificaSalidaObservadaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaDatosVehiculo">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta de datos de un vehículo</wsdl:documentation>
+      <wsdl:input message="tns:ConsultaDatosVehiculoSoapIn" />
+      <wsdl:output message="tns:ConsultaDatosVehiculoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetVersion">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Obtención de la Versión del Web Service</wsdl:documentation>
+      <wsdl:input message="tns:GetVersionSoapIn" />
+      <wsdl:output message="tns:GetVersionSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Metodo dummy para verificacion de funcionamiento</wsdl:documentation>
+      <wsdl:input message="tns:DummySoapIn" />
+      <wsdl:output message="tns:DummySoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="wEnysaSoap" type="tns:wEnysaSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="CargaDatosVehiculo">
+      <soap:operation soapAction="Ar.Gov.Afip.Dia.ServiciosWeb.ServiciosEnysa/CargaDatosVehiculo" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="CargaEventoEntradaSalida">
+      <soap:operation soapAction="Ar.Gov.Afip.Dia.ServiciosWeb.ServiciosEnysa/CargaEventoEntradaSalida" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="NotificaSalidaObservada">
+      <soap:operation soapAction="Ar.Gov.Afip.Dia.ServiciosWeb.ServiciosEnysa/NotificaSalidaObservada" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaDatosVehiculo">
+      <soap:operation soapAction="Ar.Gov.Afip.Dia.ServiciosWeb.ServiciosEnysa/ConsultaDatosVehiculo" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetVersion">
+      <soap:operation soapAction="Ar.Gov.Afip.Dia.ServiciosWeb.ServiciosEnysa/GetVersion" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap:operation soapAction="Ar.Gov.Afip.Dia.ServiciosWeb.ServiciosEnysa/Dummy" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="wEnysaSoap12" type="tns:wEnysaSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="CargaDatosVehiculo">
+      <soap12:operation soapAction="Ar.Gov.Afip.Dia.ServiciosWeb.ServiciosEnysa/CargaDatosVehiculo" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="CargaEventoEntradaSalida">
+      <soap12:operation soapAction="Ar.Gov.Afip.Dia.ServiciosWeb.ServiciosEnysa/CargaEventoEntradaSalida" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="NotificaSalidaObservada">
+      <soap12:operation soapAction="Ar.Gov.Afip.Dia.ServiciosWeb.ServiciosEnysa/NotificaSalidaObservada" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaDatosVehiculo">
+      <soap12:operation soapAction="Ar.Gov.Afip.Dia.ServiciosWeb.ServiciosEnysa/ConsultaDatosVehiculo" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetVersion">
+      <soap12:operation soapAction="Ar.Gov.Afip.Dia.ServiciosWeb.ServiciosEnysa/GetVersion" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap12:operation soapAction="Ar.Gov.Afip.Dia.ServiciosWeb.ServiciosEnysa/Dummy" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="wEnysa">
+    <wsdl:port name="wEnysaSoap" binding="tns:wEnysaSoap">
+      <soap:address location="https://testdia.afip.gov.ar/DIA/WS/wEnysa/wEnysa.asmx" />
+    </wsdl:port>
+    <wsdl:port name="wEnysaSoap12" binding="tns:wEnysaSoap12">
+      <soap12:address location="https://testdia.afip.gov.ar/DIA/WS/wEnysa/wEnysa.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

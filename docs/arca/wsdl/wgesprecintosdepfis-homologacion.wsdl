@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Cerrojo electronico de depositos fiscales</wsdl:documentation>
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis">
+      <s:element name="ConsultarPrecintosPendientes">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="Autenticacion">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:AutenticacionBase">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Cuit" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="TipoAgente" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="Rol" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="AutenticacionBase">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Token" nillable="true" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Sign" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultarPrecintosPendientesResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultarPrecintosPendientesResult" type="tns:RtaPrecintosPendientes" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaPrecintosPendientes">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="PrecintosPendientes" type="tns:ArrayOfPrecintoPendiente" />
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfPrecintoPendiente">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="PrecintoPendiente" nillable="true" type="tns:PrecintoPendiente" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="PrecintoPendiente">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdPrecinto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Estado" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaEstado" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Recibo">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="CodErr" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="DesError" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescAdicErr" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="IniciarMonitoreo">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argIniciarMonitoreo" type="tns:InIniciarMonitoreo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="InIniciarMonitoreo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdPrecinto" type="tns:ArrayOfString" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfString">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="string" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="IniciarMonitoreoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="IniciarMonitoreoResult" type="tns:Recibo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="TerminarMonitoreo">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argTerminarMonitoreo" type="tns:InTerminarMonitoreo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="InTerminarMonitoreo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdPrecinto" type="tns:ArrayOfString" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="TerminarMonitoreoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="TerminarMonitoreoResult" type="tns:Recibo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="InformarEstadoPrecintos">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argInformarEstadoPrecintos" type="tns:InInformarEstadoPrecintos" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="InInformarEstadoPrecintos">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="EventoPrecintos" type="tns:ArrayOfEventoPrecinto" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfEventoPrecinto">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="EventoPrecinto" nillable="true" type="tns:EventoPrecinto" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="EventoPrecinto">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdPrecinto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodAlarma" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaEvento" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="InformarEstadoPrecintosResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="InformarEstadoPrecintosResult" type="tns:Recibo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultarPrecintos">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argConsultaPrecintos" type="tns:InConsultaPrecintos" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="InConsultaPrecintos">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdPrecinto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Estado" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultarPrecintosResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultarPrecintosResult" type="tns:RtaConsultaPrecintos" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaConsultaPrecintos">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Precintos" type="tns:ArrayOfPrecinto" />
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfPrecinto">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Precinto" nillable="true" type="tns:Precinto" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Precinto">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdPrecinto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Estado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodAlarma" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FUltEstado" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FUltEvento" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="NovedadPrecinto">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argPrecinto" type="tns:InPrecinto" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="InPrecinto">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdPrecinto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LugarOperativo" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="NovedadPrecintoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="NovedadPrecintoResult" type="tns:Recibo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultaCemaPadron">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argConsulta" type="tns:InConsultaCemaPadron" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="InConsultaCemaPadron">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:InPrecinto">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="EstadoPrecinto" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="EstadoAcepDepo" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="ConsultaCemaPadronResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultaCemaPadronResult" type="tns:RtaConsultaCemaPadron" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaConsultaCemaPadron">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="Dispositivos" type="tns:ArrayOfRtaDispositivo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfRtaDispositivo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Dispositivo" nillable="true" type="tns:RtaDispositivo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="RtaDispositivo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdPrecinto" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LugarOperativo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="EstadoPrecinto" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaEstado" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="EstadoAcepDepo" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="Dummy">
+        <s:complexType />
+      </s:element>
+      <s:element name="DummyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DummyResult" type="tns:WsDummyResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="WsDummyResponse">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="appserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="dbserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="authserver" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="ConsultarPrecintosPendientesSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultarPrecintosPendientes" />
+  </wsdl:message>
+  <wsdl:message name="ConsultarPrecintosPendientesSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultarPrecintosPendientesResponse" />
+  </wsdl:message>
+  <wsdl:message name="IniciarMonitoreoSoapIn">
+    <wsdl:part name="parameters" element="tns:IniciarMonitoreo" />
+  </wsdl:message>
+  <wsdl:message name="IniciarMonitoreoSoapOut">
+    <wsdl:part name="parameters" element="tns:IniciarMonitoreoResponse" />
+  </wsdl:message>
+  <wsdl:message name="TerminarMonitoreoSoapIn">
+    <wsdl:part name="parameters" element="tns:TerminarMonitoreo" />
+  </wsdl:message>
+  <wsdl:message name="TerminarMonitoreoSoapOut">
+    <wsdl:part name="parameters" element="tns:TerminarMonitoreoResponse" />
+  </wsdl:message>
+  <wsdl:message name="InformarEstadoPrecintosSoapIn">
+    <wsdl:part name="parameters" element="tns:InformarEstadoPrecintos" />
+  </wsdl:message>
+  <wsdl:message name="InformarEstadoPrecintosSoapOut">
+    <wsdl:part name="parameters" element="tns:InformarEstadoPrecintosResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultarPrecintosSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultarPrecintos" />
+  </wsdl:message>
+  <wsdl:message name="ConsultarPrecintosSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultarPrecintosResponse" />
+  </wsdl:message>
+  <wsdl:message name="NovedadPrecintoSoapIn">
+    <wsdl:part name="parameters" element="tns:NovedadPrecinto" />
+  </wsdl:message>
+  <wsdl:message name="NovedadPrecintoSoapOut">
+    <wsdl:part name="parameters" element="tns:NovedadPrecintoResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaCemaPadronSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultaCemaPadron" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaCemaPadronSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultaCemaPadronResponse" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapIn">
+    <wsdl:part name="parameters" element="tns:Dummy" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapOut">
+    <wsdl:part name="parameters" element="tns:DummyResponse" />
+  </wsdl:message>
+  <wsdl:portType name="wgesprecintosdepfisSoap">
+    <wsdl:operation name="ConsultarPrecintosPendientes">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta de los precintos cuyo estado requiere iniciar o terminar el monitoreo</wsdl:documentation>
+      <wsdl:input message="tns:ConsultarPrecintosPendientesSoapIn" />
+      <wsdl:output message="tns:ConsultarPrecintosPendientesSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="IniciarMonitoreo">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Inicio del monitoreo del dispositivo</wsdl:documentation>
+      <wsdl:input message="tns:IniciarMonitoreoSoapIn" />
+      <wsdl:output message="tns:IniciarMonitoreoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="TerminarMonitoreo">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Finalizacion del monitoreo del dispositivo</wsdl:documentation>
+      <wsdl:input message="tns:TerminarMonitoreoSoapIn" />
+      <wsdl:output message="tns:TerminarMonitoreoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="InformarEstadoPrecintos">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Comunicacion del estado de los precintos que estan siendo monitoreados.</wsdl:documentation>
+      <wsdl:input message="tns:InformarEstadoPrecintosSoapIn" />
+      <wsdl:output message="tns:InformarEstadoPrecintosSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultarPrecintos">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta de informacion de los precintos del prestador</wsdl:documentation>
+      <wsdl:input message="tns:ConsultarPrecintosSoapIn" />
+      <wsdl:output message="tns:ConsultarPrecintosSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="NovedadPrecinto">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Novedad del Precinto Electronico</wsdl:documentation>
+      <wsdl:input message="tns:NovedadPrecintoSoapIn" />
+      <wsdl:output message="tns:NovedadPrecintoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaCemaPadron">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta el Padron de los Precintos para Puertas de Despositos CEMA</wsdl:documentation>
+      <wsdl:input message="tns:ConsultaCemaPadronSoapIn" />
+      <wsdl:output message="tns:ConsultaCemaPadronSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Metodo dummy para verificacion de funcionamiento</wsdl:documentation>
+      <wsdl:input message="tns:DummySoapIn" />
+      <wsdl:output message="tns:DummySoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="wgesprecintosdepfisSoap" type="tns:wgesprecintosdepfisSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ConsultarPrecintosPendientes">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/ConsultarPrecintosPendientes" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="IniciarMonitoreo">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/IniciarMonitoreo" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="TerminarMonitoreo">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/TerminarMonitoreo" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="InformarEstadoPrecintos">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/InformarEstadoPrecintos" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultarPrecintos">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/ConsultarPrecintos" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="NovedadPrecinto">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/NovedadPrecinto" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaCemaPadron">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/ConsultaCemaPadron" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/Dummy" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="wgesprecintosdepfisSoap12" type="tns:wgesprecintosdepfisSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ConsultarPrecintosPendientes">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/ConsultarPrecintosPendientes" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="IniciarMonitoreo">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/IniciarMonitoreo" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="TerminarMonitoreo">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/TerminarMonitoreo" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="InformarEstadoPrecintos">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/InformarEstadoPrecintos" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultarPrecintos">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/ConsultarPrecintos" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="NovedadPrecinto">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/NovedadPrecinto" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaCemaPadron">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/ConsultaCemaPadron" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.wgesprecintosdepfis/Dummy" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="wgesprecintosdepfis">
+    <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Cerrojo electronico de depositos fiscales</wsdl:documentation>
+    <wsdl:port name="wgesprecintosdepfisSoap" binding="tns:wgesprecintosdepfisSoap">
+      <soap:address location="https://testdia.afip.gob.ar/Dia/Ws/wgesprecintosdepfis/wgesprecintosdepfis.asmx" />
+    </wsdl:port>
+    <wsdl:port name="wgesprecintosdepfisSoap12" binding="tns:wgesprecintosdepfisSoap12">
+      <soap12:address location="https://testdia.afip.gob.ar/Dia/Ws/wgesprecintosdepfis/wgesprecintosdepfis.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES">
+      <s:element name="ConsultaDispositivo">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argIdentificadorDispositivo" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="Autenticacion">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:AutenticacionBase">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Cuit" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="TipoAgente" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="Rol" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="AutenticacionBase">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Token" nillable="true" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Sign" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultaDispositivoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultaDispositivoResult" type="tns:RtaConsultaDispositivo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaConsultaDispositivo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="Dispositivos" type="tns:ArrayOfDispositivo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Recibo">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="CodErr" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="DesError" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescAdicErr" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfDispositivo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Dispositivo" nillable="true" type="tns:Dispositivo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Dispositivo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CuitPrestador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorDispositivo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="EstadoOperacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FechaEstadoOperacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorDestinacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorContenedor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorAduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorSalida" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultaContenedor">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argContenedor" type="tns:InContenedor" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="InContenedor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorDestinacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorDispositivo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorContenedor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="EstadoOperacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="AduanaOrigen" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultaContenedorResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultaContenedorResult" type="tns:RtaConsultaContenedor" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaConsultaContenedor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="Contenedores" type="tns:ArrayOfContenedor" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfContenedor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Contenedor" nillable="true" type="tns:Contenedor" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Contenedor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorDestinacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorDispositivo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorContenedor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="EstadoContenedor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorSalida" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorAduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IndUsaDES" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CUITPrestador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="EstadoOperacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FechaEstadoOperacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FechaEstadoContenedor" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ActualizaDispositivo">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argDispositivo" type="tns:InActualizaDispositivo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="InActualizaDispositivo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorDispositivo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorDestinacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Contenedor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Estado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FechaEstado" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ActualizaDispositivoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ActualizaDispositivoResult" type="tns:Recibo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="InicioCargaSuelta">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argInicioCargaSuelta" type="tns:InInicioCargaSuelta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="InInicioCargaSuelta">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorDispositivo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorDestinacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="PaisPatente" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Fecha" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="InicioCargaSueltaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="InicioCargaSueltaResult" type="tns:Recibo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultaDatosATA">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argCuitATA" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultaDatosATAResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultaDatosATAResult" type="tns:RtaConsultaDatosATA" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaConsultaDatosATA">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="DatosATA" type="tns:DatosATA" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DatosATA">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CuitATA" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoEstado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="RazonSocial" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="NovedadDispositivo">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argNovedadDispositivo" type="tns:InNovedadDispositivo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="InNovedadDispositivo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorDispositivo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="TipoDispositivo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorDispositivoInterno" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="ModeloDispositivo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Novedad" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorDispositivoSatelital" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorDispositivoNuevo" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="NovedadDispositivoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="NovedadDispositivoResult" type="tns:Recibo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultaPemaPadron">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argConsultaPemaPadron" type="tns:InConsultaPemaPadron" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="InConsultaPemaPadron">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorDispositivo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="EstadoDispositivo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="TipoDispositivo" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultaPemaPadronResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ConsultaPemaPadronResult" type="tns:RtaConsultaPemaPadron" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaConsultaPemaPadron">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="DispositivosPema" type="tns:ArrayOfPema" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfPema">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Pema" nillable="true" type="tns:Pema" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Pema">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Identificador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Tipo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Estado" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaEstado" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorInterno" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdentificadorModelo" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaAlta" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="Observaciones" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="Dummy">
+        <s:complexType />
+      </s:element>
+      <s:element name="DummyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DummyResult" type="tns:WsDummyResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="WsDummyResponse">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="appserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="dbserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="authserver" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="ConsultaDispositivoSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultaDispositivo" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaDispositivoSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultaDispositivoResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaContenedorSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultaContenedor" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaContenedorSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultaContenedorResponse" />
+  </wsdl:message>
+  <wsdl:message name="ActualizaDispositivoSoapIn">
+    <wsdl:part name="parameters" element="tns:ActualizaDispositivo" />
+  </wsdl:message>
+  <wsdl:message name="ActualizaDispositivoSoapOut">
+    <wsdl:part name="parameters" element="tns:ActualizaDispositivoResponse" />
+  </wsdl:message>
+  <wsdl:message name="InicioCargaSueltaSoapIn">
+    <wsdl:part name="parameters" element="tns:InicioCargaSuelta" />
+  </wsdl:message>
+  <wsdl:message name="InicioCargaSueltaSoapOut">
+    <wsdl:part name="parameters" element="tns:InicioCargaSueltaResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaDatosATASoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultaDatosATA" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaDatosATASoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultaDatosATAResponse" />
+  </wsdl:message>
+  <wsdl:message name="NovedadDispositivoSoapIn">
+    <wsdl:part name="parameters" element="tns:NovedadDispositivo" />
+  </wsdl:message>
+  <wsdl:message name="NovedadDispositivoSoapOut">
+    <wsdl:part name="parameters" element="tns:NovedadDispositivoResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaPemaPadronSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultaPemaPadron" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaPemaPadronSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultaPemaPadronResponse" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapIn">
+    <wsdl:part name="parameters" element="tns:Dummy" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapOut">
+    <wsdl:part name="parameters" element="tns:DummyResponse" />
+  </wsdl:message>
+  <wsdl:portType name="WDiaUtiDESSoap">
+    <wsdl:operation name="ConsultaDispositivo">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta de un dispositivo DES.</wsdl:documentation>
+      <wsdl:input message="tns:ConsultaDispositivoSoapIn" />
+      <wsdl:output message="tns:ConsultaDispositivoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaContenedor">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta de Contenedores.</wsdl:documentation>
+      <wsdl:input message="tns:ConsultaContenedorSoapIn" />
+      <wsdl:output message="tns:ConsultaContenedorSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ActualizaDispositivo">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Actualizacion de un dispositivo DES.</wsdl:documentation>
+      <wsdl:input message="tns:ActualizaDispositivoSoapIn" />
+      <wsdl:output message="tns:ActualizaDispositivoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="InicioCargaSuelta">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Inicializacion des circuito Carga Suelta.</wsdl:documentation>
+      <wsdl:input message="tns:InicioCargaSueltaSoapIn" />
+      <wsdl:output message="tns:InicioCargaSueltaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaDatosATA">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta de Datos de Agentes de Transporte Aduanero (ATA).</wsdl:documentation>
+      <wsdl:input message="tns:ConsultaDatosATASoapIn" />
+      <wsdl:output message="tns:ConsultaDatosATASoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="NovedadDispositivo">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Altas, Bajas y Modificaciones de Dispositivos</wsdl:documentation>
+      <wsdl:input message="tns:NovedadDispositivoSoapIn" />
+      <wsdl:output message="tns:NovedadDispositivoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaPemaPadron">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta del padron de PEMAs</wsdl:documentation>
+      <wsdl:input message="tns:ConsultaPemaPadronSoapIn" />
+      <wsdl:output message="tns:ConsultaPemaPadronSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Metodo dummy para verificacion de funcionamiento</wsdl:documentation>
+      <wsdl:input message="tns:DummySoapIn" />
+      <wsdl:output message="tns:DummySoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="WDiaUtiDESSoap" type="tns:WDiaUtiDESSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ConsultaDispositivo">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/ConsultaDispositivo" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaContenedor">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/ConsultaContenedor" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ActualizaDispositivo">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/ActualizaDispositivo" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="InicioCargaSuelta">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/InicioCargaSuelta" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaDatosATA">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/ConsultaDatosATA" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="NovedadDispositivo">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/NovedadDispositivo" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaPemaPadron">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/ConsultaPemaPadron" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/Dummy" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="WDiaUtiDESSoap12" type="tns:WDiaUtiDESSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ConsultaDispositivo">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/ConsultaDispositivo" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaContenedor">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/ConsultaContenedor" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ActualizaDispositivo">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/ActualizaDispositivo" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="InicioCargaSuelta">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/InicioCargaSuelta" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaDatosATA">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/ConsultaDatosATA" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="NovedadDispositivo">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/NovedadDispositivo" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaPemaPadron">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/ConsultaPemaPadron" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosWeb.WDiaUtiDES/Dummy" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="WDiaUtiDES">
+    <wsdl:port name="WDiaUtiDESSoap" binding="tns:WDiaUtiDESSoap">
+      <soap:address location="https://testdia.afip.gov.ar/dia/ws/WDiaUtiDES/WDiaUtiDES.asmx" />
+    </wsdl:port>
+    <wsdl:port name="WDiaUtiDESSoap12" binding="tns:WDiaUtiDESSoap12">
+      <soap12:address location="https://testdia.afip.gov.ar/dia/ws/WDiaUtiDES/WDiaUtiDES.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

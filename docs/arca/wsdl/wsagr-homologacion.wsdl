@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://servicios1.afip.gob.ar/wsagr/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://servicios1.afip.gob.ar/wsagr/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">WebService WSAgr (ReproWeb)</wsdl:documentation>
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://servicios1.afip.gob.ar/wsagr/">
+      <s:element name="Consulta">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Auth" type="tns:Auth" />
+            <s:element minOccurs="0" maxOccurs="1" name="Periodo" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="unbounded" name="Cuit" nillable="true" type="s:long" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="Auth">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Token" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Sign" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Cuit" nillable="true" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Respuesta" type="tns:ResConsulta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ResConsulta">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Det" type="tns:ArrayOfDetalleCuits" />
+          <s:element minOccurs="0" maxOccurs="1" name="Err" type="tns:WsErrors" />
+          <s:element minOccurs="0" maxOccurs="1" name="Evt" type="tns:WsEvents" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfDetalleCuits">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="DetalleCuits" nillable="true" type="tns:DetalleCuits" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DetalleCuits">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Cuit" nillable="true" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="Pdo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Rsp" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="RTran" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FTran" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodObs" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Err" type="tns:WsErrors" />
+          <s:element minOccurs="0" maxOccurs="1" name="Evt" type="tns:WsEvents" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="WsErrors">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Code" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="Msg" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="WsEvents">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Code" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="Msg" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultaHistorica">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Auth" type="tns:Auth" />
+            <s:element minOccurs="0" maxOccurs="1" name="Periodo" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="unbounded" name="Cuit" nillable="true" type="s:long" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultaHistoricaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Respuesta" type="tns:ResConsultaHistorica" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ResConsultaHistorica">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Det" type="tns:ArrayOfDetalleCuits" />
+          <s:element minOccurs="0" maxOccurs="1" name="Err" type="tns:WsErrors" />
+          <s:element minOccurs="0" maxOccurs="1" name="Evt" type="tns:WsEvents" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultaRectificada">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Auth" type="tns:Auth" />
+            <s:element minOccurs="0" maxOccurs="1" name="Periodo" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultaRectificadaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Respuesta" type="tns:ResConsultaRectificada" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ResConsultaRectificada">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Det" type="tns:ArrayOfDetalleCuits" />
+          <s:element minOccurs="0" maxOccurs="1" name="Err" type="tns:WsErrors" />
+          <s:element minOccurs="0" maxOccurs="1" name="Evt" type="tns:WsEvents" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultaCondRet">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Auth" type="tns:Auth" />
+            <s:element minOccurs="0" maxOccurs="1" name="Periodo" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="unbounded" name="Cuit" nillable="true" type="s:long" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultaCondRetResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Respuesta" type="tns:ResConsultaCondRet" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ResConsultaCondRet">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Det" type="tns:ArrayOfDetalleCuits" />
+          <s:element minOccurs="0" maxOccurs="1" name="Err" type="tns:WsErrors" />
+          <s:element minOccurs="0" maxOccurs="1" name="Evt" type="tns:WsEvents" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultaCodResp">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Auth" type="tns:Auth" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultaCodRespResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Respuesta" type="tns:ResConsultaCodResp" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ResConsultaCodResp">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Err" type="tns:WsErrors" />
+          <s:element minOccurs="0" maxOccurs="1" name="Evt" type="tns:WsEvents" />
+          <s:element minOccurs="0" maxOccurs="1" name="Rsp" type="tns:ArrayOfWsResp" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfWsResp">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="WsResp" nillable="true" type="tns:WsResp" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="WsResp">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Code" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Msg" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultaCantCuit">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Auth" type="tns:Auth" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultaCantCuitResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Respuesta" type="tns:ResCantCuit" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ResCantCuit">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Err" type="tns:WsErrors" />
+          <s:element minOccurs="1" maxOccurs="1" name="Cantidad" type="s:int" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ConsultaObs">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Auth" type="tns:Auth" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ConsultaObsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Respuesta" type="tns:ResConsultaObs" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ResConsultaObs">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Err" type="tns:WsErrors" />
+          <s:element minOccurs="0" maxOccurs="1" name="Evt" type="tns:WsEvents" />
+          <s:element minOccurs="0" maxOccurs="1" name="Obs" type="tns:ArrayOfWsObs" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfWsObs">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="WsObs" nillable="true" type="tns:WsObs" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="WsObs">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Code" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Msg" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="dummy">
+        <s:complexType />
+      </s:element>
+      <s:element name="dummyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Respuesta" type="tns:DummyResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DummyResponse">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="AppServer" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DbServer" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="AuthServer" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="ConsultaSoapIn">
+    <wsdl:part name="parameters" element="tns:Consulta" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultaResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaHistoricaSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultaHistorica" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaHistoricaSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultaHistoricaResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaRectificadaSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultaRectificada" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaRectificadaSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultaRectificadaResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaCondRetSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultaCondRet" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaCondRetSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultaCondRetResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaCodRespSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultaCodResp" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaCodRespSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultaCodRespResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaCantCuitSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultaCantCuit" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaCantCuitSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultaCantCuitResponse" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaObsSoapIn">
+    <wsdl:part name="parameters" element="tns:ConsultaObs" />
+  </wsdl:message>
+  <wsdl:message name="ConsultaObsSoapOut">
+    <wsdl:part name="parameters" element="tns:ConsultaObsResponse" />
+  </wsdl:message>
+  <wsdl:message name="dummySoapIn">
+    <wsdl:part name="parameters" element="tns:dummy" />
+  </wsdl:message>
+  <wsdl:message name="dummySoapOut">
+    <wsdl:part name="parameters" element="tns:dummyResponse" />
+  </wsdl:message>
+  <wsdl:portType name="WSAgrSoap">
+    <wsdl:operation name="Consulta">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta Puntual</wsdl:documentation>
+      <wsdl:input message="tns:ConsultaSoapIn" />
+      <wsdl:output message="tns:ConsultaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaHistorica">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta Historica</wsdl:documentation>
+      <wsdl:input message="tns:ConsultaHistoricaSoapIn" />
+      <wsdl:output message="tns:ConsultaHistoricaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaRectificada">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta Rectificada</wsdl:documentation>
+      <wsdl:input message="tns:ConsultaRectificadaSoapIn" />
+      <wsdl:output message="tns:ConsultaRectificadaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaCondRet">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta de condiciones de retencion</wsdl:documentation>
+      <wsdl:input message="tns:ConsultaCondRetSoapIn" />
+      <wsdl:output message="tns:ConsultaCondRetSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaCodResp">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta parametrica que devuelve la lista de codigos de respuesta y su descripcion</wsdl:documentation>
+      <wsdl:input message="tns:ConsultaCodRespSoapIn" />
+      <wsdl:output message="tns:ConsultaCodRespSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaCantCuit">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta parametrica que devuelve la cantidad maxima de cuits que se pueden consultar en un solo request</wsdl:documentation>
+      <wsdl:input message="tns:ConsultaCantCuitSoapIn" />
+      <wsdl:output message="tns:ConsultaCantCuitSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaObs">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Consulta parametrica que devuelve la lista de codigos de observacion y su descripcion</wsdl:documentation>
+      <wsdl:input message="tns:ConsultaObsSoapIn" />
+      <wsdl:output message="tns:ConsultaObsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="dummy">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Metodo dummy para verificacion de funcionamiento</wsdl:documentation>
+      <wsdl:input message="tns:dummySoapIn" />
+      <wsdl:output message="tns:dummySoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="WSAgrSoap" type="tns:WSAgrSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="Consulta">
+      <soap:operation soapAction="http://servicios1.afip.gob.ar/wsagr/Consulta" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaHistorica">
+      <soap:operation soapAction="http://servicios1.afip.gob.ar/wsagr/ConsultaHistorica" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaRectificada">
+      <soap:operation soapAction="http://servicios1.afip.gob.ar/wsagr/ConsultaRectificada" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaCondRet">
+      <soap:operation soapAction="http://servicios1.afip.gob.ar/wsagr/ConsultaCondRet" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaCodResp">
+      <soap:operation soapAction="http://servicios1.afip.gob.ar/wsagr/ConsultaCodResp" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaCantCuit">
+      <soap:operation soapAction="http://servicios1.afip.gob.ar/wsagr/ConsultaCantCuit" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaObs">
+      <soap:operation soapAction="http://servicios1.afip.gob.ar/wsagr/ConsultaObs" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="dummy">
+      <soap:operation soapAction="http://servicios1.afip.gob.ar/wsagr/dummy" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="WSAgrSoap12" type="tns:WSAgrSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="Consulta">
+      <soap12:operation soapAction="http://servicios1.afip.gob.ar/wsagr/Consulta" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaHistorica">
+      <soap12:operation soapAction="http://servicios1.afip.gob.ar/wsagr/ConsultaHistorica" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaRectificada">
+      <soap12:operation soapAction="http://servicios1.afip.gob.ar/wsagr/ConsultaRectificada" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaCondRet">
+      <soap12:operation soapAction="http://servicios1.afip.gob.ar/wsagr/ConsultaCondRet" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaCodResp">
+      <soap12:operation soapAction="http://servicios1.afip.gob.ar/wsagr/ConsultaCodResp" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaCantCuit">
+      <soap12:operation soapAction="http://servicios1.afip.gob.ar/wsagr/ConsultaCantCuit" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsultaObs">
+      <soap12:operation soapAction="http://servicios1.afip.gob.ar/wsagr/ConsultaObs" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="dummy">
+      <soap12:operation soapAction="http://servicios1.afip.gob.ar/wsagr/dummy" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="WSAgr">
+    <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">WebService WSAgr (ReproWeb)</wsdl:documentation>
+    <wsdl:port name="WSAgrSoap" binding="tns:WSAgrSoap">
+      <soap:address location="https://wswhomo.afip.gov.ar/wsagr/wsagr.asmx" />
+    </wsdl:port>
+    <wsdl:port name="WSAgrSoap12" binding="tns:WSAgrSoap12">
+      <soap12:address location="https://wswhomo.afip.gov.ar/wsagr/wsagr.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

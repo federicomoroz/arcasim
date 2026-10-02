@@ -1,0 +1,1020 @@
+<?xml version='1.0' encoding='UTF-8'?><wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://ar.gob.afip.wsjaza/JAZAService/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="JAZAService" targetNamespace="http://ar.gob.afip.wsjaza/JAZAService/">
+	<wsdl:types>
+		<xsd:schema targetNamespace="http://ar.gob.afip.wsjaza/JAZAService/">
+      		<xsd:element name="dummyResponse" type="tns:DummyResponseType" />
+
+			<xsd:complexType name="DummyResponseType">
+				<xsd:sequence>
+					<xsd:element name="dummyReturn" type="tns:DummyReturnType" maxOccurs="1" minOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="DummyReturnType">
+				<xsd:sequence>
+					<xsd:element name="appserver" type="xsd:string" maxOccurs="1" minOccurs="1" />
+					<xsd:element name="authserver" type="xsd:string" maxOccurs="1" minOccurs="1" />
+					<xsd:element name="dbserver" type="xsd:string" maxOccurs="1" minOccurs="1" />
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:element name="informarResumenDiaMERequest" type="tns:InformarResumenDiaMERequestType" />
+			<xsd:element name="informarResumenDiaMEResponse" type="tns:InformarResumenDiaMEResponseType" />
+
+			<xsd:complexType name="InformarResumenDiaMEResponseType">
+				<xsd:sequence>
+					<xsd:element name="informarResumenDiaMEReturn" type="tns:InformarResumenDiaMEReturnType" maxOccurs="1" minOccurs="1" />
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="InformarResumenDiaMERequestType">
+				<xsd:sequence>
+					<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1" />
+					<xsd:element name="nroPuntoExplotacion" type="xsd:short" maxOccurs="1" minOccurs="1" />
+					<xsd:element name="fechaPresentacion" type="xsd:date" maxOccurs="1" minOccurs="1" />
+					<xsd:element name="nroPresentacion" type="xsd:short" maxOccurs="1" minOccurs="1" />
+					<xsd:element name="detalleMaquinaElectronica" type="tns:DetalleMaquinaElectronicaType" maxOccurs="1" minOccurs="1" />
+				</xsd:sequence>
+			</xsd:complexType>
+
+            <xsd:complexType name="AuthRequestType">
+            	<xsd:sequence>
+            		<xsd:element name="token" type="xsd:string" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="sign" type="xsd:string" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="cuitRepresentada" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:simpleType name="CuitSimpleType">
+            	<xsd:restriction base="xsd:long">
+            		<xsd:minExclusive value="9999999999" />
+            		<xsd:maxInclusive value="99999999999" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+
+            <xsd:complexType name="InformarResumenDiaMEReturnType">
+            	<xsd:sequence>
+                    <xsd:element name="resultado" type="tns:ResultadoSimpleType" maxOccurs="1" minOccurs="1" />
+                    <xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0" />
+                    <xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0" />
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="ArrayCodigosDescripcionesType">
+            	<xsd:sequence>
+            		<xsd:element name="codigoDescripcion" type="tns:CodigoDescripcionType" maxOccurs="unbounded" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="ArrayCodigosDescripcionesStringType">
+            	<xsd:sequence>
+            		<xsd:element name="codigoDescripcionString" type="tns:CodigoDescripcionStringType" maxOccurs="unbounded" minOccurs="1">
+            		</xsd:element>
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="CodigoDescripcionType">
+            	<xsd:sequence>
+            		<xsd:element name="codigo" type="xsd:short" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="descripcion" type="xsd:string" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="CodigoDescripcionStringType">
+            	<xsd:sequence>
+            		<xsd:element name="codigo" type="xsd:string" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="descripcion" type="xsd:string" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="ArrayDetallesMaquinasElectronicasType">
+            	<xsd:sequence>
+            		<xsd:element name="detalleMaquinaElectronica" type="tns:DetalleMaquinaElectronicaType" maxOccurs="unbounded" minOccurs="0">
+            		</xsd:element>
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="ArrayDetallesPartidasBingoType">
+            	<xsd:sequence>
+            		<xsd:element name="detallePartidaBingo" type="tns:DetallePartidaBingoType" maxOccurs="unbounded" minOccurs="0" />
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="CajaConsolidadaMesasVivasType">
+            	<xsd:sequence>
+            		<xsd:element name="tipoMesa" type="xsd:short" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="cantidadMesas" type="xsd:short" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="efectivoApertura" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="efectivoCierre" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="importeEqFichasApertura" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="importeEqFichasCierre" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="totalRetiros" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="totalReposiciones" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="totalRetirosEqFichas" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="totalReposicionesEqFichas" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="totalVentas" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="totalPagos" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="diferenciaCaja" type="tns:ImporteSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="totalEqTicketsFondPromOtorg" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="totalEqTicketsFondPromRecup" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="CajaConsolidadaBingosType">
+            	<xsd:sequence>
+            		<xsd:element name="efectivoApertura" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="efectivoCierre" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="totalVentas" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="totalPagos" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="diferenciaCaja" type="tns:ImporteSimpleType" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:simpleType name="ImporteSimpleType">
+            	<xsd:restriction base="xsd:decimal">
+            		<xsd:maxInclusive value="9999999999.99" />
+            		<xsd:minInclusive value="-9999999999.99" />
+            		<xsd:fractionDigits value="2" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+
+            <xsd:simpleType name="ImporteNoNegativoSimpleType">
+            	<xsd:restriction base="xsd:decimal">
+            		<xsd:minInclusive value="0" />
+            		<xsd:maxInclusive value="9999999999.99" />
+            		<xsd:fractionDigits value="2" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+
+            <xsd:complexType name="DetallePartidaBingoType">
+            	<xsd:sequence>
+            		<xsd:element name="nroPartida" type="tns:EnteroPositivoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="fechaHoraInicio" type="xsd:dateTime" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="valorCarton" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+                    <xsd:element name="nroSerie" type="tns:EnteroPositivoSimpleType" maxOccurs="1" minOccurs="0" />
+                    <xsd:element name="cantidadCartonesSerie" type="tns:EnteroPositivoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="cantidadCartonesVendidos" type="tns:EnteroNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="nroPrimerCartonVendido" type="tns:EnteroNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="nroUltimoCartonVendido" type="tns:EnteroNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="totalPremiosPagados" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="DetalleMaquinaElectronicaType">
+            	<xsd:sequence>
+            		<xsd:element name="idMaquina" type="tns:IdMaquinaElectronicaSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="secuencia" type="xsd:short" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="fechaHoraSecuenciaInicio" type="xsd:dateTime" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="fechaHoraSecuenciaFin" type="xsd:dateTime" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="denomContabilidad" type="tns:ImporteNoNegativoSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="contadoresInicial" type="tns:GrupoContadoresMEType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="contadoresFinal" type="tns:GrupoContadoresMEType" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="ArrayCajasConsolidadasMesasVivasType">
+            	<xsd:sequence>
+            		<xsd:element name="cajaConsolidadaMesasVivas" type="tns:CajaConsolidadaMesasVivasType" maxOccurs="unbounded" minOccurs="0" />
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:simpleType name="ContadorSimpleType">
+            	<xsd:restriction base="xsd:long">
+            		<xsd:minInclusive value="0" />
+            		<xsd:maxInclusive value="999999999999999999" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+
+
+            <xsd:element name="informarResumenDiaOtrosRequest" type="tns:InformarResumenDiaOtrosRequestType" />
+            <xsd:element name="informarResumenDiaOtrosResponse" type="tns:InformarResumenDiaOtrosResponseType" />
+
+            <xsd:complexType name="InformarResumenDiaOtrosRequestType">
+				<xsd:sequence>
+					<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1" />
+                    <xsd:element name="nroPuntoExplotacion" type="xsd:short" maxOccurs="1" minOccurs="1" />
+                    <xsd:element name="fechaPresentacion" type="xsd:date" maxOccurs="1" minOccurs="1" />
+					<xsd:element name="nroPresentacion" type="xsd:short" maxOccurs="1" minOccurs="1" />
+					<xsd:element name="arrayDetallePartidasBingo" type="tns:ArrayDetallesPartidasBingoType" maxOccurs="1" minOccurs="0" />
+					<xsd:element name="arrayCajasConsolidadaMesasVivas" type="tns:ArrayCajasConsolidadasMesasVivasType" maxOccurs="1" minOccurs="0" />
+					<xsd:element name="cajaConsolidadaBingos" type="tns:CajaConsolidadaBingosType" maxOccurs="1" minOccurs="0" />
+				</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="InformarResumenDiaOtrosResponseType">
+            	<xsd:sequence>
+            		<xsd:element name="informarResumenDiaOtrosReturn" type="tns:InformarResumenDiaOtrosReturnType" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="InformarResumenDiaOtrosReturnType">
+            	<xsd:sequence>
+                    <xsd:element name="resultado" type="tns:ResultadoSimpleType" maxOccurs="1" minOccurs="1" />
+                    <xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0" />
+                    <xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0" />
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="GrupoContadoresMEType">
+            	<xsd:sequence>
+            		<xsd:element name="juegosJugados" type="tns:ContadorSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="coinIn" type="tns:ContadorSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="coinOut" type="tns:ContadorSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="jackpot" type="tns:ContadorSimpleType" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:simpleType name="SiNoSimpleType">
+            	<xsd:restriction base="xsd:string">
+            		<xsd:enumeration value="S" />
+            		<xsd:enumeration value="N" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+
+            <xsd:simpleType name="IdMaquinaElectronicaSimpleType">
+            	<xsd:restriction base="xsd:string">
+            		<xsd:minLength value="1" />
+            		<xsd:maxLength value="50" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+            <xsd:element name="consultarMEInformadaRequest" type="tns:ConsultarMEInformadaRequestType" />
+            <xsd:element name="consultarMEInformadaResponse" type="tns:ConsultarMEInformadaResponseType" />
+            
+            <xsd:complexType name="ConsultarMEInformadaRequestType">
+            	<xsd:sequence>
+  					<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1" />
+					<xsd:element name="nroPuntoExplotacion" type="xsd:short" maxOccurs="1" minOccurs="1" />
+					<xsd:element name="fechaPresentacion" type="xsd:date" maxOccurs="1" minOccurs="1" />
+             		<xsd:element name="idMaquina" type="tns:IdMaquinaElectronicaSimpleType" maxOccurs="1" minOccurs="1" />
+          		</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:complexType name="ConsultarMEInformadaResponseType">
+            	<xsd:sequence>
+            		<xsd:element name="consultarMEInformadaReturn" type="tns:ConsultarMEInformadaReturnType" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:complexType name="ConsultarMEInformadaReturnType">
+            	<xsd:sequence>
+ 					<xsd:element name="arrayDetalleMaquinasElectronicas" type="tns:ArrayDetallesMaquinasElectronicasType" maxOccurs="1" minOccurs="0" />
+                    <xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0" />
+                    <xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0" />
+          		</xsd:sequence>
+            </xsd:complexType>
+            
+            <xsd:element name="consultarIdsMEInformadasRequest" type="tns:ConsultarIdsMEInformadasRequestType" />
+            <xsd:element name="consultarIdsMEInformadasResponse" type="tns:ConsultarIdsMEInformadasResponseType" />
+            
+            <xsd:complexType name="ConsultarIdsMEInformadasRequestType">
+            	<xsd:sequence>
+            		<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="nroPuntoExplotacion" type="xsd:short" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="fechaPresentacion" type="xsd:date" maxOccurs="1" minOccurs="0" />
+            	</xsd:sequence>
+            </xsd:complexType>
+        
+            <xsd:complexType name="ConsultarIdsMEInformadasResponseType">
+            	<xsd:sequence>
+            		<xsd:element name="consultarIdsMEInformadasReturn" type="tns:ConsultarIdsMEInformadasReturnType" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:complexType name="ConsultarIdsMEInformadasReturnType">
+            	<xsd:sequence>
+            		<xsd:element name="nroPuntoExplotacion" type="xsd:short" maxOccurs="1" minOccurs="0" />
+            		<xsd:element name="fechaPresentacion" type="xsd:date" maxOccurs="1" minOccurs="0" />
+            		<xsd:element name="arrayIdsMaquinasElectronicas" type="tns:ArrayIdsMaquinasElectronicasType" maxOccurs="1" minOccurs="0" />
+            		<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0" />
+            		<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:element name="consultarIdsMEPendientesRequest" type="tns:ConsultarIdsMEPendientesRequestType" />
+            <xsd:element name="consultarIdsMEPendientesResponse" type="tns:ConsultarIdsMEPendientesResponseType" />
+
+            <xsd:complexType name="ConsultarIdsMEPendientesRequestType">
+            	<xsd:sequence>
+            		<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="nroPuntoExplotacion" type="xsd:short" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:complexType name="ConsultarIdsMEPendientesResponseType">
+            	<xsd:sequence>
+            		<xsd:element name="consultarIdsMEPendientesReturn" type="tns:ConsultarIdsMEPendientesReturnType" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:complexType name="ConsultarIdsMEPendientesReturnType">
+            	<xsd:sequence>
+            		<xsd:element name="nroPuntoExplotacion" type="xsd:short" maxOccurs="1" minOccurs="0" />
+            		<xsd:element name="arrayIdsFechasMaquinasElectronicas" type="tns:ArrayIdsFechasMaquinasElectronicasType" maxOccurs="1" minOccurs="0" />
+            		<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0" />
+            		<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:complexType name="ArrayIdsMaquinasElectronicasType">
+            	<xsd:sequence>
+            		<xsd:element name="idMaquina" type="tns:IdMaquinaElectronicaSimpleType" maxOccurs="unbounded" minOccurs="0" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:element name="removerResumenDiaMERequest" type="tns:RemoverResumenDiaMERequestType" />
+            <xsd:element name="removerResumenDiaMEResponse" type="tns:RemoverResumenDiaMEResponseType" />
+            
+            <xsd:complexType name="RemoverResumenDiaMERequestType">
+            	<xsd:sequence>
+ 					<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1" />
+					<xsd:element name="nroPuntoExplotacion" type="xsd:short" maxOccurs="1" minOccurs="1" />
+					<xsd:element name="fechaPresentacion" type="xsd:date" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="idMaquina" type="tns:IdMaquinaElectronicaSimpleType" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:complexType name="RemoverResumenDiaMEResponseType">
+            	<xsd:sequence>
+            		<xsd:element name="removerResumenDiaMEReturn" type="tns:RemoverResumenDiaMEReturnType" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:complexType name="RemoverResumenDiaMEReturnType">
+            	<xsd:sequence>
+           			<xsd:element name="resultado" type="tns:ResultadoSimpleType" maxOccurs="1" minOccurs="1" />
+           			<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0" />
+           			<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0" />
+           		</xsd:sequence>
+            </xsd:complexType>
+            <xsd:element name="responderSolicitudMERequest" type="tns:ResponderSolicitudMERequestType">
+
+            </xsd:element>
+            <xsd:element name="responderSolicitudMEResponse" type="tns:ResponderSolicitudMEResponseType">
+
+            </xsd:element>
+            
+            <xsd:complexType name="ResponderSolicitudMERequestType">
+            	<xsd:sequence>
+            		<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="idSolicitud" type="xsd:long" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="estado" type="tns:EstadoMESimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="detalleMaquinaElectronica" type="tns:DetalleMaquinaElectronicaType" maxOccurs="1" minOccurs="0" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:simpleType name="EstadoMESimpleType">
+            	<xsd:restriction base="xsd:string">
+            		<xsd:enumeration value="OK" />
+            		<xsd:enumeration value="BA" />
+            		<xsd:enumeration value="ND" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+		
+            <xsd:complexType name="ResponderSolicitudMEResponseType">
+            	<xsd:sequence>
+            		<xsd:element name="responderSolicitudMEReturn" type="tns:ResponderSolicitudMEReturnType" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:complexType name="ResponderSolicitudMEReturnType">
+            	<xsd:sequence>
+           			<xsd:element name="resultado" type="tns:ResultadoSimpleType" maxOccurs="1" minOccurs="1" />
+           			<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0" />
+           			<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0" />
+            	</xsd:sequence>
+            </xsd:complexType>
+        
+            <xsd:complexType name="ArrayIdsFechasMaquinasElectronicasType">
+            	<xsd:sequence>
+            		<xsd:element name="idFechaMaquina" type="tns:IdFechaMaquinaElectronicaType" maxOccurs="unbounded" minOccurs="0" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:complexType name="IdFechaMaquinaElectronicaType">
+            	<xsd:sequence>
+            		<xsd:element name="idMaquina" type="tns:IdMaquinaElectronicaSimpleType" maxOccurs="1" minOccurs="1" />
+            		<xsd:element name="fecha" type="xsd:date" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:simpleType name="EnteroNoNegativoSimpleType">
+            	<xsd:restriction base="xsd:int">
+            		<xsd:minInclusive value="0" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+		
+            <xsd:simpleType name="EnteroPositivoSimpleType">
+            	<xsd:restriction base="xsd:int">
+            		<xsd:minInclusive value="1" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+            <xsd:element name="consultarResumenDiaOtrosRequest" type="tns:ConsultarResumenDiaOtrosRequestType" />
+            <xsd:element name="consultarResumenDiaOtrosResponse" type="tns:ConsultarResumenDiaOtrosResponseType" />
+            
+            <xsd:complexType name="ConsultarResumenDiaOtrosRequestType">
+            	<xsd:sequence>
+  					<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1" />
+					<xsd:element name="nroPuntoExplotacion" type="xsd:short" maxOccurs="1" minOccurs="1" />
+					<xsd:element name="fechaPresentacion" type="xsd:date" maxOccurs="1" minOccurs="1" />
+           		</xsd:sequence>
+            </xsd:complexType>
+        
+            <xsd:complexType name="ConsultarResumenDiaOtrosResponseType">
+            	<xsd:sequence>
+            		<xsd:element name="consultarResumenDiaOtrosReturn" type="tns:ConsultarResumenDiaOtrosReturnType" maxOccurs="1" minOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:complexType name="ConsultarResumenDiaOtrosReturnType">
+            	<xsd:sequence>
+					<xsd:element name="arrayDetallePartidasBingo" type="tns:ArrayDetallesPartidasBingoType" maxOccurs="1" minOccurs="0" />
+					<xsd:element name="arrayCajasConsolidadaMesasVivas" type="tns:ArrayCajasConsolidadasMesasVivasType" maxOccurs="1" minOccurs="0" />
+					<xsd:element name="cajaConsolidadaBingos" type="tns:CajaConsolidadaBingosType" maxOccurs="1" minOccurs="0" />
+                    <xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0" />
+                    <xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0" />
+            	</xsd:sequence>
+            </xsd:complexType>
+            <xsd:element name="informarLoteMERequest" type="tns:InformarLoteMERequestType">
+
+            </xsd:element>
+            <xsd:element name="informarLoteMEResponse" type="tns:InformarLoteMEResponseType">
+
+            </xsd:element>
+
+            <xsd:complexType name="InformarLoteMERequestType">
+            	<xsd:sequence>
+            		<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+            		</xsd:element>
+
+
+
+            		<xsd:element name="ptoExplotacion" type="tns:PuntoExplotacionSimpleType" minOccurs="1" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="arrayME" type="tns:ArrayMEType" minOccurs="1" maxOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+
+
+
+		
+            <xsd:complexType name="InformarLoteMEResponseType">
+            	<xsd:sequence>
+            		<xsd:element name="nroLote" type="xsd:long" minOccurs="1" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1" />
+            		<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+
+
+
+
+            <xsd:simpleType name="CodMarcaSimpleType">
+            	<xsd:restriction base="xsd:int">
+            		<xsd:minInclusive value="1" />
+            		<xsd:maxInclusive value="999" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+		
+            <xsd:simpleType name="Descripcion50SimpleType">
+            	<xsd:restriction base="xsd:string">
+            		<xsd:minLength value="1" />
+            		<xsd:maxLength value="50" />
+            		<xsd:pattern value="[^;/&lt;>]*" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+
+
+            <xsd:simpleType name="Codigo4SimpleType">
+            	<xsd:restriction base="xsd:int">
+            		<xsd:maxInclusive value="9999" />
+            		<xsd:minInclusive value="1" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+		
+        
+            <xsd:simpleType name="Descripcion20SimpleType">
+            	<xsd:restriction base="xsd:string">
+            		<xsd:minLength value="1" />
+            		<xsd:maxLength value="50" />
+            		<xsd:pattern value="[^;/&lt;>]*" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+
+            <xsd:simpleType name="Codigo1SimpleType">
+            	<xsd:restriction base="xsd:int">
+            		<xsd:minInclusive value="1" />
+            		<xsd:maxExclusive value="9" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+
+            <xsd:simpleType name="PorcentajeComisionSimpleType">
+            	<xsd:restriction base="xsd:float">
+            		<xsd:maxInclusive value="999.99" />
+            		<xsd:minInclusive value="0.01" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+		
+        
+            <xsd:simpleType name="CannonComisionSimpleType">
+            	<xsd:restriction base="xsd:float">
+            		<xsd:minInclusive value="0.01" />
+            		<xsd:maxInclusive value="99999999.99" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+		
+            <xsd:simpleType name="ObservacionSimpleType">
+            	<xsd:restriction base="xsd:string">
+            		<xsd:minLength value="0" />
+            		<xsd:maxLength value="200" />
+            		<xsd:pattern value="[^;/&lt;>]*" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+
+            <xsd:simpleType name="Descripcion30SimpleType">
+            	<xsd:restriction base="xsd:string">
+            		<xsd:minLength value="1" />
+            		<xsd:maxLength value="30" />
+            		<xsd:pattern value="[^;/&lt;>]*" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+
+            <xsd:simpleType name="CodTipoMaquinaSimpleType">
+            	<xsd:restriction base="xsd:int">
+            		<xsd:minInclusive value="1" />
+            		<xsd:maxInclusive value="99" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+		
+            <xsd:simpleType name="PuntoExplotacionSimpleType">
+            	<xsd:restriction base="xsd:long">
+            		<xsd:maxInclusive value="999999999999" />
+            		<xsd:minInclusive value="1" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+
+
+
+            <xsd:simpleType name="ResultadoSimpleType">
+            	<xsd:restriction base="xsd:string">
+            		<xsd:enumeration value="A" />
+            		<xsd:enumeration value="I" />
+            		<xsd:enumeration value="R" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+		
+            <xsd:complexType name="METype">
+            	<xsd:sequence>
+            		<xsd:element name="oper" type="tns:Codigo1SimpleType" minOccurs="1" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="uid" type="tns:Descripcion30SimpleType" minOccurs="1" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="codTipoMaquina" type="tns:CodTipoMaquinaSimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="codMarca" type="tns:CodMarcaSimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="descTipoMarca" type="tns:Descripcion50SimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="codModelo" type="tns:Codigo4SimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="descModelo" type="tns:Descripcion50SimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="codJuego" type="tns:Codigo4SimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="descJuego" type="tns:Descripcion50SimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="nroSerie" type="tns:Descripcion20SimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="software" type="tns:Descripcion50SimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="multipuesto" type="tns:SiNoSimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="particOArrend" type="tns:SiNoSimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="cuitArrend" type="tns:CuitSimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="codTipoComision" type="tns:Codigo1SimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="porcComision" type="tns:PorcentajeComisionSimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="cannonComision" type="tns:CannonComisionSimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="observComision" type="tns:ObservacionSimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="fecIniOp" type="xsd:date" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+
+            		<xsd:element name="codBaja" type="tns:CodBajaSimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="descBaja" type="tns:Descripcion30SimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="fechaBaja" type="xsd:date" minOccurs="0" maxOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+            
+		
+            <xsd:simpleType name="CodBajaSimpleType">
+            	<xsd:restriction base="xsd:int">
+            		<xsd:minInclusive value="1" />
+            		<xsd:maxInclusive value="99" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+            <xsd:element name="consultarLoteMERequest" type="tns:ConsultarLoteMEType">
+            </xsd:element>
+            <xsd:element name="consultarLoteMEResponse" type="tns:ConsultarLoteMEResponseType">
+
+            </xsd:element>
+            
+            <xsd:complexType name="ConsultarLoteMEType">
+            	<xsd:sequence>
+            		<xsd:element name="authRequest" type="tns:AuthRequestType" minOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="ptoExplotacion" type="tns:PuntoExplotacionSimpleType" minOccurs="1" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="nroLoteDesde" type="tns:NumeroLoteSimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="nroLoteHasta" type="tns:NumeroLoteSimpleType" minOccurs="0" maxOccurs="1" />
+            		<xsd:element name="fechaDesde" type="xsd:date" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="fechaHasta" type="xsd:date" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:simpleType name="NumeroLoteSimpleType">
+            	<xsd:restriction base="xsd:long">
+            		<xsd:minInclusive value="0" />
+            		<xsd:maxInclusive value="999999999999" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+
+            <xsd:complexType name="ConsultarLoteMEResponseType">
+            	<xsd:sequence>
+            		<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="arrayLotesME" type="tns:ArrayLotesMEType" minOccurs="0" maxOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+        
+            <xsd:complexType name="ArrayLotesMEType">
+            	<xsd:sequence>
+            		<xsd:element name="loteME" type="tns:LoteMEType" minOccurs="0" maxOccurs="unbounded" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:complexType name="LoteMEType">
+            	<xsd:sequence>
+            		<xsd:element name="nroLote" type="tns:NumeroLoteSimpleType" minOccurs="1" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="estado" type="tns:EstadoLoteSimpleType" minOccurs="1" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="fechaEnvio" type="xsd:date" minOccurs="1" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="origen" type="tns:OrigenSimpleType" minOccurs="1" maxOccurs="1" />
+            		<xsd:element name="observaciones" type="tns:ObservacionesLoteSimpleType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="arrayErrores" type="tns:ArrayErroresMEType" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:simpleType name="EstadoLoteSimpleType">
+            	<xsd:restriction base="xsd:string">
+            		<xsd:length value="2" />
+            		<xsd:enumeration value="ER" />
+            		<xsd:enumeration value="RP" />
+            		<xsd:enumeration value="PE" />
+            		<xsd:enumeration value="TE" />
+            		<xsd:enumeration value="OP" />
+            		<xsd:enumeration value="CA" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+		
+            <xsd:simpleType name="ObservacionesLoteSimpleType">
+            	<xsd:restriction base="xsd:string">
+            		<xsd:minLength value="0" />
+            		<xsd:maxLength value="1000" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+		
+		
+            <xsd:complexType name="ArrayErroresMEType">
+            	<xsd:sequence>
+            		<xsd:element name="errorME" type="tns:ErrorMEType" minOccurs="0" maxOccurs="unbounded" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:complexType name="ErrorMEType">
+            	<xsd:sequence>
+            		<xsd:element name="nroLinea" type="xsd:int" minOccurs="1" maxOccurs="1">
+            		</xsd:element>
+
+
+
+            		<xsd:element name="erroresLinea" type="tns:ErroresLineaMEType" minOccurs="1" maxOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:simpleType name="DescripcionErrorMESimpleType">
+            	<xsd:restriction base="xsd:string">
+            		<xsd:minLength value="1" />
+            		<xsd:maxLength value="200" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+		
+		
+		
+            <xsd:complexType name="ArrayMEType">
+            	<xsd:sequence>
+            		<xsd:element name="me" type="tns:METype" minOccurs="1" maxOccurs="unbounded" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+        
+            <xsd:complexType name="ErroresLineaMEType">
+            	<xsd:sequence>
+            		<xsd:element name="errorLineaME" type="tns:ErrorLineaMEType" minOccurs="1" maxOccurs="unbounded" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:complexType name="ErrorLineaMEType">
+            	<xsd:sequence>
+            		<xsd:element name="codError" type="xsd:int" minOccurs="1" maxOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="descError" type="tns:DescripcionErrorMESimpleType" minOccurs="0" maxOccurs="1" />
+            	</xsd:sequence>
+            </xsd:complexType>
+		
+            <xsd:simpleType name="OrigenSimpleType">
+            	<xsd:restriction base="xsd:string">
+            		<xsd:length value="2" />
+            		<xsd:enumeration value="WS" />
+            		<xsd:enumeration value="OL" />
+            	</xsd:restriction>
+            </xsd:simpleType>
+		</xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="dummyRequest">
+  </wsdl:message>
+  <wsdl:message name="dummyResponse">
+    <wsdl:part element="tns:dummyResponse" name="parameters" />
+  </wsdl:message>
+  <wsdl:message name="informarResumenDiaMERequest">
+  	<wsdl:part name="parameters" element="tns:informarResumenDiaMERequest" />
+  </wsdl:message>
+  <wsdl:message name="informarResumenDiaMEResponse">
+  	<wsdl:part name="parameters" element="tns:informarResumenDiaMEResponse" />
+  </wsdl:message>
+  <wsdl:message name="informarResumenDiaOtrosRequest">
+  	<wsdl:part name="parameters" element="tns:informarResumenDiaOtrosRequest" />
+  </wsdl:message>
+  <wsdl:message name="informarResumenDiaOtrosResponse">
+  	<wsdl:part name="parameters" element="tns:informarResumenDiaOtrosResponse" />
+  </wsdl:message>
+  <wsdl:message name="consultarMEInformadaRequest">
+  	<wsdl:part name="parameters" element="tns:consultarMEInformadaRequest" />
+  </wsdl:message>
+  <wsdl:message name="consultarMEInformadaResponse">
+  	<wsdl:part name="parameters" element="tns:consultarMEInformadaResponse" />
+  </wsdl:message>
+  <wsdl:message name="consultarIdsMEInformadasRequest">
+  	<wsdl:part name="parameters" element="tns:consultarIdsMEInformadasRequest" />
+  </wsdl:message>
+  <wsdl:message name="consultarIdsMEInformadasResponse">
+  	<wsdl:part name="parameters" element="tns:consultarIdsMEInformadasResponse" />
+  </wsdl:message>
+  <wsdl:message name="consultarIdsMEPendientesRequest">
+  	<wsdl:part name="parameters" element="tns:consultarIdsMEPendientesRequest" />
+  </wsdl:message>
+  <wsdl:message name="consultarIdsMEPendientesResponse">
+  	<wsdl:part name="parameters" element="tns:consultarIdsMEPendientesResponse" />
+  </wsdl:message>
+  <wsdl:message name="removerResumenDiaMERequest">
+  	<wsdl:part name="parameters" element="tns:removerResumenDiaMERequest" />
+  </wsdl:message>
+  <wsdl:message name="removerResumenDiaMEResponse">
+  	<wsdl:part name="parameters" element="tns:removerResumenDiaMEResponse" />
+  </wsdl:message>
+  <wsdl:message name="responderSolicitudMERequest">
+  	<wsdl:part name="parameters" element="tns:responderSolicitudMERequest" />
+  </wsdl:message>
+  <wsdl:message name="responderSolicitudMEResponse">
+  	<wsdl:part name="parameters" element="tns:responderSolicitudMEResponse" />
+  </wsdl:message>
+  <wsdl:message name="consultarResumenDiaOtrosRequest">
+  	<wsdl:part name="parameters" element="tns:consultarResumenDiaOtrosRequest" />
+  </wsdl:message>
+  <wsdl:message name="consultarResumenDiaOtrosResponse">
+  	<wsdl:part name="parameters" element="tns:consultarResumenDiaOtrosResponse" />
+  </wsdl:message>
+  <wsdl:message name="informarLoteMERequest">
+  	<wsdl:part name="parameters" element="tns:informarLoteMERequest" />
+  </wsdl:message>
+  <wsdl:message name="informarLoteMEResponse">
+  	<wsdl:part name="parameters" element="tns:informarLoteMEResponse" />
+  </wsdl:message>
+  <wsdl:message name="consultarLoteMERequest">
+  	<wsdl:part name="parameters" element="tns:consultarLoteMERequest" />
+  </wsdl:message>
+  <wsdl:message name="consultarLoteMEResponse">
+  	<wsdl:part name="parameters" element="tns:consultarLoteMEResponse" />
+  </wsdl:message>
+  <wsdl:portType name="JAZAServicePortType">
+    <wsdl:operation name="dummy">
+      <wsdl:input message="tns:dummyRequest" />
+      <wsdl:output message="tns:dummyResponse" />
+    </wsdl:operation>
+    <wsdl:operation name="informarResumenDiaME">
+    	<wsdl:input message="tns:informarResumenDiaMERequest" />
+    	<wsdl:output message="tns:informarResumenDiaMEResponse" />
+    </wsdl:operation>
+    <wsdl:operation name="informarResumenDiaOtros">
+    	<wsdl:input message="tns:informarResumenDiaOtrosRequest" />
+    	<wsdl:output message="tns:informarResumenDiaOtrosResponse" />
+    </wsdl:operation>
+    <wsdl:operation name="consultarMEInformada">
+    	<wsdl:input message="tns:consultarMEInformadaRequest" />
+    	<wsdl:output message="tns:consultarMEInformadaResponse" />
+    </wsdl:operation>
+    <wsdl:operation name="consultarIdsMEInformadas">
+    	<wsdl:input message="tns:consultarIdsMEInformadasRequest" />
+    	<wsdl:output message="tns:consultarIdsMEInformadasResponse" />
+    </wsdl:operation>
+    <wsdl:operation name="consultarIdsMEPendientes">
+    	<wsdl:input message="tns:consultarIdsMEPendientesRequest" />
+    	<wsdl:output message="tns:consultarIdsMEPendientesResponse" />
+    </wsdl:operation>
+    <wsdl:operation name="removerResumenDiaME">
+    	<wsdl:input message="tns:removerResumenDiaMERequest" />
+    	<wsdl:output message="tns:removerResumenDiaMEResponse" />
+    </wsdl:operation>
+    <wsdl:operation name="responderSolicitudME">
+    	<wsdl:input message="tns:responderSolicitudMERequest" />
+    	<wsdl:output message="tns:responderSolicitudMEResponse" />
+    </wsdl:operation>
+    <wsdl:operation name="consultarResumenDiaOtros">
+    	<wsdl:input message="tns:consultarResumenDiaOtrosRequest" />
+    	<wsdl:output message="tns:consultarResumenDiaOtrosResponse" />
+    </wsdl:operation>
+    <wsdl:operation name="informarLoteME">
+    	<wsdl:input message="tns:informarLoteMERequest" />
+    	<wsdl:output message="tns:informarLoteMEResponse" />
+    </wsdl:operation>
+    <wsdl:operation name="consultarLoteME">
+    	<wsdl:input message="tns:consultarLoteMERequest" />
+    	<wsdl:output message="tns:consultarLoteMEResponse" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="JAZAServiceSOAP" type="tns:JAZAServicePortType">
+
+  	<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http" />
+  	<wsdl:operation name="dummy">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsjaza/JAZAService/dummy" />
+  		<wsdl:input>
+
+  			<soap:body use="literal" />
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal" />
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="informarResumenDiaME">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsjaza/JAZAService/informarResumenDiaME" />
+  		<wsdl:input>
+
+  			<soap:body use="literal" />
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal" />
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="informarResumenDiaOtros">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsjaza/JAZAService/informarResumenDiaOtros" />
+  		<wsdl:input>
+
+  			<soap:body use="literal" />
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal" />
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="consultarMEInformada">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsjaza/JAZAService/consultarMEInformada" />
+  		<wsdl:input>
+
+  			<soap:body use="literal" />
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal" />
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="consultarIdsMEPendientes">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsjaza/JAZAService/consultarIdsMEPendientes" />
+  		<wsdl:input>
+
+  			<soap:body use="literal" />
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal" />
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="removerResumenDiaME">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsjaza/JAZAService/removerResumenDiaME" />
+  		<wsdl:input>
+
+  			<soap:body use="literal" />
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal" />
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="responderSolicitudME">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsjaza/JAZAService/responderSolicitudME" />
+  		<wsdl:input>
+
+  			<soap:body use="literal" />
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal" />
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="consultarIdsMEInformadas">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsjaza/JAZAService/consultarIdsMEInformadas" />
+  		<wsdl:input>
+
+  			<soap:body use="literal" />
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal" />
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="consultarResumenDiaOtros">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsjaza/JAZAService/consultarResumenDiaOtros" />
+  		<wsdl:input>
+
+  			<soap:body use="literal" />
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal" />
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="informarLoteME">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsjaza/JAZAService/informarLoteME" />
+  		<wsdl:input>
+
+  			<soap:body use="literal" />
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal" />
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="consultarLoteME">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsjaza/JAZAService/consultarLoteME" />
+  		<wsdl:input>
+
+  			<soap:body use="literal" />
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal" />
+  		</wsdl:output>
+  	</wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="JAZAService">
+    <wsdl:port binding="tns:JAZAServiceSOAP" name="JAZAServiceSOAP">
+      <soap:address location="https://fwshomo.afip.gov.ar:443/wsjaza/JAZAService" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

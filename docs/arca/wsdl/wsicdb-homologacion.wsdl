@@ -1,0 +1,519 @@
+<?xml version='1.0' encoding='UTF-8'?><wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://serviciosjava.afip.gob.ar/wsicdb/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="wsicdb" targetNamespace="http://serviciosjava.afip.gob.ar/wsicdb/">
+            <wsdl:types>
+                <xsd:schema targetNamespace="http://serviciosjava.afip.gob.ar/wsicdb/">
+        <xsd:complexType name="Auth">
+            <xsd:sequence>
+        
+        <xsd:element name="token" type="xsd:string" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="sign" type="xsd:string" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="cuit" type="tns:CUIT" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="CodigoDescripcion">
+            <xsd:sequence>
+        
+        <xsd:element name="codigo" type="xsd:string" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="descripcion" type="xsd:string" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="Errores">
+            <xsd:sequence>
+        
+        <xsd:element name="error" type="tns:CodigoDescripcion" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="DummyRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="appserver" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="authserver" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="dbserver" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultaSolicitudRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="cuit" type="xsd:long" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="cbu" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="codigoBeneficio" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="codigoEstado" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="fechaVigencia" type="xsd:date" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarNovedadesPorFechaSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="fecha" type="xsd:date" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarNovedadesPorFechaRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="registro" type="tns:ConsultaSolicitudRespuesta" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarEstadoCuentaPorFechaSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="cuitCliente" type="tns:CUIT" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="cbu" type="tns:CBU" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="fecha" type="xsd:date" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarEstadoCuentaPorFechaRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="registro" type="tns:ConsultaSolicitudRespuesta" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="BeneficioRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="codigoDescripcion" type="tns:CodigoDescripcion" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="norma" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="articulo" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="inciso" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarBeneficiosRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="beneficio" type="tns:BeneficioRespuesta" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="EstadoRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="codigoDescripcion" type="tns:CodigoDescripcion" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarEstadosRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="estado" type="tns:EstadoRespuesta" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="EnteExentoLey25413Respuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="cuit" type="xsd:long" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="razonSocial" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarEnteExentoLey25413Respuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="ente" type="tns:EnteExentoLey25413Respuesta" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarEnteExentoLey25413Solicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="cuitCliente" type="tns:CUIT" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="InscriptoRegistroRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="cuit" type="xsd:long" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="cbu" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="codBeneficio" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="fechaVigencia" type="xsd:date" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarInscriptosRegistroRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="registro" type="tns:InscriptoRegistroRespuesta" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarEntesExentosLey25413Respuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="ente" type="tns:EnteExentoLey25413Respuesta" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="DummyResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:DummyRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                <xsd:complexType name="ConsultarNovedadesPorFechaResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarNovedadesPorFechaRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarNovedadesPorFechaRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        
+                        <xsd:element name="solicitud" type="tns:ConsultarNovedadesPorFechaSolicitud" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarEstadoCuentaPorFechaResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarEstadoCuentaPorFechaRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarEstadoCuentaPorFechaRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        
+                        <xsd:element name="solicitud" type="tns:ConsultarEstadoCuentaPorFechaSolicitud" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarBeneficiosResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarBeneficiosRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarBeneficiosRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarEstadosResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarEstadosRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarEstadosRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarEnteExentoLey25413Response">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarEnteExentoLey25413Respuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarEnteExentoLey25413Request">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        
+                        <xsd:element name="solicitud" type="tns:ConsultarEnteExentoLey25413Solicitud" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarInscriptosRegistroResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarInscriptosRegistroRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarInscriptosRegistroRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarEntesExentosLey25413Response">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarEntesExentosLey25413Respuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarEntesExentosLey25413Request">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType><xsd:simpleType name="CUIT"><xsd:restriction base="xsd:long">
+            <xsd:minInclusive value="10000000000" />
+            <xsd:maxInclusive value="99999999999" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="CBU"><xsd:restriction base="xsd:string"><xsd:pattern value="\d{22}" /></xsd:restriction></xsd:simpleType><xsd:element name="DummyResp" type="tns:DummyResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarNovedadesPorFechaReq" type="tns:ConsultarNovedadesPorFechaRequest">
+                </xsd:element><xsd:element name="ConsultarNovedadesPorFechaResp" type="tns:ConsultarNovedadesPorFechaResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarEstadoCuentaPorFechaReq" type="tns:ConsultarEstadoCuentaPorFechaRequest">
+                </xsd:element><xsd:element name="ConsultarEstadoCuentaPorFechaResp" type="tns:ConsultarEstadoCuentaPorFechaResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarBeneficiosReq" type="tns:ConsultarBeneficiosRequest">
+                </xsd:element><xsd:element name="ConsultarBeneficiosResp" type="tns:ConsultarBeneficiosResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarEstadosReq" type="tns:ConsultarEstadosRequest">
+                </xsd:element><xsd:element name="ConsultarEstadosResp" type="tns:ConsultarEstadosResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarEnteExentoLey25413Req" type="tns:ConsultarEnteExentoLey25413Request">
+                </xsd:element><xsd:element name="ConsultarEnteExentoLey25413Resp" type="tns:ConsultarEnteExentoLey25413Response">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarInscriptosRegistroReq" type="tns:ConsultarInscriptosRegistroRequest">
+                </xsd:element><xsd:element name="ConsultarInscriptosRegistroResp" type="tns:ConsultarInscriptosRegistroResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarEntesExentosLey25413Req" type="tns:ConsultarEntesExentosLey25413Request">
+                </xsd:element><xsd:element name="ConsultarEntesExentosLey25413Resp" type="tns:ConsultarEntesExentosLey25413Response">
+            </xsd:element>
+            
+</xsd:schema></wsdl:types>
+                <wsdl:message name="dummyRequest" />
+            <wsdl:message name="dummyResponse">
+                <wsdl:part name="parameters" element="tns:DummyResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarNovedadesPorFechaRequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarNovedadesPorFechaReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarNovedadesPorFechaResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarNovedadesPorFechaResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarEstadoCuentaPorFechaRequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarEstadoCuentaPorFechaReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarEstadoCuentaPorFechaResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarEstadoCuentaPorFechaResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarBeneficiosRequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarBeneficiosReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarBeneficiosResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarBeneficiosResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarEstadosRequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarEstadosReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarEstadosResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarEstadosResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarEnteExentoLey25413Request">
+                    <wsdl:part name="parameters" element="tns:ConsultarEnteExentoLey25413Req" />
+                </wsdl:message>
+            <wsdl:message name="consultarEnteExentoLey25413Response">
+                <wsdl:part name="parameters" element="tns:ConsultarEnteExentoLey25413Resp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarInscriptosRegistroRequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarInscriptosRegistroReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarInscriptosRegistroResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarInscriptosRegistroResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarEntesExentosLey25413Request">
+                    <wsdl:part name="parameters" element="tns:ConsultarEntesExentosLey25413Req" />
+                </wsdl:message>
+            <wsdl:message name="consultarEntesExentosLey25413Response">
+                <wsdl:part name="parameters" element="tns:ConsultarEntesExentosLey25413Resp" />
+            </wsdl:message>
+            <wsdl:portType name="IcdbPortType">
+            <wsdl:operation name="dummy">
+                <wsdl:input message="tns:dummyRequest" />
+                <wsdl:output message="tns:dummyResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarNovedadesPorFecha">
+                <wsdl:input message="tns:consultarNovedadesPorFechaRequest" />
+                <wsdl:output message="tns:consultarNovedadesPorFechaResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarEstadoCuentaPorFecha">
+                <wsdl:input message="tns:consultarEstadoCuentaPorFechaRequest" />
+                <wsdl:output message="tns:consultarEstadoCuentaPorFechaResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarBeneficios">
+                <wsdl:input message="tns:consultarBeneficiosRequest" />
+                <wsdl:output message="tns:consultarBeneficiosResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarEstados">
+                <wsdl:input message="tns:consultarEstadosRequest" />
+                <wsdl:output message="tns:consultarEstadosResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarEnteExentoLey25413">
+                <wsdl:input message="tns:consultarEnteExentoLey25413Request" />
+                <wsdl:output message="tns:consultarEnteExentoLey25413Response" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarInscriptosRegistro">
+                <wsdl:input message="tns:consultarInscriptosRegistroRequest" />
+                <wsdl:output message="tns:consultarInscriptosRegistroResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarEntesExentosLey25413">
+                <wsdl:input message="tns:consultarEntesExentosLey25413Request" />
+                <wsdl:output message="tns:consultarEntesExentosLey25413Response" />
+            </wsdl:operation>
+            </wsdl:portType>
+        <wsdl:binding name="wsicdbSOAP" type="tns:IcdbPortType">
+            <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http" />
+        
+            <wsdl:operation name="dummy">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsicdb/dummy" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarNovedadesPorFecha">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsicdb/consultarNovedadesPorFecha" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarEstadoCuentaPorFecha">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsicdb/consultarEstadoCuentaPorFecha" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarBeneficios">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsicdb/consultarBeneficios" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarEstados">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsicdb/consultarEstados" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarEnteExentoLey25413">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsicdb/consultarEnteExentoLey25413" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarInscriptosRegistro">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsicdb/consultarInscriptosRegistro" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarEntesExentosLey25413">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsicdb/consultarEntesExentosLey25413" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            </wsdl:binding>
+            <wsdl:service name="IcdbService">
+                <wsdl:port binding="tns:wsicdbSOAP" name="IcdbEndPoint">
+                    <soap:address location="https://fwshomo.afip.gov.ar:443/wsicdb/IcdbService" />
+                </wsdl:port>
+            </wsdl:service>
+        </wsdl:definitions>

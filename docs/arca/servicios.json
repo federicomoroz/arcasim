@@ -1,0 +1,75 @@
+// The ARCA web services ArcaSim answers through their WSDL (src/ArcaSim.Application/Contracts).
+// wsfev1, WSAA and the padrón A5/A13 have their own code and are not listed here.
+// Each entry: the WSDL saved in wsdl/, the WSAA ids that open the service, its dialect,
+// and, when the specs in servicios/ record them, how it words a refused ticket.
+[
+  // ---- Facturación ------------------------------------------------------------------
+  { "id": "wsmtxca", "name": "Factura con detalle de ítems (WSMTXCA)", "group": "facturacion", "wsdl": "wsmtxca-homologacion.wsdl", "wsaa": ["wsmtxca"], "dialect": "JaxWs" },
+  { "id": "wsfexv1", "name": "Factura de exportación (WSFEXv1)", "group": "facturacion", "wsdl": "wsfexv1-homologacion.wsdl", "wsaa": ["wsfex"], "dialect": "Asmx",
+    "auth": { "inBody": true, "code": 1000, "prefix": "Usuario no autorizado a realizar esta operacion. " } },
+  { "id": "wsbfev1", "name": "Bonos fiscales electrónicos (WSBFEv1)", "group": "facturacion", "wsdl": "wsbfev1-homologacion.wsdl", "wsaa": ["wsbfe"], "dialect": "Asmx" },
+  { "id": "wsbfe", "name": "Bonos fiscales electrónicos, versión anterior (WSBFE)", "group": "facturacion", "wsdl": "wsbfe-homologacion.wsdl", "wsaa": ["wsbfe"], "dialect": "Asmx" },
+  { "id": "wsct", "name": "Comprobantes T, turismo (WSCT)", "group": "facturacion", "wsdl": "wsct-homologacion.wsdl", "wsaa": ["wsct"], "dialect": "JaxWs" },
+  { "id": "wsseg", "name": "Seguros de caución (WSSEG)", "group": "facturacion", "wsdl": "wsseg-homologacion.wsdl", "wsaa": ["wsseg"], "dialect": "Asmx" },
+  { "id": "wscdc", "name": "Constatación de comprobantes (WSCDC)", "group": "facturacion", "wsdl": "wscdc-homologacion.wsdl", "wsaa": ["wscdc"], "dialect": "Asmx",
+    "values": { "ambiente": "Homologacion-Ext - srt", "id": "3.1.1.0" } },
+  { "id": "wsfecred", "name": "Factura de Crédito Electrónica MiPyMEs (WSFECRED)", "group": "facturacion", "wsdl": "wsfecred-homologacion.wsdl", "wsaa": ["wsfecred"], "dialect": "JaxWs" },
+  { "id": "wsfecredagente", "name": "FCE MiPyMEs, agentes de depósito colectivo", "group": "facturacion", "wsdl": "wsfecredagente-homologacion.wsdl", "wsaa": ["wsfecredagente"], "dialect": "SpringWs", "envelopePrefix": "soap" },
+  { "id": "wsfecredsca", "name": "FCE MiPyMEs, Sistema de Circulación Abierta", "group": "facturacion", "wsdl": "wsfecredsca-homologacion.wsdl", "wsaa": ["wsfecredsca"], "dialect": "SpringWs", "envelopePrefix": "soap" },
+
+  // ---- Padrón ----------------------------------------------------------------------
+  { "id": "ws_sr_padron_a4", "name": "Padrón A4: situación tributaria", "group": "padron", "wsdl": "ws_sr_padron_a4-homologacion.wsdl", "wsaa": ["ws_sr_padron_a4"], "dialect": "Cxf",
+    "auth": { "faultCode": "soap:Server", "detail": "SRValidationException" } },
+  { "id": "ws_sr_padron_a10", "name": "Padrón A10: datos resumidos", "group": "padron", "wsdl": "ws_sr_padron_a10-homologacion.wsdl", "wsaa": ["ws_sr_padron_a10"], "dialect": "Cxf",
+    "auth": { "faultCode": "soap:Server", "detail": "SRValidationException" } },
+  { "id": "ws_sr_padron_a100", "name": "Padrón A100: tablas de parámetros", "group": "padron", "wsdl": "ws_sr_padron_a100-homologacion.wsdl", "wsaa": ["ws_sr_padron_a100"], "dialect": "Cxf",
+    "auth": { "faultCode": "soap:Server" } },
+
+  // ---- Agro y remitos --------------------------------------------------------------
+  { "id": "wscpe", "name": "Carta de Porte Electrónica (WSCPE)", "group": "agro", "wsdl": "wscpe-homologacion.wsdl", "wsaa": ["wscpe"], "dialect": "Cxf",
+    "auth": { "faultCode": "soap:Client", "texts": {
+      "MissingToken": "Token o Sign nulos", "MissingSign": "Token o Sign nulos",
+      "Unreadable": "Error en la autenticacion: Token invalido",
+      "BadSignature": "El sign no se conrresponde con el token" } } },
+  { "id": "wslpg", "name": "Liquidación primaria de granos (WSLPG)", "group": "agro", "wsdl": "wslpg-homologacion.wsdl", "wsaa": ["wslpg"], "dialect": "JaxWs" },
+  { "id": "wslsp", "name": "Liquidación del sector pecuario (WSLSP)", "group": "agro", "wsdl": "wslsp-homologacion.wsdl", "wsaa": ["wslsp"], "dialect": "JaxWs" },
+  { "id": "wslum", "name": "Liquidación única mensual de lechería (WSLUM)", "group": "agro", "wsdl": "wslum-homologacion.wsdl", "wsaa": ["wslum"], "dialect": "JaxWs" },
+  { "id": "wsltv", "name": "Liquidación de tabaco verde (WSLTV)", "group": "agro", "wsdl": "wsltv-homologacion.wsdl", "wsaa": ["wsltv"], "dialect": "JaxWs" },
+  { "id": "wslca", "name": "Liquidación de caña de azúcar (WSLCA)", "group": "agro", "wsdl": "wslca-homologacion.wsdl", "wsaa": ["wslca"], "dialect": "Cxf" },
+  { "id": "wstabaco", "name": "Régimen tabacalero (WSTABACO)", "group": "agro", "wsdl": "wstabaco-homologacion.wsdl", "wsaa": ["wstabaco"], "dialect": "JaxWs" },
+  { "id": "wsremharina", "name": "Remito electrónico de harinas (WSREMHARINA)", "group": "agro", "wsdl": "wsremharina-homologacion.wsdl", "wsaa": ["wsremharina"], "dialect": "JaxWs" },
+  { "id": "wsremcarne", "name": "Remito electrónico cárnico (WSREMCARNE)", "group": "agro", "wsdl": "wsremcarne-homologacion.wsdl", "wsaa": ["wsremcarne"], "dialect": "JaxWs" },
+  { "id": "wsremazucar", "name": "Remito electrónico de azúcar (WSREMAZUCAR)", "group": "agro", "wsdl": "wsremazucar-homologacion.wsdl", "wsaa": ["wsremazucar"], "dialect": "JaxWs" },
+  { "id": "wsagr", "name": "Registro AGR / Reproweb (WSAGR)", "group": "agro", "wsdl": "wsagr-homologacion.wsdl", "wsaa": ["wsagr"], "dialect": "Asmx",
+    "auth": { "inBody": true, "code": 501 } },
+
+  // ---- Organismos y otros ----------------------------------------------------------
+  { "id": "wscec", "name": "Economía del Conocimiento (WSCEC)", "group": "organismos", "wsdl": "wscec-homologacion.wsdl", "wsaa": ["wscec"], "dialect": "SpringWs" },
+  { "id": "wsapoc", "name": "Contribuyentes y facturas apócrifas (WSAPOC)", "group": "organismos", "wsdl": "wsapoc-homologacion.wsdl", "wsaa": ["wsapoc"], "dialect": "Asmx",
+    "auth": { "inBody": true, "code": 201, "codeField": "codigo", "textField": "descripcion", "cuitField": "CUITDelegado",
+      "texts": { "Unreadable": "Token invalido", "BadSignature": "Sign invalida" } } },
+  { "id": "sud_restricciones", "name": "Deuda de proveedores y clientes (SUD)", "group": "organismos", "wsdl": "sud_restricciones-produccion.wsdl", "wsaa": ["sud_restricciones"], "dialect": "SpringWs" },
+  { "id": "veconsumerws", "name": "Ventanilla Electrónica (WSCCOMU)", "group": "organismos", "wsdl": "veconsumerws-homologacion.wsdl", "wsaa": ["veconsumerws"], "dialect": "Cxf", "prefix": "ns1" },
+  { "id": "wsjaza", "name": "Juegos de azar (WSJAZA)", "group": "organismos", "wsdl": "wsjaza-homologacion.wsdl", "wsaa": ["wsjaza"], "dialect": "JaxWs" },
+  { "id": "miargentina-ws", "name": "Mi Argentina: vida laboral", "group": "organismos", "wsdl": "miargentina-ws-homologacion.wsdl", "wsaa": ["miargentina-ws"], "dialect": "Asmx",
+    "auth": { "inBody": true, "code": 9101, "block": "EstadoTransaccion", "codeField": "Codigo", "textField": "Descripcion",
+      "texts": { "Unreadable": "La codificación del token no es base64", "WrongService": "Servicio inválido o no implementado. Nombre de servicio recibido: {service}" } } },
+  { "id": "uploadPresentacionService", "name": "Presentación de declaraciones juradas", "group": "organismos", "wsdl": "uploadPresentacionService-homologacion.wsdl",
+    "wsaa": ["presentacionprocessor", "djprocessorcontribuyente", "djprocessorcontribuyente_cf"], "dialect": "Cxf" },
+  { "id": "wsrgiva", "name": "Régimen de percepción de IVA (WSRGIVA)", "group": "organismos", "wsdl": "wsrgiva-homologacion.wsdl", "wsaa": ["wsrgiva"], "dialect": "SpringWs" },
+  { "id": "wsicdb", "name": "Beneficios en créditos y débitos bancarios (WSICDB)", "group": "organismos", "wsdl": "wsicdb-homologacion.wsdl", "wsaa": ["wsicdb"], "dialect": "JaxWs" },
+  { "id": "sire-ws", "name": "Retenciones electrónicas, certificado F2005 (SIRE)", "group": "organismos", "wsdl": "sire-ws-homologacion.wsdl", "wsaa": ["sire-ws"], "dialect": "Cxf" },
+  { "id": "wssv", "name": "Seguimiento vehicular (WSSV)", "group": "organismos", "wsdl": "wssv-homologacion.wsdl", "wsaa": ["wssv"], "dialect": "Asmx" },
+
+  // ---- Aduana (DIA) ----------------------------------------------------------------
+  { "id": "WDiaUtiDES", "name": "Aduana: dispositivos PEMA", "group": "aduana", "wsdl": "WDiaUtiDES-homologacion.wsdl", "wsaa": ["wdiautides"], "dialect": "Asmx" },
+  { "id": "WGesINV", "name": "Aduana: despachos de vitivinicultura (INV)", "group": "aduana", "wsdl": "WGesINV-homologacion.wsdl", "wsaa": ["wgesinv"], "dialect": "Asmx" },
+  { "id": "wgesTabRef", "name": "Aduana: tablas de referencia", "group": "aduana", "wsdl": "wgesTabRef-homologacion.wsdl", "wsaa": ["wgestabref"], "dialect": "Asmx" },
+  { "id": "wConsDepFiel", "name": "Aduana: legajos de depositario fiel", "group": "aduana", "wsdl": "wConsDepFiel-homologacion.wsdl", "wsaa": ["wconsdepfiel"], "dialect": "Asmx" },
+  { "id": "wgestiendaslibres", "name": "Aduana: tiendas libres", "group": "aduana", "wsdl": "wgestiendaslibres-homologacion.wsdl", "wsaa": ["wgestiendaslibres"], "dialect": "Asmx" },
+  { "id": "wgesprecintosdepfis", "name": "Aduana: precintos de depositario fiscal", "group": "aduana", "wsdl": "wgesprecintosdepfis-homologacion.wsdl", "wsaa": ["wgesprecintosdepfis"], "dialect": "Asmx" },
+  { "id": "wDigDepFiel", "name": "Aduana: digitalización de legajos", "group": "aduana", "wsdl": "wDigDepFiel-homologacion.wsdl", "wsaa": ["wdigdepfiel"], "dialect": "Asmx" },
+  { "id": "WutiGOPDeclaraciones", "name": "Aduana: declaraciones de grandes operadores", "group": "aduana", "wsdl": "WutiGOPDeclaraciones-homologacion.wsdl", "wsaa": ["wutigopdeclaraciones"], "dialect": "Asmx" },
+  { "id": "wdepMovimientos", "name": "Aduana: movimientos de terminales y depósitos", "group": "aduana", "wsdl": "wdepMovimientos-homologacion.wsdl", "wsaa": ["wdepmovimientos"], "dialect": "Asmx" },
+  { "id": "wEnysa", "name": "Aduana: entradas y salidas desde Chile", "group": "aduana", "wsdl": "wEnysa-homologacion.wsdl", "wsaa": ["wenysa"], "dialect": "Asmx" }
+]

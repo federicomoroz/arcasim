@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="ar.gov.afip.dia.serviciosWeb.wDigDepFiel" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="ar.gov.afip.dia.serviciosWeb.wDigDepFiel" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="ar.gov.afip.dia.serviciosWeb.wDigDepFiel">
+      <s:element name="AvisoRecepAcept">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="autentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="nroLegajo" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="cuitDeclarante" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="cuitPSAD" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="cuitIE" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="codigo" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="fechaHoraAcept" type="s:dateTime" />
+            <s:element minOccurs="0" maxOccurs="1" name="ticket" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="sigea" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="nroGuia" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="fechaGeneracion" type="s:dateTime" />
+            <s:element minOccurs="0" maxOccurs="1" name="indLugarFisico" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="idEnvio" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="fechaDespacho" type="s:dateTime" />
+            <s:element minOccurs="1" maxOccurs="1" name="cantFojas" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="nroReferencia" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="hashing" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="Autenticacion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Cuit" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="TipoAgente" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Rol" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Token" nillable="true" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Sign" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="AvisoRecepAceptResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="AvisoRecepAceptResult" type="tns:Recibo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="Recibo">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="codError" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="descError" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="AvisoDigit">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="autentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="nroLegajo" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="cuitDeclarante" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="cuitPSAD" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="cuitIE" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="cuitATA" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="codigo" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="url" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="familias" type="tns:ArrayOfFamilia" />
+            <s:element minOccurs="0" maxOccurs="1" name="ticket" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="hashing" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="cantidadTotal" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="sigea" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="nroReferencia" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ArrayOfFamilia">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Familia" type="tns:Familia" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Familia">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="codigo" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="cantidad" type="s:int" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="AvisoDigitResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="AvisoDigitResult" type="tns:Recibo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="Dummy">
+        <s:complexType />
+      </s:element>
+      <s:element name="DummyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DummyResult" type="tns:WsDummyResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="WsDummyResponse">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="appserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="dbserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="authserver" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="AvisoRecepAceptSoapIn">
+    <wsdl:part name="parameters" element="tns:AvisoRecepAcept" />
+  </wsdl:message>
+  <wsdl:message name="AvisoRecepAceptSoapOut">
+    <wsdl:part name="parameters" element="tns:AvisoRecepAceptResponse" />
+  </wsdl:message>
+  <wsdl:message name="AvisoDigitSoapIn">
+    <wsdl:part name="parameters" element="tns:AvisoDigit" />
+  </wsdl:message>
+  <wsdl:message name="AvisoDigitSoapOut">
+    <wsdl:part name="parameters" element="tns:AvisoDigitResponse" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapIn">
+    <wsdl:part name="parameters" element="tns:Dummy" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapOut">
+    <wsdl:part name="parameters" element="tns:DummyResponse" />
+  </wsdl:message>
+  <wsdl:portType name="wDigDepFielSoap">
+    <wsdl:operation name="AvisoRecepAcept">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Aviso de recepcion y aceptacion.</wsdl:documentation>
+      <wsdl:input message="tns:AvisoRecepAceptSoapIn" />
+      <wsdl:output message="tns:AvisoRecepAceptSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="AvisoDigit">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Aviso de digitalizacion.</wsdl:documentation>
+      <wsdl:input message="tns:AvisoDigitSoapIn" />
+      <wsdl:output message="tns:AvisoDigitSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Metodo dummy para verificacion de funcionamiento</wsdl:documentation>
+      <wsdl:input message="tns:DummySoapIn" />
+      <wsdl:output message="tns:DummySoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="wDigDepFielSoap" type="tns:wDigDepFielSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="AvisoRecepAcept">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosWeb.wDigDepFiel/AvisoRecepAcept" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="AvisoDigit">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosWeb.wDigDepFiel/AvisoDigit" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosWeb.wDigDepFiel/Dummy" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="wDigDepFielSoap12" type="tns:wDigDepFielSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="AvisoRecepAcept">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosWeb.wDigDepFiel/AvisoRecepAcept" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="AvisoDigit">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosWeb.wDigDepFiel/AvisoDigit" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosWeb.wDigDepFiel/Dummy" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="wDigDepFiel">
+    <wsdl:port name="wDigDepFielSoap" binding="tns:wDigDepFielSoap">
+      <soap:address location="https://testdia.afip.gov.ar/Dia/Ws/wDigDepFiel/wDigDepFiel.asmx" />
+    </wsdl:port>
+    <wsdl:port name="wDigDepFielSoap12" binding="tns:wDigDepFielSoap12">
+      <soap12:address location="https://testdia.afip.gov.ar/Dia/Ws/wDigDepFiel/wDigDepFiel.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

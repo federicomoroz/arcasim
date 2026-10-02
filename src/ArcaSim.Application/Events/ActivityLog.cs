@@ -48,6 +48,7 @@ public sealed class ActivityLog
             $"{r.Cuit} · PV {r.PointOfSale} · tipo {r.VoucherType} · {r.Number} rechazado ({string.Join(", ", r.Codes)})"),
         CaeaGranted c => new(c.At, "ok", "wsfe", $"{c.Cuit} · CAEA {c.Code} para {c.Period}/{c.Fortnight}"),
         RequestRefused r => new(r.At, "refused", r.Service, "Saturado: 503"),
+        ServiceCalled s => new(s.At, s.Outcome, s.Service, s.Cuit > 0 ? $"{s.Cuit} · {s.Operation}{(s.Text.Length > 0 ? $": {s.Text}" : "")}" : s.Operation),
         _ => null,
     };
 }

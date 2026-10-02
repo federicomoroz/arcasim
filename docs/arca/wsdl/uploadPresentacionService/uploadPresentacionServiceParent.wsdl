@@ -1,0 +1,205 @@
+<?xml version='1.0' encoding='UTF-8'?><wsdl:definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:ns1="http://domain.presentacion.seti.osiris.afip.gov/" name="PresentacionProcessorMTOMService" targetNamespace="http://domain.presentacion.seti.osiris.afip.gov/">
+  <wsdl:types>
+<xs:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://domain.presentacion.seti.osiris.afip.gov/" xmlns:ns1="http://domain.presentacion.seti.osiris.afip.gov/" attributeFormDefault="unqualified" elementFormDefault="unqualified" targetNamespace="http://domain.presentacion.seti.osiris.afip.gov/">
+
+  <xs:element name="consulta" type="tns:consulta"/>
+
+  <xs:element name="consultaResponse" type="tns:consultaResponse"/>
+
+  <xs:element name="dummy" type="tns:dummy"/>
+
+  <xs:element name="dummyResponse" type="tns:dummyResponse"/>
+
+  <xs:element name="upload" type="tns:upload"/>
+
+  <xs:element name="uploadResponse" type="tns:uploadResponse"/>
+
+  <xs:complexType name="upload">
+
+    <xs:sequence>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="token" type="xs:string"/>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="sign" type="xs:string"/>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="representadoCuit" type="xs:string"/>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="presentacion" type="tns:presentacionFileB2B"/>
+
+    </xs:sequence>
+
+  </xs:complexType>
+
+  <xs:complexType name="presentacionFileB2B">
+
+    <xs:sequence>
+
+      <xs:element xmlns:ns1="http://www.w3.org/2005/05/xmlmime" maxOccurs="1" minOccurs="1" name="presentacionDataHandler" ns1:expectedContentTypes="application/octet-stream" type="xs:base64Binary"/>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="fileName" type="xs:string"/>
+
+    </xs:sequence>
+
+  </xs:complexType>
+
+  <xs:complexType name="uploadResponse">
+
+    <xs:sequence>
+
+      <xs:element name="return" type="xs:long"/>
+
+    </xs:sequence>
+
+  </xs:complexType>
+
+  <xs:complexType name="dummy">
+
+    <xs:sequence/>
+
+  </xs:complexType>
+
+  <xs:complexType name="dummyResponse">
+
+    <xs:sequence>
+
+      <xs:element minOccurs="0" name="return" type="tns:dummyReturn"/>
+
+    </xs:sequence>
+
+  </xs:complexType>
+
+  <xs:complexType name="dummyReturn">
+
+    <xs:sequence>
+
+      <xs:element minOccurs="0" name="appserver" type="xs:string"/>
+
+      <xs:element minOccurs="0" name="authserver" type="xs:string"/>
+
+      <xs:element minOccurs="0" name="dbserver" type="xs:string"/>
+
+    </xs:sequence>
+
+  </xs:complexType>
+
+  <xs:complexType name="consulta">
+
+    <xs:sequence>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="token" type="xs:string"/>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="sign" type="xs:string"/>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="representadoCuit" type="xs:string"/>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="fileName" type="xs:string"/>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="formulario" type="xs:int"/>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="contribuyenteCuit" type="xs:long"/>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="md5" type="xs:string"/>
+
+    </xs:sequence>
+
+  </xs:complexType>
+
+  <xs:complexType name="consultaResponse">
+
+    <xs:sequence>
+
+      <xs:element minOccurs="0" name="return" type="tns:consultaPresentacionReturn"/>
+
+    </xs:sequence>
+
+  </xs:complexType>
+
+  <xs:complexType name="consultaPresentacionReturn">
+
+    <xs:sequence>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="contribuyenteCuit" type="xs:long"/>
+
+      <xs:element maxOccurs="1" minOccurs="0" name="fechaHoraPresentacion" type="xs:string"/>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="fileName" type="xs:string"/>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="formulario" type="xs:int"/>
+
+      <xs:element maxOccurs="1" minOccurs="1" name="md5" type="xs:string"/>
+
+      <xs:element maxOccurs="1" minOccurs="0" name="numeroTransaccion" type="xs:long"/>
+
+    </xs:sequence>
+
+  </xs:complexType>
+
+  <xs:element name="Exception" type="tns:Exception"/>
+
+  <xs:complexType name="Exception">
+
+    <xs:sequence>
+
+      <xs:element minOccurs="0" name="message" type="xs:string"/>
+
+    </xs:sequence>
+
+  </xs:complexType>
+
+</xs:schema>
+  </wsdl:types>
+  <wsdl:message name="consulta">
+    <wsdl:part element="ns1:consulta" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="Exception">
+    <wsdl:part element="ns1:Exception" name="Exception">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="uploadResponse">
+    <wsdl:part element="ns1:uploadResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="upload">
+    <wsdl:part element="ns1:upload" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="dummyResponse">
+    <wsdl:part element="ns1:dummyResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="consultaResponse">
+    <wsdl:part element="ns1:consultaResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="dummy">
+    <wsdl:part element="ns1:dummy" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="PresentacionProcessorMTOMService">
+    <wsdl:operation name="upload">
+      <wsdl:input message="ns1:upload" name="upload">
+    </wsdl:input>
+      <wsdl:output message="ns1:uploadResponse" name="uploadResponse">
+    </wsdl:output>
+      <wsdl:fault message="ns1:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="dummy">
+      <wsdl:input message="ns1:dummy" name="dummy">
+    </wsdl:input>
+      <wsdl:output message="ns1:dummyResponse" name="dummyResponse">
+    </wsdl:output>
+      <wsdl:fault message="ns1:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="consulta">
+      <wsdl:input message="ns1:consulta" name="consulta">
+    </wsdl:input>
+      <wsdl:output message="ns1:consultaResponse" name="consultaResponse">
+    </wsdl:output>
+      <wsdl:fault message="ns1:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:portType>
+</wsdl:definitions>

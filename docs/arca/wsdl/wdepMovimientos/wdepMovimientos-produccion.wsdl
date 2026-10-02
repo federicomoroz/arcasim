@@ -1,0 +1,719 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="ar.gov.afip.dia.serviciosweb.wdepMovimientos.wdepMovimientos" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="ar.gov.afip.dia.serviciosweb.wdepMovimientos.wdepMovimientos" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="ar.gov.afip.dia.serviciosweb.wdepMovimientos.wdepMovimientos">
+      <s:element name="WdepIngresos">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argwdepIngresos" type="tns:argIngresoEntrada" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="Autenticacion">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:AutenticacionBase">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Cuit" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="TipoAgente" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="Rol" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="AutenticacionBase">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Token" nillable="true" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Sign" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="argIngresoEntrada">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:argNroTransaccion">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Carga" type="tns:wdepIngresoEntrada" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="argNroTransaccion">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:argBase">
+            <s:sequence>
+              <s:element minOccurs="1" maxOccurs="1" name="NroTransaccion" type="s:long" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="argBase" abstract="true">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LugarOperativo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="AduanaDestino" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LugarOperativoDestino" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepIngresoEntrada">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDeposito" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NomMatMedio" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdDeclaracion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="TituloTransporte" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroSalida" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CierreIngreso" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantTotal" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="PesoTotal" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="ConocimientoEmbarque" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LineasMercaderia" type="tns:ArrayOfIZPLineaMercaderia" />
+          <s:element minOccurs="0" maxOccurs="1" name="Contenedores" type="tns:ArrayOfIZPContenedor" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfIZPLineaMercaderia">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="IZPLineaMercaderia" type="tns:IZPLineaMercaderia" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="IZPLineaMercaderia">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="NroLinea" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodEmbalaje" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="TipoEmbalaje" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LocalizacionEnDeposito" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantidadIngresada" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="PesoIngresado" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantidadAveriada" type="s:double" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfIZPContenedor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="IZPContenedor" type="tns:IZPContenedor" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="IZPContenedor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdContenedor" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="WdepIngresosResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="WdepIngresosResult" type="tns:Recibo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="Recibo">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="CodErr" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="DesError" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescAdicErr" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="WdepSalidas">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argwdepSalidas" type="tns:argSZPEntrada" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="argSZPEntrada">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:argNroTransaccion">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Carga" type="tns:wdepSZPEntrada" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="wdepSZPEntrada">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Salida" type="tns:SZPSalida" />
+          <s:element minOccurs="0" maxOccurs="1" name="Titulos" type="tns:ArrayOfSZPTitulo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="SZPSalida">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDeclaracion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Ruta" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Custodio" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CierreSalida" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="TipNumSal" type="tns:SZPTipNumSal" />
+          <s:element minOccurs="1" maxOccurs="1" name="SalidaAnulada" type="tns:SZPSalidaAnulada" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdTemporalSinTransformacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdTemporalConTransformacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NomMedioTransporte" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LotDestinoTransito" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="ATA" type="tns:SZPATA" />
+          <s:element minOccurs="1" maxOccurs="1" name="Transportista" type="tns:SZPTransportista" />
+          <s:element minOccurs="1" maxOccurs="1" name="Transporte" type="tns:SZPTransporte" />
+          <s:element minOccurs="0" maxOccurs="1" name="Precintos" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Conductor" type="tns:SZPConductor" />
+          <s:element minOccurs="1" maxOccurs="1" name="Portador" type="tns:SZPPortador" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="SZPTipNumSal">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="TipoSalida" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroSalida" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="SZPSalidaAnulada">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NroSalidaReemplazada" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Observaciones" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="SZPATA">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdATA" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitATA" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="SZPTransportista">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NombreTransportista" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="PaisTransportista" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitTransportista" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="SZPTransporte">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="MedioTransporte" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="PaisMedioTransporte" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DominioCamion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdPEMACamion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="PaisAcoplado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DominioAcoplado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdPEMAAcoplado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DominioOtro" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="SZPConductor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NombreConductor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="TipoDocConductor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroDocConductor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroLicConductor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="TelefonoContacto" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="SZPPortador">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NombrePortador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="TipoDocPortador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroDocPortador" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfSZPTitulo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="SZPTitulo" type="tns:SZPTitulo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="SZPTitulo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdTitulo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LineasMercaderia" type="tns:ArrayOfSZPLineaMercaderia" />
+          <s:element minOccurs="0" maxOccurs="1" name="Contenedores" type="tns:ArrayOfSZPContenedor" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfSZPLineaMercaderia">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="SZPLineaMercaderia" type="tns:SZPLineaMercaderia" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="SZPLineaMercaderia">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="NroLinea" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodEmbalaje" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="TipoEmbalaje" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantidadEgresada" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="PesoEgresado" type="s:double" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfSZPContenedor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="SZPContenedor" type="tns:SZPContenedor" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="SZPContenedor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdContenedor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Precintos" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdDES" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CondCtd" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="PesoEgresado" type="s:double" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="WdepSalidasResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="WdepSalidasResult" type="tns:RtaWdepSalidas" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaWdepSalidas">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroSalida" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="WdepSalidasPorMT">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argwdepSalidas" type="tns:argSZPEntradaMT" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="argSZPEntradaMT">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:argNroTransaccion">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Carga" type="tns:wdepSZPEntradaMT" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="wdepSZPEntradaMT">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="SalidaMT" type="tns:wdepBaseSalida" />
+          <s:element minOccurs="0" maxOccurs="1" name="CargaSuelta" type="tns:ArrayOfWdepBaseDeclaracion" />
+          <s:element minOccurs="0" maxOccurs="1" name="Contenedores" type="tns:ArrayOfWdepBaseContenedor" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepBaseSalida">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Ruta" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Custodio" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="TipNumSal" type="tns:wdepBaseTipNumSal" />
+          <s:element minOccurs="0" maxOccurs="1" name="SalidaAnulada" type="tns:wdepBaseSalidaAnulada" />
+          <s:element minOccurs="0" maxOccurs="1" name="ATA" type="tns:wdepBaseAta" />
+          <s:element minOccurs="0" maxOccurs="1" name="Transportista" type="tns:wdepBaseTransportista" />
+          <s:element minOccurs="0" maxOccurs="1" name="Transporte" type="tns:wdepBaseTransporte" />
+          <s:element minOccurs="0" maxOccurs="1" name="Precintos" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Conductor" type="tns:wdepBaseConductor" />
+          <s:element minOccurs="1" maxOccurs="1" name="PesoEgresado" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepBaseTipNumSal">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="TipoSalida" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroSalida" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepBaseSalidaAnulada">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NroSalidaReemplazada" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Observaciones" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepBaseAta">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CuitATA" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepBaseTransportista">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CuitTransportista" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NombreTransportista" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="PaisTransportista" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepBaseTransporte">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="PaisCamion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DominioCamion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="PaisAcoplado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DominioAcoplado" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepBaseConductor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NombreConductor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="TipoDocConductor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroDocConductor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroLicConductor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="TelefonoContacto" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfWdepBaseDeclaracion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Declaracion" nillable="true" type="tns:wdepBaseDeclaracion" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepBaseDeclaracion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDeclaracion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Titulos" type="tns:ArrayOfWdepBaseTitulo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfWdepBaseTitulo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Titulo" nillable="true" type="tns:wdepBaseTitulo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepBaseTitulo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdTitulo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LineasMercaderia" type="tns:ArrayOfWdepBaseLineaMercaderia" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfWdepBaseLineaMercaderia">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="LineaMercaderia" nillable="true" type="tns:wdepBaseLineaMercaderia" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepBaseLineaMercaderia">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="NroLinea" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodEmbalaje" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="TipoEmbalaje" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantidadEgresada" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="PesoEgresado" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfWdepBaseContenedor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Contenedor" nillable="true" type="tns:wdepBaseContenedor" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepBaseContenedor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdContenedor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Precintos" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="PesoEgresado" type="s:decimal" />
+          <s:element minOccurs="0" maxOccurs="1" name="Declaraciones" type="tns:ArrayOfWdepBaseContenedorDeclaracion" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfWdepBaseContenedorDeclaracion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="DeclaracionContenedor" nillable="true" type="tns:wdepBaseContenedorDeclaracion" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepBaseContenedorDeclaracion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDeclaracion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Titulos" type="tns:ArrayOfWdepBaseContenedorDeclaracionTitulo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfWdepBaseContenedorDeclaracionTitulo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="TituloContenedor" nillable="true" type="tns:wdepBaseContenedorDeclaracionTitulo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepBaseContenedorDeclaracionTitulo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdTitulo" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Peso" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="WdepSalidasPorMTResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="WdepSalidasPorMTResult" type="tns:RtaWdepSalidas" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="WdepListarRutas">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argwdepListarRutas" type="tns:argListarRutas" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="argListarRutas">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:argBase" />
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="WdepListarRutasResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="WdepListarRutasResult" type="tns:RtaWdepListarRutas" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaWdepListarRutas">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="ListaRutas" type="tns:ArrayOfWdepHojaRuta" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfWdepHojaRuta">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="wdepHojaRuta" type="tns:wdepHojaRuta" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepHojaRuta">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Codigo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Descripcion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="HojaRuta" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="WdepListaTitulosPorContenedor">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argwdepListaTitulosPorContenedor" type="tns:argListaTitulosPorContenedor" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="argListaTitulosPorContenedor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LugarOperativo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdContenedor" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="WdepListaTitulosPorContenedorResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="WdepListaTitulosPorContenedorResult" type="tns:RtaWdepListaTitulosPorContenedor" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaWdepListaTitulosPorContenedor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="Contenedor" type="tns:wdepListaTitulosPorContenedor" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepListaTitulosPorContenedor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdContenedor" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Declaraciones" type="tns:ArrayOfWdepListaTitulosPorContenedorItemDecla" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfWdepListaTitulosPorContenedorItemDecla">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Declaracion" nillable="true" type="tns:wdepListaTitulosPorContenedorItemDecla" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepListaTitulosPorContenedorItemDecla">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDeclaracion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Titulos" type="tns:ArrayOfWdepListaTitulosPorContenedorItemTit" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfWdepListaTitulosPorContenedorItemTit">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Titulo" nillable="true" type="tns:wdepListaTitulosPorContenedorItemTit" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="wdepListaTitulosPorContenedorItemTit">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdTitulo" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="Dummy">
+        <s:complexType />
+      </s:element>
+      <s:element name="DummyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DummyResult" type="tns:WsDummyResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="WsDummyResponse">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="appserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="dbserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="authserver" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="WdepIngresosSoapIn">
+    <wsdl:part name="parameters" element="tns:WdepIngresos" />
+  </wsdl:message>
+  <wsdl:message name="WdepIngresosSoapOut">
+    <wsdl:part name="parameters" element="tns:WdepIngresosResponse" />
+  </wsdl:message>
+  <wsdl:message name="WdepSalidasSoapIn">
+    <wsdl:part name="parameters" element="tns:WdepSalidas" />
+  </wsdl:message>
+  <wsdl:message name="WdepSalidasSoapOut">
+    <wsdl:part name="parameters" element="tns:WdepSalidasResponse" />
+  </wsdl:message>
+  <wsdl:message name="WdepSalidasPorMTSoapIn">
+    <wsdl:part name="parameters" element="tns:WdepSalidasPorMT" />
+  </wsdl:message>
+  <wsdl:message name="WdepSalidasPorMTSoapOut">
+    <wsdl:part name="parameters" element="tns:WdepSalidasPorMTResponse" />
+  </wsdl:message>
+  <wsdl:message name="WdepListarRutasSoapIn">
+    <wsdl:part name="parameters" element="tns:WdepListarRutas" />
+  </wsdl:message>
+  <wsdl:message name="WdepListarRutasSoapOut">
+    <wsdl:part name="parameters" element="tns:WdepListarRutasResponse" />
+  </wsdl:message>
+  <wsdl:message name="WdepListaTitulosPorContenedorSoapIn">
+    <wsdl:part name="parameters" element="tns:WdepListaTitulosPorContenedor" />
+  </wsdl:message>
+  <wsdl:message name="WdepListaTitulosPorContenedorSoapOut">
+    <wsdl:part name="parameters" element="tns:WdepListaTitulosPorContenedorResponse" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapIn">
+    <wsdl:part name="parameters" element="tns:Dummy" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapOut">
+    <wsdl:part name="parameters" element="tns:DummyResponse" />
+  </wsdl:message>
+  <wsdl:portType name="wdepMovimientosSoap">
+    <wsdl:operation name="WdepIngresos">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Ingresos a deposito de importacion/exportacion. Ingreso a zona portuaria de exportacion.</wsdl:documentation>
+      <wsdl:input message="tns:WdepIngresosSoapIn" />
+      <wsdl:output message="tns:WdepIngresosSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="WdepSalidas">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Ingresos a deposito de importacion/exportacion. Ingreso a zona portuaria de exportacion.</wsdl:documentation>
+      <wsdl:input message="tns:WdepSalidasSoapIn" />
+      <wsdl:output message="tns:WdepSalidasSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="WdepSalidasPorMT">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Salida de deposito de importacion/exportacion por Medio de Transporte.</wsdl:documentation>
+      <wsdl:input message="tns:WdepSalidasPorMTSoapIn" />
+      <wsdl:output message="tns:WdepSalidasPorMTSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="WdepListarRutas">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Lista de rutas.</wsdl:documentation>
+      <wsdl:input message="tns:WdepListarRutasSoapIn" />
+      <wsdl:output message="tns:WdepListarRutasSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="WdepListaTitulosPorContenedor">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Lista de Titulos por Contedor.</wsdl:documentation>
+      <wsdl:input message="tns:WdepListaTitulosPorContenedorSoapIn" />
+      <wsdl:output message="tns:WdepListaTitulosPorContenedorSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Metodo dummy para verificacion de funcionamiento</wsdl:documentation>
+      <wsdl:input message="tns:DummySoapIn" />
+      <wsdl:output message="tns:DummySoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="wdepMovimientosSoap" type="tns:wdepMovimientosSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="WdepIngresos">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.wdepMovimientos.wdepMovimientos/WdepIngresos" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="WdepSalidas">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.wdepMovimientos.wdepMovimientos/WdepSalidas" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="WdepSalidasPorMT">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.wdepMovimientos.wdepMovimientos/WdepSalidasPorMT" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="WdepListarRutas">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.wdepMovimientos.wdepMovimientos/WdepListarRutas" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="WdepListaTitulosPorContenedor">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.wdepMovimientos.wdepMovimientos/WdepListaTitulosPorContenedor" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.wdepMovimientos.wdepMovimientos/Dummy" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="wdepMovimientosSoap12" type="tns:wdepMovimientosSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="WdepIngresos">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.wdepMovimientos.wdepMovimientos/WdepIngresos" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="WdepSalidas">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.wdepMovimientos.wdepMovimientos/WdepSalidas" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="WdepSalidasPorMT">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.wdepMovimientos.wdepMovimientos/WdepSalidasPorMT" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="WdepListarRutas">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.wdepMovimientos.wdepMovimientos/WdepListarRutas" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="WdepListaTitulosPorContenedor">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.wdepMovimientos.wdepMovimientos/WdepListaTitulosPorContenedor" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.wdepMovimientos.wdepMovimientos/Dummy" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="wdepMovimientos">
+    <wsdl:port name="wdepMovimientosSoap" binding="tns:wdepMovimientosSoap">
+      <soap:address location="https://servicios3.arca.gob.ar/dia/ws/wdepMovimientos/wdepMovimientos.asmx" />
+    </wsdl:port>
+    <wsdl:port name="wdepMovimientosSoap12" binding="tns:wdepMovimientosSoap12">
+      <soap12:address location="https://servicios3.arca.gob.ar/dia/ws/wdepMovimientos/wdepMovimientos.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

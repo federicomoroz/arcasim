@@ -18,21 +18,35 @@ public sealed record WebService(string Id, string Description)
 {
     public string TokenDestination => $"CN={Id}, O=AFIP, C=AR";
 
-    /// <summary>The services ArcaSim answers for. WSAA rejects any other id with wsn.notFound.</summary>
-    public static readonly IReadOnlyList<WebService> Known =
+    /// <summary>The services with their own code; the ones answered through their WSDL register at startup.</summary>
+    private static readonly List<WebService> Registered =
     [
         new("wsfe", "Factura Electrónica (WSFEv1)"),
         new("ws_sr_constancia_inscripcion", "Constancia de inscripción"),
         new("ws_sr_padron_a5", "Constancia de inscripción (nombre anterior)"),
         new("ws_sr_padron_a13", "Padrón A13"),
-        new("ws_sr_padron_a4", "Padrón A4"),
-        new("ws_sr_padron_a10", "Padrón A10"),
-        new("ws_sr_padron_a100", "Padrón A100: tablas de parámetros"),
-        new("wscdc", "Constatación de comprobantes"),
-        new("wsfex", "Factura de exportación (WSFEXv1)"),
     ];
 
-    public static WebService? Find(string id) => Known.FirstOrDefault(s => s.Id == id);
+    /// <summary>The services ArcaSim answers for. WSAA rejects any other id with wsn.notFound.</summary>
+    public static IReadOnlyList<WebService> Known
+    {
+        get
+        {
+            lock (Registered) return Registered.ToList();
+        }
+    }
+
+    /// <summary>Adds a service id, from the catalog of services answered through their WSDL.</summary>
+    public static void Register(string id, string description)
+    {
+        lock (Registered)
+            if (Registered.All(s => s.Id != id)) Registered.Add(new WebService(id, description));
+    }
+
+    public static WebService? Find(string id)
+    {
+        lock (Registered) return Registered.FirstOrDefault(s => s.Id == id);
+    }
 }
 
 /// <summary>A TA that WSAA handed out, kept to apply the anti-repeat window.</summary>

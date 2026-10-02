@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="CertificadoDNRPAService" targetNamespace="http://impl.service.cta.afip.gov.ar/CertificadoDNRPAService/" xmlns:ns="http://impl.service.cta.afip.gov.ar/CertificadoDNRPAService/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/">
+<wsdl:documentation>
+		CertificadoDNRPAService
+	</wsdl:documentation>
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://impl.service.cta.afip.gov.ar/CertificadoDNRPAService/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        	<xsd:element name="dummyResponse">
+        		<xsd:complexType>
+        			<xsd:sequence>
+        				<xsd:element maxOccurs="1" minOccurs="0" name="return" type="ns:DummyResponse">
+        				</xsd:element>
+        			</xsd:sequence>
+        		</xsd:complexType>
+        	</xsd:element>        
+        	<xsd:complexType name="DummyResponse">
+        		<xsd:sequence>
+        			<xsd:element name="appserver" type="xsd:string"/>
+        			<xsd:element name="authserver" type="xsd:string"/>
+        			<xsd:element name="dbserver" type="xsd:string"/>
+        		</xsd:sequence>
+        	</xsd:complexType>
+        	<xsd:element name="Exception">
+        		<xsd:complexType>
+        			<xsd:sequence>
+        				<xsd:element maxOccurs="1" minOccurs="0" name="Exception" type="xsd:string">
+        				</xsd:element>
+        			</xsd:sequence>
+        		</xsd:complexType>
+        	</xsd:element>
+        	<xsd:element name="getCertificadoPDF">
+        		<xsd:complexType>
+        			<xsd:sequence>
+        				<xsd:element name="token" type="xsd:string"/>
+						<xsd:element name="sign" type="xsd:string">
+						</xsd:element>
+						<xsd:element name="nroCertificado" type="xsd:long">
+						</xsd:element>
+						<xsd:element name="cuitRepresentado" type="xsd:long">
+						</xsd:element>
+						<xsd:element name="nroDominio" type="xsd:string">
+						</xsd:element>
+        			</xsd:sequence>
+        		</xsd:complexType>
+        	</xsd:element>
+        	<xsd:element name="getCertificadoPDFResponse">
+        		<xsd:complexType>
+        			<xsd:sequence>
+						<xsd:element maxOccurs="1" minOccurs="0" name="return" type="ns:CertificadoDTO">
+						</xsd:element>
+        			</xsd:sequence>
+        		</xsd:complexType>
+        	</xsd:element>
+        	<xsd:complexType name="CertificadoDTO">
+        		<xsd:sequence>
+					<xsd:element name="documentoPDF" type="xsd:string">
+					</xsd:element>
+					<xsd:element name="idLog" type="xsd:long">
+					</xsd:element>
+        		</xsd:sequence>
+        	</xsd:complexType>
+        	<xsd:element name="rechazarCertificado">
+        		<xsd:complexType>
+        			<xsd:sequence>
+        				<xsd:element name="token" type="xsd:string"/>
+        				<xsd:element name="sign" type="xsd:string"/>
+						<xsd:element name="nroCertificado" type="xsd:long">
+						</xsd:element>
+						<xsd:element name="cuitRepresentado" type="xsd:long">
+						</xsd:element>
+						<xsd:element name="registroSeccionalDNRPA" type="xsd:string">
+						</xsd:element>
+        			</xsd:sequence>
+        		</xsd:complexType>
+        	</xsd:element>
+        	<xsd:element name="rechazarCertificadoResponse">
+        		<xsd:complexType>
+        			<xsd:sequence>
+        				<xsd:element name="idLog" type="xsd:long"/>
+        			</xsd:sequence>
+        		</xsd:complexType>
+        	</xsd:element>
+        	<xsd:element name="aprobarCertificado">
+        		<xsd:complexType>
+        			<xsd:sequence>
+        				<xsd:element name="token" type="xsd:string"/>
+						<xsd:element name="sign" type="xsd:string">
+						</xsd:element>
+						<xsd:element name="nroCertificado" type="xsd:long">
+						</xsd:element>
+						<xsd:element name="cuitRepresentado" type="xsd:long">
+						</xsd:element>
+						<xsd:element name="registroSeccionalDNRPA" type="xsd:string">
+						</xsd:element>
+        			</xsd:sequence>
+        		</xsd:complexType>
+        	</xsd:element>
+        	<xsd:element name="aprobarCertificadoResponse">
+        		<xsd:complexType>
+        			<xsd:sequence>
+        				<xsd:element name="idLog" type="xsd:long"/>
+        			</xsd:sequence>
+        		</xsd:complexType>
+        	</xsd:element>
+        	<xsd:element name="consultarEstadoCertificado">
+        		<xsd:complexType>
+        			<xsd:sequence>
+						<xsd:element name="token" type="xsd:string"/>
+						<xsd:element name="sign" type="xsd:string">
+						</xsd:element>
+        				<xsd:element name="nroCertificado" type="xsd:long">
+						</xsd:element>
+        				<xsd:element name="cuitRepresentado" type="xsd:long">
+						</xsd:element>
+        				<xsd:element name="nroDominio" type="xsd:string">
+						</xsd:element>
+        			</xsd:sequence>
+        		</xsd:complexType>
+        	</xsd:element>
+        	<xsd:element name="consultarEstadoCertificadoResponse">
+        		<xsd:complexType>
+        			<xsd:sequence>
+						<xsd:element maxOccurs="1" minOccurs="1" name="return" type="ns:ConsultarEstadoCertificadoResponseType"/>
+        			</xsd:sequence>
+        		</xsd:complexType>
+        	</xsd:element>
+            <xsd:element name="CertificatesByDomain">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="token" type="xsd:string"/>
+                        <xsd:element name="sign" type="xsd:string"/>
+                        <xsd:element name="cuitRepresentado" type="xsd:long"/>
+                        <xsd:element name="nroDominio" type="xsd:string"/>
+        			</xsd:sequence>
+        		</xsd:complexType>
+        	</xsd:element>    
+            <xsd:element name="getListCertificatesByDomainResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+						<xsd:element maxOccurs="unbounded" minOccurs="1" name="return" type="ns:ListCertificatesByDomainResponseType"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+			<xsd:complexType name="ListCertificatesByDomainResponseType">
+				<xsd:sequence>
+					<xsd:element maxOccurs="1" minOccurs="1" name="idLog" type="xsd:long">
+					</xsd:element>
+					<xsd:element maxOccurs="1" minOccurs="1" name="nroDominio" type="xsd:string">
+					</xsd:element>
+					<xsd:element maxOccurs="1" minOccurs="1" name="cuitSolicitante" type="xsd:string">
+					</xsd:element>
+					<xsd:element maxOccurs="1" minOccurs="1" name="nroTramite" type="xsd:string">
+					</xsd:element>
+					<xsd:element maxOccurs="1" minOccurs="1" name="estado" type="xsd:string">
+					</xsd:element>
+					<xsd:element maxOccurs="1" minOccurs="0" name="fechaAprobacion" type="xsd:string">
+					</xsd:element>
+					<xsd:element maxOccurs="1" minOccurs="0" name="fechaRechazo" type="xsd:string">
+					</xsd:element>
+					<xsd:element maxOccurs="1" minOccurs="0" name="registroSeccionalDNRPA" type="xsd:string"/>
+					<xsd:element maxOccurs="1" minOccurs="1" name="documentoPDF" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:complexType>
+        	<xsd:complexType name="ConsultarEstadoCertificadoResponseType">
+        		<xsd:sequence>
+        			<xsd:element maxOccurs="1" minOccurs="1" name="idLog" type="xsd:long">
+					</xsd:element>
+        			<xsd:element maxOccurs="1" minOccurs="1" name="estado" type="xsd:string">
+					</xsd:element>
+        			<xsd:element maxOccurs="1" minOccurs="0" name="fechaAprobacion" type="xsd:string">
+					</xsd:element>
+        			<xsd:element maxOccurs="1" minOccurs="0" name="fechaRechazo" type="xsd:string">
+        			</xsd:element>
+        			<xsd:element maxOccurs="1" minOccurs="0" name="registroSeccionalDNRPA" type="xsd:string"/>
+        			<xsd:element maxOccurs="1" minOccurs="1" name="documentoPDF" type="xsd:string"/>
+        		</xsd:sequence>
+        	</xsd:complexType>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="aprobarCertificadoResponse">
+    <wsdl:part name="parameters" element="ns:aprobarCertificadoResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="aprobarCertificadoRequest">
+    <wsdl:part name="parameters" element="ns:aprobarCertificado">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="dummyRequest">
+  </wsdl:message>
+  <wsdl:message name="getListCertificatesByDomainResponse">
+    <wsdl:part name="parameters" element="ns:getListCertificatesByDomainResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="consultarEstadoCertificadoRequest">
+    <wsdl:part name="parameters" element="ns:consultarEstadoCertificado">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="rechazarCertificadoRequest">
+    <wsdl:part name="parameters" element="ns:rechazarCertificado">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="getCertificadoPDFRequest">
+    <wsdl:part name="parameters" element="ns:getCertificadoPDF">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="rechazarCertificadoResponse">
+    <wsdl:part name="parameters" element="ns:rechazarCertificadoResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="getCertificadoPDFResponse">
+    <wsdl:part name="parameters" element="ns:getCertificadoPDFResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="dummyResponse">
+    <wsdl:part name="parameters" element="ns:dummyResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="Exception">
+    <wsdl:part name="parameters" element="ns:Exception">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="consultarEstadoCertificadoResponse">
+    <wsdl:part name="parameters" element="ns:consultarEstadoCertificadoResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="getListCertificatesByDomainRequest">
+    <wsdl:part name="parameters" element="ns:CertificatesByDomain">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="CertificadoDNRPAServicePortType">
+    <wsdl:operation name="dummy">
+      <wsdl:input message="ns:dummyRequest">
+    </wsdl:input>
+      <wsdl:output message="ns:dummyResponse">
+    </wsdl:output>
+      <wsdl:fault name="Exception" message="ns:Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getCertificadoPDF">
+      <wsdl:input message="ns:getCertificadoPDFRequest">
+    </wsdl:input>
+      <wsdl:output message="ns:getCertificadoPDFResponse">
+    </wsdl:output>
+      <wsdl:fault name="Exception" message="ns:Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="rechazarCertificado">
+      <wsdl:input message="ns:rechazarCertificadoRequest">
+    </wsdl:input>
+      <wsdl:output message="ns:rechazarCertificadoResponse">
+    </wsdl:output>
+      <wsdl:fault name="Exception" message="ns:Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="aprobarCertificado">
+      <wsdl:input message="ns:aprobarCertificadoRequest">
+    </wsdl:input>
+      <wsdl:output message="ns:aprobarCertificadoResponse">
+    </wsdl:output>
+      <wsdl:fault name="Exception" message="ns:Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="consultarEstadoCertificado">
+      <wsdl:input message="ns:consultarEstadoCertificadoRequest">
+    </wsdl:input>
+      <wsdl:output message="ns:consultarEstadoCertificadoResponse">
+    </wsdl:output>
+      <wsdl:fault name="Exception" message="ns:Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getListCertificatesByDomain">
+      <wsdl:input message="ns:getListCertificatesByDomainRequest">
+    </wsdl:input>
+      <wsdl:output message="ns:getListCertificatesByDomainResponse">
+    </wsdl:output>
+      <wsdl:fault name="Exception" message="ns:Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="CertificadoDNRPAServiceSoap11Binding" type="ns:CertificadoDNRPAServicePortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="dummy">
+      <soap:operation soapAction="http://impl.service.cta.afip.gov.ar/CertificadoDNRPAService/dummy"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getCertificadoPDF">
+      <soap:operation soapAction="http://impl.service.cta.afip.gov.ar/CertificadoDNRPAService/getCertificadoPDF"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="rechazarCertificado">
+      <soap:operation soapAction="http://impl.service.cta.afip.gov.ar/CertificadoDNRPAService/rechazarCertificado"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="aprobarCertificado">
+      <soap:operation soapAction="http://impl.service.cta.afip.gov.ar/CertificadoDNRPAService/aprobarCertificado"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="consultarEstadoCertificado">
+      <soap:operation soapAction="http://impl.service.cta.afip.gov.ar/CertificadoDNRPAService/consultarEstadoCertificado"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getListCertificatesByDomain">
+      <soap:operation soapAction="http://impl.service.cta.afip.gov.ar/CertificadoDNRPAService/getListCertificatesByDomain"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="CertificadoDNRPAService">
+    <wsdl:port name="CertificadoDNRPAServiceHttpSoap11Endpoint" binding="ns:CertificadoDNRPAServiceSoap11Binding">
+      <soap:address location="https://serviciosjava.afip.gob.ar/wscta/services/CertificadoDNRPAService"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

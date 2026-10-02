@@ -1,0 +1,1094 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones">
+      <s:element name="PndListaGOPDetallada">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argPndListaGOPDetallada" type="tns:ReqPndListaGOPDetallada" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="Autenticacion">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:AutenticacionBase">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Cuit" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="TipoAgente" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="Rol" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="AutenticacionBase">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Token" nillable="true" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Sign" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ReqPndListaGOPDetallada">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ReqBurLot" />
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ReqBurLot">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Aduana" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LugarOperativo" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="PndListaGOPDetalladaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="PndListaGOPDetalladaResult" type="tns:RtaPndListaGOPDetallada" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaPndListaGOPDetallada">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="Pendientes" type="tns:ArrayOfPendiente" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Recibo">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="CodErr" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="DesError" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescAdicErr" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfPendiente">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Pendiente" nillable="true" type="tns:Pendiente" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Pendiente">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ListaGOPCaratDeta">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argListaGOPCaratDeta" type="tns:ReqListaGOPCaratDeta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ReqListaGOPCaratDeta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ReqBurLot">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="ListaGOPCaratDetaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ListaGOPCaratDetaResult" type="tns:RtaListaGOPCaratDeta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaListaGOPCaratDeta">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="Declaracion" type="tns:Declaracion" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Declaracion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodAduReg" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodTipDecla" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodImpoExpo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NomImpoExpo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitImpoExpo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitDesp" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitTransp" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NomProvDest" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodViaMedTransp" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdDecSumaria" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdDepoAlmac" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodAduOrigDest" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodPaisOrigDest" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodDivisaSeg" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodDivisaFle" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodDivisaFob" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FacilidadPago" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechCierreVta" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechOfic" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechCump" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="MotAnulac" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodCondVta" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoFobTotDol" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoFob" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoSeg" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoFlete" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodCondInsIva" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="MotDestSusp" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantDiasAutDestSusp" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantDiasProrrDestSusp" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechVencDestSusp" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantBultos" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="PesoBrutoBultos" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodDeposito" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="MatMedTransp" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodPaisMedTransp" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodPuertoCompAerea" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroGuia" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechLlegMedTransp" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodEstDecla" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoBaseImponible" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="IndFaltaSob" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IndAfecTran" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodTipProc" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="CotizDivisa" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdPreDespacho" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Embarques" type="tns:ArrayOfEmbarque" />
+          <s:element minOccurs="0" maxOccurs="1" name="MarcasYNumeros" type="tns:ArrayOfBulto" />
+          <s:element minOccurs="0" maxOccurs="1" name="Documentos" type="tns:ArrayOfDocumento" />
+          <s:element minOccurs="0" maxOccurs="1" name="DatosComplementarios" type="tns:ArrayOfDatoComplementario" />
+          <s:element minOccurs="0" maxOccurs="1" name="Terceros" type="tns:ArrayOfTercero" />
+          <s:element minOccurs="0" maxOccurs="1" name="Beneficios" type="tns:ArrayOfBeneficio" />
+          <s:element minOccurs="0" maxOccurs="1" name="Reintegros" type="tns:ArrayOfReintegro" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfEmbarque">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Embarque" nillable="true" type="tns:Embarque" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Embarque">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDocTransp" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdVehiculo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FechEmb" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfBulto">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Bulto" nillable="true" type="tns:Bulto" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Bulto">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="NroLinea" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodEmbalaje" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodTipEmbalaje" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroBultos" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantDecla" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantCump" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantDispo" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="PesoPrecum" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="PesoCump" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodUniMedida" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfDocumento">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Documento" nillable="true" type="tns:Documento" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Documento">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodDoc" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="PresDocPresenta" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="RefDoc" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfDatoComplementario">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="DatoComplementario" nillable="true" type="tns:DatoComplementario" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DatoComplementario">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodDato" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="SufValDatoComp" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Valor" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfTercero">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Tercero" nillable="true" type="tns:Tercero" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Tercero">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodTipDoc" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroDoc" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Nombre" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Domicilio" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfBeneficio">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Beneficio" nillable="true" type="tns:Beneficio" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Beneficio">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodConcep" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoBenef" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="AutPago" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfReintegro">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Reintegro" nillable="true" type="tns:Reintegro" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Reintegro">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDevo" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="NroCompDevo" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodTipCompDevo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodClasDevo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodMotDevo" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechCrea" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechEstado" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodDivisa" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="ImpDevo" type="s:double" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ListaGOPItemsDeta">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argListaGOPItemsDeta" type="tns:ReqListaGOPItemsDeta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ReqListaGOPItemsDeta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ReqBurLot">
+            <s:sequence>
+              <s:element minOccurs="1" maxOccurs="1" name="NroLote" type="s:decimal" />
+              <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="ListaGOPItemsDetaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ListaGOPItemsDetaResult" type="tns:RtaListaGOPItemsDeta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaListaGOPItemsDeta">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="Items" type="tns:Items" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Items">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="NroLote" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="IndUltLote" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Items" type="tns:ArrayOfItem" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Item" nillable="true" type="tns:Item" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Item">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="NroItem" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="PosArancelaria" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodUniDecla" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantUniDecla" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoFobDivisa" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoFobDol" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="PrecioUnitario" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="PesoNetoKilos" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodPaisOrigDest" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodPaisProc" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodEstMercad" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="PosArancGattNaladisa" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Acuerdo" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoFleteDivisa" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoSeguroDivisa" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoAjusteIncluirDol" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoAjusteDeducirDol" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodUniEstad" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoBaseImpDol" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantUniDerechoEspecif" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantEstadistica" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodUniDerechoEspecif" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="InsumosImpTemp" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="InsumosImpAConsumo" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="CoefExpo" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="IndCalidadDistStand" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IndPagoRegalias" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodTipItem" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodProducto" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="NroItemCancel" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="DeclaCancel" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="PosArancCancel" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechMomImp" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantCancel" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="BaseImponibleDivisa" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="PrecioOficialDol" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodUniPrecioOficial" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoDispoACancelar" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="DocumentosItem" type="tns:ArrayOfDocumentoItem" />
+          <s:element minOccurs="0" maxOccurs="1" name="DatosComplementariosItem" type="tns:ArrayOfDatoComplementarioItem" />
+          <s:element minOccurs="0" maxOccurs="1" name="BeneficiosItem" type="tns:ArrayOfBeneficioItem" />
+          <s:element minOccurs="0" maxOccurs="1" name="LiquidacionesItem" type="tns:ArrayOfLiquidacionItem" />
+          <s:element minOccurs="0" maxOccurs="1" name="VentajasItem" type="tns:ArrayOfVentajaItem" />
+          <s:element minOccurs="0" maxOccurs="1" name="SubItems" type="tns:ArrayOfSubitem" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfDocumentoItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="DocumentoItem" nillable="true" type="tns:DocumentoItem" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DocumentoItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodDoc" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="PresDocPresenta" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="RefDoc" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfDatoComplementarioItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="DatoComplementarioItem" nillable="true" type="tns:DatoComplementarioItem" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DatoComplementarioItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodDato" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="SufValDatoComp" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Valor" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfBeneficioItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="BeneficioItem" nillable="true" type="tns:BeneficioItem" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="BeneficioItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodConcep" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoBenef" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="AutPago" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfLiquidacionItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="LiquidacionItem" nillable="true" type="tns:LiquidacionItem" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="LiquidacionItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodConcep" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodTipOblig" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodMotGar" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="BaseImpConc" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="CoefConcep" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoConcep" type="s:double" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfVentajaItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="VentajaItem" nillable="true" type="tns:VentajaItem" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="VentajaItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodVen" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfSubitem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Subitem" nillable="true" type="tns:Subitem" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Subitem">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="NroSubitem" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoFob" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantDecla" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="PrecUniDol" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="SufijosVal" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CantUniDereEspecif" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodProducto" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="SubitemRef" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoFobDol" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantEstadistica" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="MarcaModVer" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ListaGOPLiquiDeta">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argListaGOPLiquiDeta" type="tns:ReqListaGOPLiquiDeta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ReqListaGOPLiquiDeta">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ReqBurLot">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="ListaGOPLiquiDetaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ListaGOPLiquiDetaResult" type="tns:RtaListaGOPLiquiDeta" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaListaGOPLiquiDeta">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="Liquidaciones" type="tns:Liquidaciones" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Liquidaciones">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Liquidaciones" type="tns:ArrayOfLiquidacion" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfLiquidacion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Liquidacion" nillable="true" type="tns:Liquidacion" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Liquidacion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NroLiq" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoPagar" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoGaran" type="s:decimal" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodDivisa" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodEstado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LiqCarLineas" type="tns:ArrayOfLiqCarLinea" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfLiqCarLinea">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="LiqCarLinea" nillable="true" type="tns:LiqCarLinea" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="LiqCarLinea">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodConcep" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodTipOblig" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodMotGar" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="MontoConcep" type="s:decimal" />
+          <s:element minOccurs="0" maxOccurs="1" name="PagLineas" type="tns:ArrayOfPagLinea" />
+          <s:element minOccurs="0" maxOccurs="1" name="GarantiaLineas" type="tns:ArrayOfGarantiaLinea" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfPagLinea">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="PagLinea" nillable="true" type="tns:PagLinea" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="PagLinea">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodTipSubcuenta" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodMedDepo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroMedDepo" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="ImpDepo" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfGarantiaLinea">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="GarantiaLinea" nillable="true" type="tns:GarantiaLinea" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="GarantiaLinea">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdGar" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodMotGar" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="ImpAfect" type="s:double" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ListaGOPCancelaA">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argListaGOPCancelaA" type="tns:ReqListaGOPCancelaA" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ReqListaGOPCancelaA">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ReqBurLot">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+              <s:element minOccurs="1" maxOccurs="1" name="NroItem" type="s:int" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="ListaGOPCancelaAResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ListaGOPCancelaAResult" type="tns:RtaCancelacionesA" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaCancelacionesA">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="CancelacionesA" type="tns:CancelacionesA" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="CancelacionesA">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="NroItem" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="CancelaA" type="tns:ArrayOfCancelaA" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfCancelaA">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="CancelaA" nillable="true" type="tns:CancelaA" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="CancelaA">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="NroItemCancel" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="PosAranCancel" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantCancel" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodEstCancel" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechEstCancel" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="Expediente" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="NroOrden" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroResol" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="NroSubitemCancel" type="s:int" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ListaGOPItemsCancelados">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argListaGOPItemsCancelados" type="tns:ReqListaGOPItemsCancelados" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ReqListaGOPItemsCancelados">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ReqBurLot">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+              <s:element minOccurs="1" maxOccurs="1" name="NroItem" type="s:int" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="ListaGOPItemsCanceladosResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ListaGOPItemsCanceladosResult" type="tns:RtaListaGOPItemsCancelados" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaListaGOPItemsCancelados">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="CancelacionesPor" type="tns:CancelacionesPor" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="CancelacionesPor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="NroItem" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="CanceladaPor" type="tns:ArrayOfCanceladaPor" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfCanceladaPor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="CanceladaPor" nillable="true" type="tns:CanceladaPor" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="CanceladaPor">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="NroSubitemCancel" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="Declaracion" type="tns:DeclaCancel" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DeclaCancel">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="NroItemCancel" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="PosAranCancel" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantCancel" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodEstCancel" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechEstCancel" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="Expediente" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="NroOrden" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroResol" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="PndListaGOPEstados">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argPndListaGOPEstados" type="tns:ReqPndListaGOPEstados" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ReqPndListaGOPEstados">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ReqBurLot" />
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="PndListaGOPEstadosResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="PndListaGOPEstadosResult" type="tns:RtaPndListaGOPEstados" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaPndListaGOPEstados">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="Pendientes" type="tns:ArrayOfPendiente" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ListaGOPEstados">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argListaGOPEstados" type="tns:ReqListaGOPEstados" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ReqListaGOPEstados">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ReqBurLot">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="ListaGOPEstadosResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ListaGOPEstadosResult" type="tns:RtaListaGOPEstados" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaListaGOPEstados">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="EstadosDeclaracion" type="tns:EstadosDeclaracion" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="EstadosDeclaracion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitImpoExpo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodEstDecla" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodCanal" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechOfic" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechPresen" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechObtAutoriza" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechCancel" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechCump" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechSal" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechEmb" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="IndEstadoRein" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechPrecum" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechAutRein" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechCreaDev" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechPagDev" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ListaGOPBloqueos">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argListaBloqueos" type="tns:ReqListaBloqueos" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ReqListaBloqueos">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:ReqBurLot">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="IdDecla" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="ListaGOPBloqueosResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ListaGOPBloqueosResult" type="tns:RtaListaBloqueos" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaListaBloqueos">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="Bloqueos" type="tns:Bloqueos" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Bloqueos">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Destinacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="ListaBloqueos" type="tns:ArrayOfBloqueo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfBloqueo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Bloqueo" nillable="true" type="tns:Bloqueo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Bloqueo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CuitImportador" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitDespachante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoBloqueo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FechaBloqueo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FechaDesbloqueo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Observaciones" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FechaDenegacion" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CausaDenegacion" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="Dummy">
+        <s:complexType />
+      </s:element>
+      <s:element name="DummyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DummyResult" type="tns:WsDummyResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="WsDummyResponse">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="appserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="dbserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="authserver" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="PndListaGOPDetalladaSoapIn">
+    <wsdl:part name="parameters" element="tns:PndListaGOPDetallada" />
+  </wsdl:message>
+  <wsdl:message name="PndListaGOPDetalladaSoapOut">
+    <wsdl:part name="parameters" element="tns:PndListaGOPDetalladaResponse" />
+  </wsdl:message>
+  <wsdl:message name="ListaGOPCaratDetaSoapIn">
+    <wsdl:part name="parameters" element="tns:ListaGOPCaratDeta" />
+  </wsdl:message>
+  <wsdl:message name="ListaGOPCaratDetaSoapOut">
+    <wsdl:part name="parameters" element="tns:ListaGOPCaratDetaResponse" />
+  </wsdl:message>
+  <wsdl:message name="ListaGOPItemsDetaSoapIn">
+    <wsdl:part name="parameters" element="tns:ListaGOPItemsDeta" />
+  </wsdl:message>
+  <wsdl:message name="ListaGOPItemsDetaSoapOut">
+    <wsdl:part name="parameters" element="tns:ListaGOPItemsDetaResponse" />
+  </wsdl:message>
+  <wsdl:message name="ListaGOPLiquiDetaSoapIn">
+    <wsdl:part name="parameters" element="tns:ListaGOPLiquiDeta" />
+  </wsdl:message>
+  <wsdl:message name="ListaGOPLiquiDetaSoapOut">
+    <wsdl:part name="parameters" element="tns:ListaGOPLiquiDetaResponse" />
+  </wsdl:message>
+  <wsdl:message name="ListaGOPCancelaASoapIn">
+    <wsdl:part name="parameters" element="tns:ListaGOPCancelaA" />
+  </wsdl:message>
+  <wsdl:message name="ListaGOPCancelaASoapOut">
+    <wsdl:part name="parameters" element="tns:ListaGOPCancelaAResponse" />
+  </wsdl:message>
+  <wsdl:message name="ListaGOPItemsCanceladosSoapIn">
+    <wsdl:part name="parameters" element="tns:ListaGOPItemsCancelados" />
+  </wsdl:message>
+  <wsdl:message name="ListaGOPItemsCanceladosSoapOut">
+    <wsdl:part name="parameters" element="tns:ListaGOPItemsCanceladosResponse" />
+  </wsdl:message>
+  <wsdl:message name="PndListaGOPEstadosSoapIn">
+    <wsdl:part name="parameters" element="tns:PndListaGOPEstados" />
+  </wsdl:message>
+  <wsdl:message name="PndListaGOPEstadosSoapOut">
+    <wsdl:part name="parameters" element="tns:PndListaGOPEstadosResponse" />
+  </wsdl:message>
+  <wsdl:message name="ListaGOPEstadosSoapIn">
+    <wsdl:part name="parameters" element="tns:ListaGOPEstados" />
+  </wsdl:message>
+  <wsdl:message name="ListaGOPEstadosSoapOut">
+    <wsdl:part name="parameters" element="tns:ListaGOPEstadosResponse" />
+  </wsdl:message>
+  <wsdl:message name="ListaGOPBloqueosSoapIn">
+    <wsdl:part name="parameters" element="tns:ListaGOPBloqueos" />
+  </wsdl:message>
+  <wsdl:message name="ListaGOPBloqueosSoapOut">
+    <wsdl:part name="parameters" element="tns:ListaGOPBloqueosResponse" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapIn">
+    <wsdl:part name="parameters" element="tns:Dummy" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapOut">
+    <wsdl:part name="parameters" element="tns:DummyResponse" />
+  </wsdl:message>
+  <wsdl:portType name="WutiGOPDeclaracionesSoap">
+    <wsdl:operation name="PndListaGOPDetallada">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Lista de Destinaciones Detalladas pendientes de transmitir.</wsdl:documentation>
+      <wsdl:input message="tns:PndListaGOPDetalladaSoapIn" />
+      <wsdl:output message="tns:PndListaGOPDetalladaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPCaratDeta">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Lista la Caratula de la Destinacion Detallada.</wsdl:documentation>
+      <wsdl:input message="tns:ListaGOPCaratDetaSoapIn" />
+      <wsdl:output message="tns:ListaGOPCaratDetaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPItemsDeta">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Lista los items de la  Destinacion Detallada.</wsdl:documentation>
+      <wsdl:input message="tns:ListaGOPItemsDetaSoapIn" />
+      <wsdl:output message="tns:ListaGOPItemsDetaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPLiquiDeta">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Lista la Liquidacion a nivel Gral de una  Destinacion Detallada.</wsdl:documentation>
+      <wsdl:input message="tns:ListaGOPLiquiDetaSoapIn" />
+      <wsdl:output message="tns:ListaGOPLiquiDetaSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPCancelaA">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Muestra todas las Destinaciones a las que cancela la Destinacion-Item ingresado.</wsdl:documentation>
+      <wsdl:input message="tns:ListaGOPCancelaASoapIn" />
+      <wsdl:output message="tns:ListaGOPCancelaASoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPItemsCancelados">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Muestra todas las Destinaciones que cancelaron la Destinacion-Item ingresado</wsdl:documentation>
+      <wsdl:input message="tns:ListaGOPItemsCanceladosSoapIn" />
+      <wsdl:output message="tns:ListaGOPItemsCanceladosSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="PndListaGOPEstados">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Lista de Destinaciones Detalladas que han tenido cambios de Estado.</wsdl:documentation>
+      <wsdl:input message="tns:PndListaGOPEstadosSoapIn" />
+      <wsdl:output message="tns:PndListaGOPEstadosSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPEstados">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Lista las Fecha de Estado de la Destinacion Detallada.</wsdl:documentation>
+      <wsdl:input message="tns:ListaGOPEstadosSoapIn" />
+      <wsdl:output message="tns:ListaGOPEstadosSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPBloqueos">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Lista los Bloqueos de una Destinacion.</wsdl:documentation>
+      <wsdl:input message="tns:ListaGOPBloqueosSoapIn" />
+      <wsdl:output message="tns:ListaGOPBloqueosSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Metodo dummy para verificacion de funcionamiento</wsdl:documentation>
+      <wsdl:input message="tns:DummySoapIn" />
+      <wsdl:output message="tns:DummySoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="WutiGOPDeclaracionesSoap" type="tns:WutiGOPDeclaracionesSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="PndListaGOPDetallada">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/PndListaGOPDetallada" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPCaratDeta">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/ListaGOPCaratDeta" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPItemsDeta">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/ListaGOPItemsDeta" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPLiquiDeta">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/ListaGOPLiquiDeta" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPCancelaA">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/ListaGOPCancelaA" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPItemsCancelados">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/ListaGOPItemsCancelados" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="PndListaGOPEstados">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/PndListaGOPEstados" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPEstados">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/ListaGOPEstados" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPBloqueos">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/ListaGOPBloqueos" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/Dummy" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="WutiGOPDeclaracionesSoap12" type="tns:WutiGOPDeclaracionesSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="PndListaGOPDetallada">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/PndListaGOPDetallada" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPCaratDeta">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/ListaGOPCaratDeta" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPItemsDeta">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/ListaGOPItemsDeta" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPLiquiDeta">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/ListaGOPLiquiDeta" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPCancelaA">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/ListaGOPCancelaA" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPItemsCancelados">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/ListaGOPItemsCancelados" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="PndListaGOPEstados">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/PndListaGOPEstados" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPEstados">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/ListaGOPEstados" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaGOPBloqueos">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/ListaGOPBloqueos" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap12:operation soapAction="ar.gov.afip.dia.serviciosweb.WutiGOPDeclaraciones/Dummy" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="WutiGOPDeclaraciones">
+    <wsdl:port name="WutiGOPDeclaracionesSoap" binding="tns:WutiGOPDeclaracionesSoap">
+      <soap:address location="https://testdia.afip.gov.ar/Dia/Ws/WutiGOPDeclaraciones/WutiGOPDeclaraciones.asmx" />
+    </wsdl:port>
+    <wsdl:port name="WutiGOPDeclaracionesSoap12" binding="tns:WutiGOPDeclaracionesSoap12">
+      <soap12:address location="https://testdia.afip.gov.ar/Dia/Ws/WutiGOPDeclaraciones/WutiGOPDeclaraciones.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

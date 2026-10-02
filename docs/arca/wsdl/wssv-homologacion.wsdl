@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="https://wswhomo.afip.gov.ar/wssv/service.asmx" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="https://wswhomo.afip.gov.ar/wssv/service.asmx" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="https://wswhomo.afip.gov.ar/wssv/service.asmx">
+      <s:element name="Reporte">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="AuthObj" type="tns:WSSV_AuthObj" />
+            <s:element minOccurs="0" maxOccurs="1" name="IdTras" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="IdDES" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="FHDES" type="s:dateTime" />
+            <s:element minOccurs="1" maxOccurs="1" name="Lat" type="s:double" />
+            <s:element minOccurs="1" maxOccurs="1" name="Lng" type="s:double" />
+            <s:element minOccurs="0" maxOccurs="1" name="Alarmas" type="tns:ArrayOfString" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="WSSV_AuthObj">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Token" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Sign" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="CUIT" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfString">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="string" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ReporteResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ReporteResult" type="tns:WSResponseError" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="WSResponseError">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="RError" type="tns:WSError" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="WSError">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="ErrNum" type="s:short" />
+          <s:element minOccurs="0" maxOccurs="1" name="ErrMsg" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ListarAlarmas">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="AuthObj" type="tns:WSSV_AuthObj" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ListarAlarmasResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ListarAlarmasResult" type="tns:WSResponseAlarmas" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="WSResponseAlarmas">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Alarmas" type="tns:ArrayOfAlarma" />
+          <s:element minOccurs="0" maxOccurs="1" name="RError" type="tns:WSError" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfAlarma">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Alarma" nillable="true" type="tns:Alarma" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Alarma">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Id" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Des" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="TrasladoBegin">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="AuthObj" type="tns:WSSV_AuthObj" />
+            <s:element minOccurs="0" maxOccurs="1" name="IdTras" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="IdDES" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="IdRuta" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="IdCont" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="IdSalida" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="TrasladoBeginResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="TrasladoBeginResult" type="tns:WSResponseError" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="TrasladoEnd">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="AuthObj" type="tns:WSSV_AuthObj" />
+            <s:element minOccurs="0" maxOccurs="1" name="IdTras" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="TrasladoEndResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="TrasladoEndResult" type="tns:WSResponseError" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ListarTrasladosActivos">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="AuthObj" type="tns:WSSV_AuthObj" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ListarTrasladosActivosResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ListarTrasladosActivosResult" type="tns:WSResponseTraslados" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="WSResponseTraslados">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Traslados" type="tns:ArrayOfTraslado" />
+          <s:element minOccurs="0" maxOccurs="1" name="RError" type="tns:WSError" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfTraslado">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Traslado" nillable="true" type="tns:Traslado" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Traslado">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="IdTras" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdDES" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IdRuta" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ListarTraslado">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="AuthObj" type="tns:WSSV_AuthObj" />
+            <s:element minOccurs="0" maxOccurs="1" name="IdTras" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="IdDES" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ListarTrasladoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ListarTrasladoResult" type="tns:WSResponseDetalleTraslado" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="WSResponseDetalleTraslado">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Coordenadas" type="tns:ArrayOfCoordenada" />
+          <s:element minOccurs="0" maxOccurs="1" name="RError" type="tns:WSError" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfCoordenada">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Coordenada" nillable="true" type="tns:Coordenada" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Coordenada">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Fecha" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="Lat" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Lng" type="s:double" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="dummy">
+        <s:complexType />
+      </s:element>
+      <s:element name="dummyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="dummyResult" type="tns:DummyResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DummyResponse">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="appserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="dbserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="authserver" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="DummyResponse" nillable="true" type="tns:DummyResponse" />
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="ReporteSoapIn">
+    <wsdl:part name="parameters" element="tns:Reporte" />
+  </wsdl:message>
+  <wsdl:message name="ReporteSoapOut">
+    <wsdl:part name="parameters" element="tns:ReporteResponse" />
+  </wsdl:message>
+  <wsdl:message name="ListarAlarmasSoapIn">
+    <wsdl:part name="parameters" element="tns:ListarAlarmas" />
+  </wsdl:message>
+  <wsdl:message name="ListarAlarmasSoapOut">
+    <wsdl:part name="parameters" element="tns:ListarAlarmasResponse" />
+  </wsdl:message>
+  <wsdl:message name="TrasladoBeginSoapIn">
+    <wsdl:part name="parameters" element="tns:TrasladoBegin" />
+  </wsdl:message>
+  <wsdl:message name="TrasladoBeginSoapOut">
+    <wsdl:part name="parameters" element="tns:TrasladoBeginResponse" />
+  </wsdl:message>
+  <wsdl:message name="TrasladoEndSoapIn">
+    <wsdl:part name="parameters" element="tns:TrasladoEnd" />
+  </wsdl:message>
+  <wsdl:message name="TrasladoEndSoapOut">
+    <wsdl:part name="parameters" element="tns:TrasladoEndResponse" />
+  </wsdl:message>
+  <wsdl:message name="ListarTrasladosActivosSoapIn">
+    <wsdl:part name="parameters" element="tns:ListarTrasladosActivos" />
+  </wsdl:message>
+  <wsdl:message name="ListarTrasladosActivosSoapOut">
+    <wsdl:part name="parameters" element="tns:ListarTrasladosActivosResponse" />
+  </wsdl:message>
+  <wsdl:message name="ListarTrasladoSoapIn">
+    <wsdl:part name="parameters" element="tns:ListarTraslado" />
+  </wsdl:message>
+  <wsdl:message name="ListarTrasladoSoapOut">
+    <wsdl:part name="parameters" element="tns:ListarTrasladoResponse" />
+  </wsdl:message>
+  <wsdl:message name="dummySoapIn">
+    <wsdl:part name="parameters" element="tns:dummy" />
+  </wsdl:message>
+  <wsdl:message name="dummySoapOut">
+    <wsdl:part name="parameters" element="tns:dummyResponse" />
+  </wsdl:message>
+  <wsdl:message name="dummyHttpGetIn" />
+  <wsdl:message name="dummyHttpGetOut">
+    <wsdl:part name="Body" element="tns:DummyResponse" />
+  </wsdl:message>
+  <wsdl:message name="dummyHttpPostIn" />
+  <wsdl:message name="dummyHttpPostOut">
+    <wsdl:part name="Body" element="tns:DummyResponse" />
+  </wsdl:message>
+  <wsdl:portType name="ServiceSoap">
+    <wsdl:operation name="Reporte">
+      <wsdl:input message="tns:ReporteSoapIn" />
+      <wsdl:output message="tns:ReporteSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ListarAlarmas">
+      <wsdl:input message="tns:ListarAlarmasSoapIn" />
+      <wsdl:output message="tns:ListarAlarmasSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="TrasladoBegin">
+      <wsdl:input message="tns:TrasladoBeginSoapIn" />
+      <wsdl:output message="tns:TrasladoBeginSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="TrasladoEnd">
+      <wsdl:input message="tns:TrasladoEndSoapIn" />
+      <wsdl:output message="tns:TrasladoEndSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ListarTrasladosActivos">
+      <wsdl:input message="tns:ListarTrasladosActivosSoapIn" />
+      <wsdl:output message="tns:ListarTrasladosActivosSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ListarTraslado">
+      <wsdl:input message="tns:ListarTrasladoSoapIn" />
+      <wsdl:output message="tns:ListarTrasladoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="dummy">
+      <wsdl:input message="tns:dummySoapIn" />
+      <wsdl:output message="tns:dummySoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:portType name="ServiceHttpGet">
+    <wsdl:operation name="dummy">
+      <wsdl:input message="tns:dummyHttpGetIn" />
+      <wsdl:output message="tns:dummyHttpGetOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:portType name="ServiceHttpPost">
+    <wsdl:operation name="dummy">
+      <wsdl:input message="tns:dummyHttpPostIn" />
+      <wsdl:output message="tns:dummyHttpPostOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="ServiceSoap" type="tns:ServiceSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="Reporte">
+      <soap:operation soapAction="https://wswhomo.afip.gov.ar/wssv/service.asmx/Reporte" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListarAlarmas">
+      <soap:operation soapAction="https://wswhomo.afip.gov.ar/wssv/service.asmx/ListarAlarmas" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="TrasladoBegin">
+      <soap:operation soapAction="https://wswhomo.afip.gov.ar/wssv/service.asmx/TrasladoBegin" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="TrasladoEnd">
+      <soap:operation soapAction="https://wswhomo.afip.gov.ar/wssv/service.asmx/TrasladoEnd" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListarTrasladosActivos">
+      <soap:operation soapAction="https://wswhomo.afip.gov.ar/wssv/service.asmx/ListarTrasladosActivos" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListarTraslado">
+      <soap:operation soapAction="https://wswhomo.afip.gov.ar/wssv/service.asmx/ListarTraslado" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="dummy">
+      <soap:operation soapAction="https://wswhomo.afip.gov.ar/wssv/service.asmx/dummy" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="ServiceSoap12" type="tns:ServiceSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="Reporte">
+      <soap12:operation soapAction="https://wswhomo.afip.gov.ar/wssv/service.asmx/Reporte" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListarAlarmas">
+      <soap12:operation soapAction="https://wswhomo.afip.gov.ar/wssv/service.asmx/ListarAlarmas" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="TrasladoBegin">
+      <soap12:operation soapAction="https://wswhomo.afip.gov.ar/wssv/service.asmx/TrasladoBegin" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="TrasladoEnd">
+      <soap12:operation soapAction="https://wswhomo.afip.gov.ar/wssv/service.asmx/TrasladoEnd" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListarTrasladosActivos">
+      <soap12:operation soapAction="https://wswhomo.afip.gov.ar/wssv/service.asmx/ListarTrasladosActivos" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListarTraslado">
+      <soap12:operation soapAction="https://wswhomo.afip.gov.ar/wssv/service.asmx/ListarTraslado" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="dummy">
+      <soap12:operation soapAction="https://wswhomo.afip.gov.ar/wssv/service.asmx/dummy" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="ServiceHttpGet" type="tns:ServiceHttpGet">
+    <http:binding verb="GET" />
+    <wsdl:operation name="dummy">
+      <http:operation location="/dummy" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="ServiceHttpPost" type="tns:ServiceHttpPost">
+    <http:binding verb="POST" />
+    <wsdl:operation name="dummy">
+      <http:operation location="/dummy" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="Service">
+    <wsdl:port name="ServiceSoap" binding="tns:ServiceSoap">
+      <soap:address location="https://wswhomo.afip.gov.ar/wssv/service.asmx" />
+    </wsdl:port>
+    <wsdl:port name="ServiceSoap12" binding="tns:ServiceSoap12">
+      <soap12:address location="https://wswhomo.afip.gov.ar/wssv/service.asmx" />
+    </wsdl:port>
+    <wsdl:port name="ServiceHttpGet" binding="tns:ServiceHttpGet">
+      <http:address location="https://wswhomo.afip.gov.ar/wssv/service.asmx" />
+    </wsdl:port>
+    <wsdl:port name="ServiceHttpPost" binding="tns:ServiceHttpPost">
+      <http:address location="https://wswhomo.afip.gov.ar/wssv/service.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

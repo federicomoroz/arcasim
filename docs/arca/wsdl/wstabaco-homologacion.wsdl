@@ -1,0 +1,1955 @@
+<?xml version='1.0' encoding='UTF-8'?><wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://ar.gob.afip.wstabaco/TabacoService/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" name="wstabaco" targetNamespace="http://ar.gob.afip.wstabaco/TabacoService/">
+	<wsdl:types>
+		<xsd:schema targetNamespace="http://ar.gob.afip.wstabaco/TabacoService/">
+			<xsd:element name="dummy">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="in" type="xsd:string"/>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+
+			<xsd:complexType name="DummyReturnType">
+				<xsd:sequence>
+					<xsd:element name="appserver" type="xsd:string"/>
+					<xsd:element name="authserver" type="xsd:string"/>
+					<xsd:element name="dbserver" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:element name="dummyResponse" type="tns:DummyResponseType">
+
+			</xsd:element>
+			<xsd:complexType name="DummyResponseType">
+				<xsd:sequence>
+					<xsd:element name="return" type="tns:DummyReturnType" maxOccurs="1" minOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+
+
+
+			<xsd:complexType name="AuthType">
+				<xsd:sequence>
+					<xsd:element name="token" type="xsd:string" maxOccurs="1" minOccurs="1">
+					</xsd:element>
+					<xsd:element name="sign" type="xsd:string" maxOccurs="1" minOccurs="1">
+					</xsd:element>
+					<xsd:element name="cuitRepresentada" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:simpleType name="CuitSimpleType">
+				<xsd:restriction base="xsd:long">
+					<xsd:minExclusive value="9999999999"/>
+
+					<xsd:maxInclusive value="99999999999"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+
+
+			<xsd:simpleType name="NumeroPtoVentaSimpleType">
+				<xsd:restriction base="xsd:long">
+					<xsd:minInclusive value="1"/>
+					<xsd:maxInclusive value="09999"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+
+
+
+			<xsd:complexType name="CodigoDescripcionType">
+				<xsd:sequence>
+					<xsd:element name="codigo" type="tns:CodigoSimpleType" maxOccurs="1" minOccurs="1">
+						<xsd:annotation>
+							<xsd:documentation>Identificador del tipo del dato representado
+								según su aplicación
+
+								OBLIGATORIO: S
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="descripcion" type="tns:DescripSimpleType" maxOccurs="1" minOccurs="1">
+						<xsd:annotation>
+							<xsd:documentation>representa el detalle del campo id
+
+								OBLIGATORIO: S
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+
+			<xsd:simpleType name="ImporteSimpleType">
+				<xsd:restriction base="xsd:decimal">
+
+					<xsd:minExclusive value="0"/>
+					<xsd:maxInclusive value="9999999999999.99"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+
+
+
+
+			<xsd:simpleType name="DescripcionSimpleType">
+				<xsd:restriction base="xsd:string">
+					<xsd:minLength value="0"/>
+					<xsd:maxLength value="50"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			<xsd:simpleType name="DescripSimpleType">
+				<xsd:restriction base="xsd:string">
+					<xsd:minLength value="1"/>
+					<xsd:maxLength value="250"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+
+
+
+
+
+			<xsd:simpleType name="NumeroCbteSimpleType">
+				<xsd:restriction base="xsd:long">
+					<xsd:minInclusive value="1"/>
+					<xsd:maxInclusive value="99999999"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+
+
+
+
+
+
+
+			<xsd:simpleType name="ResultadoSimpleType">
+				<xsd:restriction base="xsd:string">
+					<xsd:enumeration value="A"/>
+					<xsd:enumeration value="O"/>
+					<xsd:enumeration value="R"/>
+
+				</xsd:restriction>
+			</xsd:simpleType>
+
+			<xsd:complexType name="ArrayErroresType">
+				<xsd:sequence>
+					<xsd:element name="error" type="tns:CodigoDescripcionType" maxOccurs="unbounded" minOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+
+
+
+
+
+			<xsd:complexType name="ArrayProductosType"/>
+
+
+
+			<xsd:simpleType name="CantidadSimpleType">
+				<xsd:restriction base="xsd:long">
+
+					<xsd:minInclusive value="1"/>
+
+					<xsd:maxInclusive value="999999"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+
+
+			<xsd:complexType name="ConsultarRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" maxOccurs="1" minOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+			<xsd:complexType name="ArrayCodigoDescripcionType">
+				<xsd:sequence>
+					<xsd:element name="codigoDescripcion" type="tns:CodigoDescripcionType" maxOccurs="unbounded" minOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:element name="consultarTiposComprobanteResponse" type="tns:ConsultarTiposComprobanteResponseType">
+
+			</xsd:element>
+			<xsd:element name="consultarTiposComprobanteRequest" type="tns:ConsultarRequestType">
+			</xsd:element>
+
+
+			<xsd:complexType name="ConsultarTiposComprobanteResponseType">
+				<xsd:sequence>
+					<xsd:element name="arrayTiposComprobante" type="tns:ArrayCodigoDescripcionType" maxOccurs="1" minOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+			<xsd:simpleType name="SiNoSimpleType">
+				<xsd:restriction base="xsd:string">
+					<xsd:enumeration value="S"/>
+					<xsd:enumeration value="N"/>
+					<xsd:length value="1"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+
+
+			<xsd:element name="consultarTiposMercaderiaRequest" type="tns:ConsultarRequestType">
+			</xsd:element>
+			<xsd:element name="consultarTiposMercaderiaResponse" type="tns:ConsultarTiposMercaderiaResponseType">
+			</xsd:element>
+
+
+			<xsd:complexType name="ConsultarTiposMercaderiaResponseType">
+				<xsd:sequence>
+					<xsd:element name="arrayTiposMercaderia" type="tns:ArrayCodigoDescripcionType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:element name="consultarTiposProductoElaboradoResponse" type="tns:ConsultarTiposProductoElaboradoResponseType">
+
+			</xsd:element>
+			<xsd:element name="consultarTiposProductoElaboradoRequest" type="tns:ConsultarRequestType">
+			</xsd:element>
+
+			<xsd:complexType name="ConsultarTiposProductoElaboradoResponseType">
+				<xsd:sequence>
+					<xsd:element name="arrayTiposProductoElaborado" type="tns:ArrayCodigoDescripcionType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:element name="informarParametrosProductivosResponse" type="tns:InformarParametrosProductivosResponseType">
+			</xsd:element>
+			<xsd:element name="informarParametrosProductivosRequest" type="tns:InformarParametrosProductivosRequestType">
+			</xsd:element>
+
+			<xsd:complexType name="InformarParametrosProductivosRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arrayParametros" type="tns:ArrayParametrosProductivosType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="operacion" type="tns:OperacionSimpleType" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ArrayParametrosProductivosType">
+				<xsd:sequence>
+					<xsd:element name="parametros" type="tns:ParametrosProductivosType" minOccurs="1" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+			<xsd:complexType name="ParametrosProductivosType">
+				<xsd:sequence>
+					<xsd:element name="deposito" type="xsd:long" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="kilos" type="tns:KilosSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="cantidad" minOccurs="1" maxOccurs="1" type="tns:CantidadSimpleType">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:simpleType name="KilosSimpleType">
+				<xsd:restriction base="xsd:decimal">
+					<xsd:maxInclusive value="999999.99"/>
+					<xsd:minExclusive value="0"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+
+			<xsd:complexType name="InformarParametrosProductivosResponseType">
+				<xsd:sequence>
+					<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="observaciones" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:element name="informarExistenciaInicialCataResponse" type="tns:InformarExistenciaInicialCataResponseType">
+
+			</xsd:element>
+			<xsd:element name="informarExistenciaInicialCataRequest" type="tns:InformarExistenciaInicialCataRequestType">
+			</xsd:element>
+
+			<xsd:complexType name="InformarExistenciaInicialCataRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arrayExistenciasCata" type="tns:ArrayExistenciasCataType" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ArrayExistenciasCataType">
+				<xsd:sequence>
+					<xsd:element name="datosCata" type="tns:DatosCataType" minOccurs="1" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="DatosCataType">
+				<xsd:sequence>
+					<xsd:element name="cata" type="tns:CodAutorizacionTabacoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="deposito" type="xsd:long" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="kilos" type="tns:KilosSimpleType" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:element name="solicitarCathesTabacoElaboradoResponse" type="tns:SolicitarCathesTabacoElaboradoResponseType">
+
+			</xsd:element>
+			<xsd:element name="solicitarCathesTabacoElaboradoRequest" type="tns:SolicitarCathesTabacoElaboradoRequestType">
+			</xsd:element>
+			<xsd:element name="solicitarCathesTabacoImportadoResponse" type="tns:SolicitarCathesTabacoImportadoResponseType">
+
+			</xsd:element>
+			<xsd:element name="vincularCathesTabacoImportadoRequest" type="tns:VincularCathesTabacoImportadoRequestType">
+			</xsd:element>
+
+			<xsd:element name="vincularCathesTabacoElaboradoResponse" type="tns:VincularCathesTabacoElaboradoResponseType">
+
+			</xsd:element>
+			<xsd:element name="vincularCathesTabacoElaboradoRequest" type="tns:VincularCathesTabacoElaboradoRequestType">
+			</xsd:element>
+
+			<xsd:element name="vincularCathesTabacoImportadoResponse" type="tns:VincularCathesTabacoImportadoResponseType">
+
+			</xsd:element>
+			<xsd:element name="solicitarCathesTabacoImportadoRequest" type="tns:SolicitarCathesTabacoImportadoRequestType">
+			</xsd:element>
+			<xsd:element name="informarElaboracionProductosRequest" type="tns:InformarElaboracionProductosRequestType">
+
+			</xsd:element>
+			<xsd:element name="informarElaboracionProductosResponse" type="tns:InformarElaboracionProductosResponseType">
+
+			</xsd:element>
+			<xsd:element name="solicitarDesnaturalizacionRequest" type="tns:SolicitarDesnaturalizacionRequestType">
+
+			</xsd:element>
+			<xsd:element name="solicitarDesnaturalizacionResponse" type="tns:SolicitarDesnaturalizacionResponseType">
+
+			</xsd:element>
+			<xsd:element name="consultarSolicitudDesnaturalizacionRequest" type="tns:ConsultarSolicitudDesnaturalizacionRequestType">
+
+			</xsd:element>
+			<xsd:element name="consultarSolicitudDesnaturalizacionResponse" type="tns:ConsultarSolicitudDesnaturalizacionResponseType">
+
+			</xsd:element>
+			<xsd:element name="solicitarCambioTitularSinMovFisicoRequest" type="tns:SolicitarCambioTitularSinMovFisicoRequestType">
+
+			</xsd:element>
+			<xsd:element name="solicitarCambioTitularSinMovFisicoResponse" type="tns:SolicitarCambioTitularSinMovFisicoResponseType">
+
+			</xsd:element>
+			<xsd:element name="confirmarCambioTitularSinMovFisicoRequest" type="tns:ConfirmarCambioTitularSinMovFisicoRequestType">
+
+			</xsd:element>
+			<xsd:element name="confirmarCambioTitularSinMovFisicoResponse" type="tns:ConfirmarCambioTitularSinMovFisicoResponseType">
+
+			</xsd:element>
+			<xsd:element name="consultarSolicitudCambioTitularRequest" type="tns:ConsultarSolicitudCambioTitularResquestType">
+
+			</xsd:element>
+			<xsd:element name="consultarSolicitudCambioTitularResponse" type="tns:ConsultarSolicitudCambioTitularResponseType">
+
+			</xsd:element>
+
+
+			<xsd:complexType name="SolicitarCathesTabacoElaboradoRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="inicial" type="tns:SiNoSimpleType" minOccurs="0" maxOccurs="1"/>
+					<xsd:element name="deposito" type="xsd:long" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="cantidad" type="tns:CantidadSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ArrayCantidadesPorDepositoType">
+				<xsd:sequence>
+					<xsd:element name="cantPorDeposito" type="tns:CantidadPorDepositoType" minOccurs="1" maxOccurs="unbounded">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+			<xsd:complexType name="SolicitarCathesTabacoElaboradoResponseType">
+				<xsd:sequence>
+					<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arrayCathes" type="tns:ArrayCathesType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="observaciones" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+
+
+
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="SolicitarCathesTabacoImportadoRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="inicial" type="tns:SiNoSimpleType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="nroDespachoImp" type="tns:DespachoImportacionSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="cuitDespachante" type="tns:CuitSimpleType" minOccurs="1" maxOccurs="1"/>
+					<xsd:element name="cantBultos" type="tns:CantidadSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arrayCantSolicitadas" type="tns:ArrayCantidadesPorDepositoType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+
+			<xsd:complexType name="SolicitarCathesTabacoImportadoResponseType">
+				<xsd:sequence>
+					<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arrayCathes" type="tns:ArrayCathesGeneradosType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="observaciones" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+			<xsd:complexType name="CantidadPorDepositoType">
+				<xsd:sequence>
+					<xsd:element name="deposito" type="xsd:long" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="cantidad" type="tns:CantidadSimpleType" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+
+			<xsd:complexType name="ArrayCathesType">
+				<xsd:sequence>
+					<xsd:element name="cathe" type="tns:CodAutorizacionTabacoSimpleType" minOccurs="1" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="SolicitarCambioTitularSinMovFisicoRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="cuitComprador" type="tns:CuitSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+
+					<xsd:element name="cuitVendedor" type="tns:CuitSimpleType" minOccurs="1" maxOccurs="1"/>
+					<xsd:element name="fechaCambio" type="xsd:date" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="modoFactura" type="tns:ModoFacturaSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="tipoComprobante" type="xsd:string" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="puntoVenta" type="tns:NumeroPtoVentaSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="numeroComprobante" type="tns:NumeroCbteSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="importeNetoGravado" type="tns:ImporteSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="importeTotal" type="tns:ImporteSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+
+					<xsd:element name="arrayCathes" type="tns:ArrayCathesType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="SolicitarCambioTitularSinMovFisicoResponseType">
+				<xsd:sequence>
+					<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="idSolicitud" type="xsd:long" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="estado" type="xsd:string" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="observaciones" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ConfirmarCambioTitularSinMovFisicoRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="idSolicitud" type="xsd:long" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="confirma" type="tns:SiNoSimpleType" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ConfirmarCambioTitularSinMovFisicoResponseType">
+				<xsd:sequence>
+					<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="observaciones" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ConsultarSolicitudCambioTitularResquestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="idSolicitud" type="xsd:long" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ConsultarSolicitudCambioTitularResponseType">
+				<xsd:sequence>
+					<xsd:element name="idSolicitud" type="xsd:long" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="cuitInformante" type="tns:CuitSimpleType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="cuitVendedor" type="tns:CuitSimpleType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="cuitComprador" type="tns:CuitSimpleType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fechaCambio" type="xsd:date" minOccurs="0" maxOccurs="1"/>
+					<xsd:element name="modoFactura" type="tns:ModoFacturaSimpleType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="tipoComprobante" type="xsd:string" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="puntoVenta" type="tns:NumeroPtoVentaSimpleType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="numeroComprobante" type="tns:NumeroCbteSimpleType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="importeNetoGravado" type="tns:ImporteSimpleType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="importeTotal" type="tns:ImporteSimpleType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arrayCathes" type="tns:ArrayCathesType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="estado" type="xsd:string" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:element name="consultarSolicCambioTitularPendientesRequest" type="tns:ConsultarRangoFechasRequestType">
+			</xsd:element>
+			<xsd:element name="consultarSolicCambioTitularPendientesResponse" type="tns:ConsultarSolicitudesCambioTitularResponseType">
+			</xsd:element>
+
+
+
+
+			<xsd:complexType name="ConsultarSolicitudesCambioTitularResponseType">
+				<xsd:sequence>
+					<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arraySolicitudes" type="tns:ArraySolicitudesCambioTitularType" minOccurs="0" maxOccurs="1"/>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="observaciones" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+			<xsd:element name="consultarSolicCambioTitularAprobadasRequest" type="tns:ConsultarRangoFechasRequestType">
+			</xsd:element>
+			<xsd:element name="consultarSolicCambioTitularAprobadasResponse" type="tns:ConsultarSolicitudesCambioTitularResponseType">
+			</xsd:element>
+
+
+
+			<xsd:element name="consultarSolicCambioTitularRechazadasRequest" type="tns:ConsultarRangoFechasRequestType">
+
+			</xsd:element>
+			<xsd:element name="consultarSolicCambioTitularRechazadasResponse" type="tns:ConsultarSolicitudesCambioTitularResponseType">
+			</xsd:element>
+
+
+
+
+			<xsd:complexType name="SolicitarDesnaturalizacionRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="deposito" type="xsd:long" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fecha" type="xsd:date" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="motivo" minOccurs="1" maxOccurs="1" type="tns:MotivoSimpleType">
+					</xsd:element>
+					<xsd:element name="arrayCathes" type="tns:ArrayCathesType" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="SolicitarDesnaturalizacionResponseType">
+				<xsd:sequence>
+					<xsd:element name="resultado" type="tns:ResultadoSimpleType">
+					</xsd:element>
+					<xsd:element name="idSolicitud" type="xsd:long" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+
+					<xsd:element name="observaciones" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ConsultarSolicitudDesnaturalizacionRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="idSolicitud" type="xsd:long" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ConsultarSolicitudDesnaturalizacionResponseType">
+				<xsd:sequence>
+
+					<xsd:element name="idSolicitud" type="xsd:long" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="deposito" type="xsd:long" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fechaDesnat" type="xsd:date" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="motivo" type="tns:MotivoSimpleType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arrayCathesDesnat" type="tns:ArrayEstadoCathesType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="resultadoSolicitud" type="xsd:string" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fechaResultado" type="xsd:date" minOccurs="0" maxOccurs="1"/>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ArrayEstadoCathesType">
+				<xsd:sequence>
+					<xsd:element name="estadoCathe" type="tns:CatheADesnaturalizarType" minOccurs="1" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="CatheADesnaturalizarType">
+				<xsd:sequence>
+					<xsd:element name="cathe" type="xsd:long" minOccurs="1" maxOccurs="1"/>
+					<xsd:element name="estado" type="tns:EstadoCatheDesnatSimpleType" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+
+			<xsd:simpleType name="EstadoCatheDesnatSimpleType">
+				<xsd:restriction base="xsd:string">
+					<xsd:enumeration value="P"/>
+					<xsd:enumeration value="S"/>
+					<xsd:enumeration value="N"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+
+
+			<xsd:complexType name="VincularCathesTabacoElaboradoRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="recupero" type="tns:SiNoSimpleType" minOccurs="1" maxOccurs="1"/>
+					<xsd:element name="tipoMercaderia" type="xsd:short" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fechaElaboracion" type="xsd:date" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="nroOrdenProduccion" minOccurs="0" maxOccurs="1" type="tns:OrdenProduccionSimpleType">
+					</xsd:element>
+					<xsd:element name="arrayCathesElaborados" type="tns:ArrayCathesElaboradosType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arrayCathesUsados" type="tns:ArrayCathesUsadosType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arrayCatasUsados" type="tns:ArrayCatasUsadosType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+			<xsd:complexType name="ArrayCathesElaboradosType">
+				<xsd:sequence>
+					<xsd:element name="datosTabacoElaborado" type="tns:DatosTabacoElaboradoType" minOccurs="1" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+			<xsd:complexType name="ArrayCatasUsadosType">
+				<xsd:sequence>
+					<xsd:element name="datosCataUsado" type="tns:DatosCataUsadoType" minOccurs="1" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="VincularCathesTabacoElaboradoResponseType">
+				<xsd:sequence>
+					<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="observaciones" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="VincularCathesTabacoImportadoRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arrayCathesImp" type="tns:ArrayDatosTabacoImportadoType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+			<xsd:complexType name="DatosTabacoElaboradoType">
+				<xsd:sequence>
+					<xsd:element name="cathe" type="tns:CodAutorizacionTabacoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="cuitTitular" type="tns:CuitSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="kilosBrutos" type="tns:KilosSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="kilosNetos" type="tns:KilosSimpleType" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+
+
+
+			<xsd:complexType name="ArrayDatosTabacoImportadoType">
+				<xsd:sequence>
+					<xsd:element name="datosTabacoImportado" type="tns:DatosTabacoImportadoType" minOccurs="1" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="DatosTabacoImportadoType">
+				<xsd:sequence>
+					<xsd:element name="cathe" type="tns:CodAutorizacionTabacoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="tipoMercaderia" type="xsd:short" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fechaIngreso" type="xsd:date" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="cuitTitular" type="tns:CuitSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="kilosBrutos" type="tns:KilosSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="kilosNetos" type="tns:KilosSimpleType" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+			<xsd:simpleType name="DespachoImportacionSimpleType">
+				<xsd:restriction base="xsd:string">
+					<xsd:pattern value="\d{5}[A-Z0-9]{4}\d{6}[A-Z]"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+
+
+
+			<xsd:complexType name="DatosCataUsadoType">
+				<xsd:sequence>
+					<xsd:element name="cata" type="tns:CodAutorizacionTabacoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="kilosNetos" type="tns:KilosSimpleType" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="VincularCathesTabacoImportadoResponseType">
+				<xsd:sequence>
+					<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="observaciones" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="InformarElaboracionProductosRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="deposito" type="xsd:long" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fechaElaboracion" type="xsd:date" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="rectificativa" type="tns:RectificativaSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arrayCathes" type="tns:ArrayCathesProductosType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ArrayCathesProductosType">
+				<xsd:sequence>
+					<xsd:element name="datosCatheProducto" type="tns:DatosCatheProductoType" minOccurs="1" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="DatosCatheProductoType">
+				<xsd:sequence>
+					<xsd:element name="cathe" type="tns:CodAutorizacionTabacoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="tipoProducto" type="xsd:short" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="descripcionOtroProducto" type="tns:DescripcionSimpleType" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+			<xsd:complexType name="InformarElaboracionProductosResponseType">
+				<xsd:sequence>
+					<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="observaciones" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+
+
+			<xsd:simpleType name="CodAutorizacionTabacoSimpleType">
+				<xsd:restriction base="xsd:long">
+					<xsd:minExclusive value="9999999999999"/>
+					<xsd:maxInclusive value="99999999999999"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+
+
+
+			<xsd:simpleType name="MotivoSimpleType">
+				<xsd:restriction base="xsd:string">
+					<xsd:minLength value="1"/>
+					<xsd:maxLength value="100"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+
+			<xsd:complexType name="InformarExistenciaInicialCataResponseType">
+				<xsd:sequence>
+					<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+			<xsd:simpleType name="OrdenProduccionSimpleType">
+				<xsd:restriction base="xsd:string">
+					<xsd:minLength value="1"/>
+					<xsd:maxLength value="30"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:element name="consultarParametrosProductivosResponse" type="tns:ConsultarParametrosProductivosResponseType">
+
+			</xsd:element>
+			<xsd:element name="consultarParametrosProductivosRequest" type="tns:ConsultarRequestType">
+			</xsd:element>
+
+
+			<xsd:complexType name="ConsultarParametrosProductivosResponseType">
+				<xsd:sequence>
+					<xsd:element name="arrayParametros" type="tns:ArrayParametrosProductivosType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:element name="consultarExistenciaInicialCataResponse" type="tns:ConsultarExistenciaInicialCataResponseType">
+
+			</xsd:element>
+			<xsd:element name="consultarExistenciaInicialCataRequest" type="tns:ConsultarExistenciaInicialCataRequestType">
+			</xsd:element>
+
+			<xsd:complexType name="ConsultarExistenciaInicialCataRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1"/>
+					<xsd:element name="deposito" type="xsd:long" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ConsultarExistenciaInicialCataResponseType">
+				<xsd:sequence>
+					<xsd:element name="arrayExistenciasCata" type="tns:ArrayExistenciasCataType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ArrayCathesGeneradosType">
+				<xsd:sequence>
+					<xsd:element name="datosCathes" type="tns:CathesGeneradosType" minOccurs="1" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="CathesGeneradosType">
+				<xsd:sequence>
+					<xsd:element name="cathe" type="tns:CodAutorizacionTabacoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="deposito" type="xsd:long" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+
+			<xsd:simpleType name="ModoFacturaSimpleType">
+				<xsd:restriction base="xsd:string">
+					<xsd:enumeration value="P"/>
+					<xsd:enumeration value="E"/>
+					<xsd:length value="1"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+
+			<xsd:complexType name="ArraySolicitudesCambioTitularType">
+				<xsd:sequence>
+					<xsd:element name="datosSolicitud" type="tns:DatosSolicCambioTitularType" minOccurs="1" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+			<xsd:complexType name="DatosSolicCambioTitularType">
+				<xsd:sequence>
+					<xsd:element name="idSolicitud" type="xsd:long" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="cuitInformante" type="tns:CuitSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="cuitComprador" type="tns:CuitSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="cuitVendedor" type="tns:CuitSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fechaCambio" type="xsd:date" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="tipoComprobante" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+					<xsd:element name="puntoVenta" type="tns:NumeroPtoVentaSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="numeroComprobante" type="tns:NumeroCbteSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="estado" type="xsd:string" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:element name="consultarTiposEstadoSolicitudCambioTitularRequest" type="tns:ConsultarRequestType">
+
+			</xsd:element>
+			<xsd:element name="consultarTiposEstadoSolicitudCambioTitularResponse" type="tns:ConsultarTiposEstadoSolicitudCambioTitularResponseType">
+
+			</xsd:element>
+
+			<xsd:complexType name="ConsultarTiposEstadoSolicitudCambioTitularResponseType">
+				<xsd:sequence>
+					<xsd:element name="arrayTiposEstados" type="tns:ArrayCodigoDescripcionType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:element name="consultarTiposEstadoCatheRequest" type="tns:ConsultarRequestType">
+
+			</xsd:element>
+			<xsd:element name="consultarTiposEstadoCatheResponse" type="tns:ConsultarTiposEstadoCatheResponseType">
+
+			</xsd:element>
+
+			<xsd:complexType name="ConsultarTiposEstadoCatheResponseType">
+				<xsd:sequence>
+					<xsd:element name="arrayTiposEstado" type="tns:ArrayCodigoDescripcionType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:element name="consultarTiposResultadoDesnaturalizacionRequest" type="tns:ConsultarRequestType">
+
+			</xsd:element>
+			<xsd:element name="consultarTiposResultadoDesnaturalizacionResponse" type="tns:ConsultarTiposResultadoDesnaturalizacionResponseType">
+
+			</xsd:element>
+
+			<xsd:complexType name="ConsultarTiposResultadoDesnaturalizacionResponseType">
+				<xsd:sequence>
+					<xsd:element name="arrayTiposResultado" type="tns:ArrayCodigoDescripcionType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:element name="consultarSolicDesnatPendientesRequest" type="tns:ConsultarRangoFechasRequestType">
+
+			</xsd:element>
+			<xsd:element name="consultarSolicDesnatPendientesResponse" type="tns:ConsultarSolicDesnatPendientesResponseType">
+
+			</xsd:element>
+
+			<xsd:complexType name="ConsultarSolicDesnatPendientesResponseType">
+				<xsd:sequence>
+
+
+					<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arraySolicitudes" type="tns:ArraySolicDesnatPendientesType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="observaciones" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ConsultarRangoFechasRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fechaDesde" type="xsd:date" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fechaHasta" type="xsd:date" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+
+			<xsd:complexType name="ArraySolicDesnatPendientesType">
+				<xsd:sequence>
+					<xsd:element name="datosSolicitud" type="tns:DatosSolicDesnatPendienteType" minOccurs="1" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="DatosSolicDesnatPendienteType">
+				<xsd:sequence>
+					<xsd:element name="idSolicitud" type="xsd:long" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="deposito" type="xsd:long" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fechaDesnat" type="xsd:date" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="motivo" type="tns:MotivoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:element name="consultarSolicDesnatProcesadasRequest" type="tns:ConsultarRangoFechasRequestType">
+
+			</xsd:element>
+			<xsd:element name="consultarSolicDesnatProcesadasResponse" type="tns:ConsultarSolicDesnatProcesadasResponseType">
+
+			</xsd:element>
+
+			<xsd:complexType name="ConsultarSolicDesnatProcesadasResponseType">
+				<xsd:sequence>
+					<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arraySolicitudes" type="tns:ArraySolicDesnatProcesadasType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="observaciones" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ArraySolicDesnatProcesadasType">
+				<xsd:sequence>
+					<xsd:element name="datosSolicitud" type="tns:DatosSolicDesnatProcesadaType" minOccurs="1" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="DatosSolicDesnatProcesadaType">
+				<xsd:sequence>
+					<xsd:element name="idSolicitud" type="xsd:long" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="deposito" type="xsd:long" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fechaDesnat" type="xsd:date" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="motivo" type="tns:MotivoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="resultado" type="xsd:string" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fechaResultado" type="xsd:date" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ArrayCathesUsadosType">
+				<xsd:sequence>
+					<xsd:element name="datosCatheUsado" type="tns:DatosCatheUsadoType" minOccurs="1" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="DatosCatheUsadoType">
+				<xsd:sequence>
+					<xsd:element name="cathe" type="tns:CodAutorizacionTabacoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="kilosNetos" type="tns:KilosSimpleType" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:simpleType name="RectificativaSimpleType">
+				<xsd:restriction base="xsd:short">
+					<xsd:minInclusive value="0"/>
+					<xsd:maxInclusive value="99"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+
+			<xsd:simpleType name="OperacionSimpleType">
+				<xsd:restriction base="xsd:string">
+					<xsd:enumeration value="A"/>
+					<xsd:enumeration value="M"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:element name="consultarElaboracionProductosRequest" type="tns:ConsultarElaboracionProductosRequestType">
+			</xsd:element>
+			<xsd:element name="consultarElaboracionProductosResponse" type="tns:ConsultarElaboracionProductosResponseType">
+
+			</xsd:element>
+
+			<xsd:complexType name="ConsultarElaboracionProductosRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="deposito" type="xsd:long" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fecha" type="xsd:date" minOccurs="1" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ConsultarElaboracionProductosResponseType">
+				<xsd:sequence>
+					<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="deposito" type="xsd:long" minOccurs="0" maxOccurs="1"/>
+					<xsd:element name="fechaElaboracion" type="xsd:date" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fechaInformacion" type="xsd:date" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arrayCathes" type="tns:ArrayCathesProductosType" minOccurs="0" maxOccurs="1"/>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+					<xsd:element name="observaciones" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:element name="consultarCathesSolicitadosRequest" type="tns:ConsultarCathesRequestType">
+
+			</xsd:element>
+			<xsd:element name="consultarCathesSolicitadosResponse" type="tns:ConsultarCathesResponseType">
+
+			</xsd:element>
+
+			<xsd:complexType name="ConsultarCathesRequestType">
+				<xsd:sequence>
+					<xsd:element name="auth" type="tns:AuthType" minOccurs="1" maxOccurs="1"/>
+					<xsd:element name="deposito" type="xsd:long" minOccurs="0" maxOccurs="1"/>
+					<xsd:element name="nroDespachoImp" type="tns:DespachoImportacionSimpleType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="fechaDesde" type="xsd:date" minOccurs="0" maxOccurs="1"/>
+					<xsd:element name="fechaHasta" type="xsd:date" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ConsultarCathesResponseType">
+				<xsd:sequence>
+					<xsd:element name="resultado" type="tns:ResultadoSimpleType" minOccurs="1" maxOccurs="1"/>
+					<xsd:element name="arrayCathes" type="tns:ArrayConsultaCathesType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="errores" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+					<xsd:element name="observaciones" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="eventos" type="tns:ArrayCodigoDescripcionType" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="ArrayConsultaCathesType">
+				<xsd:sequence>
+					<xsd:element name="datosCathe" type="tns:DatosConsultaCatheType" minOccurs="1" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:complexType>
+
+			<xsd:complexType name="DatosConsultaCatheType">
+				<xsd:sequence>
+					<xsd:element name="cathe" type="tns:CodAutorizacionTabacoSimpleType" minOccurs="1" maxOccurs="1"/>
+					<xsd:element name="deposito" type="xsd:long" minOccurs="1" maxOccurs="1"/>
+					<xsd:element name="nroDespachoImp" type="tns:DespachoImportacionSimpleType" minOccurs="0" maxOccurs="1"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:element name="consultarCathesVinculadosRequest" type="tns:ConsultarCathesRequestType">
+
+			</xsd:element>
+			<xsd:element name="consultarCathesVinculadosResponse" type="tns:ConsultarCathesResponseType">
+
+			</xsd:element>
+
+			<xsd:simpleType name="CodigoSimpleType">
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="6"/>
+					<xsd:minLength value="1"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:schema>
+	</wsdl:types>
+
+	<wsdl:message name="dummyRequest">
+	</wsdl:message>
+	<wsdl:message name="dummyResponse">
+		<wsdl:part name="parameters" element="tns:dummyResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarTiposComprobanteRequest">
+		<wsdl:part name="parameters" element="tns:consultarTiposComprobanteRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarTiposComprobanteResponse">
+		<wsdl:part name="parameters" element="tns:consultarTiposComprobanteResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarTiposMercaderiaRequest">
+		<wsdl:part name="parameters" element="tns:consultarTiposMercaderiaRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarTiposMercaderiaResponse">
+		<wsdl:part name="parameters" element="tns:consultarTiposMercaderiaResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarTiposProductoElaboradoRequest">
+		<wsdl:part name="parameters" element="tns:consultarTiposProductoElaboradoRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarTiposProductoElaboradoResponse">
+		<wsdl:part name="parameters" element="tns:consultarTiposProductoElaboradoResponse"/>
+	</wsdl:message>
+	<wsdl:message name="informarParametrosProductivosRequest">
+		<wsdl:part name="parameters" element="tns:informarParametrosProductivosRequest">
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="informarParametrosProductivosResponse">
+		<wsdl:part name="parameters" element="tns:informarParametrosProductivosResponse"/>
+	</wsdl:message>
+	<wsdl:message name="informarExistenciaInicialCataRequest">
+		<wsdl:part name="parameters" element="tns:informarExistenciaInicialCataRequest"/>
+	</wsdl:message>
+	<wsdl:message name="informarExistenciaInicialCataResponse">
+		<wsdl:part name="parameters" element="tns:informarExistenciaInicialCataResponse"/>
+	</wsdl:message>
+	<wsdl:message name="solicitarCathesTabacoElaboradoRequest">
+		<wsdl:part name="parameters" element="tns:solicitarCathesTabacoElaboradoRequest">
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="solicitarCathesTabacoElaboradoResponse">
+		<wsdl:part name="parameters" element="tns:solicitarCathesTabacoElaboradoResponse"/>
+	</wsdl:message>
+	<wsdl:message name="solicitarCathesTabacoImportadoRequest">
+		<wsdl:part name="parameters" element="tns:solicitarCathesTabacoImportadoRequest">
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="solicitarCathesTabacoImportadoResponse">
+		<wsdl:part name="parameters" element="tns:solicitarCathesTabacoImportadoResponse"/>
+	</wsdl:message>
+	<wsdl:message name="vincularCathesTabacoElaboradoRequest">
+		<wsdl:part name="parameters" element="tns:vincularCathesTabacoElaboradoRequest">
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="vincularCathesTabacoElaboradoResponse">
+		<wsdl:part name="parameters" element="tns:vincularCathesTabacoElaboradoResponse"/>
+	</wsdl:message>
+	<wsdl:message name="vincularCathesTabacoImportadoRequest">
+		<wsdl:part name="parameters" element="tns:vincularCathesTabacoImportadoRequest">
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="vincularCathesTabacoImportadoResponse">
+		<wsdl:part name="parameters" element="tns:vincularCathesTabacoImportadoResponse"/>
+	</wsdl:message>
+	<wsdl:message name="informarElaboracionProductosRequest">
+		<wsdl:part name="parameters" element="tns:informarElaboracionProductosRequest"/>
+	</wsdl:message>
+	<wsdl:message name="informarElaboracionProductosResponse">
+		<wsdl:part name="parameters" element="tns:informarElaboracionProductosResponse"/>
+	</wsdl:message>
+	<wsdl:message name="solicitarDesnaturalizacionRequest">
+		<wsdl:part name="parameters" element="tns:solicitarDesnaturalizacionRequest"/>
+	</wsdl:message>
+	<wsdl:message name="solicitarDesnaturalizacionResponse">
+		<wsdl:part name="parameters" element="tns:solicitarDesnaturalizacionResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarSolicitudDesnaturalizacionRequest">
+		<wsdl:part name="parameters" element="tns:consultarSolicitudDesnaturalizacionRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarSolicitudDesnaturalizacionResponse">
+		<wsdl:part name="parameters" element="tns:consultarSolicitudDesnaturalizacionResponse"/>
+	</wsdl:message>
+	<wsdl:message name="solicitarCambioTitularSinMovFisicoRequest">
+		<wsdl:part name="parameters" element="tns:solicitarCambioTitularSinMovFisicoRequest"/>
+	</wsdl:message>
+	<wsdl:message name="solicitarCambioTitularSinMovFisicoResponse">
+		<wsdl:part name="parameters" element="tns:solicitarCambioTitularSinMovFisicoResponse"/>
+	</wsdl:message>
+	<wsdl:message name="confirmarCambioTitularSinMovFisicoRequest">
+		<wsdl:part name="parameters" element="tns:confirmarCambioTitularSinMovFisicoRequest"/>
+	</wsdl:message>
+	<wsdl:message name="confirmarCambioTitularSinMovFisicoResponse">
+		<wsdl:part name="parameters" element="tns:confirmarCambioTitularSinMovFisicoResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarSolicitudCambioTitularRequest">
+		<wsdl:part name="parameters" element="tns:consultarSolicitudCambioTitularRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarSolicitudCambioTitularResponse">
+		<wsdl:part name="parameters" element="tns:consultarSolicitudCambioTitularResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarSolicCambioTitularPendientesRequest">
+		<wsdl:part name="parameters" element="tns:consultarSolicCambioTitularPendientesRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarSolicCambioTitularPendientesResponse">
+		<wsdl:part name="parameters" element="tns:consultarSolicCambioTitularPendientesResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarSolicCambioTitularAprobadasRequest">
+		<wsdl:part name="parameters" element="tns:consultarSolicCambioTitularAprobadasRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarSolicCambioTitularAprobadasResponse">
+		<wsdl:part name="parameters" element="tns:consultarSolicCambioTitularAprobadasResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarSolicCambioTitularRechazadasRequest">
+		<wsdl:part name="parameters" element="tns:consultarSolicCambioTitularRechazadasRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarSolicCambioTitularRechazadasResponse">
+		<wsdl:part name="parameters" element="tns:consultarSolicCambioTitularRechazadasResponse"/>
+	</wsdl:message>
+
+
+
+	<wsdl:message name="consultarParametrosProductivosRequest">
+		<wsdl:part name="parameters" element="tns:consultarParametrosProductivosRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarParametrosProductivosResponse">
+		<wsdl:part name="parameters" element="tns:consultarParametrosProductivosResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarExistenciaInicialCataRequest">
+		<wsdl:part name="parameters" element="tns:consultarExistenciaInicialCataRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarExistenciaInicialCataResponse">
+		<wsdl:part name="parameters" element="tns:consultarExistenciaInicialCataResponse"/>
+	</wsdl:message>
+
+	<wsdl:message name="consultarTiposEstadoSolicitudCambioTitularRequest">
+		<wsdl:part name="parameters" element="tns:consultarTiposEstadoSolicitudCambioTitularRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarTiposEstadoSolicitudCambioTitularResponse">
+		<wsdl:part name="parameters" element="tns:consultarTiposEstadoSolicitudCambioTitularResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarTiposEstadoCatheRequest">
+		<wsdl:part name="parameters" element="tns:consultarTiposEstadoCatheRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarTiposEstadoCatheResponse">
+		<wsdl:part name="parameters" element="tns:consultarTiposEstadoCatheResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarTiposResultadoDesnaturalizacionRequest">
+		<wsdl:part name="parameters" element="tns:consultarTiposResultadoDesnaturalizacionRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarTiposResultadoDesnaturalizacionResponse">
+		<wsdl:part name="parameters" element="tns:consultarTiposResultadoDesnaturalizacionResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarSolicDesnatPendientesRequest">
+		<wsdl:part name="parameters" element="tns:consultarSolicDesnatPendientesRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarSolicDesnatPendientesResponse">
+		<wsdl:part name="parameters" element="tns:consultarSolicDesnatPendientesResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarSolicDesnatProcesadasRequest">
+		<wsdl:part name="parameters" element="tns:consultarSolicDesnatProcesadasRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarSolicDesnatProcesadasResponse">
+		<wsdl:part name="parameters" element="tns:consultarSolicDesnatProcesadasResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarElaboracionProductosRequest">
+		<wsdl:part name="parameters" element="tns:consultarElaboracionProductosRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarElaboracionProductosResponse">
+		<wsdl:part name="parameters" element="tns:consultarElaboracionProductosResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarCathesSolicitadosRequest">
+		<wsdl:part name="parameters" element="tns:consultarCathesSolicitadosRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarCathesSolicitadosResponse">
+		<wsdl:part name="parameters" element="tns:consultarCathesSolicitadosResponse"/>
+	</wsdl:message>
+	<wsdl:message name="consultarCathesVinculadosRequest">
+		<wsdl:part name="parameters" element="tns:consultarCathesVinculadosRequest"/>
+	</wsdl:message>
+	<wsdl:message name="consultarCathesVinculadosResponse">
+		<wsdl:part name="parameters" element="tns:consultarCathesVinculadosResponse"/>
+	</wsdl:message>
+	<wsdl:portType name="TabacoServicePortType">
+		<wsdl:operation name="dummy">
+			<wsdl:input message="tns:dummyRequest"/>
+			<wsdl:output message="tns:dummyResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarTiposComprobante">
+			<wsdl:input message="tns:consultarTiposComprobanteRequest"/>
+			<wsdl:output message="tns:consultarTiposComprobanteResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarTiposMercaderia">
+			<wsdl:input message="tns:consultarTiposMercaderiaRequest"/>
+			<wsdl:output message="tns:consultarTiposMercaderiaResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarTiposProductoElaborado">
+			<wsdl:input message="tns:consultarTiposProductoElaboradoRequest"/>
+			<wsdl:output message="tns:consultarTiposProductoElaboradoResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="informarParametrosProductivos">
+			<wsdl:input message="tns:informarParametrosProductivosRequest"/>
+			<wsdl:output message="tns:informarParametrosProductivosResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="informarExistenciaInicialCata">
+			<wsdl:input message="tns:informarExistenciaInicialCataRequest"/>
+			<wsdl:output message="tns:informarExistenciaInicialCataResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="solicitarCathesTabacoElaborado">
+			<wsdl:input message="tns:solicitarCathesTabacoElaboradoRequest"/>
+			<wsdl:output message="tns:solicitarCathesTabacoElaboradoResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="solicitarCathesTabacoImportado">
+			<wsdl:input message="tns:solicitarCathesTabacoImportadoRequest"/>
+			<wsdl:output message="tns:solicitarCathesTabacoImportadoResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="vincularCathesTabacoElaborado">
+			<wsdl:input message="tns:vincularCathesTabacoElaboradoRequest"/>
+			<wsdl:output message="tns:vincularCathesTabacoElaboradoResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="vincularCathesTabacoImportado">
+			<wsdl:input message="tns:vincularCathesTabacoImportadoRequest"/>
+			<wsdl:output message="tns:vincularCathesTabacoImportadoResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="informarElaboracionProductos">
+			<wsdl:input message="tns:informarElaboracionProductosRequest"/>
+			<wsdl:output message="tns:informarElaboracionProductosResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="solicitarDesnaturalizacion">
+			<wsdl:input message="tns:solicitarDesnaturalizacionRequest"/>
+			<wsdl:output message="tns:solicitarDesnaturalizacionResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarSolicitudDesnaturalizacion">
+			<wsdl:input message="tns:consultarSolicitudDesnaturalizacionRequest"/>
+			<wsdl:output message="tns:consultarSolicitudDesnaturalizacionResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="solicitarCambioTitularSinMovFisico">
+			<wsdl:input message="tns:solicitarCambioTitularSinMovFisicoRequest"/>
+			<wsdl:output message="tns:solicitarCambioTitularSinMovFisicoResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="confirmarCambioTitularSinMovFisico">
+			<wsdl:input message="tns:confirmarCambioTitularSinMovFisicoRequest"/>
+			<wsdl:output message="tns:confirmarCambioTitularSinMovFisicoResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarSolicitudCambioTitular">
+			<wsdl:input message="tns:consultarSolicitudCambioTitularRequest"/>
+			<wsdl:output message="tns:consultarSolicitudCambioTitularResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarSolicCambioTitularPendientes">
+			<wsdl:input message="tns:consultarSolicCambioTitularPendientesRequest"/>
+			<wsdl:output message="tns:consultarSolicCambioTitularPendientesResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarSolicCambioTitularAprobadas">
+			<wsdl:input message="tns:consultarSolicCambioTitularAprobadasRequest"/>
+			<wsdl:output message="tns:consultarSolicCambioTitularAprobadasResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarSolicCambioTitularRechazadas">
+			<wsdl:input message="tns:consultarSolicCambioTitularRechazadasRequest"/>
+			<wsdl:output message="tns:consultarSolicCambioTitularRechazadasResponse"/>
+		</wsdl:operation>
+
+
+		<wsdl:operation name="consultarParametrosProductivos">
+			<wsdl:input message="tns:consultarParametrosProductivosRequest"/>
+			<wsdl:output message="tns:consultarParametrosProductivosResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarExistenciaInicialCata">
+			<wsdl:input message="tns:consultarExistenciaInicialCataRequest"/>
+			<wsdl:output message="tns:consultarExistenciaInicialCataResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarTiposEstadoSolicitudCambioTitular">
+			<wsdl:input message="tns:consultarTiposEstadoSolicitudCambioTitularRequest"/>
+			<wsdl:output message="tns:consultarTiposEstadoSolicitudCambioTitularResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarTiposEstadoCathe">
+			<wsdl:input message="tns:consultarTiposEstadoCatheRequest"/>
+			<wsdl:output message="tns:consultarTiposEstadoCatheResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarTiposResultadoDesnaturalizacion">
+			<wsdl:input message="tns:consultarTiposResultadoDesnaturalizacionRequest"/>
+			<wsdl:output message="tns:consultarTiposResultadoDesnaturalizacionResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarSolicDesnatPendientes">
+			<wsdl:input message="tns:consultarSolicDesnatPendientesRequest"/>
+			<wsdl:output message="tns:consultarSolicDesnatPendientesResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarSolicDesnatProcesadas">
+			<wsdl:input message="tns:consultarSolicDesnatProcesadasRequest"/>
+			<wsdl:output message="tns:consultarSolicDesnatProcesadasResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarElaboracionProductos">
+			<wsdl:input message="tns:consultarElaboracionProductosRequest"/>
+			<wsdl:output message="tns:consultarElaboracionProductosResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarCathesSolicitados">
+			<wsdl:input message="tns:consultarCathesSolicitadosRequest"/>
+			<wsdl:output message="tns:consultarCathesSolicitadosResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="consultarCathesVinculados">
+			<wsdl:input message="tns:consultarCathesVinculadosRequest"/>
+			<wsdl:output message="tns:consultarCathesVinculadosResponse"/>
+		</wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name="TabacoServiceSOAP" type="tns:TabacoServicePortType">
+
+		<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+		<wsdl:operation name="dummy">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/dummy"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+
+
+
+
+
+
+
+
+		<wsdl:operation name="consultarTiposComprobante">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarTiposComprobante"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		<wsdl:operation name="consultarTiposMercaderia">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarTiposMercaderia"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarTiposProductoElaborado">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarTiposProductoElaborado"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="informarParametrosProductivos">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/informarParametrosProductivos"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="informarExistenciaInicialCata">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/informarExistenciaInicialCata"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+
+
+		<wsdl:operation name="solicitarCathesTabacoElaborado">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/solicitarCathesTabacoElaborado"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="solicitarCathesTabacoImportado">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/solicitarCathesTabacoImportado"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="vincularCathesTabacoElaborado">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/vincularCathesTabacoElaborado"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="vincularCathesTabacoImportado">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/vincularCathesTabacoImportado"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+
+		<wsdl:operation name="informarElaboracionProductos">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/informarElaboracionProductos"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="solicitarDesnaturalizacion">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/solicitarDesnaturalizacion"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarSolicitudDesnaturalizacion">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarSolicitudDesnaturalizacion"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="solicitarCambioTitularSinMovFisico">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/solicitarCambioTitularSinMovFisico"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="confirmarCambioTitularSinMovFisico">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/confirmarCambioTitularSinMovFisico"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarSolicitudCambioTitular">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarSolicitudCambioTitular"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarSolicCambioTitularPendientes">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarSolicCambioTitularPendientes"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+
+		<wsdl:operation name="consultarSolicCambioTitularAprobadas">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarSolicCambioTitularAprobadas"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarSolicCambioTitularRechazadas">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarSolicCambioTitularRechazadas"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+
+
+		<wsdl:operation name="consultarParametrosProductivos">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarParametrosProductivos"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarExistenciaInicialCata">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarExistenciaInicialCata"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarTiposEstadoSolicitudCambioTitular">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarTiposEstadoSolicitudCambioTitular"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarTiposEstadoCathe">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarTiposEstadoCathe"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+
+
+		<wsdl:operation name="consultarTiposResultadoDesnaturalizacion">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarTiposResultadoDesnaturalizacion"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarSolicDesnatPendientes">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarSolicDesnatPendientes"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarSolicDesnatProcesadas">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarSolicDesnatProcesadas"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarElaboracionProductos">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarElaboracionProductos"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarCathesSolicitados">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarCathesSolicitados"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarCathesVinculados">
+
+			<soap:operation soapAction="http://ar.gob.afip.wstabaco/TabacoService/consultarCathesVinculados"/>
+			<wsdl:input>
+
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name="TabacoService">
+		<wsdl:port binding="tns:TabacoServiceSOAP" name="TabacoServiceSOAP">
+			<soap:address location="http://fwshomo.afip.gov.ar:80/wstabaco/TabacoService"/>
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>

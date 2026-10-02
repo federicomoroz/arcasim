@@ -25,3 +25,6 @@ public sealed record VoucherRejected(
 
 /// <summary>A CAEA was granted for a fortnight.</summary>
 public sealed record CaeaGranted(DateTimeOffset At, long Cuit, int Period, short Fortnight, string Code) : IArcaSimEvent;
+
+/// <summary>One of the services answered from its WSDL took a call; the outcome is "ok" or "error", with the error's text.</summary>
+public sealed record ServiceCalled(DateTimeOffset At, string Service, string Operation, long Cuit, string Outcome, string Text) : IArcaSimEvent;

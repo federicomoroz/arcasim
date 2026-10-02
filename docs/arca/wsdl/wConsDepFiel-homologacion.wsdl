@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="ar.gov.afip.dia.ServiciosWeb.wConsDepFiel" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="ar.gov.afip.dia.ServiciosWeb.wConsDepFiel" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="ar.gov.afip.dia.ServiciosWeb.wConsDepFiel">
+      <s:element name="PndListaEndo">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argInPndListaEndo" type="tns:InPndListaEndo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="Autenticacion">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:AutenticacionBase">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Cuit" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="TipoAgente" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="Rol" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="AutenticacionBase">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Token" nillable="true" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Sign" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="InPndListaEndo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CuitDeclarante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoCarpeta" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaDesde" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaHasta" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="PndListaEndoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="PndListaEndoResult" type="tns:RtaPndListaEndo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaPndListaEndo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="Legajos" type="tns:ArrayOfLegajo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Recibo">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="CodErr" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescErr" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescAdicErr" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfLegajo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Legajo" nillable="true" type="tns:Legajo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Legajo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CuitDeclarante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescDeclarante" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitIE" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescIE" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroLegajo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Codigo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Ticket" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="ImporteLiq" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaOfic" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaEndo" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="Sigea" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroReferencia" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="OptoCambioVia" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ListaEstado">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="argAutentica" type="tns:Autenticacion" />
+            <s:element minOccurs="0" maxOccurs="1" name="argInListaEstado" type="tns:InListaEstado" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="InListaEstado">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoCarpeta" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="NroLegajo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Ticket" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Sigea" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ListaEstadoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ListaEstadoResult" type="tns:RtaListaEstado" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RtaListaEstado">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Recibo" type="tns:Recibo" />
+          <s:element minOccurs="0" maxOccurs="1" name="LegajoEstado" type="tns:LegajoEstado" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="LegajoEstado">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="NroLegajo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Codigo" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Estado" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaVtoPSAD" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="FechaVtoDIGI" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitIE" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescIE" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CuitDesp" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescDesp" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Sigea" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="Dummy">
+        <s:complexType />
+      </s:element>
+      <s:element name="DummyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DummyResult" type="tns:WsDummyResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="WsDummyResponse">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="appserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="dbserver" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="authserver" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="PndListaEndoSoapIn">
+    <wsdl:part name="parameters" element="tns:PndListaEndo" />
+  </wsdl:message>
+  <wsdl:message name="PndListaEndoSoapOut">
+    <wsdl:part name="parameters" element="tns:PndListaEndoResponse" />
+  </wsdl:message>
+  <wsdl:message name="ListaEstadoSoapIn">
+    <wsdl:part name="parameters" element="tns:ListaEstado" />
+  </wsdl:message>
+  <wsdl:message name="ListaEstadoSoapOut">
+    <wsdl:part name="parameters" element="tns:ListaEstadoResponse" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapIn">
+    <wsdl:part name="parameters" element="tns:Dummy" />
+  </wsdl:message>
+  <wsdl:message name="DummySoapOut">
+    <wsdl:part name="parameters" element="tns:DummyResponse" />
+  </wsdl:message>
+  <wsdl:portType name="wConsDepFielSoap">
+    <wsdl:operation name="PndListaEndo">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Lista de legajos ENDO.</wsdl:documentation>
+      <wsdl:input message="tns:PndListaEndoSoapIn" />
+      <wsdl:output message="tns:PndListaEndoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ListaEstado">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Devuelve el Estado del Legajo.</wsdl:documentation>
+      <wsdl:input message="tns:ListaEstadoSoapIn" />
+      <wsdl:output message="tns:ListaEstadoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Metodo dummy para verificacion de funcionamiento</wsdl:documentation>
+      <wsdl:input message="tns:DummySoapIn" />
+      <wsdl:output message="tns:DummySoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="wConsDepFielSoap" type="tns:wConsDepFielSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="PndListaEndo">
+      <soap:operation soapAction="ar.gov.afip.dia.ServiciosWeb.wConsDepFiel/PndListaEndo" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaEstado">
+      <soap:operation soapAction="ar.gov.afip.dia.ServiciosWeb.wConsDepFiel/ListaEstado" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap:operation soapAction="ar.gov.afip.dia.ServiciosWeb.wConsDepFiel/Dummy" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="wConsDepFielSoap12" type="tns:wConsDepFielSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="PndListaEndo">
+      <soap12:operation soapAction="ar.gov.afip.dia.ServiciosWeb.wConsDepFiel/PndListaEndo" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListaEstado">
+      <soap12:operation soapAction="ar.gov.afip.dia.ServiciosWeb.wConsDepFiel/ListaEstado" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Dummy">
+      <soap12:operation soapAction="ar.gov.afip.dia.ServiciosWeb.wConsDepFiel/Dummy" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="wConsDepFiel">
+    <wsdl:port name="wConsDepFielSoap" binding="tns:wConsDepFielSoap">
+      <soap:address location="https://testdia.afip.gov.ar/Dia/Ws/wConsDepFiel/wConsDepFiel.asmx" />
+    </wsdl:port>
+    <wsdl:port name="wConsDepFielSoap12" binding="tns:wConsDepFielSoap12">
+      <soap12:address location="https://testdia.afip.gov.ar/Dia/Ws/wConsDepFiel/wConsDepFiel.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

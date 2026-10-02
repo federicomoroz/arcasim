@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:sch="http://afip.gob.ar/ws/sud_restricciones" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://afip.gob.ar/ws/sud_restricciones" targetNamespace="http://afip.gob.ar/ws/sud_restricciones">
+  <wsdl:types>
+    <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://afip.gob.ar/ws/sud_restricciones">
+
+    <xs:complexType name="tieneDeudaRequestType">
+        <xs:sequence>
+            <xs:element name="cuit" type="xs:long"/>
+            <xs:element name="cuitRepresentado" type="xs:long"/>
+            <xs:element name="token" type="xs:string"/>
+            <xs:element name="sign" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tieneDeudaResponseType">
+        <xs:sequence>
+            <xs:element name="tieneDeuda" type="xs:boolean"/>
+            <xs:element name="consultaId" type="xs:long"/>
+            <xs:element name="metadata">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="fechaHora" type="xs:string"/>
+                        <xs:element name="servidor" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="dummyRequestType"/>
+
+    <xs:complexType name="dummyResponseType">
+        <xs:sequence>
+            <xs:element name="return">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="appserver" type="xs:string"/>
+                        <xs:element name="authserver" type="xs:string"/>
+                        <xs:element name="dbserver" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tieneDeudaV2RequestType">
+        <xs:sequence>
+            <xs:element name="cuit" type="xs:long"/>
+            <xs:element name="cuitRepresentado" type="xs:long"/>
+            <xs:element name="token" type="xs:string"/>
+            <xs:element name="sign" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="deudaType">
+        <xs:sequence>
+            <xs:element name="impuesto" type="xs:long"/>
+            <xs:element name="periodoFiscal" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="deudasType">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" name="deuda" type="tns:deudaType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tieneDeudaV2ResponseType">
+        <xs:sequence>
+            <xs:element name="tieneDeuda" type="xs:boolean"/>
+            <xs:element name="deudas" type="tns:deudasType"/>
+            <xs:element name="consultaId" type="xs:long"/>
+            <xs:element name="metadata">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="fechaHora" type="xs:string"/>
+                        <xs:element name="servidor" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="tieneDeudaV2Request" type="tns:tieneDeudaV2RequestType"/>
+
+    <xs:element name="tieneDeudaV2Response" type="tns:tieneDeudaV2ResponseType"/>
+
+    <xs:element name="tieneDeudaRequest" type="tns:tieneDeudaRequestType"/>
+
+    <xs:element name="tieneDeudaResponse" type="tns:tieneDeudaResponseType"/>
+
+    <xs:element name="dummyRequest" type="tns:dummyRequestType"/>
+
+    <xs:element name="dummyResponse" type="tns:dummyResponseType"/>
+
+</xs:schema>
+  </wsdl:types>
+  <wsdl:message name="dummyResponse">
+    <wsdl:part element="tns:dummyResponse" name="dummyResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="tieneDeudaV2Response">
+    <wsdl:part element="tns:tieneDeudaV2Response" name="tieneDeudaV2Response">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="tieneDeudaResponse">
+    <wsdl:part element="tns:tieneDeudaResponse" name="tieneDeudaResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="dummyRequest">
+    <wsdl:part element="tns:dummyRequest" name="dummyRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="tieneDeudaRequest">
+    <wsdl:part element="tns:tieneDeudaRequest" name="tieneDeudaRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="tieneDeudaV2Request">
+    <wsdl:part element="tns:tieneDeudaV2Request" name="tieneDeudaV2Request">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="SudPort">
+    <wsdl:operation name="dummy">
+      <wsdl:input message="tns:dummyRequest" name="dummyRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:dummyResponse" name="dummyResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="tieneDeudaV2">
+      <wsdl:input message="tns:tieneDeudaV2Request" name="tieneDeudaV2Request">
+    </wsdl:input>
+      <wsdl:output message="tns:tieneDeudaV2Response" name="tieneDeudaV2Response">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="tieneDeuda">
+      <wsdl:input message="tns:tieneDeudaRequest" name="tieneDeudaRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:tieneDeudaResponse" name="tieneDeudaResponse">
+    </wsdl:output>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="SudPortSoap11" type="tns:SudPort">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="dummy">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="dummyRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="dummyResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="tieneDeudaV2">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="tieneDeudaV2Request">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="tieneDeudaV2Response">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="tieneDeuda">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="tieneDeudaRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="tieneDeudaResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="SudPortService">
+    <wsdl:port binding="tns:SudPortSoap11" name="SudPortSoap11">
+      <soap:address location="https://sud-ws.cloud.afip.gob.ar/sud_restricciones"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

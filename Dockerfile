@@ -4,6 +4,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY Directory.Build.props ./
 COPY docs/arca/wsdl/ docs/arca/wsdl/
+COPY docs/arca/servicios.json docs/arca/
 COPY src/ src/
 RUN dotnet publish src/ArcaSim.Api -c Release -o /out
 

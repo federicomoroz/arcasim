@@ -1,0 +1,837 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://ar.gov.afip.dif.seg/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" targetNamespace="http://ar.gov.afip.dif.seg/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Web Service orientado  al  servicio  de Empresas de Seguros </wsdl:documentation>
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://ar.gov.afip.dif.seg/">
+      <s:element name="SEGAuthorize">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Auth" type="tns:ClsSEGAuthRequest" />
+            <s:element minOccurs="0" maxOccurs="1" name="Cmp" type="tns:ClsSEGRequest" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ClsSEGAuthRequest">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Token" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Sign" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Cuit" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ClsSEGRequest">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Id" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="Tipo_doc" type="s:short" />
+          <s:element minOccurs="1" maxOccurs="1" name="Nro_doc" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="Tipo_cbte" type="s:short" />
+          <s:element minOccurs="1" maxOccurs="1" name="Punto_vta" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="Cbte_nro" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_total" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_tot_conc" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_neto" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Impto_liq" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Impto_liq_rni" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_op_ex" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_perc" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_iibb" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_perc_mun" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_internos" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="Imp_moneda_Id" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Imp_moneda_ctz" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_otrib_prov" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="Fecha_cbte" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CanMisMonExt" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CondicionIVAReceptorId" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="Items" type="tns:ArrayOfItem" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfItem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Item" nillable="true" type="tns:Item" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Item">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Poliza" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Endoso" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Ds" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Qty" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Precio_uni" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_bonif" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_total" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_valor_aseg" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="Imp_moneda_vaseg" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Iva_id" type="s:short" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SEGAuthorizeResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SEGAuthorizeResult" type="tns:SEGResponseAuthorize" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SEGResponseAuthorize">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="SEGResultAuth" type="tns:ClsSEGOutAuthorize" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGErr" type="tns:ClsSEGErr" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGEvents" type="tns:ClsSEGEvents" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ClsSEGOutAuthorize">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Id" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="Cuit" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="Cae" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Fch_venc_Cae" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Fch_cbte" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Resultado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Reproceso" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Obs" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ClsSEGErr">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="ErrCode" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="ErrMsg" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ClsSEGEvents">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="EventCode" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="EventMsg" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SEGGetCMP">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Auth" type="tns:ClsSEGAuthRequest" />
+            <s:element minOccurs="0" maxOccurs="1" name="Cmp" type="tns:ClsSEGGetCMP" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ClsSEGGetCMP">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Tipo_cbte" type="s:short" />
+          <s:element minOccurs="1" maxOccurs="1" name="Punto_vta" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="Cbte_nro" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SEGGetCMPResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SEGGetCMPResult" type="tns:SEGGetCMPResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SEGGetCMPResponse">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="SEGResultGet" type="tns:ClsSEGGetCMPR" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGErr" type="tns:ClsSEGErr" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGEvents" type="tns:ClsSEGEvents" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ClsSEGGetCMPR">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Id" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="Cuit" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="Tipo_doc" type="s:short" />
+          <s:element minOccurs="1" maxOccurs="1" name="Nro_doc" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="Tipo_cbte" type="s:short" />
+          <s:element minOccurs="1" maxOccurs="1" name="Punto_vta" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="Cbte_nro" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_total" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_tot_conc" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_neto" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Impto_liq" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Impto_liq_rni" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_op_ex" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_perc" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_iibb" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_perc_mun" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_internos" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="Imp_moneda_Id" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_moneda_ctz" type="s:double" />
+          <s:element minOccurs="1" maxOccurs="1" name="Imp_otrib_prov" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="Fecha_cbte_orig" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Fecha_cbte_cae" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Fch_venc_Cae" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Cae" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Resultado" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Obs" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CanMisMonExt" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CondicionIVAReceptorId" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="Items" type="tns:ArrayOfItem" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SEGGetPARAM_Tipo_doc">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="auth" type="tns:ClsSEGAuthRequest" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="SEGGetPARAM_Tipo_docResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SEGGetPARAM_Tipo_docResult" type="tns:SEGResponse_Tipo_doc" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SEGResponse_Tipo_doc">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="SEGResultGet" type="tns:ArrayOfClsSEGResponse_Tipo_doc" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGErr" type="tns:ClsSEGErr" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGEvents" type="tns:ClsSEGEvents" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfClsSEGResponse_Tipo_doc">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="ClsSEGResponse_Tipo_doc" nillable="true" type="tns:ClsSEGResponse_Tipo_doc" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ClsSEGResponse_Tipo_doc">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Doc_Id" type="s:short" />
+          <s:element minOccurs="0" maxOccurs="1" name="Doc_Ds" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Doc_vig_desde" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Doc_vig_hasta" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SEGGetPARAM_Tipo_IVA">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="auth" type="tns:ClsSEGAuthRequest" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="SEGGetPARAM_Tipo_IVAResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SEGGetPARAM_Tipo_IVAResult" type="tns:SEGResponse_Tipo_IVA" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SEGResponse_Tipo_IVA">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="SEGResultGet" type="tns:ArrayOfClsSEGResponse_Tipo_IVA" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGErr" type="tns:ClsSEGErr" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGEvents" type="tns:ClsSEGEvents" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfClsSEGResponse_Tipo_IVA">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="ClsSEGResponse_Tipo_IVA" nillable="true" type="tns:ClsSEGResponse_Tipo_IVA" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ClsSEGResponse_Tipo_IVA">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="IVA_Id" type="s:short" />
+          <s:element minOccurs="0" maxOccurs="1" name="IVA_Ds" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IVA_vig_desde" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="IVA_vig_hasta" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SEGGetPARAM_Tipo_Cbte">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="auth" type="tns:ClsSEGAuthRequest" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="SEGGetPARAM_Tipo_CbteResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SEGGetPARAM_Tipo_CbteResult" type="tns:SEGResponse_Tipo_Cbte" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SEGResponse_Tipo_Cbte">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="SEGResultGet" type="tns:ArrayOfClsSEGResponse_Tipo_Cbte" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGErr" type="tns:ClsSEGErr" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGEvents" type="tns:ClsSEGEvents" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfClsSEGResponse_Tipo_Cbte">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="ClsSEGResponse_Tipo_Cbte" nillable="true" type="tns:ClsSEGResponse_Tipo_Cbte" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ClsSEGResponse_Tipo_Cbte">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Cbte_Id" type="s:short" />
+          <s:element minOccurs="0" maxOccurs="1" name="Cbte_Ds" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Cbte_vig_desde" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Cbte_vig_hasta" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SEGGetPARAM_MON">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="auth" type="tns:ClsSEGAuthRequest" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="SEGGetPARAM_MONResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SEGGetPARAM_MONResult" type="tns:SEGResponse_Mon" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SEGResponse_Mon">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="SEGResultGet" type="tns:ArrayOfClsSEGResponse_Mon" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGErr" type="tns:ClsSEGErr" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGEvents" type="tns:ClsSEGEvents" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfClsSEGResponse_Mon">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="ClsSEGResponse_Mon" nillable="true" type="tns:ClsSEGResponse_Mon" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ClsSEGResponse_Mon">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Mon_Id" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Mon_Ds" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Mon_vig_desde" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Mon_vig_hasta" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SEGGetPARAM_Ctz">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="auth" type="tns:ClsSEGAuthRequest" />
+            <s:element minOccurs="0" maxOccurs="1" name="MonId" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="FchCotiz" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="SEGGetPARAM_CtzResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SEGGetPARAM_CtzResult" type="tns:SEGResponse_Ctz" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SEGResponse_Ctz">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="SEGResultGet" type="tns:ClsSEGResponse_Ctz" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGErr" type="tns:ClsSEGErr" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGEvents" type="tns:ClsSEGEvents" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ClsSEGResponse_Ctz">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="MonId" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="MonCotiz" type="s:double" />
+          <s:element minOccurs="0" maxOccurs="1" name="FchCotiz" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SEGGetLast_CMP">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Auth" type="tns:ClsSEG_LastCMP" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ClsSEG_LastCMP">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Token" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Sign" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Cuit" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="Pto_venta" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="Tipo_cbte" type="s:short" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SEGGetLast_CMPResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SEGGetLast_CMPResult" type="tns:SEGResponseLast_CMP" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SEGResponseLast_CMP">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="SEGResult_LastCMP" type="tns:ClsSEG_LastCMP_Response" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGErr" type="tns:ClsSEGErr" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGEvents" type="tns:ClsSEGEvents" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ClsSEG_LastCMP_Response">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Cbte_nro" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="Cbte_fecha" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SEGDummy">
+        <s:complexType />
+      </s:element>
+      <s:element name="SEGDummyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SEGDummyResult" type="tns:DummyResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DummyResponse">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="AppServer" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DbServer" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="AuthServer" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SEGGetLast_ID">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Auth" type="tns:ClsSEGAuthRequest" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="SEGGetLast_IDResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SEGGetLast_IDResult" type="tns:SEGResponse_LastID" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SEGResponse_LastID">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="SEGResultGet" type="tns:ClsSEGResponse_LastID" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGErr" type="tns:ClsSEGErr" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGEvents" type="tns:ClsSEGEvents" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ClsSEGResponse_LastID">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Id" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SEGGetCondicionIvaReceptor">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Auth" type="tns:ClsSEGAuthRequest" />
+            <s:element minOccurs="0" maxOccurs="1" name="ClaseCmp" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="SEGGetCondicionIvaReceptorResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SEGGetCondicionIvaReceptorResult" type="tns:SEGResponse_CondicionIvaReceptor" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="SEGResponse_CondicionIvaReceptor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="SEGResultGet" type="tns:ArrayOfClsSEGResponse_CondicionIvaReceptor" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGErr" type="tns:ClsSEGErr" />
+          <s:element minOccurs="0" maxOccurs="1" name="SEGEvents" type="tns:ClsSEGEvents" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfClsSEGResponse_CondicionIvaReceptor">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="ClsSEGResponse_CondicionIvaReceptor" nillable="true" type="tns:ClsSEGResponse_CondicionIvaReceptor" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ClsSEGResponse_CondicionIvaReceptor">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Id" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="Desc" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Cmp_Clase" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="DummyResponse" nillable="true" type="tns:DummyResponse" />
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="SEGAuthorizeSoapIn">
+    <wsdl:part name="parameters" element="tns:SEGAuthorize" />
+  </wsdl:message>
+  <wsdl:message name="SEGAuthorizeSoapOut">
+    <wsdl:part name="parameters" element="tns:SEGAuthorizeResponse" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetCMPSoapIn">
+    <wsdl:part name="parameters" element="tns:SEGGetCMP" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetCMPSoapOut">
+    <wsdl:part name="parameters" element="tns:SEGGetCMPResponse" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetPARAM_Tipo_docSoapIn">
+    <wsdl:part name="parameters" element="tns:SEGGetPARAM_Tipo_doc" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetPARAM_Tipo_docSoapOut">
+    <wsdl:part name="parameters" element="tns:SEGGetPARAM_Tipo_docResponse" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetPARAM_Tipo_IVASoapIn">
+    <wsdl:part name="parameters" element="tns:SEGGetPARAM_Tipo_IVA" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetPARAM_Tipo_IVASoapOut">
+    <wsdl:part name="parameters" element="tns:SEGGetPARAM_Tipo_IVAResponse" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetPARAM_Tipo_CbteSoapIn">
+    <wsdl:part name="parameters" element="tns:SEGGetPARAM_Tipo_Cbte" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetPARAM_Tipo_CbteSoapOut">
+    <wsdl:part name="parameters" element="tns:SEGGetPARAM_Tipo_CbteResponse" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetPARAM_MONSoapIn">
+    <wsdl:part name="parameters" element="tns:SEGGetPARAM_MON" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetPARAM_MONSoapOut">
+    <wsdl:part name="parameters" element="tns:SEGGetPARAM_MONResponse" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetPARAM_CtzSoapIn">
+    <wsdl:part name="parameters" element="tns:SEGGetPARAM_Ctz" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetPARAM_CtzSoapOut">
+    <wsdl:part name="parameters" element="tns:SEGGetPARAM_CtzResponse" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetLast_CMPSoapIn">
+    <wsdl:part name="parameters" element="tns:SEGGetLast_CMP" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetLast_CMPSoapOut">
+    <wsdl:part name="parameters" element="tns:SEGGetLast_CMPResponse" />
+  </wsdl:message>
+  <wsdl:message name="SEGDummySoapIn">
+    <wsdl:part name="parameters" element="tns:SEGDummy" />
+  </wsdl:message>
+  <wsdl:message name="SEGDummySoapOut">
+    <wsdl:part name="parameters" element="tns:SEGDummyResponse" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetLast_IDSoapIn">
+    <wsdl:part name="parameters" element="tns:SEGGetLast_ID" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetLast_IDSoapOut">
+    <wsdl:part name="parameters" element="tns:SEGGetLast_IDResponse" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetCondicionIvaReceptorSoapIn">
+    <wsdl:part name="parameters" element="tns:SEGGetCondicionIvaReceptor" />
+  </wsdl:message>
+  <wsdl:message name="SEGGetCondicionIvaReceptorSoapOut">
+    <wsdl:part name="parameters" element="tns:SEGGetCondicionIvaReceptorResponse" />
+  </wsdl:message>
+  <wsdl:message name="SEGDummyHttpGetIn" />
+  <wsdl:message name="SEGDummyHttpGetOut">
+    <wsdl:part name="Body" element="tns:DummyResponse" />
+  </wsdl:message>
+  <wsdl:message name="SEGDummyHttpPostIn" />
+  <wsdl:message name="SEGDummyHttpPostOut">
+    <wsdl:part name="Body" element="tns:DummyResponse" />
+  </wsdl:message>
+  <wsdl:portType name="ServiceSoap">
+    <wsdl:operation name="SEGAuthorize">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Autoriza un comprobante, devolviendo  su CAE correspondiente</wsdl:documentation>
+      <wsdl:input message="tns:SEGAuthorizeSoapIn" />
+      <wsdl:output message="tns:SEGAuthorizeSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetCMP">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Recupera los datos completos de un comprobante ya autorizado</wsdl:documentation>
+      <wsdl:input message="tns:SEGGetCMPSoapIn" />
+      <wsdl:output message="tns:SEGGetCMPSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetPARAM_Tipo_doc">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Recupera el listado de los  tipos de comprobante  y su codigo utilizables en servicio de autorizacion</wsdl:documentation>
+      <wsdl:input message="tns:SEGGetPARAM_Tipo_docSoapIn" />
+      <wsdl:output message="tns:SEGGetPARAM_Tipo_docSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetPARAM_Tipo_IVA">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Recupera el listado de las alicuotas de IVA  y su codigo utilizables en servicio de autorizacion</wsdl:documentation>
+      <wsdl:input message="tns:SEGGetPARAM_Tipo_IVASoapIn" />
+      <wsdl:output message="tns:SEGGetPARAM_Tipo_IVASoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetPARAM_Tipo_Cbte">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Recupera el listado de los tipos de comprobante  y su codigo utilizables en servicio de autorizacion</wsdl:documentation>
+      <wsdl:input message="tns:SEGGetPARAM_Tipo_CbteSoapIn" />
+      <wsdl:output message="tns:SEGGetPARAM_Tipo_CbteSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetPARAM_MON">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Recupera el listado  de monedas y su codigo utilizables en servicio de autorizacion</wsdl:documentation>
+      <wsdl:input message="tns:SEGGetPARAM_MONSoapIn" />
+      <wsdl:output message="tns:SEGGetPARAM_MONSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetPARAM_Ctz">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Recupera la cotizacion registrada en el organismo para la moneda y fecha indicadas</wsdl:documentation>
+      <wsdl:input message="tns:SEGGetPARAM_CtzSoapIn" />
+      <wsdl:output message="tns:SEGGetPARAM_CtzSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetLast_CMP">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Recupera el ultimos comprobante autorizado</wsdl:documentation>
+      <wsdl:input message="tns:SEGGetLast_CMPSoapIn" />
+      <wsdl:output message="tns:SEGGetLast_CMPSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SEGDummy">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Metodo dummy para verificacion de funcionamiento</wsdl:documentation>
+      <wsdl:input message="tns:SEGDummySoapIn" />
+      <wsdl:output message="tns:SEGDummySoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetLast_ID">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Recupera el ultimo ID y su  fecha </wsdl:documentation>
+      <wsdl:input message="tns:SEGGetLast_IDSoapIn" />
+      <wsdl:output message="tns:SEGGetLast_IDSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetCondicionIvaReceptor">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Recupera la condicion frente al IVA del receptor (para una clase de comprobante determinada o para todos si no se especifica).</wsdl:documentation>
+      <wsdl:input message="tns:SEGGetCondicionIvaReceptorSoapIn" />
+      <wsdl:output message="tns:SEGGetCondicionIvaReceptorSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:portType name="ServiceHttpGet">
+    <wsdl:operation name="SEGDummy">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Metodo dummy para verificacion de funcionamiento</wsdl:documentation>
+      <wsdl:input message="tns:SEGDummyHttpGetIn" />
+      <wsdl:output message="tns:SEGDummyHttpGetOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:portType name="ServiceHttpPost">
+    <wsdl:operation name="SEGDummy">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Metodo dummy para verificacion de funcionamiento</wsdl:documentation>
+      <wsdl:input message="tns:SEGDummyHttpPostIn" />
+      <wsdl:output message="tns:SEGDummyHttpPostOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="ServiceSoap" type="tns:ServiceSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="SEGAuthorize">
+      <soap:operation soapAction="http://ar.gov.afip.dif.seg/SEGAuthorize" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetCMP">
+      <soap:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetCMP" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetPARAM_Tipo_doc">
+      <soap:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetPARAM_Tipo_doc" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetPARAM_Tipo_IVA">
+      <soap:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetPARAM_Tipo_IVA" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetPARAM_Tipo_Cbte">
+      <soap:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetPARAM_Tipo_Cbte" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetPARAM_MON">
+      <soap:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetPARAM_MON" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetPARAM_Ctz">
+      <soap:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetPARAM_Ctz" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetLast_CMP">
+      <soap:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetLast_CMP" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGDummy">
+      <soap:operation soapAction="http://ar.gov.afip.dif.seg/SEGDummy" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetLast_ID">
+      <soap:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetLast_ID" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetCondicionIvaReceptor">
+      <soap:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetCondicionIvaReceptor" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="ServiceSoap12" type="tns:ServiceSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="SEGAuthorize">
+      <soap12:operation soapAction="http://ar.gov.afip.dif.seg/SEGAuthorize" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetCMP">
+      <soap12:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetCMP" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetPARAM_Tipo_doc">
+      <soap12:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetPARAM_Tipo_doc" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetPARAM_Tipo_IVA">
+      <soap12:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetPARAM_Tipo_IVA" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetPARAM_Tipo_Cbte">
+      <soap12:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetPARAM_Tipo_Cbte" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetPARAM_MON">
+      <soap12:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetPARAM_MON" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetPARAM_Ctz">
+      <soap12:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetPARAM_Ctz" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetLast_CMP">
+      <soap12:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetLast_CMP" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGDummy">
+      <soap12:operation soapAction="http://ar.gov.afip.dif.seg/SEGDummy" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetLast_ID">
+      <soap12:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetLast_ID" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SEGGetCondicionIvaReceptor">
+      <soap12:operation soapAction="http://ar.gov.afip.dif.seg/SEGGetCondicionIvaReceptor" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="ServiceHttpGet" type="tns:ServiceHttpGet">
+    <http:binding verb="GET" />
+    <wsdl:operation name="SEGDummy">
+      <http:operation location="/SEGDummy" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="ServiceHttpPost" type="tns:ServiceHttpPost">
+    <http:binding verb="POST" />
+    <wsdl:operation name="SEGDummy">
+      <http:operation location="/SEGDummy" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="Service">
+    <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Web Service orientado  al  servicio  de Empresas de Seguros </wsdl:documentation>
+    <wsdl:port name="ServiceSoap" binding="tns:ServiceSoap">
+      <soap:address location="https://wswhomo.afip.gov.ar/wsseg/service.asmx" />
+    </wsdl:port>
+    <wsdl:port name="ServiceSoap12" binding="tns:ServiceSoap12">
+      <soap12:address location="https://wswhomo.afip.gov.ar/wsseg/service.asmx" />
+    </wsdl:port>
+    <wsdl:port name="ServiceHttpGet" binding="tns:ServiceHttpGet">
+      <http:address location="https://wswhomo.afip.gov.ar/wsseg/service.asmx" />
+    </wsdl:port>
+    <wsdl:port name="ServiceHttpPost" binding="tns:ServiceHttpPost">
+      <http:address location="https://wswhomo.afip.gov.ar/wsseg/service.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

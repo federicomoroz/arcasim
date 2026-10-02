@@ -1,0 +1,1467 @@
+<?xml version='1.0' encoding='UTF-8'?><wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://serviciosjava.afip.gob.ar/wsltv/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="wsltv" targetNamespace="http://serviciosjava.afip.gob.ar/wsltv/">
+            <wsdl:types>
+                <xsd:schema targetNamespace="http://serviciosjava.afip.gob.ar/wsltv/">
+        <xsd:complexType name="Auth">
+            <xsd:sequence>
+        
+        <xsd:element name="token" type="xsd:string" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="sign" type="xsd:string" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="cuit" type="tns:Cuit" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="CodigoDescripcion">
+            <xsd:sequence>
+        
+        <xsd:element name="codigo" type="xsd:string" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="descripcion" type="xsd:string" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="Errores">
+            <xsd:sequence>
+        
+        <xsd:element name="error" type="tns:CodigoDescripcion" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="DummyRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="appserver" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="authserver" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="dbserver" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarProvinciasRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="provincia" type="tns:CodigoDescripcion" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarPuntosVentasRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="puntoVenta" type="tns:CodigoDescripcion" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarUltCompXPtoVtaSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="puntoVenta" type="tns:PuntoVenta" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="tipoComprobante" type="tns:TipoComprobante" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarUltCompXPtoVtaRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="nroComprobante" type="tns:NroComprobante" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="AcopioDetalle">
+            <xsd:sequence>
+        
+        <xsd:element name="codigo" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="direccion" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="localidad" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="codigoPostal" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarDepositosAcopioRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="acopio" type="tns:AcopioDetalle" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarCondicionesVentaRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="condicionVenta" type="tns:CodigoDescripcion" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="VariedadTabaco">
+            <xsd:sequence>
+        
+        <xsd:element name="codigo" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="descripcion" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="clase" type="tns:CodigoDescripcion" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarVariedadesClasesTabacoRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="variedad" type="tns:VariedadTabaco" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarRetencionesTabacalerasRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="retencion" type="tns:CodigoDescripcion" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="TributoRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="codigo" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="descripcion" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarTributosRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="tributo" type="tns:TributoRespuesta" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ComprobanteAAjustar">
+            <xsd:sequence>
+        
+        <xsd:element name="tipoComprobante" type="tns:TipoComprobante" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="puntoVenta" type="tns:PuntoVenta" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="nroComprobante" type="tns:NroComprobante" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarTotalesDeClasesPorComprobantesParaAjustarSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="comprobante" type="tns:ComprobanteAAjustar" maxOccurs="unbounded" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="TotalesPorPrecioClaseRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="codClase" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="descripcionClase" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="totalFardos" type="xsd:int" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="totalKilos" type="xsd:int" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="precioXKilo" type="xsd:float" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarTotalesDeClasesPorComprobantesParaAjustarRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="detalleTotalClase" type="tns:TotalesPorPrecioClaseRespuesta" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarLiquidacionXCAESolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="cae" type="tns:NroCAE" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="pdf" type="xsd:boolean" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ConsultarLiquidacionXNroComprobanteSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="puntoVenta" type="tns:PuntoVenta" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="tipoComprobante" type="tns:TipoComprobante" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="nroComprobante" type="tns:NroComprobante" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="pdf" type="xsd:boolean" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="CondicionVenta">
+            <xsd:sequence>
+        
+        <xsd:element name="codigo" type="tns:CodigoCondicionVenta" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="descripcion" type="tns:Texto200" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="LiquidacionSolicitud">
+            <xsd:sequence>
+
+            	<xsd:element name="tipoComprobante" type="tns:TipoComprobante" maxOccurs="1" minOccurs="1">
+            	</xsd:element>
+
+            	<xsd:element name="nroComprobante" type="tns:NroComprobante" maxOccurs="1" minOccurs="1">
+            	</xsd:element>
+
+            	<xsd:element name="puntoVenta" type="tns:PuntoVenta" maxOccurs="1" minOccurs="1">
+            	</xsd:element>
+
+            	<xsd:element name="iibbEmisor" type="tns:IIBB" maxOccurs="1" minOccurs="0">
+            	</xsd:element>
+
+            	<xsd:element name="codDepositoAcopio" type="xsd:long" maxOccurs="1" minOccurs="1">
+            	</xsd:element>
+
+            	<xsd:element name="fechaLiquidacion" type="xsd:date" maxOccurs="1" minOccurs="1">
+            	</xsd:element>
+
+            	<xsd:element name="tipoCompra" type="tns:TipoCompra" maxOccurs="1" minOccurs="1">
+            	</xsd:element>
+
+                    <xsd:element name="titularCompra" type="tns:TitularCompraType" maxOccurs="1" minOccurs="0" />
+                    <xsd:element name="condicionVenta" type="tns:CondicionVenta" maxOccurs="unbounded" minOccurs="1">
+            	</xsd:element>
+
+            	<xsd:element name="variedadTabaco" type="tns:CodigoVariedadTabaco" maxOccurs="1" minOccurs="1">
+            	</xsd:element>
+
+            	<xsd:element name="codProvinciaOrigenTabaco" type="tns:CodigoProvincia" maxOccurs="1" minOccurs="1">
+            	</xsd:element>
+
+            	<xsd:element name="puerta" type="tns:Texto20" maxOccurs="1" minOccurs="0">
+            	</xsd:element>
+
+            	<xsd:element name="nroTarjeta" type="tns:Texto20" maxOccurs="1" minOccurs="0">
+            	</xsd:element>
+
+            	<xsd:element name="horas" type="tns:Texto20" maxOccurs="1" minOccurs="0">
+            	</xsd:element>
+
+            	<xsd:element name="control" type="tns:Texto20" maxOccurs="1" minOccurs="0">
+            	</xsd:element>
+
+            	<xsd:element name="nroInterno" type="tns:Texto20" maxOccurs="1" minOccurs="0">
+            	</xsd:element>
+
+            	<xsd:element name="fechaInicioActividad" type="xsd:date" maxOccurs="1" minOccurs="1">
+            	</xsd:element>
+
+            </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ReceptorSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="cuit" type="tns:Cuit" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="iibb" type="tns:IIBB" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="nroSocio" type="tns:Texto20" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="nroFET" type="tns:Texto15" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="FardoSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="codTrazabilidad" type="tns:CodigoTrazabilidad" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="claseTabaco" type="tns:CodigoClaseTabaco" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="peso" type="tns:PesoFardo" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="RomaneoSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="nroRomaneo" type="tns:NroRomaneo" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="fechaRomaneo" type="xsd:date" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="fardo" type="tns:FardoSolicitud" maxOccurs="unbounded" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="PrecioClaseSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="claseTabaco" type="tns:CodigoClaseTabaco" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="precio" type="tns:ImporteClase" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="RetencionSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="codRetencion" type="tns:CodigoRetencionTributo" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="descripcion" type="tns:Texto100" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="importe" type="tns:ImporteTributoRetencion" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="TributoSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="codigoTributo" type="tns:CodigoRetencionTributo" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="descripcion" type="tns:Texto80" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="baseImponible" type="tns:Importe" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="alicuota" type="tns:AlicuotaTributo" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="importe" type="tns:ImporteTributoRetencion" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="FleteDetalle">
+            <xsd:sequence>
+        
+        <xsd:element name="descripcion" type="tns:Texto20" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="importe" type="tns:ImporteFlete" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="BonificacionDetalle">
+            <xsd:sequence>
+        
+        <xsd:element name="porcentaje" type="tns:Porcentaje" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="importe" type="tns:Importe" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="GenerarLiquidacionSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="liquidacion" type="tns:LiquidacionSolicitud" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="receptor" type="tns:ReceptorSolicitud" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="romaneo" type="tns:RomaneoSolicitud" maxOccurs="unbounded" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="precioClase" type="tns:PrecioClaseSolicitud" maxOccurs="unbounded" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="retencion" type="tns:RetencionSolicitud" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="tributo" type="tns:TributoSolicitud" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="flete" type="tns:FleteDetalle" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="bonificacion" type="tns:BonificacionDetalle" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="LiquidacionAjusteSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="tipoComprobante" type="tns:TipoComprobante" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="nroComprobante" type="tns:NroComprobante" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="fechaAjusteLiquidacion" type="xsd:date" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="puntoVenta" type="tns:PuntoVenta" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="iibbEmisor" type="tns:IIBB" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="codDepositoAcopio" type="xsd:long" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="tipoAjuste" type="tns:TipoAjuste" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="comprobanteAAjustar" type="tns:ComprobanteAAjustar" maxOccurs="unbounded" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="cuitReceptor" type="tns:Cuit" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="iibbReceptor" type="tns:IIBB" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="fechaInicioActividad" type="xsd:date" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="PrecioClaseAjusteSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="claseTabaco" type="tns:CodigoClaseTabaco" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="totalKilos" type="tns:Kilogramos" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="totalFardos" type="tns:CantidadFardos" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="precio" type="tns:Importe" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="AjustarLiquidacionSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="liquidacionAjuste" type="tns:LiquidacionAjusteSolicitud" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="precioClase" type="tns:PrecioClaseAjusteSolicitud" maxOccurs="unbounded" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="retencion" type="tns:RetencionSolicitud" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="tributo" type="tns:TributoSolicitud" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="CabeceraLiquidacion">
+            <xsd:sequence>
+        
+        <xsd:element name="tipoComprobante" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="fechaLiquidacion" type="xsd:date" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="fechaVencimiento" type="xsd:date" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="puntoVenta" type="xsd:short" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="domicilioPuntoVenta" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="codDepositoAcopio" type="xsd:int" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="domicilioDepositoAcopio" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="nroComprobante" type="xsd:int" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="cae" type="xsd:long" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="tipoAjuste" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="EmisorDetalle">
+            <xsd:sequence>
+        
+        <xsd:element name="cuit" type="xsd:long" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="razonSocial" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="situacionIVA" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="domicilio" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="nombreLocalidad" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="codProvincia" type="xsd:int" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="iibb" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="fechaInicioActividad" type="xsd:date" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ReceptorDetalle">
+            <xsd:sequence>
+        
+        <xsd:element name="cuit" type="xsd:long" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="razonSocial" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="situacionIVA" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="domicilio" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="nombreLocalidad" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="codProvincia" type="xsd:int" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="iibb" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="nroSocio" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="nroFET" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="DatosOperacionDetalle">
+            <xsd:sequence>
+        
+        <xsd:element name="tipoCompra" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="variedadTabaco" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="puerta" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="nroTarjeta" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="horas" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="control" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="nroInterno" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="codProvinciaOrigenTabaco" type="xsd:short" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="condicionVenta" type="tns:CondicionVenta" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="ClaseLiquidacionDetalle">
+            <xsd:sequence>
+        
+        <xsd:element name="codClase" type="xsd:short" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="cantidadFardos" type="xsd:int" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="pesoFardosKg" type="xsd:short" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="precioXKgFardo" type="xsd:float" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="importe" type="xsd:double" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="RomaneoDetalleLiquidacion">
+            <xsd:sequence>
+        
+        <xsd:element name="nroRomaneo" type="xsd:long" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="fechaRomaneo" type="xsd:date" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="detalleClase" type="tns:ClaseLiquidacionDetalle" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="DetalleOperacionLiquidacion">
+            <xsd:sequence>
+        
+        <xsd:element name="romaneo" type="tns:RomaneoDetalleLiquidacion" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="claseAjuste" type="tns:ClaseLiquidacionDetalle" maxOccurs="unbounded" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="cantidadTotalFardos" type="xsd:int" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="pesoTotalFardosKg" type="xsd:int" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="RetencionDetalle">
+            <xsd:sequence>
+        
+        <xsd:element name="codigo" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="descripcion" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="importe" type="xsd:double" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="TributoDetalle">
+            <xsd:sequence>
+        
+        <xsd:element name="codigo" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="descripcion" type="xsd:string" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="baseImponible" type="xsd:float" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="alicuota" type="xsd:float" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="importe" type="xsd:double" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="TotalesOperacion">
+            <xsd:sequence>
+        
+        <xsd:element name="importeFlete" type="xsd:double" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="importeBonificacion" type="xsd:double" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="importeNeto" type="xsd:double" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="alicuotaIVA" type="xsd:double" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="importeIVA" type="xsd:double" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="subtotal" type="xsd:double" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="totalRetenciones" type="xsd:double" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="totalTributos" type="xsd:double" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="total" type="xsd:double" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="LiquidacionDetalle">
+            <xsd:sequence>
+
+            	<xsd:element name="cabecera" type="tns:CabeceraLiquidacion" maxOccurs="1" minOccurs="0" />
+
+            	<xsd:element name="emisor" type="tns:EmisorDetalle" maxOccurs="1" minOccurs="0" />
+
+            	<xsd:element name="receptor" type="tns:ReceptorDetalle" maxOccurs="1" minOccurs="0" />
+
+                    <xsd:element name="titularCompra" type="tns:TitularCompraType" maxOccurs="1" minOccurs="0" />
+                    <xsd:element name="datosOperacion" type="tns:DatosOperacionDetalle" maxOccurs="1" minOccurs="0">
+            	</xsd:element>
+
+            	<xsd:element name="detalleOperacion" type="tns:DetalleOperacionLiquidacion" maxOccurs="1" minOccurs="0">
+            	</xsd:element>
+
+            	<xsd:element name="retencion" type="tns:RetencionDetalle" maxOccurs="unbounded" minOccurs="0">
+            	</xsd:element>
+
+            	<xsd:element name="tributo" type="tns:TributoDetalle" maxOccurs="unbounded" minOccurs="0" />
+
+            	<xsd:element name="totalesOperacion" type="tns:TotalesOperacion" maxOccurs="1" minOccurs="0">
+            	</xsd:element>
+
+            	<xsd:element name="flete" type="tns:FleteDetalle" maxOccurs="1" minOccurs="0" />
+
+            	<xsd:element name="bonificacion" type="tns:BonificacionDetalle" maxOccurs="1" minOccurs="0">
+            	</xsd:element>
+
+            	<xsd:element name="caeAjustado" type="xsd:long" maxOccurs="unbounded" minOccurs="0" />
+
+            	<xsd:element name="pdf" type="xsd:base64Binary" maxOccurs="1" minOccurs="0" />
+
+            </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="LiquidacionDetalleRespuesta">
+            <xsd:sequence>
+        
+        <xsd:element name="liquidacion" type="tns:LiquidacionDetalle" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        
+        <xsd:element name="errores" type="tns:Errores" maxOccurs="1" minOccurs="0">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+        <xsd:complexType name="GenerarAjusteFisicoSolicitud">
+            <xsd:sequence>
+        
+        <xsd:element name="tipoComprobante" type="tns:TipoComprobante" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="puntoVenta" type="tns:PuntoVenta" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="nroComprobante" type="tns:NroComprobante" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="fechaLiquidacion" type="xsd:date" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="fechaInicioActividad" type="xsd:date" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        
+        <xsd:element name="comprobanteAAjustar" type="tns:ComprobanteAAjustar" maxOccurs="1" minOccurs="1">
+        </xsd:element>
+        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="DummyResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:DummyRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                <xsd:complexType name="ConsultarProvinciasResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarProvinciasRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarProvinciasRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarPuntosVentasResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarPuntosVentasRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarPuntosVentasRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarCondicionesVentaResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarCondicionesVentaRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarCondicionesVentaRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarDepositosAcopioResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarDepositosAcopioRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarDepositosAcopioRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarUltimoComprobanteXPuntoVentaResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarUltCompXPtoVtaRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarUltimoComprobanteXPuntoVentaRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        
+                        <xsd:element name="solicitud" type="tns:ConsultarUltCompXPtoVtaSolicitud" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarVariedadesClasesTabacoResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarVariedadesClasesTabacoRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarVariedadesClasesTabacoRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarRetencionesTabacalerasResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarRetencionesTabacalerasRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarRetencionesTabacalerasRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarTributosResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarTributosRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarTributosRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarLiquidacionXCAEResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:LiquidacionDetalleRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarLiquidacionXCAERequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        
+                        <xsd:element name="solicitud" type="tns:ConsultarLiquidacionXCAESolicitud" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarLiquidacionXNroComprobanteResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:LiquidacionDetalleRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarLiquidacionXNroComprobanteRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        
+                        <xsd:element name="solicitud" type="tns:ConsultarLiquidacionXNroComprobanteSolicitud" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="GenerarLiquidacionResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:LiquidacionDetalleRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="GenerarLiquidacionRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        
+                        <xsd:element name="solicitud" type="tns:GenerarLiquidacionSolicitud" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="AjustarLiquidacionResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:LiquidacionDetalleRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="AjustarLiquidacionRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        
+                        <xsd:element name="solicitud" type="tns:AjustarLiquidacionSolicitud" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="ConsultarTotalesDeClasesPorComprobantesParaAjustarResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:ConsultarTotalesDeClasesPorComprobantesParaAjustarRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="ConsultarTotalesDeClasesPorComprobantesParaAjustarRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        
+                        <xsd:element name="solicitud" type="tns:ConsultarTotalesDeClasesPorComprobantesParaAjustarSolicitud" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType>
+                <xsd:complexType name="GenerarAjusteFisicoResponse">
+                    <xsd:sequence>
+                        <xsd:element name="respuesta" type="tns:LiquidacionDetalleRespuesta" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                
+                    <xsd:complexType name="GenerarAjusteFisicoRequest">
+                        <xsd:sequence>
+                    
+                        <xsd:element name="auth" type="tns:Auth" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        
+                        <xsd:element name="solicitud" type="tns:GenerarAjusteFisicoSolicitud" maxOccurs="1" minOccurs="1">
+                        </xsd:element>
+                        </xsd:sequence></xsd:complexType><xsd:simpleType name="PuntoVenta"><xsd:restriction base="xsd:int">
+            <xsd:minInclusive value="1" />
+            <xsd:maxInclusive value="99999" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="CodigoProvincia"><xsd:restriction base="xsd:short">
+            <xsd:minInclusive value="0" />
+            <xsd:maxInclusive value="99" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="Cuit"><xsd:restriction base="xsd:long">
+            <xsd:minInclusive value="10000000000" />
+            <xsd:maxInclusive value="99999999999" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="IIBB"><xsd:restriction base="xsd:string">
+            <xsd:minLength value="1" />
+            <xsd:maxLength value="11" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="AlicuotaIVA"><xsd:restriction base="xsd:float"><xsd:enumeration value="0.0" /><xsd:enumeration value="21.0" /></xsd:restriction></xsd:simpleType><xsd:simpleType name="AlicuotaTributo"><xsd:restriction base="xsd:decimal"><xsd:fractionDigits value="2" />
+            <xsd:minInclusive value="0.0" />
+            <xsd:maxInclusive value="999.99" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="CodigoClaseTabaco"><xsd:restriction base="xsd:short">
+            <xsd:minInclusive value="1" />
+            <xsd:maxInclusive value="999" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="CodigoCondicionVenta"><xsd:restriction base="xsd:short">
+            <xsd:minInclusive value="1" />
+            <xsd:maxInclusive value="99" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="CodigoRetencionTributo"><xsd:restriction base="xsd:short">
+            <xsd:minInclusive value="1" />
+            <xsd:maxInclusive value="99" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="CodigoTrazabilidad"><xsd:restriction base="xsd:string">
+            <xsd:minLength value="1" />
+            <xsd:maxLength value="30" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="CodigoVariedadTabaco"><xsd:restriction base="xsd:string">
+            <xsd:minLength value="2" />
+            <xsd:maxLength value="2" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="Importe"><xsd:restriction base="xsd:decimal"><xsd:fractionDigits value="2" />
+            <xsd:minInclusive value="0.01" />
+            <xsd:maxInclusive value="999999999999.99" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="ImporteClase"><xsd:restriction base="xsd:decimal"><xsd:fractionDigits value="2" />
+            <xsd:minInclusive value="0.01" />
+            <xsd:maxInclusive value="9999.99" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="ImporteTributoRetencion"><xsd:restriction base="xsd:decimal"><xsd:fractionDigits value="2" />
+            <xsd:minInclusive value="0.01" />
+            <xsd:maxInclusive value="99999999999.99" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="ImporteFlete"><xsd:restriction base="xsd:decimal"><xsd:fractionDigits value="2" />
+            <xsd:minInclusive value="-99999999.99" />
+            <xsd:maxInclusive value="99999999.99" />
+            </xsd:restriction></xsd:simpleType>
+                	<xsd:simpleType name="Porcentaje">
+                		<xsd:restriction base="xsd:decimal">
+                			<xsd:fractionDigits value="2" />
+                			<xsd:minInclusive value="0" />
+                			<xsd:maxInclusive value="100" />
+                		</xsd:restriction>
+                	</xsd:simpleType>
+                	<xsd:simpleType name="Kilogramos"><xsd:restriction base="xsd:int">
+            <xsd:minInclusive value="1" />
+            <xsd:maxInclusive value="99999999" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="NroComprobante"><xsd:restriction base="xsd:int">
+            <xsd:minInclusive value="1" />
+            <xsd:maxInclusive value="99999999" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="NroRomaneo"><xsd:restriction base="xsd:long">
+            <xsd:minInclusive value="1" />
+            <xsd:maxInclusive value="999999999999999" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="PesoFardo"><xsd:restriction base="xsd:short">
+            <xsd:minInclusive value="1" />
+            <xsd:maxInclusive value="999" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="TipoAjuste"><xsd:restriction base="xsd:string"><xsd:enumeration value="C" /><xsd:enumeration value="D" /></xsd:restriction></xsd:simpleType><xsd:simpleType name="TipoCompra"><xsd:restriction base="xsd:string"><xsd:enumeration value="CPS" /><xsd:enumeration value="CPT" /><xsd:enumeration value="CPST" /></xsd:restriction></xsd:simpleType><xsd:simpleType name="TipoComprobante"><xsd:restriction base="xsd:string"><xsd:enumeration value="150" /><xsd:enumeration value="151" /></xsd:restriction></xsd:simpleType><xsd:simpleType name="TipoLiquidacion"><xsd:restriction base="xsd:string"><xsd:enumeration value="L" /><xsd:enumeration value="A" /></xsd:restriction></xsd:simpleType><xsd:simpleType name="NroCAE"><xsd:restriction base="xsd:long">
+            <xsd:minInclusive value="10000000000000" />
+            <xsd:maxInclusive value="99999999999999" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="CantidadFardos"><xsd:restriction base="xsd:int">
+            <xsd:minInclusive value="1" />
+            <xsd:maxInclusive value="99999999" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="Texto15"><xsd:restriction base="xsd:string">
+            <xsd:minLength value="1" />
+            <xsd:maxLength value="15" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="Texto20"><xsd:restriction base="xsd:string">
+            <xsd:minLength value="1" />
+            <xsd:maxLength value="20" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="Texto80"><xsd:restriction base="xsd:string">
+            <xsd:minLength value="1" />
+            <xsd:maxLength value="80" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="Texto100"><xsd:restriction base="xsd:string">
+            <xsd:minLength value="1" />
+            <xsd:maxLength value="100" />
+            </xsd:restriction></xsd:simpleType><xsd:simpleType name="Texto200"><xsd:restriction base="xsd:string">
+            <xsd:minLength value="1" />
+            <xsd:maxLength value="200" />
+            </xsd:restriction></xsd:simpleType><xsd:element name="DummyResp" type="tns:DummyResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarProvinciasReq" type="tns:ConsultarProvinciasRequest">
+                </xsd:element><xsd:element name="ConsultarProvinciasResp" type="tns:ConsultarProvinciasResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarPuntosVentasReq" type="tns:ConsultarPuntosVentasRequest">
+                </xsd:element><xsd:element name="ConsultarPuntosVentasResp" type="tns:ConsultarPuntosVentasResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarCondicionesVentaReq" type="tns:ConsultarCondicionesVentaRequest">
+                </xsd:element><xsd:element name="ConsultarCondicionesVentaResp" type="tns:ConsultarCondicionesVentaResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarDepositosAcopioReq" type="tns:ConsultarDepositosAcopioRequest">
+                </xsd:element><xsd:element name="ConsultarDepositosAcopioResp" type="tns:ConsultarDepositosAcopioResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarUltimoComprobanteXPuntoVentaReq" type="tns:ConsultarUltimoComprobanteXPuntoVentaRequest">
+                </xsd:element><xsd:element name="ConsultarUltimoComprobanteXPuntoVentaResp" type="tns:ConsultarUltimoComprobanteXPuntoVentaResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarVariedadesClasesTabacoReq" type="tns:ConsultarVariedadesClasesTabacoRequest">
+                </xsd:element><xsd:element name="ConsultarVariedadesClasesTabacoResp" type="tns:ConsultarVariedadesClasesTabacoResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarRetencionesTabacalerasReq" type="tns:ConsultarRetencionesTabacalerasRequest">
+                </xsd:element><xsd:element name="ConsultarRetencionesTabacalerasResp" type="tns:ConsultarRetencionesTabacalerasResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarTributosReq" type="tns:ConsultarTributosRequest">
+                </xsd:element><xsd:element name="ConsultarTributosResp" type="tns:ConsultarTributosResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarLiquidacionXCAEReq" type="tns:ConsultarLiquidacionXCAERequest">
+                </xsd:element><xsd:element name="ConsultarLiquidacionXCAEResp" type="tns:ConsultarLiquidacionXCAEResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarLiquidacionXNroComprobanteReq" type="tns:ConsultarLiquidacionXNroComprobanteRequest">
+                </xsd:element><xsd:element name="ConsultarLiquidacionXNroComprobanteResp" type="tns:ConsultarLiquidacionXNroComprobanteResponse">
+            </xsd:element>
+            
+                <xsd:element name="GenerarLiquidacionReq" type="tns:GenerarLiquidacionRequest">
+                </xsd:element><xsd:element name="GenerarLiquidacionResp" type="tns:GenerarLiquidacionResponse">
+            </xsd:element>
+            
+                <xsd:element name="AjustarLiquidacionReq" type="tns:AjustarLiquidacionRequest">
+                </xsd:element><xsd:element name="AjustarLiquidacionResp" type="tns:AjustarLiquidacionResponse">
+            </xsd:element>
+            
+                <xsd:element name="ConsultarTotalesDeClasesPorComprobantesParaAjustarReq" type="tns:ConsultarTotalesDeClasesPorComprobantesParaAjustarRequest">
+                </xsd:element><xsd:element name="ConsultarTotalesDeClasesPorComprobantesParaAjustarResp" type="tns:ConsultarTotalesDeClasesPorComprobantesParaAjustarResponse">
+            </xsd:element>
+            
+                <xsd:element name="GenerarAjusteFisicoReq" type="tns:GenerarAjusteFisicoRequest">
+                </xsd:element><xsd:element name="GenerarAjusteFisicoResp" type="tns:GenerarAjusteFisicoResponse">
+            </xsd:element>
+            
+
+                	<xsd:complexType name="TitularCompraType">
+                		<xsd:sequence>
+                			<xsd:element name="cuit" type="tns:Cuit" maxOccurs="1" minOccurs="1">
+                			</xsd:element>
+
+                			<xsd:element name="porcentaje" type="tns:Porcentaje" maxOccurs="1" minOccurs="1">
+                			</xsd:element>
+                		</xsd:sequence>
+                	</xsd:complexType>
+                </xsd:schema></wsdl:types>
+                <wsdl:message name="dummyRequest" />
+            <wsdl:message name="dummyResponse">
+                <wsdl:part name="parameters" element="tns:DummyResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarProvinciasRequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarProvinciasReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarProvinciasResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarProvinciasResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarPuntosVentasRequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarPuntosVentasReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarPuntosVentasResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarPuntosVentasResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarCondicionesVentaRequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarCondicionesVentaReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarCondicionesVentaResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarCondicionesVentaResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarDepositosAcopioRequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarDepositosAcopioReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarDepositosAcopioResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarDepositosAcopioResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarUltimoComprobanteXPuntoVentaRequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarUltimoComprobanteXPuntoVentaReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarUltimoComprobanteXPuntoVentaResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarUltimoComprobanteXPuntoVentaResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarVariedadesClasesTabacoRequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarVariedadesClasesTabacoReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarVariedadesClasesTabacoResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarVariedadesClasesTabacoResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarRetencionesTabacalerasRequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarRetencionesTabacalerasReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarRetencionesTabacalerasResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarRetencionesTabacalerasResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarTributosRequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarTributosReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarTributosResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarTributosResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarLiquidacionXCAERequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarLiquidacionXCAEReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarLiquidacionXCAEResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarLiquidacionXCAEResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarLiquidacionXNroComprobanteRequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarLiquidacionXNroComprobanteReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarLiquidacionXNroComprobanteResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarLiquidacionXNroComprobanteResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="generarLiquidacionRequest">
+                    <wsdl:part name="parameters" element="tns:GenerarLiquidacionReq" />
+                </wsdl:message>
+            <wsdl:message name="generarLiquidacionResponse">
+                <wsdl:part name="parameters" element="tns:GenerarLiquidacionResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="ajustarLiquidacionRequest">
+                    <wsdl:part name="parameters" element="tns:AjustarLiquidacionReq" />
+                </wsdl:message>
+            <wsdl:message name="ajustarLiquidacionResponse">
+                <wsdl:part name="parameters" element="tns:AjustarLiquidacionResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="consultarTotalesDeClasesPorComprobantesParaAjustarRequest">
+                    <wsdl:part name="parameters" element="tns:ConsultarTotalesDeClasesPorComprobantesParaAjustarReq" />
+                </wsdl:message>
+            <wsdl:message name="consultarTotalesDeClasesPorComprobantesParaAjustarResponse">
+                <wsdl:part name="parameters" element="tns:ConsultarTotalesDeClasesPorComprobantesParaAjustarResp" />
+            </wsdl:message>
+            
+                <wsdl:message name="generarAjusteFisicoRequest">
+                    <wsdl:part name="parameters" element="tns:GenerarAjusteFisicoReq" />
+                </wsdl:message>
+            <wsdl:message name="generarAjusteFisicoResponse">
+                <wsdl:part name="parameters" element="tns:GenerarAjusteFisicoResp" />
+            </wsdl:message>
+            <wsdl:portType name="LtvPortType">
+            <wsdl:operation name="dummy">
+                <wsdl:input message="tns:dummyRequest" />
+                <wsdl:output message="tns:dummyResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarProvincias">
+                <wsdl:input message="tns:consultarProvinciasRequest" />
+                <wsdl:output message="tns:consultarProvinciasResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarPuntosVentas">
+                <wsdl:input message="tns:consultarPuntosVentasRequest" />
+                <wsdl:output message="tns:consultarPuntosVentasResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarCondicionesVenta">
+                <wsdl:input message="tns:consultarCondicionesVentaRequest" />
+                <wsdl:output message="tns:consultarCondicionesVentaResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarDepositosAcopio">
+                <wsdl:input message="tns:consultarDepositosAcopioRequest" />
+                <wsdl:output message="tns:consultarDepositosAcopioResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarUltimoComprobanteXPuntoVenta">
+                <wsdl:input message="tns:consultarUltimoComprobanteXPuntoVentaRequest" />
+                <wsdl:output message="tns:consultarUltimoComprobanteXPuntoVentaResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarVariedadesClasesTabaco">
+                <wsdl:input message="tns:consultarVariedadesClasesTabacoRequest" />
+                <wsdl:output message="tns:consultarVariedadesClasesTabacoResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarRetencionesTabacaleras">
+                <wsdl:input message="tns:consultarRetencionesTabacalerasRequest" />
+                <wsdl:output message="tns:consultarRetencionesTabacalerasResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarTributos">
+                <wsdl:input message="tns:consultarTributosRequest" />
+                <wsdl:output message="tns:consultarTributosResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarLiquidacionXCAE">
+                <wsdl:input message="tns:consultarLiquidacionXCAERequest" />
+                <wsdl:output message="tns:consultarLiquidacionXCAEResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarLiquidacionXNroComprobante">
+                <wsdl:input message="tns:consultarLiquidacionXNroComprobanteRequest" />
+                <wsdl:output message="tns:consultarLiquidacionXNroComprobanteResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="generarLiquidacion">
+                <wsdl:input message="tns:generarLiquidacionRequest" />
+                <wsdl:output message="tns:generarLiquidacionResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="ajustarLiquidacion">
+                <wsdl:input message="tns:ajustarLiquidacionRequest" />
+                <wsdl:output message="tns:ajustarLiquidacionResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarTotalesDeClasesPorComprobantesParaAjustar">
+                <wsdl:input message="tns:consultarTotalesDeClasesPorComprobantesParaAjustarRequest" />
+                <wsdl:output message="tns:consultarTotalesDeClasesPorComprobantesParaAjustarResponse" />
+            </wsdl:operation>
+            
+            <wsdl:operation name="generarAjusteFisico">
+                <wsdl:input message="tns:generarAjusteFisicoRequest" />
+                <wsdl:output message="tns:generarAjusteFisicoResponse" />
+            </wsdl:operation>
+            </wsdl:portType>
+        <wsdl:binding name="wsltvSOAP" type="tns:LtvPortType">
+            <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http" />
+        
+            <wsdl:operation name="dummy">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsltv/dummy" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarProvincias">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsltv/consultarProvincias" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarPuntosVentas">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsltv/consultarPuntosVentas" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarCondicionesVenta">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsltv/consultarCondicionesVenta" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarDepositosAcopio">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsltv/consultarDepositosAcopio" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarUltimoComprobanteXPuntoVenta">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsltv/consultarUltimoComprobanteXPuntoVenta" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarVariedadesClasesTabaco">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsltv/consultarVariedadesClasesTabaco" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarRetencionesTabacaleras">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsltv/consultarRetencionesTabacaleras" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarTributos">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsltv/consultarTributos" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarLiquidacionXCAE">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsltv/consultarLiquidacionXCAE" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarLiquidacionXNroComprobante">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsltv/consultarLiquidacionXNroComprobante" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="generarLiquidacion">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsltv/generarLiquidacion" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="ajustarLiquidacion">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsltv/ajustarLiquidacion" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="consultarTotalesDeClasesPorComprobantesParaAjustar">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsltv/consultarTotalesDeClasesPorComprobantesParaAjustar" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            
+            <wsdl:operation name="generarAjusteFisico">
+                <soap:operation soapAction="http://serviciosjava.afip.gob.ar/wsltv/generarAjusteFisico" />
+                <wsdl:input>
+                    <soap:body use="literal" />
+                </wsdl:input>
+                <wsdl:output>
+                    <soap:body use="literal" />
+                </wsdl:output>
+            </wsdl:operation>
+            </wsdl:binding>
+            <wsdl:service name="LtvService">
+                <wsdl:port binding="tns:wsltvSOAP" name="LtvEndPoint">
+                    <soap:address location="https://fwshomo.afip.gov.ar:443/wsltv/LtvService" />
+                </wsdl:port>
+            </wsdl:service>
+        </wsdl:definitions>

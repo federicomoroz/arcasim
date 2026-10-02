@@ -1,0 +1,2298 @@
+<?xml version='1.0' encoding='UTF-8'?><wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://ar.gob.afip.wsremcarne/RemCarneService/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="RemCarneService" targetNamespace="http://ar.gob.afip.wsremcarne/RemCarneService/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://ar.gob.afip.wsremcarne/RemCarneService/">
+
+      <xsd:element name="dummyResponse" type="tns:DummyResponseType"/>
+      
+      <xsd:complexType name="DummyResponseType">
+        <xsd:sequence>
+          <xsd:element name="dummyReturn" type="tns:DummyReturnType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="DummyReturnType">
+        <xsd:sequence>
+          <xsd:element name="appserver" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+          <xsd:element name="authserver" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+          <xsd:element name="dbserver" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="AuthRequestType">
+        <xsd:sequence>
+          <xsd:element name="token" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+          <xsd:element name="sign" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+          <xsd:element name="cuitRepresentada" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:simpleType name="CuitSimpleType">
+      	<xsd:restriction base="xsd:long">
+      		<xsd:minExclusive value="9999999999"/>
+      		<xsd:maxInclusive value="99999999999"/>
+      	</xsd:restriction>
+      </xsd:simpleType>
+
+      <xsd:complexType name="ArrayCodigosDescripcionesType">
+        <xsd:sequence>
+          <xsd:element name="codigoDescripcion" type="tns:CodigoDescripcionType" maxOccurs="unbounded" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ArrayCodigosDescripcionesStringType">
+        <xsd:sequence>
+          <xsd:element name="codigoDescripcionString" type="tns:CodigoDescripcionStringType" maxOccurs="unbounded" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="CodigoDescripcionType">
+        <xsd:sequence>
+          <xsd:element name="codigo" type="xsd:short" maxOccurs="1" minOccurs="1"/>
+          <xsd:element name="descripcion" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="CodigoDescripcionStringType">
+        <xsd:sequence>
+          <xsd:element name="codigo" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+          <xsd:element name="descripcion" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="RemitoType">
+        <xsd:sequence>
+        	<xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="tipoComprobante" type="xsd:short" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="tipoMovimiento" type="tns:TipoMovimientoSimpleType" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="categoriaEmisor" type="xsd:short" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="puntoEmision" type="tns:PuntoEmisionSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="cuitTitularMercaderia" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="0">
+        		<xsd:annotation>
+        			<xsd:documentation>
+        				Titular de la mercaderia en el momento en que se
+        				genera el remito.
+        			</xsd:documentation>
+        		</xsd:annotation>
+        	</xsd:element>
+        	<xsd:element name="cuitDepositario" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="tipoReceptor" type="tns:TipoReceptorSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="categoriaReceptor" type="xsd:short" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="cuitReceptor" maxOccurs="1" minOccurs="0" type="tns:CuitSimpleType">
+        		<xsd:annotation>
+        			<xsd:documentation>
+        				EM - Deposito Emisor, MI - Mercado Interno
+        			</xsd:documentation>
+        		</xsd:annotation>
+        	</xsd:element>
+        	<xsd:element name="codDomOrigen" type="xsd:int" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="codDomDestino" type="xsd:int" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="viaje" type="tns:ViajeType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayMercaderias" type="tns:ArrayMercaderiasType" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="estado" type="tns:EstadoRemitoSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="datosEmision" type="tns:DatosEmisionType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="codRemRedestinado" type="xsd:long" minOccurs="0" maxOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="arrayContingencias" type="tns:ArrayContingenciasType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      
+      <xsd:complexType name="ArrayMercaderiasType">
+        <xsd:annotation>
+          <xsd:documentation/>
+        </xsd:annotation>
+        <xsd:sequence>
+          <xsd:element name="mercaderia" type="tns:MercaderiaType" maxOccurs="unbounded" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="MercaderiaType">
+        <xsd:sequence>
+        	<xsd:element name="orden" maxOccurs="1" minOccurs="1" type="tns:OrdenSimpleType">
+        	</xsd:element>
+                    <xsd:element name="codTipoProd" type="xsd:string" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+                    <xsd:element name="tropa" type="tns:TropaSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+
+
+        	<xsd:element name="kilos" type="tns:CantidadSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="unidades" type="tns:CantidadSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="kilosRec" type="tns:CantidadSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+
+        	<xsd:element name="unidadesRec" type="tns:CantidadSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ArrayReceptoresType">
+        <xsd:annotation>
+          <xsd:documentation/>
+        </xsd:annotation>
+        <xsd:sequence>
+          <xsd:element name="receptores" type="tns:ReceptoresType" maxOccurs="unbounded" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ReceptoresType">
+        <xsd:sequence>
+            <xsd:element name="cuitReceptor" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="1">
+            </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="VehiculoType">
+        <xsd:sequence>
+          <xsd:element name="dominioVehiculo" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+          <xsd:element name="dominioAcoplado" type="xsd:string" maxOccurs="1" minOccurs="0"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ViajeType">
+        <xsd:sequence>
+          <xsd:element name="cuitTransportista" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="0">
+          </xsd:element>
+          <xsd:element name="cuitConductor" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="0">
+          </xsd:element>
+          <xsd:element name="fechaInicioViaje" type="xsd:date" maxOccurs="1" minOccurs="1"/>
+          <xsd:element name="distanciaKm" type="xsd:decimal" maxOccurs="1" minOccurs="1"/>
+          <xsd:element name="vehiculo" type="tns:VehiculoType" maxOccurs="1" minOccurs="0"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:element name="generarRemitoRequest" type="tns:GenerarRemitoRequestType"/>
+      
+      <xsd:element name="generarRemitoResponse" type="tns:GenerarRemitoResponseType"/>
+      
+      <xsd:complexType name="GenerarRemitoRequestType">
+        <xsd:sequence>
+          <xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+          <xsd:element name="idReq" type="tns:IdReqSimpleType" maxOccurs="1" minOccurs="1"/>
+          <xsd:element name="remito" type="tns:RemitoType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="GenerarRemitoResponseType">
+        <xsd:sequence>
+          <xsd:element name="generarRemitoReturn" type="tns:RemitoReturnType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="RemitoReturnType">
+        <xsd:sequence>
+        	<xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="tipoComprobante" type="xsd:short" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="puntoEmision" type="tns:PuntoEmisionSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="datosEmision" type="tns:DatosEmisionType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="estado" type="tns:EstadoRemitoSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="qr" type="xsd:base64Binary" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="resultado" type="tns:ResultadoSimpleType" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="evento" type="tns:CodigoDescripcionType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayResultadoReceptoresValidos" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayObservaciones" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:simpleType name="IdReqSimpleType">
+      	<xsd:restriction base="xsd:long">
+      		<xsd:minInclusive value="1"/>
+      		<xsd:maxInclusive value="999999999999999">
+      		</xsd:maxInclusive>
+      		<xsd:fractionDigits value="0"/>
+      	</xsd:restriction>
+      </xsd:simpleType>
+
+      <xsd:simpleType name="ResultadoSimpleType">
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="A"/>
+          <xsd:enumeration value="O"/>
+          <xsd:enumeration value="R"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+    
+      <xsd:complexType name="DatosEmisionType">
+        <xsd:sequence>
+        	<xsd:element maxOccurs="1" minOccurs="1" name="nroRemito" type="tns:NumeroRemitoSimpleType">
+        	</xsd:element>
+        	<xsd:element name="codAutorizacion" type="xsd:long" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="fechaEmision" type="xsd:date" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="fechaVencimiento" type="xsd:date" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:simpleType name="NumeroRemitoSimpleType">
+     	<xsd:restriction base="xsd:long">
+     		<xsd:minInclusive value="1"/>
+     		<xsd:maxInclusive value="99999999"/>
+     	</xsd:restriction>
+      </xsd:simpleType>
+
+      <xsd:simpleType name="PuntoEmisionSimpleType">
+      	<xsd:restriction base="xsd:int">
+      		<xsd:minInclusive value="1"/>
+      		<xsd:maxInclusive value="99999"/>
+      	</xsd:restriction>
+      </xsd:simpleType>
+
+      <xsd:element name="emitirRemitoRequest" type="tns:EmitirRemitoRequestType"/>
+      
+      <xsd:element name="emitirRemitoResponse" type="tns:EmitirRemitoResponseType"/>
+      
+      <xsd:complexType name="EmitirRemitoRequestType">
+        <xsd:sequence>
+          <xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+          <xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+          <xsd:element name="viaje" type="tns:ViajeType" maxOccurs="1" minOccurs="0"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="EmitirRemitoResponseType">
+        <xsd:sequence>
+          <xsd:element name="emitirRemitoReturn" type="tns:RemitoReturnType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:element name="autorizarRemitoRequest" type="tns:AutorizarRemitoRequestType"/>
+      	
+      <xsd:element name="autorizarRemitoResponse" type="tns:AutorizarRemitoResponseType"/>
+      
+      <xsd:complexType name="AutorizarRemitoRequestType">
+        <xsd:sequence>
+          <xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+          <xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+          <xsd:element name="estado" type="tns:AutorizacionSimpleType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+   	
+   	  <xsd:complexType name="AutorizarRemitoResponseType">
+        <xsd:sequence>
+          <xsd:element name="autorizarRemitoReturn" type="tns:AutorizarRemitoReturnType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+   	  <xsd:complexType name="AutorizarRemitoReturnType">
+        <xsd:sequence>
+            <xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="1"/>
+            <xsd:element name="resultado" type="tns:ResultadoSimpleType" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="evento" type="tns:CodigoDescripcionType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayObservaciones" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        </xsd:sequence>
+   	  </xsd:complexType>	
+   
+   	 <xsd:simpleType name="AutorizacionSimpleType">
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="A"/>
+          <xsd:enumeration value="D"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      
+      <xsd:element name="registrarRecepcionRequest" type="tns:RegistrarRecepcionRequestType">
+      </xsd:element>
+      
+      <xsd:element name="registrarRecepcionResponse" type="tns:RegistrarRecepcionResponseType">
+      </xsd:element>
+      
+      <xsd:complexType name="RegistrarRecepcionRequestType">
+        <xsd:sequence>
+          <xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+          <xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="1"/>
+          <xsd:element name="estado" type="tns:EstadoRecepcionSimpleType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+          <xsd:element name="arrayRecepcionMercaderia" type="tns:ArrayRecepcionMercaderiaType" maxOccurs="1" minOccurs="0"/>
+          <xsd:element name="categoriaReceptor" type="xsd:short" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+       <xsd:complexType name="RegistrarRecepcionResponseType">
+        <xsd:sequence>
+          <xsd:element name="registrarRecepcionReturn" type="tns:RegistrarRecepcionReturnType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="RegistrarRecepcionReturnType">
+        <xsd:sequence>
+            <xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="1"/>
+            <xsd:element name="resultado" type="tns:ResultadoSimpleType" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="evento" type="tns:CodigoDescripcionType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayObservaciones" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ArrayRecepcionMercaderiaType">
+        <xsd:sequence>
+        	<xsd:element name="recepcionMercaderia" type="tns:RecepcionMercaderiaType" maxOccurs="unbounded" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:element name="modificarViajeRequest" type="tns:ModificarViajeRequestType"/>
+      
+      <xsd:element name="modificarViajeResponse" type="tns:ModificarViajeResponseType"/>
+      
+      <xsd:complexType name="ModificarViajeRequestType">
+        <xsd:sequence>
+        	<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="cuitTransportista" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="cuitConductor" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="vehiculo" type="tns:VehiculoType" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ModificarConductorType">
+        <xsd:sequence>
+          <xsd:element name="codigoRemito" type="xsd:long" maxOccurs="1" minOccurs="1"/>
+          <xsd:element name="cuitConductor" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ModificarViajeResponseType">
+        <xsd:sequence>
+          <xsd:element name="modificarViajeReturn" type="tns:ModificarViajeReturnType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ModificarViajeReturnType">
+        <xsd:sequence>
+            <xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="1"/>
+            <xsd:element name="resultado" type="tns:ResultadoSimpleType" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="evento" type="tns:CodigoDescripcionType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayObservaciones" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:element name="informarContingenciaRequest" type="tns:InformarContingenciaRequestType"/>
+      
+      <xsd:element name="informarContingenciaResponse" type="tns:InformarContingenciaResponseType"/>
+      
+      <xsd:complexType name="InformarContingenciaRequestType">
+        <xsd:sequence>
+        	<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+            <xsd:element name="contingencia" type="tns:ContingenciaType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:simpleType name="Texto250SimpleType">
+        <xsd:restriction base="xsd:string">
+          <xsd:minLength value="3"/>
+          <xsd:maxLength value="250"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      
+      <xsd:complexType name="InformarContingenciaResponseType">
+        <xsd:sequence>
+          <xsd:element name="informarContingenciaReturn" type="tns:InformarContingenciaReturnType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="InformarContingenciaReturnType">
+        <xsd:sequence>
+            <xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="1"/>
+            <xsd:element name="resultado" type="tns:ResultadoSimpleType" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="evento" type="tns:CodigoDescripcionType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayObservaciones" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ContingenciaType">
+        <xsd:sequence>
+          <xsd:element name="tipoContingencia" type="xsd:long" maxOccurs="1" minOccurs="1">
+          	<xsd:annotation>
+          		<xsd:documentation>
+          			Ver metodo con los tipos de contingencias
+          			(consultarTiposContingencia)
+          		</xsd:documentation>
+          	</xsd:annotation>
+          </xsd:element>
+          <xsd:element name="observacion" type="tns:Texto250SimpleType" maxOccurs="1" minOccurs="0"/>
+        </xsd:sequence>
+      </xsd:complexType>
+        
+      <xsd:complexType name="ArrayContingenciasType">
+        <xsd:sequence>
+          <xsd:element name="contingencia" type="tns:ContingenciaType" maxOccurs="unbounded" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ConsultarRemitoReturnType">
+        <xsd:sequence>
+        	<xsd:element name="idReq" type="tns:IdReqSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="remito" type="tns:RemitoType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+            <xsd:element name="qr" type="xsd:base64Binary" maxOccurs="1" minOccurs="0"/>
+            <xsd:element name="evento" type="tns:CodigoDescripcionType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayObservaciones" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ConsultarRemitoEmitidoRequestType">
+        <xsd:sequence>
+          <xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+          <xsd:element name="puntoEmision" type="tns:PuntoEmisionSimpleType" maxOccurs="1" minOccurs="1"/>
+          <xsd:element name="tipoComprobante" type="xsd:short" maxOccurs="1" minOccurs="1">
+            <xsd:annotation>
+              <xsd:documentation>Depende del tipo de remito que voy
+              a generar</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element name="nroComprobante" type="tns:NumeroRemitoSimpleType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ConsultarRemitoEmitidoResponseType">
+        <xsd:sequence>
+          <xsd:element name="consultarRemitoEmitidoReturn" type="tns:ConsultarRemitoReturnType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:element name="consultarRemitoRequest" type="tns:ConsultarRemitoRequestType"/>
+      
+      <xsd:element name="consultarRemitoResponse" type="tns:ConsultarRemitoResponseType"/>
+      
+      <xsd:complexType name="ConsultarRemitoRequestType">
+        <xsd:sequence>
+        	<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+        	</xsd:element>
+        	<xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="idReq" type="tns:IdReqSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+            <xsd:element name="cuitEmisor" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="0"/>
+            <xsd:element name="tipoComprobante" type="xsd:short" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="puntoEmision" type="tns:PuntoEmisionSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        	<xsd:element name="nroComprobante" type="tns:NumeroRemitoSimpleType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ConsultarRemitoResponseType">
+        <xsd:sequence>
+          <xsd:element name="consultarRemitoReturn" type="tns:ConsultarRemitoReturnType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:element name="consultarUltimoRemitoEmitidoRequest" type="tns:ConsultarUltimoRemitoEmitidoRequestType"/>
+      
+      <xsd:element name="consultarUltimoRemitoEmitidoResponse" type="tns:ConsultarUltimoRemitoEmitidoResponseType"/>
+      
+      <xsd:complexType name="ConsultarUltimoRemitoEmitidoRequestType">
+        <xsd:sequence>
+          <xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+          <xsd:element maxOccurs="1" minOccurs="1" name="tipoComprobante" type="xsd:short"/>
+          <xsd:element maxOccurs="1" minOccurs="1" name="puntoEmision" type="tns:PuntoEmisionSimpleType">
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ConsultarUltimoRemitoEmitidoResponseType">
+        <xsd:sequence>
+          <xsd:element name="consultarUltimoRemitoReturn" type="tns:ConsultarRemitoReturnType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:simpleType name="EstadoRemitoSimpleType">
+        <xsd:restriction base="xsd:string">
+          <xsd:length value="3"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      
+      <xsd:element name="consultarTiposComprobanteRequest" type="tns:ConsultarTiposComprobanteRequestType">
+      </xsd:element>
+      
+      <xsd:element name="consultarTiposComprobanteResponse" type="tns:ConsultarTiposComprobanteResponseType">
+      </xsd:element>
+      
+      <xsd:complexType name="ConsultarTiposComprobanteRequestType">
+        <xsd:sequence>
+          <xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ConsultarTiposComprobanteReturnType">
+        <xsd:sequence>
+          <xsd:element maxOccurs="1" minOccurs="0" name="arrayTiposComprobante" type="tns:ArrayCodigosDescripcionesType"/>
+          <xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+     <xsd:complexType name="ConsultarTiposComprobanteResponseType">
+        <xsd:sequence>
+          <xsd:element name="consultarTiposComprobanteReturn" type="tns:ConsultarTiposComprobanteReturnType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:element name="consultarTiposEstadoResponse" type="tns:ConsultarTiposEstadoResponseType">
+      </xsd:element>
+            
+      <xsd:element name="consultarTiposEstadoRequest" type="tns:ConsultarTiposEstadoRequestType">
+      </xsd:element>
+        
+      <xsd:complexType name="ConsultarTiposEstadoRequestType">
+      	<xsd:sequence>
+      		<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1"/>
+      	</xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:complexType name="ConsultarTiposEstadoResponseType">
+      	<xsd:sequence>
+      		<xsd:element name="consultarTiposEstadoReturn" type="tns:ConsultarTiposEstadoReturnType" maxOccurs="1" minOccurs="0"/>
+      	</xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:complexType name="ConsultarTiposEstadoReturnType">
+      	<xsd:sequence>
+      		<xsd:element name="arrayTiposEstado" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0">
+      		</xsd:element>
+      		<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0"/>
+      	</xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:element name="consultarTiposCategoriaReceptorRequest" type="tns:ConsultarCategoriasReceptorRequestType"/>
+      
+      <xsd:element name="consultarTiposCategoriaReceptorResponse" type="tns:ConsultarCategoriasReceptorResponseType"/>
+      
+      <xsd:complexType name="ConsultarCategoriasReceptorRequestType">
+        <xsd:sequence>
+          <xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ConsultarCategoriasReceptorResponseType">
+        <xsd:sequence>
+          <xsd:element name="consultarCategoriasReceptorReturn" type="tns:ConsultarCategoriasReceptorReturnType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ConsultarCategoriasReceptorReturnType">
+        <xsd:sequence>
+          <xsd:element name="arrayCategoriasReceptor" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0"/>
+          <xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0"/>
+        </xsd:sequence>
+   	  </xsd:complexType>
+   	  
+   	  <xsd:element name="consultarTiposCategoriaEmisorRequest" type="tns:ConsultarCategoriasEmisorRequestType"/>
+      
+      <xsd:element name="consultarTiposCategoriaEmisorResponse" type="tns:ConsultarCategoriasEmisorResponseType"/>
+      
+      <xsd:complexType name="ConsultarCategoriasEmisorRequestType">
+        <xsd:sequence>
+          <xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ConsultarCategoriasEmisorResponseType">
+        <xsd:sequence>
+          <xsd:element name="consultarCategoriasEmisorReturn" type="tns:ConsultarCategoriasEmisorReturnType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ConsultarCategoriasEmisorReturnType">
+        <xsd:sequence>
+          <xsd:element name="arrayCategoriasEmisor" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0"/>
+          <xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0"/>
+        </xsd:sequence>
+   	  </xsd:complexType>
+      
+      <xsd:element name="consultarTiposContingenciaRequest" type="tns:ConsultarTiposContingenciaRequestType"/>
+      
+      <xsd:element name="consultarTiposContingenciaResponse" type="tns:ConsultarTiposContingenciaResponseType">
+      </xsd:element>
+      
+      <xsd:complexType name="ConsultarTiposContingenciaRequestType">
+        <xsd:sequence>
+          <xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ConsultarTiposContingenciaResponseType">
+        <xsd:sequence>
+          <xsd:element name="consultarTiposContingenciaReturn" type="tns:ConsultarTiposContingenciaReturnType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="ConsultarTiposContingenciaReturnType">
+        <xsd:sequence>
+          <xsd:element name="arrayTiposContingencia" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0"/>
+          <xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:element name="consultarCodigosDomicilioRequest" type="tns:ConsultarCodigosDomicilioRequestType">
+      </xsd:element>
+      
+      <xsd:element name="consultarCodigosDomicilioResponse" type="tns:ConsultarCodigosDomicilioResponseType">
+      </xsd:element>
+     
+     <xsd:complexType name="ConsultarCodigosDomicilioRequestType">
+        <xsd:sequence>
+          <xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+          <xsd:element name="cuitTitularDomicilio" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ConsultarCodigosDomicilioResponseType">
+        <xsd:sequence>
+          <xsd:element name="consultarCodigosDomicilioReturn" type="tns:ConsultarCodigosDomicilioReturnType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ConsultarCodigosDomicilioReturnType">
+        <xsd:sequence>
+          <xsd:element name="arrayDomicilios" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0"/>
+          <xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0"/>
+          <xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:element name="consultarPuntosEmisionRequest" type="tns:ConsultarPuntosEmisionRequestType"/>
+      
+      <xsd:element name="consultarPuntosEmisionResponse" type="tns:ConsultarPuntosEmisionResponseType"/>
+      
+      <xsd:complexType name="ConsultarPuntosEmisionRequestType">
+        <xsd:sequence>
+          <xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+	 <xsd:complexType name="ConsultarPuntosEmisionResponseType">
+        <xsd:sequence>
+          <xsd:element name="consultarPuntosEmisionReturn" type="tns:ConsultarPuntosEmisionReturnType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+      <xsd:complexType name="ConsultarPuntosEmisionReturnType">
+        <xsd:sequence>
+        	<xsd:element maxOccurs="1" minOccurs="0" name="arrayPuntosEmision" type="tns:ArrayCodigosDescripcionesType">
+        	</xsd:element>
+        	<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0"/>
+            <xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0">
+        	</xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+        
+      <xsd:element name="consultarTiposCarneRequest" type="tns:ConsultarTiposCarneRequestType"/>
+      
+      <xsd:element name="consultarTiposCarneResponse" type="tns:ConsultarTiposCarneResponseType"/>
+      
+      <xsd:complexType name="ConsultarTiposCarneRequestType">
+        <xsd:sequence>
+          <xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+          <xsd:element name="codGrupoCarne" type="xsd:string" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+	  <xsd:complexType name="ConsultarTiposCarneResponseType">
+        <xsd:sequence>
+          <xsd:element name="consultarTiposCarneReturn" type="tns:ConsultarTiposCarneReturnType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+	 
+	  <xsd:complexType name="ConsultarTiposCarneReturnType">
+        <xsd:sequence>
+          <xsd:element maxOccurs="1" minOccurs="0" name="arrayTiposCarne" type="tns:ArrayCodigosDescripcionesStringType"/>
+          <xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0"/>
+          <xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0"/>
+        </xsd:sequence>
+      </xsd:complexType>
+	 
+	  <xsd:element name="consultarGruposCarneRequest" type="tns:ConsultarGruposCarneRequestType"/>
+      
+      <xsd:element name="consultarGruposCarneResponse" type="tns:ConsultarGruposCarneResponseType"/>
+      
+      <xsd:complexType name="ConsultarGruposCarneRequestType">
+        <xsd:sequence>
+          <xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+	  <xsd:complexType name="ConsultarGruposCarneResponseType">
+        <xsd:sequence>
+          <xsd:element name="consultarGruposCarneReturn" type="tns:ConsultarGruposCarneReturnType" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+      </xsd:complexType>
+	 
+	  <xsd:complexType name="ConsultarGruposCarneReturnType">
+        <xsd:sequence>
+          <xsd:element maxOccurs="1" minOccurs="0" name="arrayGruposCarne" type="tns:ArrayCodigosDescripcionesStringType"/>
+          <xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      
+    
+	  <xsd:simpleType name="TipoReceptorSimpleType">
+        <xsd:annotation>
+         	<xsd:documentation>MI: Mercado Interno (El receptor es distinto al emisor), EM: Emisor (El receptor es el emisor)
+			</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:string">
+	  		<xsd:length value="2"/>
+	  		<xsd:enumeration value="MI"/>
+	  		<xsd:enumeration value="EM"/>
+	  	</xsd:restriction>
+	  </xsd:simpleType>
+    
+	  <xsd:simpleType name="OrdenSimpleType">
+	  	<xsd:restriction base="xsd:int">
+	  		<xsd:minInclusive value="1"/>
+	  		<xsd:maxInclusive value="9999"/>
+	  	</xsd:restriction>
+	  </xsd:simpleType>
+
+	  <xsd:simpleType name="EstadoRecepcionSimpleType">
+	  	<xsd:restriction base="xsd:string">
+	  		<xsd:length value="3"/>
+	  		<xsd:enumeration value="ACE"/>
+	  		<xsd:enumeration value="ACP"/>
+	  		<xsd:enumeration value="NAC"/>
+	  		<xsd:enumeration value="PEN"/>
+	  	</xsd:restriction>
+	  </xsd:simpleType>
+
+
+	  <xsd:simpleType name="CantidadSimpleType">
+	  	<xsd:restriction base="xsd:decimal">
+	  		<xsd:minInclusive value="0"/>
+	  		<xsd:maxInclusive value="999999.99"/>
+	  	</xsd:restriction>
+	  </xsd:simpleType>
+
+	  <xsd:complexType name="RecepcionMercaderiaType">
+	  	<xsd:sequence>
+	  		<xsd:element name="orden" type="tns:OrdenSimpleType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="kilos" type="tns:CantidadSimpleType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="unidades" type="tns:CantidadSimpleType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  	</xsd:sequence>
+	  </xsd:complexType>
+    
+	  <xsd:simpleType name="TropaSimpleType">
+	  	<xsd:restriction base="xsd:long">
+	  		<xsd:minInclusive value="1"/>
+	  		<xsd:maxInclusive value="9999999999"/>
+	  	</xsd:restriction>
+	  </xsd:simpleType>
+
+	  <xsd:element name="anularRemitoRequest" type="tns:AnularRemitoRequestType">
+	  </xsd:element>
+	  
+	  <xsd:element name="anularRemitoResponse" type="tns:AnularRemitoResponseType">
+	  </xsd:element>
+
+	  <xsd:complexType name="AnularRemitoRequestType">
+	  	<xsd:sequence>
+	  		<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+            <xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="1"/>
+        </xsd:sequence>
+	  </xsd:complexType>
+    
+	  <xsd:complexType name="AnularRemitoResponseType">
+	  	<xsd:sequence>
+	  		<xsd:element name="anularRemitoReturn" type="tns:AnularRemitoReturnType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  	</xsd:sequence>
+	  </xsd:complexType>
+    
+    
+	  <xsd:complexType name="AnularRemitoReturnType">
+	  	<xsd:sequence>
+            <xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+            <xsd:element name="resultado" type="tns:ResultadoSimpleType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+            <xsd:element name="evento" type="tns:CodigoDescripcionType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+            <xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+            <xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+            </xsd:sequence>
+	    </xsd:complexType>
+	  <xsd:element name="consultarRemitosEmisorRequest" type="tns:ConsultarRemitosEmisorRequestType">
+	  </xsd:element>
+	  
+	  <xsd:element name="consultarRemitosEmisorResponse" type="tns:ConsultarRemitosResponseType">
+	  </xsd:element>
+
+	  <xsd:complexType name="ConsultarRemitosEmisorRequestType">
+	  	<xsd:sequence>
+	  		<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="rangoFechas" type="tns:RangoFechasType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="puntoEmision" type="tns:PuntoEmisionSimpleType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="tipoComprobante" type="xsd:short" maxOccurs="1" minOccurs="0"/>
+	  		<xsd:element name="estado" type="tns:EstadoRemitoSimpleType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  		<xsd:element name="nroPagina" type="xsd:short" maxOccurs="1" minOccurs="0"/>
+	  	</xsd:sequence>
+	  </xsd:complexType>
+	  
+	  <xsd:element name="consultarRemitosAutorizadorRequest" type="tns:ConsultarRemitosAutorizadorRequestType">
+	  </xsd:element>
+	  
+	  <xsd:element name="consultarRemitosAutorizadorResponse" type="tns:ConsultarRemitosResponseType">
+	  </xsd:element>
+
+	  <xsd:complexType name="ConsultarRemitosAutorizadorRequestType">
+	  	<xsd:sequence>
+	  		<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="rolAutorizador" type="tns:RolAutorizadorSimpleType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="estadoAutorizacion" type="tns:EstadoAutorizacionSimpleType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="rangoFechas" type="tns:RangoFechasType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  		<xsd:element name="cuitEmisor" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  		<xsd:element name="nroPagina" type="xsd:short" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  	</xsd:sequence>
+	  </xsd:complexType>
+	  
+	  <xsd:element name="consultarRemitosReceptorRequest" type="tns:ConsultarRemitosReceptorRequestType">
+	  </xsd:element>
+	  
+	  <xsd:element name="consultarRemitosReceptorResponse" type="tns:ConsultarRemitosResponseType">
+	  </xsd:element>
+
+	  <xsd:complexType name="ConsultarRemitosReceptorRequestType">
+	  	<xsd:sequence>
+	  		<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="estadoRecepcion" type="tns:EstadoRecepcionSimpleType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="cuitEmisor" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  		<xsd:element name="rangoFechas" type="tns:RangoFechasType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  		<xsd:element name="nroPagina" type="xsd:short" maxOccurs="1" minOccurs="0"/>
+	  	</xsd:sequence>
+	  </xsd:complexType>
+    
+	  <xsd:complexType name="ConsultarRemitosResponseType">
+	  	<xsd:sequence>
+	  		<xsd:element name="consultarRemitosReturn" type="tns:ConsultarRemitosReturnType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  	</xsd:sequence>
+	  </xsd:complexType>
+    
+	  <xsd:complexType name="ConsultarRemitosReturnType">
+	  	<xsd:sequence>
+	  		<xsd:element name="arrayRemitos" type="tns:ArrayRemitosConsultaType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+            <xsd:element name="nroPagina" type="xsd:short" maxOccurs="1" minOccurs="0"/>
+            <xsd:element name="hayMas" type="tns:SiNoSimpleType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  		<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  		<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  	</xsd:sequence>
+	  </xsd:complexType>
+    
+	  <xsd:simpleType name="SiNoSimpleType">
+	  	<xsd:restriction base="xsd:string">
+	  		<xsd:enumeration value="S"/>
+	  		<xsd:enumeration value="N"/>
+	  		<xsd:length value="1"/>
+	  	</xsd:restriction>
+	  </xsd:simpleType>
+    
+	  <xsd:complexType name="ArrayRemitosConsultaType">
+	  	<xsd:sequence>
+	  		<xsd:element name="remitosConsulta" type="tns:RemitoConsultaType" maxOccurs="unbounded" minOccurs="1">
+	  		</xsd:element>
+	  	</xsd:sequence>
+	  </xsd:complexType>
+    
+	  <xsd:complexType name="RemitoConsultaType">
+	  	<xsd:sequence>
+	  		<xsd:element name="cuitEmisor" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="puntoEmision" type="tns:PuntoEmisionSimpleType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="tipoComprobante" type="xsd:short" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="nroRemito" type="tns:NumeroRemitoSimpleType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  		<xsd:element name="idReq" type="tns:IdReqSimpleType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  		<xsd:element name="estadoActual" type="tns:EstadoRemitoSimpleType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="fechaOper" type="xsd:date" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  	</xsd:sequence>
+	  </xsd:complexType>
+    
+	  <xsd:simpleType name="RolAutorizadorSimpleType">
+        <xsd:annotation>
+        	<xsd:documentation>TIT - Titular, DEP - Depositario</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:string">
+	  		<xsd:enumeration value="TIT"/>
+	  		<xsd:enumeration value="DEP"/>
+	  	</xsd:restriction>
+	  </xsd:simpleType>
+
+	  <xsd:complexType name="RangoFechasType">
+	  	<xsd:sequence>
+	  		<xsd:element name="fechaDesde" type="xsd:date" maxOccurs="1" minOccurs="1"/>
+	  		<xsd:element name="fechaHasta" type="xsd:date" maxOccurs="1" minOccurs="1"/>
+	  	</xsd:sequence>
+	  </xsd:complexType>
+        
+	  <xsd:simpleType name="EstadoAutorizacionSimpleType">
+        <xsd:annotation>
+        	<xsd:documentation>PE - Pendiente, AU - Autorizado, RE - Rechazado</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:string">
+	  		<xsd:enumeration value="PE"/>
+	  		<xsd:enumeration value="AU"/>
+	  		<xsd:enumeration value="RE"/>
+	  	</xsd:restriction>
+	  </xsd:simpleType>
+    
+	  <xsd:simpleType name="EstadoConsultaRecepcionSimpleType">
+	  	<xsd:restriction base="xsd:string"/>
+	  </xsd:simpleType>
+	  
+	  <xsd:element name="consultarEstadosRemitoRequest" type="tns:ConsultarRemitoRequestType">
+	  </xsd:element>
+	  
+	  <xsd:element name="consultarEstadosRemitoResponse" type="tns:ConsultarEstadosRemitoResponseType">
+	  </xsd:element>
+
+	  <xsd:complexType name="ConsultarEstadosRemitoResponseType">
+	  	<xsd:sequence>
+	  		<xsd:element name="estadosRemitosReturn" type="tns:ConsultarEstadosRemitoReturnType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  	</xsd:sequence>
+	  </xsd:complexType>
+    
+	  <xsd:complexType name="ConsultarEstadosRemitoReturnType">
+	  	<xsd:sequence>
+	  		<xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  		<xsd:element name="arrayEstados" type="tns:ArrayInfoEstadosRemitoType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  		<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  		<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0">
+	  		</xsd:element>
+	  	</xsd:sequence>
+	  </xsd:complexType>
+    
+	  <xsd:complexType name="ArrayInfoEstadosRemitoType">
+	  	<xsd:sequence>
+	  		<xsd:element name="estados" type="tns:InfoEstadoRemitoType" maxOccurs="unbounded" minOccurs="1">
+	  		</xsd:element>
+	  	</xsd:sequence>
+	  </xsd:complexType>
+    
+	  <xsd:complexType name="InfoEstadoRemitoType">
+	  	<xsd:sequence>
+	  		<xsd:element name="estado" type="tns:EstadoRemitoSimpleType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="fecha" type="xsd:date" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="cuitUsuario" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  		<xsd:element name="descUsuario" type="tns:Texto250SimpleType" maxOccurs="1" minOccurs="1">
+	  		</xsd:element>
+	  	</xsd:sequence>
+	  </xsd:complexType>
+
+	  <xsd:simpleType name="TipoMovimientoSimpleType">
+	  	<xsd:annotation>
+	  		<xsd:documentation>
+	  			ENV: Envio Normal, PLA: Retiro en planta, REP: Reparto, RED: Redestino
+	  		</xsd:documentation>
+	  	</xsd:annotation>
+	  	<xsd:restriction base="xsd:string">
+	  		<xsd:enumeration value="ENV"/>
+	  		<xsd:enumeration value="REP"/>
+	  		<xsd:enumeration value="RED"/>
+	  		<xsd:enumeration value="PLA"/>
+	  	</xsd:restriction>
+	  </xsd:simpleType>
+
+	  <xsd:element name="generarRemitoRecNoCategRequest" type="tns:GenerarRemitoRecNoCategRequestType">
+	  </xsd:element>
+	  <xsd:element name="GenerarRemitoRecNoCategResponse" type="tns:GenerarRemitoRecNoCategResponseType">
+
+	  </xsd:element>
+	  
+            <xsd:complexType name="GenerarRemitoRecNoCategRequestType">
+            	 <xsd:sequence>
+		          <xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+		          </xsd:element>
+		          <xsd:element name="idReq" type="tns:IdReqSimpleType" maxOccurs="1" minOccurs="1"/>
+		          <xsd:element name="remito" type="tns:RemitoNoCategType" maxOccurs="1" minOccurs="1">
+		          </xsd:element>
+            	 </xsd:sequence>
+            </xsd:complexType>
+        
+            <xsd:complexType name="GenerarRemitoRecNoCategResponseType">
+            	<xsd:sequence>
+          			<xsd:element name="generarRemitoReturn" type="tns:RemitoReturnType" maxOccurs="1" minOccurs="1">
+          	</xsd:element>
+        </xsd:sequence>
+            </xsd:complexType>
+        
+            <xsd:complexType name="RemitoNoCategType">
+            	<xsd:sequence>
+
+
+            		<xsd:element name="tipoMovimiento" type="tns:TipoMovimientoSimpleType" maxOccurs="1" minOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="categoriaEmisor" type="xsd:short" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="puntoEmision" type="tns:PuntoEmisionSimpleType" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="cuitTitularMercaderia" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="0">
+            			<xsd:annotation>
+            				<xsd:documentation>
+            					Titular de la mercaderia en el momento
+            					en que se genera el remito.
+            				</xsd:documentation>
+            			</xsd:annotation>
+            		</xsd:element>
+            		<xsd:element name="cuitDepositario" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="codDomOrigen" type="xsd:int" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="tipoReceptor" type="tns:TipoReceptorSimpleType" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="categoriaReceptor" type="xsd:short" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="documentoReceptor" maxOccurs="1" minOccurs="1">
+            			<xsd:annotation>
+            				<xsd:documentation>
+            					EM - Deposito Emisor, MI - Mercado
+            					Interno
+            				</xsd:documentation>
+            			</xsd:annotation>
+            			<xsd:simpleType>
+            				<xsd:restriction base="xsd:long">
+            					<xsd:maxExclusive value="99999999999"/>
+            				</xsd:restriction>
+            			</xsd:simpleType>
+            		</xsd:element>
+
+
+            		<xsd:element name="denomReceptor" maxOccurs="1" minOccurs="1">
+            			<xsd:simpleType>
+            				<xsd:restriction base="xsd:string">
+            					<xsd:maxLength value="160"/>
+            				</xsd:restriction>
+            			</xsd:simpleType>
+            		</xsd:element>
+            		<xsd:element name="domDestinoCalle" maxOccurs="1" minOccurs="1">
+            			<xsd:simpleType>
+            				<xsd:restriction base="xsd:string">
+            					<xsd:maxLength value="40"/>
+            				</xsd:restriction>
+            			</xsd:simpleType>
+            		</xsd:element>
+            		<xsd:element name="domDestinoNumero" maxOccurs="1" minOccurs="1">
+            			<xsd:simpleType>
+            				<xsd:restriction base="xsd:string">
+            					<xsd:maxLength value="30"/>
+            				</xsd:restriction>
+            			</xsd:simpleType>
+            		</xsd:element>
+            		<xsd:element name="domDestinoCp" maxOccurs="1" minOccurs="1">
+            			<xsd:simpleType>
+            				<xsd:restriction base="xsd:string">
+            					<xsd:maxLength value="10"/>
+            				</xsd:restriction>
+            			</xsd:simpleType>
+            		</xsd:element>
+            		<xsd:element name="domDestinoLoc" maxOccurs="1" minOccurs="1">
+            			<xsd:simpleType>
+            				<xsd:restriction base="xsd:string">
+            					<xsd:maxLength value="60"/>
+            				</xsd:restriction>
+            			</xsd:simpleType>
+            		</xsd:element>
+            		<xsd:element name="domDestinoIdPcia" maxOccurs="1" minOccurs="1">
+            			<xsd:simpleType>
+            				<xsd:restriction base="xsd:int">
+            					<xsd:maxExclusive value="99"/>
+
+            				</xsd:restriction>
+            			</xsd:simpleType>
+            		</xsd:element>
+            		<xsd:element name="viaje" type="tns:ViajeType" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="arrayMercaderias" type="tns:ArrayMercaderiasType" maxOccurs="1" minOccurs="1">
+            		</xsd:element>
+
+
+            		<xsd:element name="codRemRedestinado" type="xsd:long" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+
+            	</xsd:sequence>
+            </xsd:complexType>
+        
+            <xsd:simpleType name="DocumentoSimpleType">
+            	<xsd:restriction base="xsd:string"/>
+            </xsd:simpleType>
+            <xsd:element name="consultarProvinciasRequest" type="tns:ConsultarProvinciasRequestType">
+
+            </xsd:element>
+            <xsd:element name="consultarProvinciasResponse" type="tns:ConsultarProvinciasResponseType">
+
+            </xsd:element>
+            
+            <xsd:complexType name="ConsultarProvinciasRequestType">
+            	<xsd:sequence>
+            		<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+            		</xsd:element>
+            	</xsd:sequence>
+            </xsd:complexType>
+            
+            <xsd:complexType name="ConsultarProvinciasResponseType">
+            	<xsd:sequence>
+            		<xsd:element name="consultarProvinciasReturn" type="tns:ConsultarProvinciasReturnType" maxOccurs="1" minOccurs="1">
+            		</xsd:element>
+
+            	</xsd:sequence>
+            </xsd:complexType>
+    
+            <xsd:complexType name="ConsultarProvinciasReturnType">
+            	<xsd:sequence>
+            		<xsd:element name="arrayProvincias" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            	</xsd:sequence>
+            </xsd:complexType>
+            <xsd:element name="generarRemitoRecNoCategImporteRequest" type="tns:GenerarRemitoRecNoCategImporteRequestType">
+
+            </xsd:element>
+            <xsd:element name="generarRemitoRecNoCategImporteResponse" type="tns:GenerarRemitoRecNoCategImporteResponseType">
+
+            </xsd:element>
+            
+            <xsd:complexType name="GenerarRemitoRecNoCategImporteRequestType">
+            	<xsd:sequence>
+            		<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="idReq" type="tns:IdReqSimpleType" maxOccurs="1" minOccurs="1">
+            		</xsd:element>
+
+            		<xsd:element name="remito" type="tns:RemitoNoCategImporteType" maxOccurs="1" minOccurs="1">
+            		</xsd:element>
+            	</xsd:sequence>
+            </xsd:complexType>
+        
+            <xsd:complexType name="RemitoNoCategImporteType">
+            	<xsd:sequence>
+            		<xsd:element name="tipoMovimiento" type="tns:TipoMovimientoSimpleType" maxOccurs="1" minOccurs="1">
+            		</xsd:element>
+            		<xsd:element name="categoriaEmisor" type="xsd:short" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="puntoEmision" type="tns:PuntoEmisionSimpleType" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="cuitTitularMercaderia" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="0">
+            			<xsd:annotation>
+            				<xsd:documentation>
+            					Titular de la mercaderia en el momento
+            					en que se genera el remito.
+            				</xsd:documentation>
+            			</xsd:annotation>
+            		</xsd:element>
+            		<xsd:element name="cuitDepositario" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="codDomOrigen" type="xsd:int" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="tipoReceptor" type="tns:TipoReceptorSimpleType" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="categoriaReceptor" type="xsd:short" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="documentoReceptor" maxOccurs="1" minOccurs="1">
+            			<xsd:annotation>
+            				<xsd:documentation>
+            					EM - Deposito Emisor, MI - Mercado
+            					Interno
+            				</xsd:documentation>
+            			</xsd:annotation>
+            			<xsd:simpleType>
+            				<xsd:restriction base="xsd:long">
+            					<xsd:maxExclusive value="99999999999"/>
+            				</xsd:restriction>
+            			</xsd:simpleType>
+            		</xsd:element>
+
+
+            		<xsd:element name="denomReceptor" maxOccurs="1" minOccurs="1">
+            			<xsd:simpleType>
+            				<xsd:restriction base="xsd:string">
+            					<xsd:maxLength value="160"/>
+            				</xsd:restriction>
+            			</xsd:simpleType>
+            		</xsd:element>
+            		<xsd:element name="domDestinoCalle" maxOccurs="1" minOccurs="1">
+            			<xsd:simpleType>
+            				<xsd:restriction base="xsd:string">
+            					<xsd:maxLength value="40"/>
+            				</xsd:restriction>
+            			</xsd:simpleType>
+            		</xsd:element>
+            		<xsd:element name="domDestinoNumero" maxOccurs="1" minOccurs="1">
+            			<xsd:simpleType>
+            				<xsd:restriction base="xsd:string">
+            					<xsd:maxLength value="30"/>
+            				</xsd:restriction>
+            			</xsd:simpleType>
+            		</xsd:element>
+            		<xsd:element name="domDestinoCp" maxOccurs="1" minOccurs="1">
+            			<xsd:simpleType>
+            				<xsd:restriction base="xsd:string">
+            					<xsd:maxLength value="10"/>
+            				</xsd:restriction>
+            			</xsd:simpleType>
+            		</xsd:element>
+            		<xsd:element name="domDestinoLoc" maxOccurs="1" minOccurs="1">
+            			<xsd:simpleType>
+            				<xsd:restriction base="xsd:string">
+            					<xsd:maxLength value="60"/>
+            				</xsd:restriction>
+            			</xsd:simpleType>
+            		</xsd:element>
+            		<xsd:element name="domDestinoIdPcia" maxOccurs="1" minOccurs="1">
+            			<xsd:simpleType>
+            				<xsd:restriction base="xsd:int">
+            					<xsd:maxExclusive value="99"/>
+
+            				</xsd:restriction>
+            			</xsd:simpleType>
+            		</xsd:element>
+            		<xsd:element name="viaje" type="tns:ViajeType" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            		<xsd:element name="arrayMercaderias" type="tns:ArrayMercaderiasType" maxOccurs="1" minOccurs="1">
+            		</xsd:element>
+
+
+            		<xsd:element name="codRemRedestinado" type="xsd:long" minOccurs="0" maxOccurs="1">
+            		</xsd:element>
+
+            		<xsd:element name="importeCot" type="tns:ImporteCotSimpleType" maxOccurs="1" minOccurs="0">
+            		</xsd:element>
+            	</xsd:sequence>
+
+            </xsd:complexType>
+        
+            <xsd:simpleType name="ImporteCotSimpleType">
+            	<xsd:restriction base="xsd:string">
+            		
+            	</xsd:restriction>
+            </xsd:simpleType>
+    
+            <xsd:complexType name="GenerarRemitoRecNoCategImporteResponseType">
+            	<xsd:sequence>
+					<xsd:element name="generarRemitoReturn" type="tns:RemitoReturnType" maxOccurs="1" minOccurs="1">
+					</xsd:element>
+				</xsd:sequence>
+            </xsd:complexType>
+            <xsd:element name="generarRemitoImporteRequest" type="tns:GenerarRemitoImporteRequestType">
+            </xsd:element>
+            <xsd:element name="generarRemitoImporteResponse" type="tns:GenerarRemitoImporteResponseType">
+
+            </xsd:element>
+            
+            <xsd:complexType name="GenerarRemitoImporteResponseType">
+            <xsd:sequence>
+	          <xsd:element name="generarRemitoReturn" type="tns:RemitoReturnType" maxOccurs="1" minOccurs="1">
+	          </xsd:element>
+	        </xsd:sequence>
+            </xsd:complexType>
+        
+            <xsd:complexType name="GenerarRemitoImporteRequestType">
+            	 <xsd:sequence>
+          			<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+          			</xsd:element>
+          			<xsd:element name="idReq" type="tns:IdReqSimpleType" maxOccurs="1" minOccurs="1"/>
+          			<xsd:element name="remito" type="tns:RemitoImporteType" maxOccurs="1" minOccurs="1"/>
+        		</xsd:sequence>            
+            </xsd:complexType>
+            <xsd:element name="consultarRemitoImporteRequest" type="tns:ConsultarRemitoImporteRequestType">
+            </xsd:element>
+            <xsd:element name="consultarRemitoImporteResponse" type="tns:ConsultarRemitoImporteResponseType">
+
+            </xsd:element>
+            
+            <xsd:complexType name="ConsultarRemitoImporteRequestType">
+            	<xsd:sequence>
+		        	<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+		        	</xsd:element>
+		        	<xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="0">
+		        	</xsd:element>
+		        	<xsd:element name="idReq" type="tns:IdReqSimpleType" maxOccurs="1" minOccurs="0">
+		        	</xsd:element>
+		            <xsd:element name="cuitEmisor" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="0"/>
+		            <xsd:element name="tipoComprobante" type="xsd:short" maxOccurs="1" minOccurs="0">
+		        	</xsd:element>
+		        	<xsd:element name="puntoEmision" type="tns:PuntoEmisionSimpleType" maxOccurs="1" minOccurs="0">
+		        	</xsd:element>
+		        	<xsd:element name="nroComprobante" type="tns:NumeroRemitoSimpleType" maxOccurs="1" minOccurs="0">
+		        	</xsd:element>
+		        </xsd:sequence>
+            </xsd:complexType>
+        
+            <xsd:complexType name="ConsultarRemitoImporteResponseType">
+            	<xsd:sequence>
+	  				<xsd:element name="consultarRemitoImporteReturn" type="tns:ConsultarRemitoImporteReturnType" maxOccurs="1" minOccurs="1">
+	  				</xsd:element>
+            	</xsd:sequence>
+            </xsd:complexType>
+        
+            <xsd:complexType name="ConsultarRemitoImporteReturnType">
+            	<xsd:sequence>
+					<xsd:element name="idReq" type="tns:IdReqSimpleType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="remito" type="tns:RemitoImporteType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="qr" type="xsd:base64Binary" maxOccurs="1" minOccurs="0"/>
+					<xsd:element name="evento" type="tns:CodigoDescripcionType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="arrayObservaciones" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+				</xsd:sequence>
+            </xsd:complexType>
+
+            <xsd:element name="consultarReceptoresValidosRequest" type="tns:consultarReceptoresValidosRequestType">
+            </xsd:element>
+            <xsd:element name="consultarReceptoresValidosResponse" type="tns:consultarReceptoresValidosResponseType">
+
+            </xsd:element>
+            
+            <xsd:complexType name="consultarReceptoresValidosRequestType">
+            	<xsd:sequence>
+		        	<xsd:element name="authRequest" type="tns:AuthRequestType" maxOccurs="1" minOccurs="1">
+		        	</xsd:element>
+					<xsd:element name="arrayReceptores" type="tns:ArrayReceptoresType" maxOccurs="1" minOccurs="1">
+					</xsd:element>
+		        </xsd:sequence>
+            </xsd:complexType>
+        
+            <xsd:complexType name="consultarReceptoresValidosResponseType">
+            	<xsd:sequence>
+	  				<xsd:element name="consultarReceptoresValidosReturn" type="tns:consultarReceptoresValidosReturnType" maxOccurs="1" minOccurs="1">
+	  				</xsd:element>
+            	</xsd:sequence>
+            </xsd:complexType>
+        
+            <xsd:complexType name="consultarReceptoresValidosReturnType">
+            	<xsd:sequence>
+                    <xsd:element name="resultado" type="tns:ResultadoSimpleType" maxOccurs="1" minOccurs="1">
+                    </xsd:element>
+					<xsd:element name="arrayObservaciones" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="arrayErrores" type="tns:ArrayCodigosDescripcionesType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="arrayErroresFormato" type="tns:ArrayCodigosDescripcionesStringType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+				</xsd:sequence>
+            </xsd:complexType>
+        
+            <xsd:complexType name="RemitoImporteType">
+            	<xsd:sequence>
+					<xsd:element name="codRemito" type="xsd:long" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="tipoComprobante" type="xsd:short" maxOccurs="1" minOccurs="1">
+					</xsd:element>
+					<xsd:element name="tipoMovimiento" type="tns:TipoMovimientoSimpleType" maxOccurs="1" minOccurs="1">
+					</xsd:element>
+					<xsd:element name="categoriaEmisor" type="xsd:short" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="puntoEmision" type="tns:PuntoEmisionSimpleType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="cuitTitularMercaderia" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								Titular de la mercaderia en el momento en que se
+								genera el remito.
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="cuitDepositario" type="tns:CuitSimpleType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="tipoReceptor" type="tns:TipoReceptorSimpleType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="categoriaReceptor" type="xsd:short" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="cuitReceptor" maxOccurs="1" minOccurs="0" type="tns:CuitSimpleType">
+						<xsd:annotation>
+							<xsd:documentation>
+								EM - Deposito Emisor, MI - Mercado Interno
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="codDomOrigen" type="xsd:int" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="codDomDestino" type="xsd:int" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="viaje" type="tns:ViajeType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="arrayMercaderias" type="tns:ArrayMercaderiasType" maxOccurs="1" minOccurs="1">
+					</xsd:element>
+					<xsd:element name="estado" type="tns:EstadoRemitoSimpleType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="datosEmision" type="tns:DatosEmisionType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="codRemRedestinado" type="xsd:long" minOccurs="0" maxOccurs="1">
+					</xsd:element>
+					<xsd:element name="arrayContingencias" type="tns:ArrayContingenciasType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+					<xsd:element name="importeCot" type="tns:ImporteCotSimpleType" maxOccurs="1" minOccurs="0">
+					</xsd:element>
+				</xsd:sequence>            
+            </xsd:complexType>
+        </xsd:schema>
+  </wsdl:types>
+    
+  <wsdl:message name="dummyRequest"/>
+  
+  <wsdl:message name="dummyResponse">
+    <wsdl:part element="tns:dummyResponse" name="parameters"/>
+  </wsdl:message>
+  
+   <wsdl:message name="generarRemitoRequest">
+    <wsdl:part name="parameters" element="tns:generarRemitoRequest"/>
+  </wsdl:message>
+  
+  <wsdl:message name="generarRemitoResponse">
+    <wsdl:part name="parameters" element="tns:generarRemitoResponse"/>
+  </wsdl:message>
+  
+ <wsdl:message name="emitirRemitoRequest">
+    <wsdl:part name="parameters" element="tns:emitirRemitoRequest">
+    </wsdl:part>
+  </wsdl:message>
+  
+  <wsdl:message name="emitirRemitoResponse">
+    <wsdl:part name="parameters" element="tns:emitirRemitoResponse"/>
+  </wsdl:message>
+  
+  <wsdl:message name="autorizarRemitoRequest">
+    <wsdl:part name="parameters" element="tns:autorizarRemitoRequest"/>
+  </wsdl:message>
+  
+  <wsdl:message name="autorizarRemitoResponse">
+    <wsdl:part name="parameters" element="tns:autorizarRemitoResponse"/>
+  </wsdl:message>
+  
+  <wsdl:message name="registrarRecepcionRequest">
+    <wsdl:part name="parameters" element="tns:registrarRecepcionRequest"/>
+  </wsdl:message>
+  
+  <wsdl:message name="registrarRecepcionResponse">
+    <wsdl:part name="parameters" element="tns:registrarRecepcionResponse"/>
+  </wsdl:message>
+  
+  <wsdl:message name="modificarViajeRequest">
+    <wsdl:part name="parameters" element="tns:modificarViajeRequest"/>
+  </wsdl:message>
+  
+  <wsdl:message name="modificarViajeResponse">
+    <wsdl:part name="parameters" element="tns:modificarViajeResponse"/>
+  </wsdl:message>
+  
+  <wsdl:message name="informarContingenciaRequest">
+    <wsdl:part name="parameters" element="tns:informarContingenciaRequest"/>
+  </wsdl:message>
+  
+  <wsdl:message name="informarContingenciaResponse">
+    <wsdl:part name="parameters" element="tns:informarContingenciaResponse"/>
+  </wsdl:message>
+   
+  <wsdl:message name="consultarRemitoRequest">
+    <wsdl:part name="parameters" element="tns:consultarRemitoRequest"/>
+  </wsdl:message>
+  
+  <wsdl:message name="consultarRemitoResponse">
+    <wsdl:part name="parameters" element="tns:consultarRemitoResponse"/>
+  </wsdl:message>
+  
+  <wsdl:message name="consultarUltimoRemitoEmitidoRequest">
+    <wsdl:part name="parameters" element="tns:consultarUltimoRemitoEmitidoRequest"/>
+  </wsdl:message>
+  
+  <wsdl:message name="consultarUltimoRemitoEmitidoResponse">
+    <wsdl:part name="parameters" element="tns:consultarUltimoRemitoEmitidoResponse"/>
+  </wsdl:message>
+  
+  <wsdl:message name="consultarTiposComprobanteRequest">
+    <wsdl:part name="parameters" element="tns:consultarTiposComprobanteRequest"/>
+  </wsdl:message>
+  
+  <wsdl:message name="consultarTiposComprobanteResponse">
+    <wsdl:part name="parameters" element="tns:consultarTiposComprobanteResponse"/>
+  </wsdl:message>
+  
+   <wsdl:message name="consultarTiposEstadoRequest">
+  	<wsdl:part name="parameters" element="tns:consultarTiposEstadoRequest">
+  	</wsdl:part>
+  </wsdl:message>
+ 
+  <wsdl:message name="consultarTiposEstadoResponse">
+  	<wsdl:part name="parameters" element="tns:consultarTiposEstadoResponse"/>
+  </wsdl:message>
+  
+  <wsdl:message name="consultarTiposCategoriaReceptorRequest">
+    <wsdl:part name="parameters" element="tns:consultarTiposCategoriaReceptorRequest"/>
+  </wsdl:message>
+ 
+  <wsdl:message name="consultarTiposCategoriaReceptorResponse">
+    <wsdl:part name="parameters" element="tns:consultarTiposCategoriaReceptorResponse"/>
+  </wsdl:message>
+  
+  <wsdl:message name="consultarTiposCategoriaEmisorRequest">
+    <wsdl:part name="parameters" element="tns:consultarTiposCategoriaEmisorRequest"/>
+  </wsdl:message>
+ 
+  <wsdl:message name="consultarTiposCategoriaEmisorResponse">
+    <wsdl:part name="parameters" element="tns:consultarTiposCategoriaEmisorResponse"/>
+  </wsdl:message>
+  
+  <wsdl:message name="consultarTiposContingenciaRequest">
+    <wsdl:part name="parameters" element="tns:consultarTiposContingenciaRequest"/>
+  </wsdl:message>
+  
+  <wsdl:message name="consultarTiposContingenciaResponse">
+    <wsdl:part name="parameters" element="tns:consultarTiposContingenciaResponse"/>
+  </wsdl:message>
+  
+  <wsdl:message name="consultarCodigosDomicilioRequest">
+    <wsdl:part name="parameters" element="tns:consultarCodigosDomicilioRequest"/>
+  </wsdl:message>
+  
+  <wsdl:message name="consultarCodigosDomicilioResponse">
+    <wsdl:part name="parameters" element="tns:consultarCodigosDomicilioResponse"/>
+  </wsdl:message>
+  
+   <wsdl:message name="consultarPuntosEmisionRequest">
+    <wsdl:part name="parameters" element="tns:consultarPuntosEmisionRequest"/>
+  </wsdl:message>
+  
+  <wsdl:message name="consultarPuntosEmisionResponse">
+    <wsdl:part name="parameters" element="tns:consultarPuntosEmisionResponse"/>
+  </wsdl:message>
+    
+  <wsdl:message name="consultarTiposCarneRequest">
+    <wsdl:part name="parameters" element="tns:consultarTiposCarneRequest"/>
+  </wsdl:message>
+  
+  <wsdl:message name="consultarTiposCarneResponse">
+    <wsdl:part name="parameters" element="tns:consultarTiposCarneResponse"/>
+  </wsdl:message>
+  
+  <wsdl:message name="consultarGruposCarneRequest">
+    <wsdl:part name="parameters" element="tns:consultarGruposCarneRequest"/>
+  </wsdl:message>
+  
+  <wsdl:message name="consultarGruposCarneResponse">
+    <wsdl:part name="parameters" element="tns:consultarGruposCarneResponse"/>
+  </wsdl:message>
+
+  <wsdl:message name="anularRemitoRequest">
+  	<wsdl:part name="parameters" element="tns:anularRemitoRequest"/>
+  </wsdl:message>
+  <wsdl:message name="anularRemitoResponse">
+  	<wsdl:part name="parameters" element="tns:anularRemitoResponse"/>
+  </wsdl:message>
+
+  <wsdl:message name="consultarRemitosEmisorRequest">
+  	<wsdl:part name="parameters" element="tns:consultarRemitosEmisorRequest"/>
+  </wsdl:message>
+  <wsdl:message name="consultarRemitosEmisorResponse">
+  	<wsdl:part name="parameters" element="tns:consultarRemitosEmisorResponse"/>
+  </wsdl:message>
+  <wsdl:message name="consultarRemitosAutorizadorRequest">
+  	<wsdl:part name="parameters" element="tns:consultarRemitosAutorizadorRequest"/>
+  </wsdl:message>
+  <wsdl:message name="consultarRemitosAutorizadorResponse">
+  	<wsdl:part name="parameters" element="tns:consultarRemitosAutorizadorResponse"/>
+  </wsdl:message>
+  <wsdl:message name="consultarRemitosReceptorRequest">
+  	<wsdl:part name="parameters" element="tns:consultarRemitosReceptorRequest"/>
+  </wsdl:message>
+  <wsdl:message name="consultarRemitosReceptorResponse">
+  	<wsdl:part name="parameters" element="tns:consultarRemitosReceptorResponse"/>
+  </wsdl:message>
+  <wsdl:message name="consultarEstadosRemitoRequest">
+  	<wsdl:part name="parameters" element="tns:consultarEstadosRemitoRequest"/>
+  </wsdl:message>
+  <wsdl:message name="consultarEstadosRemitoResponse">
+  	<wsdl:part name="parameters" element="tns:consultarEstadosRemitoResponse"/>
+  </wsdl:message>
+  <wsdl:message name="generarRemitoRecNoCategRequest">
+  	<wsdl:part name="parameters" element="tns:generarRemitoRecNoCategRequest"/>
+  </wsdl:message>
+  <wsdl:message name="generarRemitoRecNoCategResponse">
+  	<wsdl:part name="parameters" element="tns:GenerarRemitoRecNoCategResponse"/>
+  </wsdl:message>
+  <wsdl:message name="consultarProvinciasRequest">
+  	<wsdl:part name="parameters" element="tns:consultarProvinciasRequest"/>
+  </wsdl:message>
+  <wsdl:message name="consultarProvinciasResponse">
+  	<wsdl:part name="parameters" element="tns:consultarProvinciasResponse"/>
+  </wsdl:message>
+  <wsdl:message name="generarRemitoRecNoCategImporteRequest">
+  	<wsdl:part name="parameters" element="tns:generarRemitoRecNoCategImporteRequest"/>
+  </wsdl:message>
+  <wsdl:message name="generarRemitoRecNoCategImporteResponse">
+  	<wsdl:part name="parameters" element="tns:generarRemitoRecNoCategImporteResponse"/>
+  </wsdl:message>
+  <wsdl:message name="generarRemitoImporteRequest">
+  	<wsdl:part name="parameters" element="tns:generarRemitoImporteRequest"/>
+  </wsdl:message>
+  <wsdl:message name="generarRemitoImporteResponse">
+  	<wsdl:part name="parameters" element="tns:generarRemitoImporteResponse"/>
+  </wsdl:message>
+  <wsdl:message name="consultarRemitoImporteRequest">
+  	<wsdl:part name="parameters" element="tns:consultarRemitoImporteRequest"/>
+  </wsdl:message>
+  <wsdl:message name="consultarRemitoImporteResponse">
+  	<wsdl:part name="parameters" element="tns:consultarRemitoImporteResponse"/>
+  </wsdl:message>
+  <wsdl:message name="consultarReceptoresValidosRequest">
+  	<wsdl:part name="parameters" element="tns:consultarReceptoresValidosRequest"/>
+  </wsdl:message>
+  <wsdl:message name="consultarReceptoresValidosResponse">
+  	<wsdl:part name="parameters" element="tns:consultarReceptoresValidosResponse"/>
+  </wsdl:message>
+  <wsdl:portType name="RemCarneServicePortType">
+  
+    <wsdl:operation name="dummy">
+      <wsdl:input message="tns:dummyRequest"/>
+      <wsdl:output message="tns:dummyResponse">
+      </wsdl:output>
+    </wsdl:operation>
+     
+    <wsdl:operation name="generarRemito">
+      <wsdl:input message="tns:generarRemitoRequest"/>
+      <wsdl:output message="tns:generarRemitoResponse"/>
+    </wsdl:operation>
+    
+    <wsdl:operation name="autorizarRemito">
+      <wsdl:input message="tns:autorizarRemitoRequest"/>
+      <wsdl:output message="tns:autorizarRemitoResponse"/>
+    </wsdl:operation>
+    
+    <wsdl:operation name="anularRemito">
+   		<wsdl:input message="tns:anularRemitoRequest"/>
+   		<wsdl:output message="tns:anularRemitoResponse"/>
+   	</wsdl:operation>
+    
+    <wsdl:operation name="emitirRemito">
+      <wsdl:input message="tns:emitirRemitoRequest"/>
+      <wsdl:output message="tns:emitirRemitoResponse"/>
+    </wsdl:operation>
+  	    
+    <wsdl:operation name="registrarRecepcion">
+      <wsdl:input message="tns:registrarRecepcionRequest"/>
+      <wsdl:output message="tns:registrarRecepcionResponse"/>
+    </wsdl:operation>
+    
+    <wsdl:operation name="modificarViaje">
+      <wsdl:input message="tns:modificarViajeRequest"/>
+      <wsdl:output message="tns:modificarViajeResponse"/>
+    </wsdl:operation>
+    
+    <wsdl:operation name="informarContingencia">
+      <wsdl:input message="tns:informarContingenciaRequest"/>
+      <wsdl:output message="tns:informarContingenciaResponse"/>
+    </wsdl:operation>
+    
+    <wsdl:operation name="consultarUltimoRemitoEmitido">
+      <wsdl:input message="tns:consultarUltimoRemitoEmitidoRequest"/>
+      <wsdl:output message="tns:consultarUltimoRemitoEmitidoResponse"/>
+    </wsdl:operation>
+    
+    <wsdl:operation name="consultarRemito">
+      <wsdl:input message="tns:consultarRemitoRequest"/>
+      <wsdl:output message="tns:consultarRemitoResponse"/>
+    </wsdl:operation>
+    
+    <wsdl:operation name="consultarTiposComprobante">
+      <wsdl:input message="tns:consultarTiposComprobanteRequest"/>
+      <wsdl:output message="tns:consultarTiposComprobanteResponse"/>
+    </wsdl:operation>
+    
+    <wsdl:operation name="consultarTiposEstado">
+    	<wsdl:input message="tns:consultarTiposEstadoRequest"/>
+    	<wsdl:output message="tns:consultarTiposEstadoResponse"/>
+    </wsdl:operation>
+    
+    <wsdl:operation name="consultarTiposCategoriaReceptor">
+      <wsdl:input message="tns:consultarTiposCategoriaReceptorRequest"/>
+      <wsdl:output message="tns:consultarTiposCategoriaReceptorResponse"/>
+    </wsdl:operation>
+    
+    <wsdl:operation name="consultarTiposCategoriaEmisor">
+      <wsdl:input message="tns:consultarTiposCategoriaEmisorRequest"/>
+      <wsdl:output message="tns:consultarTiposCategoriaEmisorResponse"/>
+    </wsdl:operation>
+    
+     <wsdl:operation name="consultarTiposContingencia">
+      <wsdl:input message="tns:consultarTiposContingenciaRequest"/>
+      <wsdl:output message="tns:consultarTiposContingenciaResponse"/>
+    </wsdl:operation>
+    
+    <wsdl:operation name="consultarCodigosDomicilio">
+      <wsdl:input message="tns:consultarCodigosDomicilioRequest"/>
+      <wsdl:output message="tns:consultarCodigosDomicilioResponse"/>
+    </wsdl:operation>
+    
+    <wsdl:operation name="consultarPuntosEmision">
+      <wsdl:input message="tns:consultarPuntosEmisionRequest"/>
+      <wsdl:output message="tns:consultarPuntosEmisionResponse"/>
+    </wsdl:operation>
+    
+   	<wsdl:operation name="consultarTiposCarne">
+      <wsdl:input message="tns:consultarTiposCarneRequest"/>
+      <wsdl:output message="tns:consultarTiposCarneResponse"/>
+    </wsdl:operation>
+    
+   	<wsdl:operation name="consultarGruposCarne">
+      <wsdl:input message="tns:consultarGruposCarneRequest"/>
+      <wsdl:output message="tns:consultarGruposCarneResponse"/>
+    </wsdl:operation>
+
+   	<wsdl:operation name="consultarRemitosEmisor">
+   		<wsdl:input message="tns:consultarRemitosEmisorRequest"/>
+   		<wsdl:output message="tns:consultarRemitosEmisorResponse"/>
+   	</wsdl:operation>
+   	
+   	<wsdl:operation name="consultarRemitosAutorizador">
+   		<wsdl:input message="tns:consultarRemitosAutorizadorRequest"/>
+   		<wsdl:output message="tns:consultarRemitosAutorizadorResponse"/>
+   	</wsdl:operation>
+   	
+   	<wsdl:operation name="consultarRemitosReceptor">
+   		<wsdl:input message="tns:consultarRemitosReceptorRequest"/>
+   		<wsdl:output message="tns:consultarRemitosReceptorResponse"/>
+   	</wsdl:operation>
+   	
+   	<wsdl:operation name="consultarEstadosRemito">
+   		<wsdl:input message="tns:consultarEstadosRemitoRequest"/>
+   		<wsdl:output message="tns:consultarEstadosRemitoResponse"/>
+   	</wsdl:operation>
+   	<wsdl:operation name="generarRemitoRecNoCateg">
+   		<wsdl:input message="tns:generarRemitoRecNoCategRequest"/>
+   		<wsdl:output message="tns:generarRemitoRecNoCategResponse"/>
+   	</wsdl:operation>
+   	<wsdl:operation name="consultarProvincias">
+   		<wsdl:input message="tns:consultarProvinciasRequest"/>
+   		<wsdl:output message="tns:consultarProvinciasResponse"/>
+   	</wsdl:operation>
+   	<wsdl:operation name="generarRemitoRecNoCategImporte">
+   		<wsdl:input message="tns:generarRemitoRecNoCategImporteRequest"/>
+   		<wsdl:output message="tns:generarRemitoRecNoCategImporteResponse"/>
+   	</wsdl:operation>
+   	<wsdl:operation name="generarRemitoImporte">
+   		<wsdl:input message="tns:generarRemitoImporteRequest"/>
+   		<wsdl:output message="tns:generarRemitoImporteResponse"/>
+   	</wsdl:operation>
+   	<wsdl:operation name="consultarRemitoImporte">
+   		<wsdl:input message="tns:consultarRemitoImporteRequest"/>
+   		<wsdl:output message="tns:consultarRemitoImporteResponse"/>
+   	</wsdl:operation>
+   	<wsdl:operation name="consultarReceptoresValidos">
+   		<wsdl:input message="tns:consultarReceptoresValidosRequest"/>
+   		<wsdl:output message="tns:consultarReceptoresValidosResponse"/>
+   	</wsdl:operation>
+  </wsdl:portType>
+  
+  <wsdl:binding name="RemCarneServiceSOAP" type="tns:RemCarneServicePortType">
+
+
+  	<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+  	<wsdl:operation name="dummy">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/dummy"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="generarRemito">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/generarRemito"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="emitirRemito">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/emitirRemito"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="autorizarRemito">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/autorizarRemito"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="registrarRecepcion">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/registrarRecepcion"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="modificarViaje">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/modificarViaje"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="informarContingencia">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/informarContingencia"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="consultarRemito">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarRemito"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="consultarUltimoRemitoEmitido">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarUltimoRemitoEmitido"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="consultarTiposComprobante">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarTiposComprobante"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="consultarTiposEstado">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarTiposEstado"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="consultarTiposCategoriaReceptor">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarTiposCategoriaReceptor"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="consultarTiposCategoriaEmisor">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarTiposCategoriaEmisor"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="consultarTiposContingencia">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarTiposContingencia"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="consultarCodigosDomicilio">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarCodigosDomicilio"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="consultarPuntosEmision">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarPuntosEmision"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="consultarGruposCarne">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarGruposCarne"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="consultarTiposCarne">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarTiposCarne"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="anularRemito">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/anularRemito"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="consultarRemitosEmisor">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarRemitosEmisor"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="consultarRemitosAutorizador">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarRemitosAutorizador"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="consultarRemitosReceptor">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarRemitosReceptor"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+
+  	<wsdl:operation name="consultarEstadosRemito">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarEstadosRemito"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="generarRemitoRecNoCateg">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/generarRemitoRecNoCateg"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="consultarProvincias">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarProvincias"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="generarRemitoRecNoCategImporte">
+
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/generarRemitoRecNoCategImporte"/>
+  		<wsdl:input>
+
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="generarRemitoImporte">
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/generarRemitoImporte"/>
+  		<wsdl:input>
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="consultarRemitoImporte">
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarRemitoImporte"/>
+  		<wsdl:input>
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="consultarReceptoresValidos">
+  		<soap:operation soapAction="http://ar.gob.afip.wsremcarne/RemCarneService/consultarReceptoresValidos"/>
+  		<wsdl:input>
+  			<soap:body use="literal"/>
+  		</wsdl:input>
+  		<wsdl:output>
+  			<soap:body use="literal"/>
+  		</wsdl:output>
+  	</wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="RemCarneService">
+    <wsdl:port binding="tns:RemCarneServiceSOAP" name="RemCarneServiceSOAP">
+      <soap:address location="https://fwshomo.afip.gov.ar/wsremcarne/RemCarneService"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
