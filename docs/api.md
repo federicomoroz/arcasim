@@ -44,11 +44,10 @@ Los WSDL son los oficiales de ARCA: solo cambia la dirección del servicio por l
 **1. Levantarlo.**
 
 ```bash
-git clone https://github.com/federicomoroz/arcasim && cd arcasim
-docker compose up -d                                   # http://localhost:7080, con PostgreSQL
-# o, sin Docker y en memoria:
-dotnet run --project src/ArcaSim.Api --urls http://localhost:7080
+docker run -d -p 7080:8080 -v arcasim-data:/data ghcr.io/federicomoroz/arcasim   # http://localhost:7080
 ```
+
+En memoria: arranca vacío y se descarta con el contenedor. El volumen guarda su autoridad certificante y la clave de los tickets, para que un ticket guardado siga sirviendo después de reiniciarlo. Con PostgreSQL, `docker compose up -d` desde el repositorio; sin Docker, `dotnet run --project src/ArcaSim.Api --urls http://localhost:7080`.
 
 **2. Un certificado.** Por defecto ArcaSim arranca con **acceso abierto**: acepta cualquier certificado que tenga el CUIT en el DN. Sirve el que WSASS emitió para homologación, o uno autofirmado:
 

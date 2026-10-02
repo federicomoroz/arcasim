@@ -97,7 +97,10 @@ The full study of ARCA's API is in [`docs/arca/`](docs/arca/) (in Spanish): [WSA
 ### Running it
 
 ```bash
-# In memory, for development (panel at http://localhost:5199/arcasim/)
+# The published image, in memory (panel at http://localhost:7080/arcasim/)
+docker run -d -p 7080:8080 -v arcasim-data:/data ghcr.io/federicomoroz/arcasim
+
+# From the code, in memory (panel at http://localhost:5199/arcasim/)
 dotnet run --project src/ArcaSim.Api --urls "http://localhost:5199;https://localhost:7443"
 
 # With PostgreSQL, for a team or a CI (panel at http://localhost:7080/arcasim/)
