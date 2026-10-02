@@ -23,7 +23,11 @@ public sealed record WebService(string Id, string Description)
     [
         new("wsfe", "Factura Electrónica (WSFEv1)"),
         new("ws_sr_constancia_inscripcion", "Constancia de inscripción"),
+        new("ws_sr_padron_a5", "Constancia de inscripción (nombre anterior)"),
         new("ws_sr_padron_a13", "Padrón A13"),
+        new("ws_sr_padron_a4", "Padrón A4"),
+        new("ws_sr_padron_a10", "Padrón A10"),
+        new("ws_sr_padron_a100", "Padrón A100: tablas de parámetros"),
         new("wscdc", "Constatación de comprobantes"),
         new("wsfex", "Factura de exportación (WSFEXv1)"),
     ];

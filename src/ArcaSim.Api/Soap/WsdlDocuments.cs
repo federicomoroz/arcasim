@@ -20,12 +20,16 @@ public static class WsdlDocuments
             .Replace("https://wsaahomo.afip.gov.ar/ws/services/LoginCms", $"{baseUrl}/ws/services/LoginCms")
             .Replace("https://wsaa.afip.gov.ar/ws/services/LoginCms", $"{baseUrl}/ws/services/LoginCms");
 
+    /// <summary>Any of ARCA's WSDL files with its soap:address (and soap12:address) pointing at ArcaSim.</summary>
+    public static string WithAddress(string name, string address) =>
+        System.Text.RegularExpressions.Regex.Replace(Load(name), @"(<(?:\w+:)?address\b[^>]*\blocation="")[^""]*("")", $"${{1}}{address}$2");
+
     public static string BaseUrl(HttpRequest request) => $"{request.Scheme}://{request.Host}{request.PathBase}";
 
     public static bool AsksForWsdl(HttpRequest request) =>
         request.Query.Keys.Any(k => k.Equals("wsdl", StringComparison.OrdinalIgnoreCase));
 
-    private static string Load(string name)
+    public static string Load(string name)
     {
         using var stream = typeof(WsdlDocuments).Assembly.GetManifestResourceStream($"ArcaSim.Wsdl.{name}")
                            ?? throw new InvalidOperationException($"WSDL {name} is not embedded.");

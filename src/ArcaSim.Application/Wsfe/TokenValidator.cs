@@ -1,5 +1,4 @@
-using System.Text;
-using System.Xml;
+using ArcaSim.Application.Access;
 
 namespace ArcaSim.Application.Wsfe;
 
@@ -15,69 +14,28 @@ public sealed record AuthCheck(Err? Error, long Cuit)
 /// token not empty, token readable, token dates, signature, service, CUIT
 /// among the token's relations. The messages are ARCA's, word for word.
 /// </summary>
-public sealed class TokenValidator(IClock clock, ITokenSigner signer)
+public sealed class TokenValidator(TicketReader tickets)
 {
     public const string Service = "wsfe";
 
     public AuthCheck Validate(FEAuthRequest? auth)
     {
         if (auth is null) return Fail(500, "Campo Auth no fue ingresado o esta mal formado.");
-        if (string.IsNullOrEmpty(auth.Token)) return Fail(600, "ValidacionDeToken: Parametro nulo o vacio (token)");
-        if (string.IsNullOrEmpty(auth.Sign)) return Fail(600, "ValidacionDeToken: Parametro nulo o vacio (sign)");
-
-        XmlDocument token;
-        try
+        var check = tickets.Check(auth.Token, auth.Sign, auth.Cuit, Service);
+        return check.Problem switch
         {
-            token = new XmlDocument();
-            token.LoadXml(Decode(auth.Token));
-        }
-        catch (XmlException ex)
-        {
-            return Fail(600, "ValidacionDeToken: No valido token. Excepcion: CargarStringBase64Token: Excepción: CargarNodos: " +
-                             $"Error al cargar token XML. Excepcion: {ex.Message}");
-        }
-
-        var id = token.SelectSingleNode("/sso/id") as XmlElement;
-        var generation = EpochAttribute(id, "gen_time");
-        var expiration = EpochAttribute(id, "exp_time");
-        var now = clock.Now.ToUnixTimeSeconds();
-        if (now < generation || now > expiration)
-            return Fail(600, $"ValidacionDeToken: No validaron las fechas del token. GenTime={generation}, ExpTime={expiration}, NowUTC={now}");
-
-        if (!signer.Verify(auth.Token, auth.Sign)) return Fail(600, "ValidacionDeToken: Error al verificar hash: ");
-
-        var login = token.SelectSingleNode("/sso/operation/login") as XmlElement;
-        var service = login?.GetAttribute("service") ?? "";
-        if (service != Service)
-            return Fail(600, $"ValidacionDeToken: No valido Id Sistema: {Service}(Id Sistema de token es: {service})");
-
-        var relations = token.SelectNodes("/sso/operation/login/relations/relation")?.OfType<XmlElement>()
-            .Select(r => r.GetAttribute("key")) ?? [];
-        if (!relations.Contains(auth.Cuit.ToString()))
-            return Fail(600, $"ValidacionDeToken: No apareció CUIT en lista de relaciones: {auth.Cuit}");
-
-        return new AuthCheck(null, auth.Cuit);
+            TicketProblem.None => new AuthCheck(null, auth.Cuit),
+            TicketProblem.MissingToken => Fail(600, "ValidacionDeToken: Parametro nulo o vacio (token)"),
+            TicketProblem.MissingSign => Fail(600, "ValidacionDeToken: Parametro nulo o vacio (sign)"),
+            TicketProblem.Unreadable => Fail(600, "ValidacionDeToken: No valido token. Excepcion: CargarStringBase64Token: Excepción: CargarNodos: " +
+                                                  $"Error al cargar token XML. Excepcion: {check.Detail}"),
+            TicketProblem.OutOfDate => Fail(600,
+                $"ValidacionDeToken: No validaron las fechas del token. GenTime={check.GenerationTime}, ExpTime={check.ExpirationTime}, NowUTC={check.Now}"),
+            TicketProblem.BadSignature => Fail(600, "ValidacionDeToken: Error al verificar hash: "),
+            TicketProblem.WrongService => Fail(600, $"ValidacionDeToken: No valido Id Sistema: {Service}(Id Sistema de token es: {check.TokenService})"),
+            _ => Fail(600, $"ValidacionDeToken: No apareció CUIT en lista de relaciones: {auth.Cuit}"),
+        };
     }
-
-    /// <summary>
-    /// ARCA's loader reads the token as base64 and then as XML; text that is
-    /// not base64 ends up failing as XML at its first character, which is the
-    /// message homologación gives for a made-up token.
-    /// </summary>
-    private static string Decode(string token)
-    {
-        try
-        {
-            return Encoding.UTF8.GetString(Convert.FromBase64String(token));
-        }
-        catch (FormatException)
-        {
-            return "?";
-        }
-    }
-
-    private static long EpochAttribute(XmlElement? element, string name) =>
-        long.TryParse(element?.GetAttribute(name), out var value) ? value : 0;
 
     private static AuthCheck Fail(int code, string message) => new(new Err { Code = code, Msg = message }, 0);
 }

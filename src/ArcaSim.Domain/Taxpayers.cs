@@ -45,6 +45,11 @@ public sealed class Taxpayer
     public bool Active { get; private set; } = true;
     public IReadOnlyList<PointOfSale> PointsOfSale => _pointsOfSale;
 
+    /// <summary>What the padrón says about the taxpayer beyond its VAT condition. Defaults come from the CUIT and the name.</summary>
+    public TaxpayerProfile Profile { get; private set; } = TaxpayerProfile.Empty;
+
+    public PersonKind Kind => Cuits.KindOf(Cuit);
+
     private Taxpayer() { }
 
     public Taxpayer(long cuit, string name, VatCondition vatCondition, IEnumerable<PointOfSale>? pointsOfSale = null)
@@ -70,11 +75,74 @@ public sealed class Taxpayer
         VatCondition = vatCondition;
         Active = active;
     }
+
+    public void SetProfile(TaxpayerProfile profile) => Profile = profile;
+}
+
+/// <summary>A person (DNI-based CUIT: 20, 23, 24, 27) or a company (30, 33, 34).</summary>
+public enum PersonKind
+{
+    Fisica,
+    Juridica,
+}
+
+public sealed record TaxAddress(string Street, string Locality, string PostalCode, int ProvinceId, string Province)
+{
+    /// <summary>A plainly made-up fiscal address for taxpayers nobody described.</summary>
+    public static readonly TaxAddress Default = new("CALLE SIMULADA 1234", "CIUDAD AUTONOMA BUENOS AIRES", "1000", 0, "CIUDAD AUTONOMA BUENOS AIRES");
+}
+
+/// <summary>
+/// The padrón's view of a taxpayer. Every field is optional: what is missing is
+/// derived from the CUIT and the name, so a taxpayer created with only a CUIT
+/// still answers a full constancia.
+/// </summary>
+public sealed record TaxpayerProfile(
+    string? FirstName = null,
+    string? LastName = null,
+    TaxAddress? Address = null,
+    long? ActivityId = null,
+    string? ActivityDescription = null,
+    string? LegalForm = null,
+    DateOnly? RegisteredOn = null)
+{
+    public static readonly TaxpayerProfile Empty = new();
+
+    public const long DefaultActivityId = 620100;
+    public const string DefaultActivityDescription = "SERVICIOS DE CONSULTORES EN INFORMÁTICA Y SUMINISTROS DE PROGRAMAS DE INFORMÁTICA";
 }
 
 public static class Cuits
 {
     private static readonly int[] Weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+
+    public static PersonKind KindOf(long cuit) => (cuit / 1_000_000_000) is 30 or 33 or 34 ? PersonKind.Juridica : PersonKind.Fisica;
+
+    /// <summary>The DNI inside a person's CUIT: the eight digits between the prefix and the check digit.</summary>
+    public static string DocumentOf(long cuit) => (cuit / 10 % 100_000_000).ToString();
+
+    /// <summary>The CUIT a DNI gets with prefix 20, or 23 when 20 would need check digit 10, as ARCA assigns them.</summary>
+    public static long ForDocument(long document)
+    {
+        foreach (var prefix in new[] { 20L, 27L, 23L })
+        {
+            var body = prefix * 100_000_000 + document;
+            for (var check = 0; check <= 9; check++)
+            {
+                var cuit = body * 10 + check;
+                if (IsValid(cuit) && IsCanonical(cuit)) return cuit;
+            }
+        }
+        throw new ArgumentException($"No CUIT for document {document}.");
+    }
+
+    private static bool IsCanonical(long cuit)
+    {
+        var digits = cuit.ToString();
+        var sum = 0;
+        for (var i = 0; i < 10; i++) sum += (digits[i] - '0') * Weights[i];
+        return 11 - sum % 11 != 10;
+    }
 
     /// <summary>The mod 11 check digit every CUIT carries.</summary>
     public static bool IsValid(long cuit)

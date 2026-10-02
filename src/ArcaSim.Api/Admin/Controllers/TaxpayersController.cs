@@ -19,7 +19,7 @@ public sealed class TaxpayersController(ITaxpayerRepository taxpayers) : Control
     public async Task<ActionResult<TaxpayerView>> Get(long cuit, CancellationToken ct) =>
         await taxpayers.FindAsync(cuit, ct) is { } taxpayer ? TaxpayerView.Of(taxpayer) : NotFound();
 
-    /// <summary>Creates or updates a taxpayer; the points of sale sent are added or replaced.</summary>
+    /// <summary>Creates or updates a taxpayer; the points of sale sent are added or replaced, and a profile sent replaces the old one.</summary>
     [HttpPut("{cuit:long}")]
     public async Task<ActionResult<TaxpayerView>> Put(long cuit, TaxpayerBody body, CancellationToken ct)
     {
@@ -29,6 +29,7 @@ public sealed class TaxpayersController(ITaxpayerRepository taxpayers) : Control
         if (taxpayer is null) taxpayer = new Taxpayer(cuit, body.Name, body.VatCondition, points);
         else foreach (var point in points) taxpayer.AddPointOfSale(point);
         taxpayer.Update(body.Name, body.VatCondition, body.Active);
+        if (body.Profile is not null) taxpayer.SetProfile(body.Profile);
         await taxpayers.SaveAsync(taxpayer, ct);
         return TaxpayerView.Of(taxpayer);
     }

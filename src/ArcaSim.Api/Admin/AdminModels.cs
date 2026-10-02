@@ -19,7 +19,7 @@ public sealed record SettingsBody(
 
 public sealed record PointOfSaleBody(int Number, PointOfSaleKind Kind, bool Blocked = false, DateOnly? DeactivatedOn = null);
 
-public sealed record TaxpayerBody(string Name, VatCondition VatCondition, bool Active = true, List<PointOfSaleBody>? PointsOfSale = null);
+public sealed record TaxpayerBody(string Name, VatCondition VatCondition, bool Active = true, List<PointOfSaleBody>? PointsOfSale = null, TaxpayerProfile? Profile = null);
 
 public sealed record CertificateBody(long Cuit, string Alias, string? Csr, string? Password, List<string>? Services);
 
@@ -68,7 +68,7 @@ public sealed record StatusView(
 
 public sealed record PointOfSaleView(int Number, string Kind, bool Blocked, DateOnly? DeactivatedOn);
 
-public sealed record TaxpayerView(long Cuit, string Name, string VatCondition, bool Active, IReadOnlyList<PointOfSaleView> PointsOfSale)
+public sealed record TaxpayerView(long Cuit, string Name, string VatCondition, bool Active, IReadOnlyList<PointOfSaleView> PointsOfSale, TaxpayerProfile Profile)
 {
     public static TaxpayerView Of(Taxpayer taxpayer) => new(
         taxpayer.Cuit,
@@ -76,7 +76,8 @@ public sealed record TaxpayerView(long Cuit, string Name, string VatCondition, b
         taxpayer.VatCondition.ToString(),
         taxpayer.Active,
         taxpayer.PointsOfSale.OrderBy(p => p.Number)
-            .Select(p => new PointOfSaleView(p.Number, p.Kind.ToString(), p.Blocked, p.DeactivatedOn)).ToList());
+            .Select(p => new PointOfSaleView(p.Number, p.Kind.ToString(), p.Blocked, p.DeactivatedOn)).ToList(),
+        taxpayer.Profile);
 }
 
 public sealed record ReceiverView(int DocTipo, long DocNro);

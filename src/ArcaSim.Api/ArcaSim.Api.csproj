@@ -5,7 +5,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\..\docs\arca\wsdl\wsaa-*.wsdl;..\..\docs\arca\wsdl\wsfev1-*.wsdl" LogicalName="ArcaSim.Wsdl.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\docs\arca\wsdl\*.wsdl" LogicalName="ArcaSim.Wsdl.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <PropertyGroup>

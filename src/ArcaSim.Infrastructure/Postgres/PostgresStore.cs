@@ -77,6 +77,7 @@ public sealed class PostgresStore(NpgsqlDataSource db) :
             day date NOT NULL,
             rate numeric NOT NULL,
             PRIMARY KEY (currency, day));
+        ALTER TABLE taxpayers ADD COLUMN IF NOT EXISTS profile jsonb NOT NULL DEFAULT '{}';
         """;
 
     public async Task EnsureSchemaAsync(CancellationToken ct = default)
@@ -137,23 +138,25 @@ public sealed class PostgresStore(NpgsqlDataSource db) :
     // ---- Taxpayers ---------------------------------------------------------
 
     public async Task<Taxpayer?> FindAsync(long cuit, CancellationToken ct = default) =>
-        (await ListAsync("SELECT cuit, name, vat_condition, active, points_of_sale FROM taxpayers WHERE cuit = $1", [cuit], ReadTaxpayer, ct))
+        (await ListAsync("SELECT cuit, name, vat_condition, active, points_of_sale, profile FROM taxpayers WHERE cuit = $1", [cuit], ReadTaxpayer, ct))
         .FirstOrDefault();
 
     public Task<IReadOnlyList<Taxpayer>> ListAsync(CancellationToken ct = default) =>
-        ListAsync("SELECT cuit, name, vat_condition, active, points_of_sale FROM taxpayers ORDER BY cuit", [], ReadTaxpayer, ct);
+        ListAsync("SELECT cuit, name, vat_condition, active, points_of_sale, profile FROM taxpayers ORDER BY cuit", [], ReadTaxpayer, ct);
 
     public Task SaveAsync(Taxpayer taxpayer, CancellationToken ct = default) =>
         ExecuteAsync(
-            "INSERT INTO taxpayers VALUES ($1, $2, $3, $4, $5) ON CONFLICT (cuit) DO UPDATE SET " +
-            "name = excluded.name, vat_condition = excluded.vat_condition, active = excluded.active, points_of_sale = excluded.points_of_sale",
-            [taxpayer.Cuit, taxpayer.Name, (int)taxpayer.VatCondition, taxpayer.Active, Json(taxpayer.PointsOfSale)], ct);
+            "INSERT INTO taxpayers (cuit, name, vat_condition, active, points_of_sale, profile) VALUES ($1, $2, $3, $4, $5, $6) " +
+            "ON CONFLICT (cuit) DO UPDATE SET name = excluded.name, vat_condition = excluded.vat_condition, " +
+            "active = excluded.active, points_of_sale = excluded.points_of_sale, profile = excluded.profile",
+            [taxpayer.Cuit, taxpayer.Name, (int)taxpayer.VatCondition, taxpayer.Active, Json(taxpayer.PointsOfSale), Json(taxpayer.Profile)], ct);
 
     private static Taxpayer ReadTaxpayer(NpgsqlDataReader r)
     {
         var points = JsonSerializer.Deserialize<List<PointOfSale>>(r.GetString(4)) ?? [];
         var taxpayer = new Taxpayer(r.GetInt64(0), r.GetString(1), (VatCondition)r.GetInt32(2), points);
         taxpayer.Update(taxpayer.Name, taxpayer.VatCondition, r.GetBoolean(3));
+        taxpayer.SetProfile(JsonSerializer.Deserialize<TaxpayerProfile>(r.GetString(5)) ?? TaxpayerProfile.Empty);
         return taxpayer;
     }
 

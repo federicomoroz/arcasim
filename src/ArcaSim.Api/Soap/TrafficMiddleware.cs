@@ -10,10 +10,7 @@ namespace ArcaSim.Api.Soap;
 public static class TrafficMiddleware
 {
     public static string? ServiceOf(HttpRequest request) =>
-        !HttpMethods.IsPost(request.Method) ? null
-        : request.Path.StartsWithSegments("/wsfev1/service.asmx", StringComparison.OrdinalIgnoreCase) ? "wsfe"
-        : request.Path.StartsWithSegments("/ws/services/LoginCms", StringComparison.OrdinalIgnoreCase) ? "wsaa"
-        : null;
+        HttpMethods.IsPost(request.Method) ? ServiceRoutes.ServiceOf(request.Path) : null;
 
     public static void Use(WebApplication app) => app.Use(async (context, next) =>
     {
