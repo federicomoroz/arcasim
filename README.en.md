@@ -65,7 +65,7 @@ If the answer to a CAE request gets lost, `AuthorizeNextAsync` asks `FECompConsu
 | Level | What matches | How it is checked |
 |---|---|---|
 | Contract | Paths, ARCA's WSDL files (with ArcaSim's address), operations, namespaces, SOAP 1.1 and 1.2 | A client `dotnet-svcutil` generates from ARCA's WSDL asks ArcaSim for a CAE, over SOAP 1.1 and 1.2 |
-| Bytes | WSFEv1 answers in one line with the `FEHeaderInfo` header, an empty `<CAE />`, amounts without trailing zeros, the literal `NULL` for empty dates; WSAA answers with Axis faults and HTTP 500 | Tests that compare ArcaSim's answers with real ARCA responses: an approved CAE with an observation, a rejected resend and a lookup match byte for byte except the CAE number |
+| Bytes | WSFEv1 answers in one line with the `FEHeaderInfo` header, an empty `<CAE />`, amounts without trailing zeros, the literal `NULL` for empty dates; WSAA answers with Axis faults and HTTP 500 | Tests that compare ArcaSim's answers with real ARCA responses: an approved CAE with an observation and a rejected resend match byte for byte except the CAE number |
 | Errors | The manual's codes, and the real texts where they are known, missing accents and double spaces included | [Coverage of the 495 codes](docs/cobertura.md), generated from the code |
 | Behavior | Numbering per CUIT, point of sale and type; no idempotency; a batch stops at the first rejection; 12-hour ticket; anti-replay window | Scenario tests |
 

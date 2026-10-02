@@ -65,7 +65,7 @@ Si la respuesta a un pedido de CAE se pierde, `AuthorizeNextAsync` consulta con 
 | Nivel | Qué coincide | Cómo se verifica |
 |---|---|---|
 | Contrato | Rutas, WSDL oficiales (con la dirección de ArcaSim), operaciones, namespaces, SOAP 1.1 y 1.2 | Un cliente generado con `dotnet-svcutil` del WSDL de ARCA pide un CAE contra ArcaSim, en SOAP 1.1 y 1.2 |
-| Bytes | WSFEv1 responde en una línea con el encabezado `FEHeaderInfo`, `<CAE />` vacío, importes sin ceros de relleno, el literal `NULL` en fechas vacías; WSAA responde con los faults de Axis y HTTP 500 | Tests que comparan la respuesta de ArcaSim con respuestas reales de ARCA: un CAE aprobado con observación, un reenvío rechazado y una consulta coinciden byte a byte salvo el número de CAE |
+| Bytes | WSFEv1 responde en una línea con el encabezado `FEHeaderInfo`, `<CAE />` vacío, importes sin ceros de relleno, el literal `NULL` en fechas vacías; WSAA responde con los faults de Axis y HTTP 500 | Tests que comparan la respuesta de ArcaSim con respuestas reales de ARCA: un CAE aprobado con observación y un reenvío rechazado coinciden byte a byte salvo el número de CAE |
 | Errores | Códigos del manual y los textos reales donde se conocen, con sus faltas de tildes y dobles espacios | [Cobertura de los 495 códigos](docs/cobertura.md), generada del código |
 | Comportamiento | Numeración correlativa por CUIT, punto de venta y tipo; sin idempotencia; un lote se corta en el primer rechazo; ticket de 12 h; ventana anti-repetición | Tests de escenarios |
 
