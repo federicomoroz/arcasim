@@ -21,12 +21,16 @@ internal sealed class LiquidacionesSim : IAsyncDisposable
     public static readonly DateTimeOffset Now = new(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3));
 
     private readonly ServiceContract _contract;
+    private readonly string _service;
+    private readonly string _cuitField;
     private readonly string _auth;
 
-    private LiquidacionesSim(ArcaSimHarness sim, ServiceContract contract, string auth)
+    private LiquidacionesSim(ArcaSimHarness sim, ServiceContract contract, string service, string cuitField, string auth)
     {
         Sim = sim;
         _contract = contract;
+        _service = service;
+        _cuitField = cuitField;
         _auth = auth;
     }
 
@@ -40,16 +44,24 @@ internal sealed class LiquidacionesSim : IAsyncDisposable
             new PointOfSale(1, PointOfSaleKind.WebServiceCae), new PointOfSale(3000, PointOfSaleKind.WebServiceCae));
         await sim.PutTaxpayerAsync(Producer, "Juan Productor", VatCondition.ResponsableInscripto);
         await sim.PutTaxpayerAsync(Monotributista, "Ana Chacarera", VatCondition.Monotributo);
-        var certificate = await sim.IssueCertificateAsync(Issuer, "liquidaciones", service);
-        var ticket = await sim.Wsaa(Issuer, certificate).LoginAsync(service);
         var contract = ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", wsdl));
-        return new LiquidacionesSim(sim, contract, $"<auth><token>{ticket.Token}</token><sign>{ticket.Sign}</sign><{cuitField}>{Issuer}</{cuitField}></auth>");
+        return new LiquidacionesSim(sim, contract, service, cuitField, await AuthAsync(sim, Issuer, service, cuitField));
+    }
+
+    /// <summary>The auth block of another registered taxpayer, for the operations its counterpart answers.</summary>
+    public Task<string> AuthForAsync(long cuit) => AuthAsync(Sim, cuit, _service, _cuitField);
+
+    private static async Task<string> AuthAsync(ArcaSimHarness sim, long cuit, string service, string cuitField)
+    {
+        var certificate = await sim.IssueCertificateAsync(cuit, $"liquidaciones{Guid.NewGuid():N}", service);
+        var ticket = await sim.Wsaa(cuit, certificate).LoginAsync(service);
+        return $"<auth><token>{ticket.Token}</token><sign>{ticket.Sign}</sign><{cuitField}>{cuit}</{cuitField}></auth>";
     }
 
     /// <summary>Calls an operation with the ticket in auth and the rest as given; returns the answer's first child (respuesta, or the response itself when it has none).</summary>
-    public async Task<XElement> CallAsync(string operation, string inner = "")
+    public async Task<XElement> CallAsync(string operation, string inner = "", string? auth = null)
     {
-        var answer = await RawAsync(operation, _auth + inner);
+        var answer = await RawAsync(operation, (auth ?? _auth) + inner);
         return answer.Element("respuesta") ?? answer;
     }
 
