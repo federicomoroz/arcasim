@@ -424,5 +424,19 @@
     "dialect": "Axis2", "prefix": "ns1",
     "auth": { "faultCode": "soapenv:Client",
       "rows": { "OutOfDate": [{ "faultCode": "soapenv:Server" }] } },
-    "notes": "Verified live (producción 2026-10-02): Axis2, 'Token inválido' as soapenv:Client with <detail />. Manual: the expired-token text as soapenv:Server. Inferred: the WSAA id wscta and the other problems (wsmtxca's Axis2 texts). Only the production WSDL exists: homologación answers 404." }
+    "notes": "Verified live (producción 2026-10-02): Axis2, 'Token inválido' as soapenv:Client with <detail />. Manual: the expired-token text as soapenv:Server. Inferred: the WSAA id wscta and the other problems (wsmtxca's Axis2 texts). Only the production WSDL exists: homologación answers 404." },
+
+  // ---- Sin WSDL de ARCA: reconstruido del manual ------------------------------------------
+  { "id": "TRABAJO_F931", "name": "Consulta de F931 para el MTEySS (SSF931)", "group": "organismos", "level": "reglas", "wsdl": "TRABAJO_F931-arcasim.wsdl",
+    "wsaa": ["trabajo_f931", "ssf931"], "dialect": "Asmx",
+    "auth": { "inBody": true, "code": 98099, "codeField": "CodigoRespuesta", "textField": "DescripcionRespuesta", "cuitField": "CUITDelegado",
+      "rows": {
+        "MissingToken": [{ "code": 97006, "text": "Token Nulo" }],
+        "MissingSign": [{ "code": 98003, "text": "Firma Nula" }],
+        "Unreadable": [{ "code": 97001, "text": "Formato de token erróneo. No es base 64 válido." }],
+        "OutOfDate": [{ "code": 97003, "text": "Token expirado." }],
+        "BadSignature": [{ "code": 98002, "text": "Firma inválida para el token." }],
+        "WrongService": [{ "code": 97004, "text": "Token con identificador de servicio inválido." }],
+        "CuitNotRelated": [{ "code": 98006, "text": "CUITDelegado inválido." }] } },
+    "notes": "No WSDL from ARCA: TRABAJO_F931-arcasim.wsdl is ArcaSim's reconstruction from the manual (revision of 23/08/2010), whose element names, order, namespace http://tempuri.org/, SOAPAction and path /WebService/F931.asmx it keeps; type names, minOccurs and SOAP 1.1 alone are ArcaSim's. Manual: the 97xxx/98xxx codes and texts, in CodigoRespuesta and DescripcionRespuesta. Inferred: the WSAA id (the manual requires a ticket but does not name the service: trabajo_f931, after the manual's folder, and ssf931, its name in the manual, both open it), HTTP 200 for refusals, 97006 when credencial is missing. Not expressible: 97002 for a base64 token that is not XML (97001 instead), 97005 for a generation time in the future (97003), 98001 for a sign that is not base64 (98002), 98004 for an empty CUITDelegado (98006), the service checked before the signature, and a refusal's PeriodoFiscal and CantidadEmpleados, which carry sample values." }
 ]

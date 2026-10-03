@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ArcaSim's reconstruction of the TRABAJO_F931 (SSF931) WSDL from the manual "Consulta de F931
+  para el MTEySS" (revision of 23/08/2010). This is NOT a file ARCA publishes: ARCA's own WSDL
+  could not be reached anywhere (docs/arca/servicios/TRABAJO_F931.md).
+  From the manual's ASMX help pages: the operations getRemEmpleado and getDeterminativa, every
+  element name and its order, string for every request field, decimal and long in the answers,
+  the namespace http://tempuri.org/, the SOAPAction http://tempuri.org/<operation>, SOAP 1.1 and
+  the path /WebService/F931.asmx (the host is the help page's localhost).
+  ArcaSim's choices, not in the manual: the type names, minOccurs as ASMX writes them (0 for
+  strings and classes, 1 for decimal and long), the service and port names after F931.asmx,
+  the SOAP 1.1 binding alone and no dummy operation.
+-->
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://tempuri.org/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://tempuri.org/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://tempuri.org/">
+      <s:element name="getRemEmpleado">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="credencial" type="tns:Credencial" />
+            <s:element minOccurs="0" maxOccurs="1" name="cuitEmpleador" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="cuilEmpleado" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="periodo" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="Credencial">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Token" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Sign" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CUITDelegado" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="getRemEmpleadoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="getRemEmpleadoResult" type="tns:RemEmpleado" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RemEmpleado">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoRespuesta" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescripcionRespuesta" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="PeriodoFiscal" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="RemuneracionTotal" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="RemuneracionImponibleAPSS" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="RemuneracionImponibleCOSS" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="getDeterminativa">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="credencial" type="tns:Credencial" />
+            <s:element minOccurs="0" maxOccurs="1" name="cuitEmpleador" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="periodo" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="getDeterminativaResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="getDeterminativaResult" type="tns:Determinativa" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="Determinativa">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="CodigoRespuesta" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="DescripcionRespuesta" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="PeriodoFiscal" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="RemuneracionTotal" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="RemuneracionImponibleAPSS" type="s:decimal" />
+          <s:element minOccurs="1" maxOccurs="1" name="CantidadEmpleados" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="getRemEmpleadoSoapIn">
+    <wsdl:part name="parameters" element="tns:getRemEmpleado" />
+  </wsdl:message>
+  <wsdl:message name="getRemEmpleadoSoapOut">
+    <wsdl:part name="parameters" element="tns:getRemEmpleadoResponse" />
+  </wsdl:message>
+  <wsdl:message name="getDeterminativaSoapIn">
+    <wsdl:part name="parameters" element="tns:getDeterminativa" />
+  </wsdl:message>
+  <wsdl:message name="getDeterminativaSoapOut">
+    <wsdl:part name="parameters" element="tns:getDeterminativaResponse" />
+  </wsdl:message>
+  <wsdl:portType name="F931Soap">
+    <wsdl:operation name="getRemEmpleado">
+      <wsdl:input message="tns:getRemEmpleadoSoapIn" />
+      <wsdl:output message="tns:getRemEmpleadoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="getDeterminativa">
+      <wsdl:input message="tns:getDeterminativaSoapIn" />
+      <wsdl:output message="tns:getDeterminativaSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="F931Soap" type="tns:F931Soap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="getRemEmpleado">
+      <soap:operation soapAction="http://tempuri.org/getRemEmpleado" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="getDeterminativa">
+      <soap:operation soapAction="http://tempuri.org/getDeterminativa" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="F931">
+    <wsdl:port name="F931Soap" binding="tns:F931Soap">
+      <soap:address location="http://localhost/WebService/F931.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
