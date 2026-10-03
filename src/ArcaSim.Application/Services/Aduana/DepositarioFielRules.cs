@@ -57,7 +57,8 @@ internal static class Legajos
 
     public static readonly DateTimeOffset None = new(1, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
-    public static readonly string[] Codes = ["000", "001", "002", "003", "004", "100", "101"];
+    /// <summary>The carpeta codes, from the reference table wgesTabRef serves.</summary>
+    public static readonly string[] Codes = AduanaTables.Find("DFCOD_DESC")!.Rows.Select(r => r.Codigo).ToArray();
 
     public static string Required(string field) => $"Error Atributo/Parametro: \"{field}\" Obligatorio";
 

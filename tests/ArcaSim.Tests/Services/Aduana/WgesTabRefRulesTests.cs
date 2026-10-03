@@ -36,6 +36,22 @@ public class WgesTabRefRulesTests
     }
 
     [Fact]
+    public async Task Every_view_lists_the_same_codes_and_there_are_no_company_tables()
+    {
+        await using var kit = await AduanaKit.StartAsync();
+        var tabref = await TabRefAsync(kit);
+
+        var places = await tabref.CallAsync("ListaLugaresOperativos", "<IdReferencia>ESTCEL_DESC</IdReferencia>");
+        var validity = await tabref.CallAsync("ListaVigencias", "<IdReferencia>ETAPEMA_DESC</IdReferencia>");
+        var companies = await tabref.CallAsync("ListaEmpresas", "<IdReferencia>DFEST_DESC</IdReferencia>");
+
+        Assert.Equal(["CIDE", "SOAC", "ACTI", "SODE", "DESA"], places.All("Codigo").Select(c => c.Value));
+        Assert.All(validity.All("VigenciaHasta"), v => Assert.Equal("30001231", v.Value));
+        Assert.Equal("10121", companies.Code());
+        Assert.Empty(companies.All("Empresa"));
+    }
+
+    [Fact]
     public async Task A_table_it_does_not_have_answers_no_data()
     {
         await using var kit = await AduanaKit.StartAsync();

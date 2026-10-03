@@ -99,13 +99,26 @@ public sealed class WgesTabRefRules : IServiceBehavior
             case "ListaDescripcion":
             case "ListaVigencias":
             case "ListaDescripcionDecodificacion":
+            case "ListaPaisesAduanas":
+            case "ListaArancel":
+            case "ListaLugaresOperativos":
+            case "ListaDatoComplementario":
                 return Rows(call);
+            case "ListaEmpresas":
+            case "DocumentosVigentes":
+                var none = Result(call, 10121, Dia.NoData, call.Request.Text("IdReferencia") ?? "");
+                none.Descendants().Where(e => e.Name.LocalName is "Empresa" or "VigenciaIndicador").Remove();
+                return call.Done(none);
             default:
                 return null;
         }
     }
 
-    /// <summary>The rows of a table listed by ListaDescripcion; the vigencias and codificaciones views of the same rows.</summary>
+    /// <summary>
+    /// The rows of a table in the view each method gives: code and description,
+    /// with validity, ISO code, country, aduana or option where the view has
+    /// them. ArcaSim has no company tables, so ListaEmpresas finds none.
+    /// </summary>
     private static ContractAnswer Rows(ServiceCall call)
     {
         var id = call.Request.Text("IdReferencia") ?? "";
@@ -115,16 +128,19 @@ public sealed class WgesTabRefRules : IServiceBehavior
         {
             "ListaVigencias" => "Vigencia",
             "ListaDescripcionDecodificacion" => "DescripcionCodificacion",
+            "ListaPaisesAduanas" => "PaisAduana",
+            "ListaArancel" => "Opcion",
+            "ListaLugaresOperativos" => "LugarOperativo",
+            "ListaDatoComplementario" => "DatoComplementario",
             _ => "Descripcion",
         };
         var holder = answer.Descendants().First(e => e.Name.LocalName == item && e.HasElements);
         holder.Parent!.Repeat(item, table?.Rows ?? [], (row, value) =>
         {
-            row.Set("Codigo", value.Codigo);
-            row.Elements().First(e => e.Name.LocalName == "Descripcion").Value = value.Descripcion;
-            row.Set("VigenciaDesde", value.Desde);
-            row.Set("VigenciaHasta", value.Hasta);
-            row.Set("CodigoIso", value.Codigo);
+            // Direct children only: Descripcion, Opcion and LugarOperativo are also the names of their rows.
+            foreach (var (field, text) in new[] { ("Codigo", value.Codigo), ("Descripcion", value.Descripcion), ("VigenciaDesde", value.Desde),
+                         ("VigenciaHasta", value.Hasta), ("CodigoIso", value.Codigo) })
+                if (row.Elements().FirstOrDefault(e => e.Name.LocalName == field) is { } child) child.Value = text;
         });
         return call.Done(answer);
     }

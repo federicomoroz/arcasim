@@ -44,7 +44,7 @@ internal static class Dia
     {
         var answer = call.Error(code, text);
         if (answer.Body is not { } body) return answer;
-        var codeElement = body.Descendants().FirstOrDefault(e => CodeNames.Contains(e.Name.LocalName) || e.Name.LocalName == "Codigo");
+        var codeElement = body.Descendants().FirstOrDefault(e => CodeNames.Contains(e.Name.LocalName));
         var block = codeElement?.Parent;
         foreach (var leaf in body.Descendants().Where(e => !e.HasElements && e.Value == "1" && e != codeElement && (block is null || !e.Ancestors().Contains(block))))
             leaf.Value = "0";

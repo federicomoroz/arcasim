@@ -32,7 +32,6 @@ public sealed class WDiaUtiDesRules(IDocumentStore store, ITaxpayerRepository ta
     private const string Padron = "WDiaUtiDES.padron";
     private const string Uses = "WDiaUtiDES.dispositivos";
     private const string TripOk = "Procedimiento terminado OK.";
-    private static readonly string[] States = ["ZGSA", "PASA", "ZGAR", "DISP", "PFER"];
     private static readonly string[] Assigned = ["ZGSA", "PASA", "ZGAR"];
 
     /// <summary>The states a device has to be in to move to each state (manual pp.12-14).</summary>
@@ -146,7 +145,7 @@ public sealed class WDiaUtiDesRules(IDocumentStore store, ITaxpayerRepository ta
         if (Dia.FirstMissing(arg, required) is { } missing) return call.Fail(42034, Dia.MissingText(missing));
         if (!Dia.TryDayMonthYear(arg.Field(dateField), out var date)) return call.Fail(10238, "Formato fecha inválido");
         var target = stateField is null ? "ZGSA" : arg.Field(stateField);
-        if (!States.Contains(target))
+        if (!AduanaTables.Has("ETAPEMA_DESC", target))
             return call.Fail(31353, "El campo Estado tiene un formato erroneo. Debe ser ZGSA, PASA, ZGAR, DISP o PFER");
 
         var id = arg.Field("IdentificadorDispositivo");
