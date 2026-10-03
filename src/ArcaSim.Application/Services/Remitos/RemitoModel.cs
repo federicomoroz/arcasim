@@ -57,6 +57,11 @@ public sealed class Remito
     /// <summary>Each contingency as it was informed, without namespaces.</summary>
     public List<string> Contingencies { get; set; } = [];
 
+    /// <summary>Azúcar's quantities received and lost by item order, which its remito element has no place for.</summary>
+    public Dictionary<int, long> Received { get; set; } = new();
+
+    public Dictionary<int, long> Lost { get; set; } = new();
+
     public List<RemitoStep> History { get; set; } = [];
 
     public string State => History.Count == 0 ? "" : History[^1].State;
