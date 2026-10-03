@@ -126,6 +126,15 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
             .Where(p => p.Kind == PointOfSaleKind.WebServiceCae && !p.Blocked && (p.DeactivatedOn is null || p.DeactivatedOn > Today))
             .OrderBy(p => p.Number).ToList() ?? [];
 
+    /// <summary>A VAT condition as the liquidations print it; the manuals show no list, so the wording is ArcaSim's.</summary>
+    public static string VatText(VatCondition condition) => condition switch
+    {
+        VatCondition.ResponsableInscripto => "IVA Responsable Inscripto",
+        VatCondition.Exento => "IVA Sujeto Exento",
+        VatCondition.Monotributo or VatCondition.MonotributistaSocial or VatCondition.MonotributoTrabajadorIndependientePromovido => "Responsable Monotributo",
+        _ => "IVA No Alcanzado",
+    };
+
     /// <summary>The address a point of sale shows: the taxpayer's fiscal address, the only one ArcaSim knows.</summary>
     public static string AddressOf(Taxpayer? taxpayer)
     {
