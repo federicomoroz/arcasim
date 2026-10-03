@@ -43,17 +43,20 @@ public sealed class ServiceCall(
     public SampleContext Context { get; } = context;
 
     /// <summary>The contract's answer with data, values the service always sends already in place, ready to be adjusted.</summary>
-    public XElement Sample() => ContractHost.Apply(sampler.Sample(Operation.Output, Context), Definition);
+    public XElement Sample() => ContractHost.Apply(sampler.Sample(Operation.Output, Context), Definition, Context);
 
-    public XElement Sample(XName element) => ContractHost.Apply(sampler.Sample(element, Context), Definition);
+    public XElement Sample(XName element) => ContractHost.Apply(sampler.Sample(element, Context), Definition, Context);
 
     public ContractAnswer Ok(XElement body) => new(body, Headers(), null);
 
     /// <summary>A business error the way the service reports it: in its error block when the response has one, else as a fault.</summary>
-    public ContractAnswer Error(long code, string message) =>
-        sampler.ErrorResponse(Operation.Output, Context, code, message, Definition.Errors.Shape) is { } body
-            ? new(ContractHost.Apply(body, Definition), Headers(), null)
-            : Fault($"{message}");
+    public ContractAnswer Error(long code, string message) => Errors([(code, message)]);
+
+    /// <summary>Several business errors in one answer, each in its own row of the error block; a fault with the first when there is no block.</summary>
+    public ContractAnswer Errors(IReadOnlyList<(long Code, string Message)> errors) =>
+        sampler.ErrorResponse(Operation.Output, Context, errors, Definition.Errors.Shape) is { } body
+            ? new(ContractHost.Apply(body, Definition, Context), Headers(), null)
+            : Fault(errors.Count > 0 ? errors[0].Message : "");
 
     public ContractAnswer Fault(string message, string? code = null) =>
         ContractAnswer.Failed(new SoapFault(code ?? Definition.Errors.FaultCode, message,
@@ -75,7 +78,24 @@ public sealed class ContractHost(
 
     public ServiceCatalog Catalog => catalog;
 
+    /// <summary>Where a fault's detail is written as it comes, not as an element: its Value goes inside detail untouched.</summary>
+    public static readonly XName DetailFragment = XName.Get("fragment", "urn:arcasim:detail");
+
     public ServiceContract ContractOf(ServiceDefinition definition) => Load(definition).Contract;
+
+    /// <summary>ArcaSim's clock, for what the endpoint writes on its own (the balancer's mask).</summary>
+    public DateTimeOffset Now => clock.Now;
+
+    /// <summary>Any element of the service's schema with data and the service's fixed values, as an answer outside SOAP needs it (the HTTP GET dummy).</summary>
+    public XElement SampleOf(ServiceDefinition definition, XName element)
+    {
+        var context = new SampleContext(0, clock.Now) { Always = definition.Always };
+        return Apply(Load(definition).Sampler.Sample(element, context), definition, context);
+    }
+
+    /// <summary>The header the service sends that its WSDL does not declare, with this moment's values; null when it sends none.</summary>
+    public string? HeaderOf(ServiceDefinition definition) =>
+        definition.Header is { } header ? Placeholders.Fill(header, new PlaceholderValues(clock.Now) { Service = definition.Id }) : null;
 
     public bool HasRules(ServiceDefinition definition) => _behaviors.Contains(definition.Id);
 
@@ -89,18 +109,19 @@ public sealed class ContractHost(
     public async Task<ContractAnswer> AnswerAsync(ServiceDefinition definition, OperationContract operation, XElement? request, CancellationToken ct)
     {
         var (contract, sampler) = Load(definition);
-        var context = new SampleContext(0, clock.Now);
+        var context = new SampleContext(0, clock.Now) { Always = definition.Always };
         long cuit = 0;
 
         if (operation.Input is not null && sampler.CarriesTicket(operation.Input))
         {
-            var auth = AuthOf(request, definition.Errors.CuitField);
+            var auth = AuthOf(request, definition.Errors);
             cuit = auth.Cuit;
             var check = tickets.Check(auth.Token, auth.Sign, cuit, definition.Wsaa);
             if (check.Failed)
             {
-                var refusal = Refuse(definition, contract, sampler, operation, check, context);
-                events.Publish(new ServiceCalled(DateTimeOffset.UtcNow, definition.Id, operation.Name, cuit, "error", TextOf(definition, check)));
+                var rows = RowsFor(definition, check, auth, context.Now);
+                var refusal = Refuse(definition, contract, sampler, operation, rows, context with { Cuit = cuit });
+                events.Publish(new ServiceCalled(DateTimeOffset.UtcNow, definition.Id, operation.Name, cuit, "error", rows[0].Text));
                 return refusal;
             }
             context = context with { Cuit = cuit };
@@ -118,69 +139,152 @@ public sealed class ContractHost(
     }
 
     /// <summary>Fixed values the service always sends, by element name: FEHeaderInfo's ambiente and version, a server name.</summary>
-    public static XElement Apply(XElement answer, ServiceDefinition definition)
+    public static XElement Apply(XElement answer, ServiceDefinition definition) => Apply(answer, definition, new SampleContext(0, DateTimeOffset.Now));
+
+    /// <summary>
+    /// The same, with the placeholders filled for this answer: values go by
+    /// element name or by "Parent/Child" path, the path winning; the elements
+    /// in Drop are taken out.
+    /// </summary>
+    public static XElement Apply(XElement answer, ServiceDefinition definition, SampleContext context)
     {
-        if (definition.Values is null) return answer;
+        if (definition.Drop is { Length: > 0 } drop)
+            foreach (var element in answer.Descendants().Where(e => drop.Any(d => Matches(e, d))).ToList())
+                element.Remove();
+        if (definition.Values is not { Count: > 0 } values) return answer;
+        var fill = new PlaceholderValues(context.Now) { Service = definition.Id, Cuit = context.Cuit };
         foreach (var element in answer.DescendantsAndSelf().Where(e => !e.HasElements))
-            if (definition.Values.TryGetValue(element.Name.LocalName, out var value))
-                element.Value = value;
+        {
+            var path = element.Parent is { } parent ? $"{parent.Name.LocalName}/{element.Name.LocalName}" : null;
+            var key = path is not null && values.ContainsKey(path) ? path : element.Name.LocalName;
+            if (values.TryGetValue(key, out var value) && value is not null)
+                element.Value = Placeholders.Fill(value, fill);
+        }
         return answer;
+    }
+
+    private static bool Matches(XElement element, string path)
+    {
+        var slash = path.IndexOf('/');
+        return slash < 0
+            ? element.Name.LocalName == path
+            : element.Name.LocalName == path[(slash + 1)..] && element.Parent?.Name.LocalName == path[..slash];
     }
 
     // ---- Tickets ---------------------------------------------------------------------
 
-    private sealed record Auth(string? Token, string? Sign, long Cuit);
+    /// <summary>
+    /// The ticket as the request carries it: the token, the sign, the CUIT it
+    /// acts for, whether both elements came at all, and the request's root
+    /// element as the client wrote it (prefix included).
+    /// </summary>
+    private sealed record Auth(string? Token, string? Sign, long Cuit, bool HasTicket, string Element);
 
     /// <summary>
     /// The token, the sign and the represented CUIT wherever the service puts
     /// them: in Auth or authRequest or auth, or loose in the request, as the
-    /// padrón does. The CUIT is the one next to the token.
+    /// padrón does. The CUIT is the one next to the token, or the ticket's own
+    /// when the request carries none.
     /// </summary>
-    private static Auth AuthOf(XElement? request, string? cuitField)
+    private static Auth AuthOf(XElement? request, AuthErrors errors)
     {
-        if (request is null) return new(null, null, 0);
+        if (request is null) return new(null, null, 0, false, "");
+        var prefix = request.GetPrefixOfNamespace(request.Name.Namespace);
+        var element = string.IsNullOrEmpty(prefix) ? request.Name.LocalName : $"{prefix}:{request.Name.LocalName}";
         var token = request.Descendants().FirstOrDefault(e => e.Name.LocalName.Equals("token", StringComparison.OrdinalIgnoreCase));
         var scope = token?.Parent ?? request;
         var sign = scope.Elements().FirstOrDefault(e => e.Name.LocalName.Equals("sign", StringComparison.OrdinalIgnoreCase)
                                                         || e.Name.LocalName.Equals("firma", StringComparison.OrdinalIgnoreCase));
+        var hasTicket = token is not null && sign is not null;
+        if (errors.CuitFromTicket) return new(token?.Value, sign?.Value, TicketCuit(token?.Value), hasTicket, element);
         var near = scope.Elements().Where(e => e.Name.LocalName.Contains("cuit", StringComparison.OrdinalIgnoreCase)).ToList();
-        var cuit = cuitField is not null
+        var cuit = errors.CuitField is { } cuitField
             ? request.Descendants().FirstOrDefault(e => e.Name.LocalName.Equals(cuitField, StringComparison.OrdinalIgnoreCase))
             : near.FirstOrDefault(e => e.Name.LocalName.Contains("represent", StringComparison.OrdinalIgnoreCase)) ?? near.FirstOrDefault()
               ?? request.Descendants().FirstOrDefault(e => e.Name.LocalName.StartsWith("cuitRepresentad", StringComparison.OrdinalIgnoreCase));
         long.TryParse(cuit?.Value.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var number);
-        return new(token?.Value, sign?.Value, number);
+        return new(token?.Value, sign?.Value, number, hasTicket, element);
     }
 
-    private static ContractAnswer Refuse(
-        ServiceDefinition definition, ServiceContract contract, SchemaSampler sampler, OperationContract operation, TicketCheck check, SampleContext context)
+    /// <summary>The first CUIT among the ticket's relations, for services whose request names none; 0 when the token does not read.</summary>
+    private static long TicketCuit(string? token)
+    {
+        try
+        {
+            var login = XDocument.Parse(System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token ?? "")));
+            var key = login.Descendants("relation").Select(r => r.Attribute("key")?.Value).FirstOrDefault();
+            return long.TryParse(key, NumberStyles.None, CultureInfo.InvariantCulture, out var cuit) ? cuit : 0;
+        }
+        catch (Exception ex) when (ex is FormatException or System.Xml.XmlException)
+        {
+            return 0;
+        }
+    }
+
+    /// <summary>One error of a refusal, resolved: its code, its text and how it travels.</summary>
+    private sealed record Refusal(long Code, string Text, string? Detail, bool Fault, string? FaultCode, int? Status);
+
+    /// <summary>
+    /// What the service answers for this problem: its catalog rows ("NoTicket"
+    /// when the elements did not come, then the problem, then "*"), each
+    /// completed with the service's code and text; or one error with them.
+    /// </summary>
+    private static List<Refusal> RowsFor(ServiceDefinition definition, TicketCheck check, Auth auth, DateTimeOffset now)
     {
         var errors = definition.Errors;
-        var text = TextOf(definition, check);
-        if (errors.InBody && sampler.ErrorResponse(operation.Output, context, errors.CodeFor(check.Problem), errors.Prefix + text, errors.Shape) is { } body)
-            return new(Apply(body, definition), operation.OutputHeaders.Select(h => Apply(sampler.Sample(h, context), definition)).ToList(), null);
-        return ContractAnswer.Failed(new SoapFault(errors.FaultCode, text,
-            errors.Detail is { } detail ? new XElement(XName.Get(detail, contract.TargetNamespace)) : null, errors.Status));
+        var configured = (auth.HasTicket ? null : Row(errors, "NoTicket")) ?? Row(errors, check.Problem.ToString()) ?? Row(errors, "*");
+        var values = new PlaceholderValues(check.Now != 0 ? DateTimeOffset.FromUnixTimeSeconds(check.Now) : now)
+        {
+            Service = definition.Id,
+            Cuit = check.Cuit,
+            Detail = check.Detail,
+            TokenService = check.TokenService,
+            GenerationTime = check.GenerationTime,
+            ExpirationTime = check.ExpirationTime,
+            Token = auth.Token,
+            Sign = auth.Sign,
+            Element = auth.Element,
+        };
+        var fallback = Placeholders.Fill(errors.Texts?.GetValueOrDefault(check.Problem) ?? DefaultTexts(definition.Dialect, definition.Wsaa[0])[check.Problem], values);
+        return (configured is { Length: > 0 } rows ? rows : [new AuthRow()])
+            .Select(row => new Refusal(
+                row.Code != 0 ? row.Code : errors.CodeFor(check.Problem),
+                row.Text is { } text ? Placeholders.Fill(text, values) : (errors.InBody && !row.Fault ? errors.Prefix : "") + fallback,
+                row.Detail is { } detail ? Placeholders.Fill(detail, values) : null,
+                row.Fault,
+                row.FaultCode,
+                row.Status))
+            .ToList();
     }
 
-    private static string TextOf(ServiceDefinition definition, TicketCheck check) =>
-        definition.Errors.Texts?.GetValueOrDefault(check.Problem) is { } text
-            ? Fill(text, check)
-            : Fill(DefaultTexts(definition.Dialect, definition.Wsaa[0])[check.Problem], check);
+    private static AuthRow[]? Row(AuthErrors errors, string key) =>
+        errors.Rows?.FirstOrDefault(r => r.Key.Equals(key, StringComparison.OrdinalIgnoreCase)).Value;
 
-    private static string Fill(string text, TicketCheck check) => text
-        .Replace("{cuit}", check.Cuit.ToString(CultureInfo.InvariantCulture))
-        .Replace("{detail}", check.Detail ?? "")
-        .Replace("{service}", check.TokenService ?? "")
-        .Replace("{gen}", check.GenerationTime.ToString(CultureInfo.InvariantCulture))
-        .Replace("{exp}", check.ExpirationTime.ToString(CultureInfo.InvariantCulture))
-        .Replace("{now}", check.Now.ToString(CultureInfo.InvariantCulture));
+    private static ContractAnswer Refuse(
+        ServiceDefinition definition, ServiceContract contract, SchemaSampler sampler, OperationContract operation, List<Refusal> rows, SampleContext context)
+    {
+        var errors = definition.Errors;
+        var first = rows[0];
+        if (errors.InBody && !first.Fault
+            && sampler.ErrorResponse(operation.Output, context, rows.Select(r => (r.Code, r.Text)).ToList(), errors.Shape) is { } body)
+            return new(Apply(body, definition, context), operation.OutputHeaders.Select(h => Apply(sampler.Sample(h, context), definition, context)).ToList(), null);
+        var detail = first.Detail switch
+        {
+            null => errors.Detail is { } name ? new XElement(XName.Get(name, contract.TargetNamespace)) : null,
+            "" => null,
+            var fragment => new XElement(DetailFragment, fragment),
+        };
+        return ContractAnswer.Failed(new SoapFault(first.FaultCode ?? errors.FaultCode, first.Text, detail, first.Status ?? errors.Status));
+    }
 
     /// <summary>
     /// How each family words a refused ticket when the service's own texts are
     /// not known. ASMX: wsfev1's, observed in homologación. CXF: the padrón's,
-    /// observed. JAX-WS: "[wscommon_007]" is the one text a manual prints
-    /// (wsfecred, wslpg); the others follow its style and are ArcaSim's.
+    /// observed. JAX-WS: "[wscommon_007]" is the text the manuals print
+    /// (wsfecred, wslpg, wstabaco...) and "[wscommon_002]" the expired token a
+    /// 2021 wsct capture shows; the others are ArcaSim's, without a code, since
+    /// none is documented. Axis2: wsmtxca's, observed in producción; the wrong
+    /// service and the CUIT outside the relations are ArcaSim's.
     /// </summary>
     public static IReadOnlyDictionary<TicketProblem, string> DefaultTexts(Dialect dialect, string service) => dialect switch
     {
@@ -204,15 +308,29 @@ public sealed class ContractHost(
             [TicketProblem.WrongService] = "No autorizado, par token/sign invalido.",
             [TicketProblem.CuitNotRelated] = "Este token no le permite actuar en representacion de la CUIT {cuit}",
         },
+        Dialect.Axis2 => new Dictionary<TicketProblem, string>
+        {
+            [TicketProblem.MissingToken] = "Token inválido",
+            [TicketProblem.MissingSign] = "Token inválido",
+            [TicketProblem.Unreadable] = "Token inválido",
+            [TicketProblem.OutOfDate] = ExpiredToken,
+            [TicketProblem.BadSignature] = "La firma no corresponde al token enviado.",
+            [TicketProblem.WrongService] = $"Acceso Denegado  - El token no corresponde al servicio {service}.",
+            [TicketProblem.CuitNotRelated] = "Acceso Denegado  - La CUIT {cuit} no se encuentra entre los representados del token.",
+        },
         _ => new Dictionary<TicketProblem, string>
         {
-            [TicketProblem.MissingToken] = "[wscommon_001] El token no fue informado.",
-            [TicketProblem.MissingSign] = "[wscommon_002] La firma no fue informada.",
-            [TicketProblem.Unreadable] = "[wscommon_003] El token no tiene un formato valido.",
-            [TicketProblem.OutOfDate] = "[wscommon_004] El token esta vencido.",
+            [TicketProblem.MissingToken] = "El token no fue informado.",
+            [TicketProblem.MissingSign] = "La firma no fue informada.",
+            [TicketProblem.Unreadable] = "El token no tiene un formato valido.",
+            [TicketProblem.OutOfDate] = "[wscommon_002] " + ExpiredToken,
             [TicketProblem.BadSignature] = "[wscommon_007] La firma no corresponde al token enviado.",
-            [TicketProblem.WrongService] = $"[wscommon_005] El token no corresponde al servicio {service}.",
-            [TicketProblem.CuitNotRelated] = "[wscommon_006] La CUIT {cuit} no se encuentra entre los representados del token.",
+            [TicketProblem.WrongService] = $"El token no corresponde al servicio {service}.",
+            [TicketProblem.CuitNotRelated] = "La CUIT {cuit} no se encuentra entre los representados del token.",
         },
     };
+
+    /// <summary>The expired token as the Java services print it (wsmtxca live, wsct 2021, the wscta manual).</summary>
+    private const string ExpiredToken =
+        "Token vencido Fecha y Hora de Vencimiento del Token Enviado: {exp:dd-MM-yyyy HH:mm:ss} - Fecha y Hora Actual del Servidor: {now:dd-MM-yyyy HH:mm:ss}";
 }

@@ -23,7 +23,11 @@ public sealed record TaxpayerBody(string Name, VatCondition VatCondition, bool A
 
 public sealed record CertificateBody(long Cuit, string Alias, string? Csr, string? Password, List<string>? Services);
 
-public sealed record ChaosBody(bool? Down, int? DelayMilliseconds, bool? DropNextResponse, int? ForceRejection);
+public sealed record ChaosBody(bool? Down, int? DelayMilliseconds, bool? DropNextResponse, int? ForceRejection)
+{
+    /// <summary>fwshomo's F5 mask over every fault (ServiceChaos.BalancerMask).</summary>
+    public bool? BalancerMask { get; init; }
+}
 
 public sealed record ClockBody(DateTimeOffset? FreezeAt, double? AdvanceMinutes);
 
@@ -31,7 +35,10 @@ public sealed record RateBody(string Currency, DateOnly Day, decimal Rate);
 
 public sealed record ErrorView(string Error);
 
-public sealed record ChaosView(bool Down, int DelayMilliseconds, bool DropNextResponse, int PendingForcedRejections);
+public sealed record ChaosView(bool Down, int DelayMilliseconds, bool DropNextResponse, int PendingForcedRejections)
+{
+    public bool BalancerMask { get; init; }
+}
 
 public sealed record ClockView(DateTimeOffset Now, bool Frozen);
 
@@ -62,7 +69,7 @@ public sealed record StatusView(
             settings.CaeLifetimeDays,
             new ClockView(now, clock.Frozen),
             settings.Chaos.ToDictionary(c => c.Key, c => new ChaosView(
-                c.Value.Down, (int)c.Value.Delay.TotalMilliseconds, c.Value.DropNextResponse, c.Value.PendingForcedRejections)));
+                c.Value.Down, (int)c.Value.Delay.TotalMilliseconds, c.Value.DropNextResponse, c.Value.PendingForcedRejections) { BalancerMask = c.Value.BalancerMask }));
     }
 }
 
