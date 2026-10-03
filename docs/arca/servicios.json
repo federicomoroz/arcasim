@@ -420,7 +420,7 @@
     "notes": "Verified live (homologación 2026-10-02): WSAA id wEnysa (README), MsgError 503 for an empty token, 1 'Error Interno' for a bad one, the null-reference fault without autenticacion; the request carries no CUIT, so the ticket's own acts. Manual: 500, 501, 504. Not expressible: 'ID: n' in descripcionAdicional with the 'Error Interno', and ConsultaDatosVehiculo always failing with the null-reference fault." },
 
   // ---- Producción solamente ------------------------------------------------------------
-  { "id": "wscta", "name": "Certificados de transferencia de automotores (WSCTA)", "group": "organismos", "wsdl": "wscta-produccion.wsdl", "wsaa": ["wscta"],
+  { "id": "wscta", "name": "Certificados de transferencia de automotores (WSCTA)", "group": "organismos", "level": "reglas", "wsdl": "wscta-produccion.wsdl", "wsaa": ["wscta"],
     "dialect": "Axis2", "prefix": "ns1",
     "auth": { "faultCode": "soapenv:Client",
       "rows": { "OutOfDate": [{ "faultCode": "soapenv:Server" }] } },
