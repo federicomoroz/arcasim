@@ -1,0 +1,154 @@
+using System.Globalization;
+using System.Text;
+using System.Xml.Linq;
+using System.Xml.Schema;
+using ArcaSim.Application.Contracts;
+
+namespace ArcaSim.Application.Services.CpeGranos;
+
+/// <summary>
+/// Turns a contract sample into an answer about a stored document: copies the
+/// values of a stored request into the sample by element name, then removes
+/// the optional elements nothing filled, so the answer says only what the
+/// document has and still follows the schema's order and cardinality.
+/// </summary>
+internal sealed class AnswerFill
+{
+    private readonly HashSet<XElement> _filled = [];
+    private readonly Dictionary<string, XmlSchemaElement?> _declarations = new(StringComparer.Ordinal);
+
+    public AnswerFill(XElement sample, XmlSchemaSet schemas)
+    {
+        Root = sample;
+        var copy = new XDocument(new XElement(sample));
+        copy.Validate(schemas, (_, _) => { }, addSchemaInfo: true);
+        foreach (var element in copy.Root!.DescendantsAndSelf())
+            _declarations.TryAdd(PathOf(element), element.GetSchemaInfo()?.SchemaElement);
+    }
+
+    public XElement Root { get; }
+
+    /// <summary>The first element with that name under the scope, marked as filled with the value.</summary>
+    public XElement? Set(XElement scope, string name, object? value)
+    {
+        var target = scope.Find(name);
+        if (target is null) return null;
+        target.Value = ContractXml.Format(value);
+        _filled.Add(target);
+        return target;
+    }
+
+    /// <summary>Marks an element, and everything in it, as part of the answer.</summary>
+    public void Keep(XElement element)
+    {
+        foreach (var e in element.DescendantsAndSelf()) _filled.Add(e);
+    }
+
+    /// <summary>
+    /// Copies the source into the target by local name: children of the same
+    /// name first, and for a value the target has but the source keeps deeper
+    /// (origen/operador/planta for origen/planta), the first one below. A list
+    /// in the source becomes as many copies as the schema allows.
+    /// </summary>
+    public void Merge(XElement? target, XElement? source)
+    {
+        if (target is null || source is null) return;
+        if (!target.HasElements)
+        {
+            if (source.HasElements) return;
+            target.Value = source.Value;
+            _filled.Add(target);
+            return;
+        }
+        foreach (var child in target.Elements().ToList())
+        {
+            var name = child.Name.LocalName;
+            var matches = source.Elements().Where(e => e.Name.LocalName == name).ToList();
+            if (matches.Count == 0 && !child.HasElements)
+                matches = source.Descendants().Where(e => e.Name.LocalName == name && !e.HasElements).Take(1).ToList();
+            if (matches.Count == 0) continue;
+            var template = new XElement(child);
+            Merge(child, matches[0]);
+            var max = Declaration(child)?.MaxOccurs ?? 1;
+            var anchor = child;
+            foreach (var more in matches.Skip(1).Take((int)Math.Min(max - 1, 50)))
+            {
+                var copy = new XElement(template);
+                anchor.AddAfterSelf(copy);
+                anchor = copy;
+                Merge(copy, more);
+            }
+        }
+    }
+
+    /// <summary>The answer without the optional elements nothing filled; required ones keep the sample's values.</summary>
+    public XElement Done()
+    {
+        Prune(Root);
+        return Root;
+    }
+
+    private bool Prune(XElement element)
+    {
+        if (!element.HasElements) return _filled.Contains(element);
+        var holds = _filled.Contains(element);
+        foreach (var child in element.Elements().ToList())
+        {
+            if (Prune(child)) holds = true;
+            else if (Declaration(child) is { MinOccurs: 0 }) child.Remove();
+        }
+        return holds;
+    }
+
+    private XmlSchemaElement? Declaration(XElement element) => _declarations.GetValueOrDefault(PathOf(element));
+
+    private static string PathOf(XElement element) =>
+        string.Join('/', element.AncestorsAndSelf().Reverse().Select(e => e.Name.LocalName));
+}
+
+/// <summary>What wscpe and wslpg answers share: dates as ARCA writes them and the PDF they attach.</summary>
+internal static class GrainsFormat
+{
+    /// <summary>xsd:dateTime the way the manuals print it, in Argentina's time and without offset: 2016-11-17T11:32:23.</summary>
+    public static string DateTime(DateTimeOffset moment) =>
+        moment.ToArgentina().ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
+
+    /// <summary>xsd:date without zone (AAAA-MM-DD).</summary>
+    public static string Date(DateTimeOffset moment) => moment.ToArgentina().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    public static string Date(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    public static string Amount(decimal value, int decimals = 2) =>
+        Math.Round(value, decimals, MidpointRounding.ToEven).ToString("0." + new string('0', decimals), CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// The document's PDF: ARCA sends the same file its web application
+    /// prints; ArcaSim sends a one-page PDF naming the document, enough for a
+    /// client that stores or shows it.
+    /// </summary>
+    public static string Pdf(string title)
+    {
+        var text = title.Replace("(", "", StringComparison.Ordinal).Replace(")", "", StringComparison.Ordinal);
+        var stream = $"BT /F1 12 Tf 72 770 Td ({text}) Tj ET";
+        var objects = new[]
+        {
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+            $"<< /Length {stream.Length} >>\nstream\n{stream}\nendstream",
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        };
+        var pdf = new StringBuilder("%PDF-1.4\n");
+        var offsets = new List<int>();
+        for (var i = 0; i < objects.Length; i++)
+        {
+            offsets.Add(pdf.Length);
+            pdf.Append(CultureInfo.InvariantCulture, $"{i + 1} 0 obj\n{objects[i]}\nendobj\n");
+        }
+        var xref = pdf.Length;
+        pdf.Append(CultureInfo.InvariantCulture, $"xref\n0 {objects.Length + 1}\n0000000000 65535 f \n");
+        foreach (var offset in offsets) pdf.Append(CultureInfo.InvariantCulture, $"{offset:D10} 00000 n \n");
+        pdf.Append(CultureInfo.InvariantCulture, $"trailer\n<< /Size {objects.Length + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF");
+        return Convert.ToBase64String(Encoding.ASCII.GetBytes(pdf.ToString()));
+    }
+}
