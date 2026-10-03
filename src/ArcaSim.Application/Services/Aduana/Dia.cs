@@ -39,7 +39,8 @@ internal static class Dia
     /// it, with the counters the refused answer still carries back at zero and
     /// no sample filler around it.
     /// </summary>
-    public static ContractAnswer Fail(this ServiceCall call, long code, string text)
+    /// <param name="additional">What goes in DescAdicErr: the item of an array that was refused.</param>
+    public static ContractAnswer Fail(this ServiceCall call, long code, string text, string? additional = null)
     {
         var answer = call.Error(code, text);
         if (answer.Body is not { } body) return answer;
@@ -48,6 +49,8 @@ internal static class Dia
         foreach (var leaf in body.Descendants().Where(e => !e.HasElements && e.Value == "1" && e != codeElement && (block is null || !e.Ancestors().Contains(block))))
             leaf.Value = "0";
         body.Clean();
+        if (additional is not null && block?.Elements().FirstOrDefault(e => e.Name.LocalName == "DescAdicErr") is null)
+            block?.Add(new XElement(codeElement!.Name.Namespace + "DescAdicErr", additional));
         return answer;
     }
 
@@ -72,6 +75,13 @@ internal static class Dia
     /// <summary>The DIA's dd/mm/aaaa dates (ActualizaDispositivo, InicioCargaSuelta).</summary>
     public static bool TryDayMonthYear(string text, out DateOnly date) =>
         DateOnly.TryParseExact(text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
+
+    /// <summary>An xsd:dateTime as the services send it; one without an offset is Argentina's time.</summary>
+    public static DateTimeOffset? Moment(string text)
+    {
+        if (!DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var moment)) return null;
+        return moment.Kind == DateTimeKind.Unspecified ? new DateTimeOffset(moment, ArgentinaTime.Offset) : new DateTimeOffset(moment).ToArgentina();
+    }
 
     public static XName Name(this ServiceCall call, string local) => XName.Get(local, call.Contract.TargetNamespace);
 }
