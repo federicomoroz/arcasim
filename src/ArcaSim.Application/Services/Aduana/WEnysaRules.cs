@@ -114,8 +114,9 @@ public sealed class WEnysaRules(IDocumentStore store, IClock clock) : IServiceBe
     private static ContractAnswer Error(ServiceCall call, long code, string text, string? field)
     {
         var answer = call.Fail(code, text);
-        if (field is not null && answer.Body?.Descendants().FirstOrDefault(e => e.Name.LocalName == "descripcion") is { } description)
-            description.AddAfterSelf(new XElement(description.Name.Namespace + "descripcionAdicional", field));
+        if (field is null || answer.Body?.Descendants().FirstOrDefault(e => e.Name.LocalName == "descripcion") is not { } description) return answer;
+        if (description.ElementsAfterSelf().FirstOrDefault(e => e.Name.LocalName == "descripcionAdicional") is { } existing) existing.Value = field;
+        else description.AddAfterSelf(new XElement(description.Name.Namespace + "descripcionAdicional", field));
         return answer;
     }
 }

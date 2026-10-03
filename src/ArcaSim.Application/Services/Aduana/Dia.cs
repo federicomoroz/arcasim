@@ -49,8 +49,11 @@ internal static class Dia
         foreach (var leaf in body.Descendants().Where(e => !e.HasElements && e.Value == "1" && e != codeElement && (block is null || !e.Ancestors().Contains(block))))
             leaf.Value = "0";
         body.Clean();
-        if (additional is not null && block?.Elements().FirstOrDefault(e => e.Name.LocalName == "DescAdicErr") is null)
-            block?.Add(new XElement(codeElement!.Name.Namespace + "DescAdicErr", additional));
+        if (additional is not null && block is not null)
+        {
+            if (block.Elements().FirstOrDefault(e => e.Name.LocalName == "DescAdicErr") is { } existing) existing.Value = additional;
+            else block.Add(new XElement(codeElement!.Name.Namespace + "DescAdicErr", additional));
+        }
         return answer;
     }
 

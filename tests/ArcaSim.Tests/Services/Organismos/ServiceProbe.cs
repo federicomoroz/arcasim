@@ -59,7 +59,7 @@ internal sealed class ServiceProbe(ArcaSimHarness sim, ServiceContract contract,
 /// <summary>What came back: the Body's element, valid for the WSDL, or the fault's text.</summary>
 internal sealed record SoapAnswer(int Status, string Body, ServiceContract Contract)
 {
-    public XElement Element => XDocument.Parse(Body).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
+    public XElement Element => XDocument.Parse(ArcaSim.Tests.Contract.CatalogServiceTests.Soap(Body)).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
 
     /// <summary>The answer, after checking it is a 200 that validates against the WSDL: what a generated client deserializes.</summary>
     public XElement Valid()

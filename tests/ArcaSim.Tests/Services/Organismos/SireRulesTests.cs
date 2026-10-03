@@ -24,7 +24,7 @@ public class SireRulesTests
 
         var again = await sire.CallAsync("anular", Auth(sire) + Cancellation(number));
         Assert.Equal(500, again.Status);
-        Assert.Equal("soap:Client", again.FaultCode);
+        Assert.Equal("soapenv:Client", again.FaultCode);
         Assert.Equal($"El certificado {number} ya se encuentra anulado.", again.Fault);
     }
 
@@ -59,7 +59,7 @@ public class SireRulesTests
         var answer = await sire.CallAsync("emitir", Auth(sire) + Certificate().Replace(valid, wrong));
 
         Assert.Equal(500, answer.Status);
-        Assert.Equal("soap:Client", answer.FaultCode);
+        Assert.Equal("soapenv:Client", answer.FaultCode);
         Assert.Equal(expected, answer.Fault);
     }
 
