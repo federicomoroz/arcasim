@@ -88,6 +88,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
         var receiver = sent.Element("receptor")?.Element("receptorNacional").ChildLong("cuitReceptor");
         var year = _ledger.Today.Year;
 
+        using var requests = await _ledger.LockRequestsAsync(call.Cuit, point, ct);
         var problems = new List<RemitoProblem>();
         if (await _ledger.FindByRequestAsync(call.Cuit, point, requestId, ct) is not null)
             problems.Add(new RemitoProblem(151, $"El ID de request {requestId} ya existe para el punto de emisión {point}"));

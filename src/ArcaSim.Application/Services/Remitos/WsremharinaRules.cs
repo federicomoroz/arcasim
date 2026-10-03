@@ -89,6 +89,7 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         var depositary = sent.Element("depositario").ChildLong("cuitDepositario");
         var receiver = sent.Element("receptor")?.Element("receptorNacional").ChildLong("cuitReceptor");
 
+        using var requests = await _ledger.LockRequestsAsync(call.Cuit, point, ct);
         var problems = new List<RemitoProblem>();
         foreach (var party in new[] { call.Cuit, holder, depositary, receiver }.Distinct())
             if (await RemitoFamily.CheckPartyAsync(directory, party, ct) is { } problem && !problems.Contains(problem)) problems.Add(problem);
@@ -241,6 +242,7 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         if (original.Issuer != call.Cuit || original.State is not (RemitoStates.PartlyAccepted or RemitoStates.NotAccepted))
             return RemitoAnswer(call, "registrarRedestinoReturn", null, [NotAllowed]);
         var requestId = request.ChildLong("idReqCliente") ?? 0;
+        using var requests = await _ledger.LockRequestsAsync(call.Cuit, original.Point, ct);
         if (await _ledger.FindByRequestAsync(call.Cuit, original.Point, requestId, ct) is not null)
             return RemitoAnswer(call, "registrarRedestinoReturn", null,
                 [new RemitoProblem(151, $"El ID de request {requestId} ya existe para el punto de emisión {original.Point}")]);

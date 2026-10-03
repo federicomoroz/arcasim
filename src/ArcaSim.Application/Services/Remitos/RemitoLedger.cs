@@ -41,6 +41,9 @@ public sealed class RemitoLedger(string service, IDocumentStore store, SequenceL
 
     public async Task<long> NextCodeAsync(CancellationToken ct) => await store.NextAsync($"{service}.codRemito", ct);
 
+    /// <summary>One generation at a time per issuer and point of emission, so a request id cannot be taken twice. Type 0 is no voucher's.</summary>
+    public Task<IDisposable> LockRequestsAsync(long issuer, int point, CancellationToken ct) => locks.AcquireAsync(issuer, point, 0, ct);
+
     public async Task AddAsync(Remito remito, CancellationToken ct)
     {
         await SaveAsync(remito, ct);

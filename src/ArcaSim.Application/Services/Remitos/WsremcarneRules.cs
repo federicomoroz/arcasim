@@ -122,6 +122,7 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
             if (await RemitoFamily.CheckPartyAsync(directory, party, ct) is { } problem && !problems.Contains(problem)) problems.Add(problem);
         if (problems.Count > 0) return RemitoAnswer(call, "generarRemitoReturn", null, problems);
 
+        using var requests = await _ledger.LockRequestsAsync(call.Cuit, point, ct);
         if (await _ledger.FindByRequestAsync(call.Cuit, point, requestId, ct) is { } already)
             return RemitoAnswer(call, "generarRemitoReturn", already, []);
 
