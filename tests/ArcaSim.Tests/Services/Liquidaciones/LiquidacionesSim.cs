@@ -1,0 +1,103 @@
+using System.Xml.Linq;
+using System.Xml.Schema;
+using ArcaSim.Application.Contracts;
+using ArcaSim.Domain;
+
+namespace ArcaSim.Tests.Services.Liquidaciones;
+
+/// <summary>
+/// ArcaSim with an issuer that has web service points of sale 1 and 3000, a
+/// ticket for one sector service, and raw SOAP calls written the way the
+/// manuals' examples are: the operation's element in the target namespace,
+/// auth and solicitud unqualified. Every answer is checked against the WSDL.
+/// </summary>
+internal sealed class LiquidacionesSim : IAsyncDisposable
+{
+    public const long Issuer = ArcaSimHarness.Issuer;
+    public const long Producer = 20222222223;
+    public const long Monotributista = 27333333339;
+
+    /// <summary>Thursday 01/10/2026, noon in Buenos Aires.</summary>
+    public static readonly DateTimeOffset Now = new(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3));
+
+    private readonly ServiceContract _contract;
+    private readonly string _service;
+    private readonly string _cuitField;
+    private readonly string _auth;
+
+    private LiquidacionesSim(ArcaSimHarness sim, ServiceContract contract, string service, string cuitField, string auth)
+    {
+        Sim = sim;
+        _contract = contract;
+        _service = service;
+        _cuitField = cuitField;
+        _auth = auth;
+    }
+
+    public ArcaSimHarness Sim { get; }
+
+    public static async Task<LiquidacionesSim> StartAsync(string service, string wsdl, string cuitField = "cuit")
+    {
+        var sim = ArcaSimHarness.Start();
+        sim.Clock.Freeze(Now);
+        await sim.PutTaxpayerAsync(Issuer, "Industrias del Campo SA", VatCondition.ResponsableInscripto,
+            new PointOfSale(1, PointOfSaleKind.WebServiceCae), new PointOfSale(3000, PointOfSaleKind.WebServiceCae));
+        await sim.PutTaxpayerAsync(Producer, "Juan Productor", VatCondition.ResponsableInscripto);
+        await sim.PutTaxpayerAsync(Monotributista, "Ana Chacarera", VatCondition.Monotributo);
+        var contract = ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", wsdl));
+        return new LiquidacionesSim(sim, contract, service, cuitField, await AuthAsync(sim, Issuer, service, cuitField));
+    }
+
+    /// <summary>The auth block of another registered taxpayer, for the operations its counterpart answers.</summary>
+    public Task<string> AuthForAsync(long cuit) => AuthAsync(Sim, cuit, _service, _cuitField);
+
+    private static async Task<string> AuthAsync(ArcaSimHarness sim, long cuit, string service, string cuitField)
+    {
+        var certificate = await sim.IssueCertificateAsync(cuit, $"liquidaciones{Guid.NewGuid():N}", service);
+        var ticket = await sim.Wsaa(cuit, certificate).LoginAsync(service);
+        return $"<auth><token>{ticket.Token}</token><sign>{ticket.Sign}</sign><{cuitField}>{cuit}</{cuitField}></auth>";
+    }
+
+    /// <summary>Calls an operation with the ticket in auth and the rest as given; returns the answer's first child (respuesta, or the response itself when it has none).</summary>
+    public async Task<XElement> CallAsync(string operation, string inner = "", string? auth = null)
+    {
+        var answer = await RawAsync(operation, (auth ?? _auth) + inner);
+        return answer.Element("respuesta") ?? answer;
+    }
+
+    /// <summary>The Body's element, valid for the WSDL.</summary>
+    public async Task<XElement> RawAsync(string operation, string inner)
+    {
+        var contract = _contract.Operations.Single(o => o.Name == operation);
+        var element = contract.Input!;
+        var envelope = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" " +
+                       $"xmlns:x=\"{element.NamespaceName}\"><soapenv:Header/><soapenv:Body><x:{element.LocalName}>{inner}</x:{element.LocalName}>" +
+                       "</soapenv:Body></soapenv:Envelope>";
+        var (status, body) = await Sim.PostSoapAsync(new Uri("http://localhost" + _contract.AddressPath), envelope, $"\"{contract.Action}\"");
+        Assert.True(status == 200, body);
+        var answer = XDocument.Parse(body).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
+        Assert.Equal(contract.Output, answer.Name);
+        Validate(answer);
+        return answer;
+    }
+
+    /// <summary>The answer is valid for the WSDL ARCA publishes: what a generated client deserializes.</summary>
+    public void Validate(XElement answer)
+    {
+        var problems = new List<string>();
+        new XDocument(new XElement(answer)).Validate(_contract.Schemas, (_, e) =>
+        {
+            if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
+        });
+        Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems) + Environment.NewLine + answer);
+    }
+
+    public static string Day(int offset = 0) => Now.AddDays(offset).ToString("yyyy-MM-dd");
+
+    /// <summary>The codes in respuesta/errores (or errores/codigoDescripcion), in order.</summary>
+    public static List<string> Errors(XElement answer) =>
+        answer.Descendants().Where(e => e.Name.LocalName == "errores").SelectMany(e => e.Elements())
+            .Select(e => e.Element("codigo")!.Value).ToList();
+
+    public ValueTask DisposeAsync() => Sim.DisposeAsync();
+}
