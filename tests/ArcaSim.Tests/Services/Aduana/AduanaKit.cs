@@ -4,6 +4,7 @@ using System.Xml.Schema;
 using Arca.Client;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Domain;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ArcaSim.Tests.Services.Aduana;
 
@@ -55,6 +56,24 @@ internal sealed class AduanaKit : IAsyncDisposable
 
     public static string Empresa(AccessTicket t, long cuit) =>
         $"<argWSAutenticacionEmpresa><Token>{t.Token}</Token><Sign>{t.Sign}</Sign><CuitEmpresaConectada>{cuit}</CuitEmpresaConectada><TipoAgente>TILI</TipoAgente><Rol>TILI</Rol></argWSAutenticacionEmpresa>";
+
+    /// <summary>
+    /// Hands a request straight to the service's rules, as ContractHost does once
+    /// the ticket passed, for a caller CUIT: wEnysa's ticket carries no CUIT, and
+    /// the engine cannot open it to its rules over HTTP yet.
+    /// </summary>
+    public async Task<XElement> DirectAsync(string id, string operation, string inner, long cuit = Caller)
+    {
+        var definition = Catalog.Find(id)!;
+        var contract = ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", definition.Wsdl));
+        var request = XElement.Parse($"<{operation} xmlns=\"{SecurityElement.Escape(contract.TargetNamespace)}\">{inner}</{operation}>");
+        var call = new ServiceCall(definition, contract, new SchemaSampler(contract.Schemas), contract.Operations.First(o => o.Name == operation),
+            request, cuit, new SampleContext(cuit, Sim.Clock.Now));
+        var answer = await Sim.Services.GetServices<IServiceBehavior>().Single(b => b.Service == id).AnswerAsync(call, CancellationToken.None);
+        Assert.NotNull(answer?.Body);
+        Validate(contract, answer.Body);
+        return answer.Body.Elements().First();
+    }
 
     public ValueTask DisposeAsync() => Sim.DisposeAsync();
 
