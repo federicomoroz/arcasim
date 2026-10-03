@@ -132,6 +132,20 @@ public class BfeRulesTests
     }
 
     [Fact]
+    public async Task Wsbfe_has_no_credit_invoices()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var old = (await OpenAsync(sim)).Sibling("wsbfe-homologacion.wsdl", "x");
+
+        var refused = await AuthorizeAsync(old, Cmp(RequestId, 1, type: 201));
+        var types = await old.CallAsync("BFEGetPARAM_Tipo_Cbte", Auth(old, "auth"));
+
+        Assert.Equal("1014", Value(refused, "ErrCode"));
+        Assert.Equal("Tipo de comprobante inválido.", Value(refused, "ErrMsg"));
+        Assert.Equal(["1", "2", "3", "6", "7", "8"], types.Descendants(old.Ns + "Cbte_Id").Select(e => e.Value));
+    }
+
+    [Fact]
     public async Task The_queries_answer_1020_4967_the_annex_and_ArcaSims_rates()
     {
         await using var sim = ArcaSimHarness.Start();
