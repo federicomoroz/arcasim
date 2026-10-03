@@ -4,6 +4,8 @@
 
 ArcaSim speaks ARCA's protocol: the same WSDL files, the same operations, the same errors with their real texts. A client generated from the official WSDL works against ArcaSim untouched.
 
+It is not limited to electronic invoicing: it answers **52 of ARCA's 53 current web services**, with 635 operations, plus WSAA for the access ticket. Invoices with items, export invoices, fiscal bonds, tourism and insurance; voucher verification; MiPyME e-credit invoices; the taxpayer registry; grain waybills and agricultural settlements; delivery notes; the Ventanilla Electrónica inbox, debts and fake invoices; customs; and VEP payments, the only REST one. The missing one has no published contract.
+
 **[API reference](docs/api.en.md)** · **[Versión en español](README.md)**
 
 > ArcaSim is not related to ARCA. The CAEs it grants have no tax validity and its access tickets only work against ArcaSim.
@@ -16,6 +18,7 @@ ArcaSim speaks ARCA's protocol: the same WSDL files, the same operations, the sa
 |---|---|
 | **WSAA** | The whole `loginCms`: checks the signed CMS and the access request in ARCA's order, hands out the ticket in its exact format with a 12-hour life, and answers with the same faults, including the window that refuses a new ticket while the previous one is still valid. |
 | **WSFEv1** | All 22 operations: CAE for one voucher or a batch, the last number authorized, looking up an issued voucher, the parameter tables and the CAEA contingency regime. The manual's validations answer with the code and the text ARCA answers with. |
+| **The other 50 services** | Each one on its ARCA path, with its official WSDL and its server's dialect (ASMX, Axis2, CXF, JAX-WS or Spring-WS), and with state: it numbers, grants CAE, COE or CTG codes, walks the manual's states (accept, reject, cancel, adjust) and answers queries with what was issued. What any invoicing service authorizes can be verified through WSCDC. List and details in the [reference](docs/api.en.md#6-the-rest-of-arcas-services). |
 | **Endpoints only** | It starts with open access: any certificate with a CUIT in its DN gets in (a WSASS one or a self-signed one), and the taxpayer and the point of sale are created the first time they are used. Nothing has to be loaded first. |
 | **Fictitious taxpayers** | Issuers with their VAT condition and points of sale, and receivers. What WSASS does at ARCA, the panel does here: it issues the certificate with the DN ARCA requires and authorizes the service. |
 | **Failures on demand** | What is hard to cause against the real ARCA: the service down, a delay, rejecting the next voucher with a chosen code, or granting the CAE and dropping the connection before answering, to test recovery. |
@@ -72,7 +75,7 @@ If the answer to a CAE request gets lost, `AuthorizeNextAsync` asks `FECompConsu
 |---|---|---|
 | Contract | Paths, ARCA's WSDL files (with ArcaSim's address), operations, namespaces, SOAP 1.1 and 1.2 | A client `dotnet-svcutil` generates from ARCA's WSDL asks ArcaSim for a CAE, over SOAP 1.1 and 1.2 |
 | Bytes | WSFEv1 answers in one line with the `FEHeaderInfo` header, an empty `<CAE />`, amounts without trailing zeros, the literal `NULL` for empty dates; WSAA answers with Axis faults and HTTP 500 | Tests that compare ArcaSim's answers with real ARCA responses: an approved CAE with an observation and a rejected resend match byte for byte except the CAE number |
-| Errors | The manual's codes, and the real texts where they are known, missing accents and double spaces included | [Coverage of the 495 codes](docs/cobertura.md), generated from the code |
+| Errors | The manual's codes, and the real texts where they are known, missing accents and double spaces included; in every service, the refused ticket with its own codes and texts | [Coverage of WSFEv1's 495 codes](docs/cobertura.md), generated from the code; every answer of the other services is validated against its WSDL in the tests |
 | Behavior | Numbering per CUIT, point of sale and type; no idempotency; a batch stops at the first rejection; 12-hour ticket; anti-replay window | Scenario tests |
 
 ### Architecture
@@ -82,19 +85,23 @@ src/
   ArcaSim.Domain           taxpayers, points of sale, aliases and authorizations, environments
   ArcaSim.Application      WSAA, WSFEv1 (22 operations), validations as rules with a code per method
     Wsfe/Data/             the manual's 495 codes and the parameter tables, extracted from the study
+    Contracts/             the engine that answers any service from its WSDL, in its dialect
+    Services/<group>/      each service's rules: invoicing, FCE, agriculture, delivery notes, agencies, customs
+    Setiws/                SETIWS-PAGO-API, the only REST service
   ArcaSim.Infrastructure   in-memory and PostgreSQL storage, ArcaSim's own certification authority
-  ArcaSim.Api              the SOAP layer (ASMX dialect for WSFEv1, Axis for WSAA), the API and the /arcasim/ panel
+  ArcaSim.Api              the SOAP layer, SETIWS's REST gateway, the API and the /arcasim/ panel
   Arca.Client              the client applications use
-tests/ArcaSim.Tests        72 tests: scenarios, bytes against real responses, the WSDL client, both stores
+tests/ArcaSim.Tests        499 tests: scenarios, bytes against real responses, the WSDL client, every service against its WSDL, both stores
 ```
 
-- **Its own SOAP layer instead of CoreWCF.** ARCA has three different dialects (.NET ASMX in WSFEv1, Apache Axis in WSAA, Java in the taxpayer registry) with their quirks, and a generic framework would smooth them out. WSFEv1 reads and writes through `XmlSerializer`, the serializer ASMX itself uses: it accepts elements in any order, ignores unknown ones and those without the namespace, and answers in the same format.
+- **Its own SOAP layer instead of CoreWCF.** ARCA's services run on different servers (.NET ASMX, Apache Axis and Axis2, CXF, JAX-WS, Spring-WS) with their quirks, and a generic framework would smooth them out. WSFEv1 reads and writes through `XmlSerializer`, the serializer ASMX itself uses: it accepts elements in any order, ignores unknown ones and those without the namespace, and answers in the same format.
+- **An engine that reads the WSDL.** The other services have no hand-written contract: the engine reads ARCA's WSDL and XSD files, checks the ticket and answers in the service's dialect, with its prefixes, headers and faults. The catalog (`docs/arca/servicios.json`) says how each one refuses a ticket and which fixed values it sends. A service's rules are a class that registers itself, and its state goes to a document store that works in memory and in PostgreSQL.
 - **Rules as data.** Each validation is a rule carrying its code in `FECAESolicitar` and its code in `FECAEARegInformativo` (where many observe instead of rejecting). Whether it rejects or observes, and its text, come from the manual's table.
 - **Profiles.** Environment (homologación or production: header texts, anti-replay window of 10 or 2 minutes) and manual version (4.7 or 4.8), which by default follows ArcaSim's clock.
 - **An event bus between the parts.** The traffic gate, WSAA and WSFEv1 publish what happens (request served or refused, ticket issued, voucher authorized or rejected); the meter and the live log only listen. The admin API is MVC controllers, one per resource; ARCA's endpoints go through the SOAP layer, which writes the exact bytes.
 - **Persistent keys.** The certification authority and the ticket-signing key live in the data directory: an application keeps its ticket for 12 hours and should not lose it because ArcaSim restarted.
 
-The full study of ARCA's API is in [`docs/arca/`](docs/arca/) (in Spanish): [WSAA](docs/arca/wsaa.md), [WSFEv1](docs/arca/wsfev1.md), [its codes](docs/arca/wsfev1-codigos.md), the [service catalog](docs/arca/catalogo.md) and the [regulations](docs/arca/normativa.md). The design is in [docs/diseno.md](docs/diseno.md).
+The full study of ARCA's API is in [`docs/arca/`](docs/arca/) (in Spanish): [WSAA](docs/arca/wsaa.md), [WSFEv1](docs/arca/wsfev1.md), [its codes](docs/arca/wsfev1-codigos.md), the [service catalog](docs/arca/catalogo.md), [each service](docs/arca/servicios/) with its codes, and the [regulations](docs/arca/normativa.md). The design is in [docs/diseno.md](docs/diseno.md).
 
 ### Running it
 

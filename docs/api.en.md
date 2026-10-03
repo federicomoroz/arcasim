@@ -13,12 +13,13 @@ ArcaSim serves ARCA's web services (ARCA is Argentina's tax authority) on the sa
 3. [Protocol conventions](#3-protocol-conventions)
 4. [WSAA: authentication](#4-wsaa-authentication)
 5. [WSFEv1: electronic invoicing](#5-wsfev1-electronic-invoicing)
-6. [Errors](#6-errors)
-7. [Admin API](#7-admin-api)
-8. [Test scenarios](#8-test-scenarios)
-9. [Integrating it into a project](#9-integrating-it-into-a-project)
-10. [Moving to ARCA](#10-moving-to-arca)
-11. [What is not the same as ARCA](#11-what-is-not-the-same-as-arca)
+6. [The rest of ARCA's services](#6-the-rest-of-arcas-services)
+7. [Errors](#7-errors)
+8. [Admin API](#8-admin-api)
+9. [Test scenarios](#9-test-scenarios)
+10. [Integrating it into a project](#10-integrating-it-into-a-project)
+11. [Moving to ARCA](#11-moving-to-arca)
+12. [What is not the same as ARCA](#12-what-is-not-the-same-as-arca)
 
 ---
 
@@ -35,7 +36,8 @@ ArcaSim serves ARCA's web services (ARCA is Argentina's tax authority) on the sa
 | WSAA's WSDL | `GET /ws/services/LoginCms?wsdl` |
 | WSFEv1's WSDL | `GET /wsfev1/service.asmx?WSDL` |
 | Panel | `GET /arcasim/` |
-| Admin API | `/arcasim/api/...` ([§7](#7-admin-api)) |
+| The rest of the services | The same path as in ARCA, with its WSDL at `?wsdl` ([§6](#6-the-rest-of-arcas-services)) |
+| Admin API | `/arcasim/api/...` ([§8](#8-admin-api)) |
 
 The WSDL files are ARCA's own: only the service address changes to ArcaSim's.
 
@@ -81,7 +83,7 @@ ARCASIM=http://localhost:7080 CUIT=20111111112 bash docs/ejemplos/curl.sh
 | 200 | A business answer, even one with errors: in WSFEv1 errors go inside `Errors` |
 | 500 | SOAP fault: every WSAA error; in WSFEv1, an unknown `SOAPAction` or a value that cannot be read (text in a numeric field) |
 | 400 | Malformed XML, empty body |
-| 503 | Service saturated or down ([§8](#8-test-scenarios)): worth retrying |
+| 503 | Service saturated or down ([§9](#9-test-scenarios)): worth retrying |
 
 **WSFEv1 answer format**: one line, with the `FEHeaderInfo` header (environment, date with a `-03:00` offset and version); empty strings as `<CAE />`; amounts without trailing zeros (`122`, not `122.00`); dates as `yyyyMMdd` and processing moments as `yyyyMMddHHmmss`, in Argentina's time.
 
@@ -139,10 +141,10 @@ ARCASIM=http://localhost:7080 CUIT=20111111112 bash docs/ejemplos/curl.sh
 ```
 
 - The ticket lasts **12 hours**. It is reused on every WSFEv1 call inside the `Auth` block.
-- **Anti-replay window**: while a certificate's last ticket for a service is still valid, a new request within 10 minutes (2 with the production profile) gets `coe.alreadyAuthenticated`. Applications have to keep their ticket, as with ARCA. It can be switched off from the [admin API](#7-admin-api).
+- **Anti-replay window**: while a certificate's last ticket for a service is still valid, a new request within 10 minutes (2 with the production profile) gets `coe.alreadyAuthenticated`. Applications have to keep their ticket, as with ARCA. It can be switched off from the [admin API](#8-admin-api).
 - The `token` is a readable base64 `sso` XML: it carries `exp_time` and the relations (the CUITs the certificate can act for).
 
-**Services** `<service>` accepts: `wsfe`, `ws_sr_constancia_inscripcion`, `ws_sr_padron_a13`, `wscdc`, `wsfex`. For now ArcaSim answers `wsfe`'s operations.
+**Services** `<service>` accepts: `wsfe` and the WSAA id of every service in [§6](#6-the-rest-of-arcas-services) (`wsmtxca`, `wsfex`, `wscdc`, `ws_sr_padron_a13`, `seti-setipago-api`…). An id ArcaSim does not know gets `wsn.notFound`, as in ARCA.
 
 **Faults**, in the order they are checked:
 
@@ -286,7 +288,120 @@ Other detail fields, all optional: `FchServDesde`, `FchServHasta`, `FchVtoPago` 
 3. `FECAEARegInformativo` reports each voucher, with `CAEA` and `CbteFchHsGen` (`yyyyMMddHHmmss`).
 4. `FECAEASinMovimientoInformar` for each CAEA point of sale that did not use it.
 
-## 6. Errors
+## 6. The rest of ARCA's services
+
+Besides WSAA and WSFEv1, ArcaSim answers 50 more ARCA web services, with 613 operations: special invoicing, the taxpayer registry, agriculture and delivery notes, government agencies, customs and VEP payments. Of the 53 current services in ARCA's catalog it covers 52 (`sud_contrataciones` is the same service as `sud_restricciones`); the missing one, the A.P.E. revocation automation, has no published manual, WSDL or address.
+
+**How they answer.** Each one on the same path as in ARCA, with its official WSDL (`GET <path>?wsdl`) and in its server's dialect: .NET ASMX, Apache Axis2, Apache CXF, JAX-WS or Spring-WS, with their prefixes, headers and faults. The ticket is checked as in WSFEv1, but each service refuses it with its own codes and texts (for example 7004 to 7014 in the customs services, `[wscommon_002]` in the JAX-WS ones, an `SRValidationException` fault in the registry). The certificate must be authorized for the service's WSAA id; with open access, any certificate is.
+
+**What they simulate.** Each one applies its manual's rules over what ArcaSim keeps: they number "last + 1", grant CAE, CAEA, COE or CTG codes with their expiry, walk the states the manual documents (accept, reject, cancel, adjust, confirm), answer queries with what was issued and refuse with the manual's codes and texts. Operations the manual does not document well enough answer the contract with data valid for the WSDL. Every choice ArcaSim makes where the manual falls short is written in the doc comment of the class that simulates the service, and each service's research is in [`arca/servicios/`](arca/servicios/) (in Spanish).
+
+**Vouchers that can be verified.** What any invoicing service authorizes (WSFEv1, WSMTXCA, WSFEXv1, WSCT, WSBFE, WSSEG and the agriculture settlements) is recorded, and WSCDC verifies it as ARCA does: approved when the data matches, with observations when it does not.
+
+**Registries nobody writes through the API.** SUD's debts, the apócrifos, the Ventanilla Electrónica inbox, WSAGR's ratings or customs declarations have no operation to load them: ArcaSim fills them with fictitious data the first time they are queried. To test with your own data, load it beforehand through the admin API ([§8](#8-admin-api)):
+
+```bash
+curl -X PUT http://localhost:7080/arcasim/api/documents/sud_restricciones.deudas/30000000007/301 \
+     -H 'Content-Type: application/json' -d '{ ... }'
+curl http://localhost:7080/arcasim/api/documents/sud_restricciones.deudas   # what is there, and its shape
+```
+
+Each service keeps its documents in collections named after it (`wsagr`, `veconsumerws.comunicaciones`, `wscpe`…); `GET /documents/{collection}` shows what it stored and in which shape.
+
+**Invoicing**
+
+| Service | Path | WSAA id | Operations |
+|---|---|---|---:|
+| Factura con detalle de ítems (WSMTXCA) | `/wsmtxca/services/MTXCAService` | `wsmtxca` | 27 |
+| Factura de exportación (WSFEXv1) | `/wsfexv1/service.asmx` | `wsfex` | 19 |
+| Bonos fiscales electrónicos (WSBFEv1) | `/wsbfev1/service.asmx` | `wsbfe` | 15 |
+| Bonos fiscales electrónicos, versión anterior (WSBFE) | `/wsbfe/service.asmx` | `wsbfe` | 14 |
+| Comprobantes T, turismo (WSCT) | `/wsct/CTService` | `wsct` | 22 |
+| Seguros de caución (WSSEG) | `/wsseg/service.asmx` | `wsseg` | 11 |
+| Constatación de comprobantes (WSCDC) | `/WSCDC/service.asmx` | `wscdc` | 6 |
+| Factura de Crédito Electrónica MiPyMEs (WSFECRED) | `/wsfecred/FECredService` | `wsfecred` | 21 |
+| FCE MiPyMEs, agentes de depósito colectivo | `/wsfecredagente/FECredAgenteService/` | `wsfecredagente` | 8 |
+| FCE MiPyMEs, Sistema de Circulación Abierta | `/wsfecredsca/FECredSCAService/` | `wsfecredsca` | 3 |
+
+**Taxpayer registry**
+
+| Service | Path | WSAA id | Operations |
+|---|---|---|---:|
+| Constancia de inscripción (A5) | `/sr-padron/webservices/personaServiceA5` | `ws_sr_constancia_inscripcion`, `ws_sr_padron_a5` | 5 |
+| Padrón A13 | `/sr-padron/webservices/personaServiceA13` | `ws_sr_padron_a13` | 4 |
+| Padrón A4: situación tributaria | `/sr-padron/webservices/personaServiceA4` | `ws_sr_padron_a4` | 2 |
+| Padrón A10: datos resumidos | `/sr-padron/webservices/personaServiceA10` | `ws_sr_padron_a10` | 2 |
+| Padrón A100: tablas de parámetros | `/sr-parametros/webservices/parameterServiceA100` | `ws_sr_padron_a100` | 2 |
+
+**Agriculture and delivery notes**
+
+| Service | Path | WSAA id | Operations |
+|---|---|---|---:|
+| Carta de Porte Electrónica (WSCPE) | `/wscpe/services/soap` | `wscpe` | 75 |
+| Liquidación primaria de granos (WSLPG) | `/wslpg/LpgService` | `wslpg` | 48 |
+| Liquidación del sector pecuario (WSLSP) | `/wslsp/LspService` | `wslsp` | 23 |
+| Liquidación única mensual de lechería (WSLUM) | `/wslum/LumService` | `wslum` | 10 |
+| Liquidación de tabaco verde (WSLTV) | `/wsltv/LtvService` | `wsltv` | 15 |
+| Liquidación de caña de azúcar (WSLCA) | `/wslca/services/soap` | `wslca` | 14 |
+| Régimen tabacalero (WSTABACO) | `/wstabaco/TabacoService` | `wstabaco` | 29 |
+| Remito electrónico de harinas (WSREMHARINA) | `/wsremharina/RemHarinaService` | `wsremharina` | 29 |
+| Remito electrónico cárnico (WSREMCARNE) | `/wsremcarne/RemCarneService` | `wsremcarne` | 29 |
+| Remito electrónico de azúcar (WSREMAZUCAR) | `/wsremazucar/RemAzucarService` | `wsremazucar` | 27 |
+| Registro AGR / Reproweb (WSAGR) | `/wsagr/wsagr.asmx` | `wsagr` | 8 |
+
+**Government agencies**
+
+| Service | Path | WSAA id | Operations |
+|---|---|---|---:|
+| Economía del Conocimiento (WSCEC) | `/wscec/CECService/` | `wscec` | 5 |
+| Contribuyentes y facturas apócrifas (WSAPOC) | `/Service.asmx` | `wsapoc` | 4 |
+| Deuda de proveedores y clientes (SUD) | `/sud_restricciones` | `sud_restricciones` | 3 |
+| Ventanilla Electrónica (WSCCOMU) | `/ve-ws/services/veconsumer` | `veconsumerws` | 5 |
+| Juegos de azar (WSJAZA) | `/wsjaza/JAZAService` | `wsjaza` | 11 |
+| Mi Argentina: vida laboral | `/miargentina-ws/servicios.asmx` | `miargentina-ws` | 2 |
+| Presentación de declaraciones juradas | `/setiws/webservices/uploadPresentacionService` | `presentacionprocessor`, `djprocessorcontribuyente`, `djprocessorcontribuyente_cf` | 3 |
+| Régimen de percepción de IVA (WSRGIVA) | `/wsrgiva/services/RegimenPercepcionIVAService` | `wsrgiva` | 2 |
+| Beneficios en créditos y débitos bancarios (WSICDB) | `/wsicdb/IcdbService` | `wsicdb` | 8 |
+| Retenciones electrónicas, certificado F2005 (SIRE) | `/sire/ws/v1/c2005/2005` | `sire-ws` | 3 |
+| Seguimiento vehicular (WSSV) | `/wssv/service.asmx` | `wssv` | 7 |
+
+**Customs**
+
+| Service | Path | WSAA id | Operations |
+|---|---|---|---:|
+| Aduana: dispositivos PEMA | `/dia/ws/WDiaUtiDES/WDiaUtiDES.asmx` | `wdiautides`, `WDiaUtiDES` | 8 |
+| Aduana: despachos de vitivinicultura (INV) | `/Dia/Ws/WGesINV/WGesINV.asmx` | `wgesinv`, `WGesINV` | 7 |
+| Aduana: tablas de referencia | `/Dia/ws/wgesTabRef/wgesTabRef.asmx` | `wgestabref`, `WDiaUtiDES`, `wdiautides` | 13 |
+| Aduana: legajos de depositario fiel | `/Dia/Ws/wConsDepFiel/wConsDepFiel.asmx` | `wconsdepfiel`, `wConsDepFiel` | 3 |
+| Aduana: tiendas libres | `/diav2/wgestiendaslibres/wgestiendaslibres.asmx` | `wgestiendaslibres` | 17 |
+| Aduana: precintos de depositario fiscal | `/Dia/Ws/wgesprecintosdepfis/wgesprecintosdepfis.asmx` | `wgesprecintosdepfis` | 8 |
+| Aduana: digitalización de legajos | `/Dia/Ws/wDigDepFiel/wDigDepFiel.asmx` | `wdigdepfiel`, `wDigDepFiel` | 3 |
+| Aduana: declaraciones de grandes operadores | `/Dia/Ws/WutiGOPDeclaraciones/WutiGOPDeclaraciones.asmx` | `wutigopdeclaraciones` | 10 |
+| Aduana: movimientos de terminales y depósitos | `/dia/ws/wdepMovimientos/wdepMovimientos.asmx` | `wdepmovimientos`, `wDepMovimientos` | 6 |
+| Aduana: entradas y salidas desde Chile | `/DIA/WS/wEnysa/wEnysa.asmx` | `wenysa`, `wEnysa` | 6 |
+
+**Government agencies**
+
+| Service | Path | WSAA id | Operations |
+|---|---|---|---:|
+| Certificados de transferencia de automotores (WSCTA) | `/wscta/services/CertificadoDNRPAService` | `wscta` | 6 |
+| Consulta de F931 para el MTEySS (SSF931) | `/WebService/F931.asmx` | `trabajo_f931`, `ssf931` | 2 |
+
+### SETIWS-PAGO-API (REST)
+
+The one ARCA service that is not SOAP: a government agency creates VEPs and checks their payment. In ARCA it lives at the root of its own domain; in ArcaSim, under `/setiws-pago-api/`.
+
+| Method and path | What it does |
+|---|---|
+| `GET /setiws-pago-api/dummy` | `{"appserver":"OK","dbserver":"OK"}`, without authentication |
+| `POST /setiws-pago-api/api/v1/veps[?with-qr=true]` | Creates the VEP: `{"entidadDePago": 1001, "vep": {...}}`. Answers 201 with `nroVEP` and `fechaExpiracion` (today + 25 days). The same `ownerCuit` + `ownerTransactionId` returns the same VEP |
+| `GET /setiws-pago-api/api/v1/veps?owner-cuit=&nro-vep=` (or `&owner-transaction-id=`) | `{"VEP": {...}, "CP": {...}}`; while pending, without `CP` and with the QR or the payment entity's URL |
+
+Authentication travels in HTTP headers, not in the body: `WSAA-AUTH-PROXY-TOKEN` and `WSAA-AUTH-PROXY-SIGN` with the WSAA ticket for the `seti-setipago-api` service, and `WSAA-AUTH-PROXY-REPRESENTADO` with the CUIT. Like ARCA's gateway, ArcaSim checks everything together and answers a single 401 listing every problem, with its texts. WSAUTH's JWT (`Authorization: Bearer`) is not published, so ArcaSim does not issue it.
+
+The payment entity reports the payment outside the API; in ArcaSim, `POST /arcasim/api/setiws/veps/{nroVEP}/payment` simulates it (`branchType`, `paymentForm`, `bank`, all optional). After that, the query returns the payment receipt (`CP`).
+
+## 7. Errors
 
 **Structure** (WSFEv1):
 
@@ -326,7 +441,7 @@ Other detail fields, all optional: `FchServDesde`, `FchServHasta`, `FchVtoPago` 
 
 The texts are ARCA's where known, missing accents included. The full list of the manual's 495 codes is in [`arca/wsfev1-codigos.md`](arca/wsfev1-codigos.md), and which ones ArcaSim answers, in [`cobertura.md`](cobertura.md).
 
-## 7. Admin API
+## 8. Admin API
 
 It does not exist at ARCA: it sets up test scenarios. JSON, no authentication (it is for development environments). Base: `/arcasim/api`.
 
@@ -340,14 +455,16 @@ It does not exist at ARCA: it sets up test scenarios. JSON, no authentication (i
 | `POST /certificates` | `cuit`, `alias`, `services` (default `["wsfe"]`), and `csr` (returns the certificate as PEM) or `password` (returns a PFX with the key) |
 | `GET /ca` | ArcaSim's certification authority, as PEM |
 | `GET /authorizations` · `POST` · `DELETE` | Which alias may act for which CUIT on which service |
-| `PUT /chaos/{service}` | `down`, `delayMilliseconds`, `dropNextResponse`, `forceRejection` (code) — service `wsfe` or `wsaa` |
+| `PUT /chaos/{service}` | `down`, `delayMilliseconds`, `dropNextResponse`, `forceRejection` (code) for `wsfe` and `wsaa`; `down`, `delayMilliseconds` and `balancerMask` for the rest, by their id (`wsmtxca`, `wscpe`…) |
 | `GET /traffic` · `PUT /traffic/{service}` | Last-minute meter and limits: `requestsPerMinute`, `capacity`, `serviceTimeMilliseconds`, `queueLimit` |
 | `POST /clock` · `DELETE /clock` | `freezeAt` (a moment) and/or `advanceMinutes`; `DELETE` goes back to real time |
 | `GET /vouchers?cuit=&limit=` | Issued vouchers |
 | `GET /activity?limit=` | Live log: tickets, CAEs, rejections, saturated requests |
 | `PUT /rates` | `currency`, `day`, `rate`: the rate foreign currency validations use |
+| `GET /documents/{collection}?prefix=` · `GET`, `PUT`, `DELETE /documents/{collection}/{key}` | The state of the rest of the services ([§6](#6-the-rest-of-arcas-services)): read what they stored, or load before a test the registries ARCA's API cannot write |
+| `POST /setiws/veps/{nroVEP}/payment` | The payment entity reports the VEP as paid: `branchType` (TIPO_SUCURSAL), `paymentForm` (FORMA_PAGO), `bank` |
 
-## 8. Test scenarios
+## 9. Test scenarios
 
 | To test | How |
 |---|---|
@@ -358,12 +475,13 @@ It does not exist at ARCA: it sets up test scenarios. JSON, no authentication (i
 | Saturation | `PUT /traffic/wsfe {"requestsPerMinute": 30}`: past the limit, HTTP 503 |
 | Bottleneck | `PUT /traffic/wsfe {"capacity": 2, "serviceTimeMilliseconds": 500, "queueLimit": 10}`: two at a time, the rest wait in a queue, and what does not fit gets 503 |
 | Expired ticket | `POST /clock {"advanceMinutes": 780}` |
+| The homologación load balancer that hides errors | `PUT /chaos/wsmtxca {"balancerMask": true}`: every HTTP 500 of the service comes out as `fwshomo`'s F5 leaves it, the line `BL<n> <date> 500` with HTTP 200 |
 | The 01/12/2026 requirement | `POST /clock {"freezeAt": "2026-12-01T09:00:00-03:00"}` |
 | ARCA's registration errors | `PUT /settings {"openAccess": false}` or `ArcaSim:Access=Strict`: a certificate from ArcaSim's authority, an authorization per service, a registered taxpayer and point of sale |
 
 The `/arcasim/` panel does the same with buttons and shows each service's saturation meter.
 
-## 9. Integrating it into a project
+## 10. Integrating it into a project
 
 **What changes in the application:** the two URLs and the certificate. Nothing else.
 
@@ -400,7 +518,7 @@ var result = await wsfe.AuthorizeNextAsync(1, 6, new Voucher { /* … */ });
 | `ArcaSim:ReplayWindowEnabled` | `true` (default) · `false` |
 | `ArcaSim:DataDirectory` | Where it keeps its certification authority and the ticket key |
 
-## 10. Moving to ARCA
+## 11. Moving to ARCA
 
 1. Create the key and the certificate request (CSR) with the DN `SERIALNUMBER=CUIT n, CN=alias`.
 2. For homologación, upload the CSR to **WSASS**; for production, to **Administración de certificados digitales**. Associate the certificate with the `wsfe` service.
@@ -409,10 +527,14 @@ var result = await wsfe.AuthorizeNextAsync(1, 6, new Voucher { /* … */ });
 
 The application's code does not change.
 
-## 11. What is not the same as ARCA
+## 12. What is not the same as ARCA
 
 - ArcaSim's **access tickets** only work against ArcaSim: the real signature is ARCA's.
-- **CAEs** have no tax validity and cannot be verified.
+- **CAEs** have no tax validity and can only be verified in ArcaSim's WSCDC.
+- The **registries** ARCA fills outside its web services (debts, apócrifos, communications, customs declarations, ratings) start with fictitious data; replace them with `PUT /documents`.
+- Where a manual does not publish a table's values (FCE's rejection reasons, for example), the values are ArcaSim's, and the class's doc comment says so.
+- **TRABAJO_F931** has no published WSDL: ArcaSim's is reconstructed from the manual.
+- **SETIWS-PAGO-API** answers JSON only and does not take WSAUTH's JWT, which is not published; it authenticates with the WSAA ticket headers.
 - The **taxpayer registry** is fictitious: taxpayers are the ones loaded or created on use, and an unknown CUIT with a valid check digit counts as active.
 - **Exchange rates** are loaded by hand with `PUT /rates`; without one, the validations that depend on it are skipped.
 - Some of the manual's codes answer with the manual's text, because ARCA's was never captured.

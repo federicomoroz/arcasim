@@ -4,6 +4,8 @@
 
 ArcaSim habla el mismo protocolo que ARCA: los mismos WSDL, las mismas operaciones, los mismos errores con sus textos reales. Un cliente generado del WSDL oficial funciona contra ArcaSim sin tocarlo.
 
+No se limita a la factura electrónica: responde **52 de los 53 web services vigentes de ARCA**, con 635 operaciones, más WSAA para el ticket de acceso. Factura con ítems, de exportación, bonos, turismo y seguros; constatación; Factura de Crédito MiPyME; padrón; carta de porte y liquidaciones de agro; remitos; Ventanilla Electrónica, deuda y apócrifos; aduana; y el pago de VEPs, el único REST. El que falta no tiene contrato publicado.
+
 **[Referencia de la API](docs/api.md)** · **[English version](README.en.md)**
 
 > ArcaSim no tiene relación con ARCA. Los CAE que otorga no tienen validez fiscal y sus tickets de acceso solo sirven contra ArcaSim.
@@ -16,6 +18,7 @@ ArcaSim habla el mismo protocolo que ARCA: los mismos WSDL, las mismas operacion
 |---|---|
 | **WSAA** | `loginCms` completo: valida el CMS firmado y el pedido de acceso en el orden en que lo hace ARCA, entrega el ticket con el formato exacto y la vida de 12 horas, y responde con los mismos faults, incluida la ventana que impide pedir otro ticket mientras el anterior sigue vigente. |
 | **WSFEv1** | Las 22 operaciones: pedir CAE de a uno o en lotes, el último número autorizado, consultar un comprobante emitido, las tablas de parámetros y el régimen de contingencia CAEA. Las validaciones del manual devuelven el código y el texto que devuelve ARCA. |
+| **Los otros 50 servicios** | Cada uno en su ruta de ARCA, con su WSDL oficial y el dialecto de su servidor (ASMX, Axis2, CXF, JAX-WS o Spring-WS), y con estado: numera, otorga CAE, COE o CTG, recorre los estados del manual (aceptar, rechazar, anular, ajustar) y responde las consultas con lo emitido. Lo que autoriza cualquier servicio de facturación se puede constatar con WSCDC. Lista y detalles en la [referencia](docs/api.md#6-los-demás-servicios-de-arca). |
 | **Solo endpoints** | Arranca con acceso abierto: cualquier certificado con el CUIT en el DN entra (el de WSASS o uno autofirmado), y el contribuyente y el punto de venta se crean la primera vez que se usan. No hace falta cargar nada antes. |
 | **Contribuyentes ficticios** | Emisores con su condición frente al IVA y sus puntos de venta, y receptores. Lo que en ARCA hace WSASS lo hace el panel: emite el certificado con el DN que pide ARCA y autoriza el servicio. |
 | **Fallas a pedido** | Lo que con ARCA real es difícil de provocar: el servicio caído, una demora, rechazar el próximo comprobante con un código dado, u otorgar el CAE y cortar la conexión antes de responder, para probar la recuperación. |
@@ -72,7 +75,7 @@ Si la respuesta a un pedido de CAE se pierde, `AuthorizeNextAsync` consulta con 
 |---|---|---|
 | Contrato | Rutas, WSDL oficiales (con la dirección de ArcaSim), operaciones, namespaces, SOAP 1.1 y 1.2 | Un cliente generado con `dotnet-svcutil` del WSDL de ARCA pide un CAE contra ArcaSim, en SOAP 1.1 y 1.2 |
 | Bytes | WSFEv1 responde en una línea con el encabezado `FEHeaderInfo`, `<CAE />` vacío, importes sin ceros de relleno, el literal `NULL` en fechas vacías; WSAA responde con los faults de Axis y HTTP 500 | Tests que comparan la respuesta de ArcaSim con respuestas reales de ARCA: un CAE aprobado con observación y un reenvío rechazado coinciden byte a byte salvo el número de CAE |
-| Errores | Códigos del manual y los textos reales donde se conocen, con sus faltas de tildes y dobles espacios | [Cobertura de los 495 códigos](docs/cobertura.md), generada del código |
+| Errores | Códigos del manual y los textos reales donde se conocen, con sus faltas de tildes y dobles espacios; en cada servicio, el ticket rechazado con sus propios códigos y textos | [Cobertura de los 495 códigos de WSFEv1](docs/cobertura.md), generada del código; cada respuesta de los demás servicios se valida contra su WSDL en los tests |
 | Comportamiento | Numeración correlativa por CUIT, punto de venta y tipo; sin idempotencia; un lote se corta en el primer rechazo; ticket de 12 h; ventana anti-repetición | Tests de escenarios |
 
 ### Arquitectura
@@ -82,19 +85,23 @@ src/
   ArcaSim.Domain           contribuyentes, puntos de venta, alias y autorizaciones, ambientes
   ArcaSim.Application      WSAA, WSFEv1 (22 operaciones), validaciones como reglas con su código por método
     Wsfe/Data/             los 495 códigos del manual y las tablas de parámetros, extraídos del estudio
+    Contracts/             el motor que responde cualquier servicio a partir de su WSDL, en su dialecto
+    Services/<grupo>/      las reglas de cada servicio: facturación, FCE, agro, remitos, organismos, aduana
+    Setiws/                SETIWS-PAGO-API, el único servicio REST
   ArcaSim.Infrastructure   almacenamiento en memoria y en PostgreSQL, la autoridad certificante propia
-  ArcaSim.Api              la capa SOAP (dialecto ASMX para WSFEv1, Axis para WSAA), la API y el panel /arcasim/
+  ArcaSim.Api              la capa SOAP, el gateway REST de SETIWS, la API y el panel /arcasim/
   Arca.Client              el cliente que usan las aplicaciones
-tests/ArcaSim.Tests        72 tests: escenarios, bytes contra respuestas reales, cliente del WSDL, los dos almacenamientos
+tests/ArcaSim.Tests        499 tests: escenarios, bytes contra respuestas reales, cliente del WSDL, cada servicio contra su WSDL, los dos almacenamientos
 ```
 
-- **Capa SOAP propia en lugar de CoreWCF.** ARCA tiene tres dialectos distintos (ASMX de .NET en WSFEv1, Apache Axis en WSAA, Java en el padrón) con sus rarezas, y un framework genérico las normaliza. WSFEv1 lee y escribe con `XmlSerializer`, el mismo serializador que usa ASMX: acepta los elementos en cualquier orden, ignora los desconocidos y los que vienen sin namespace, y responde con el mismo formato.
+- **Capa SOAP propia en lugar de CoreWCF.** Los servicios de ARCA corren en servidores distintos (ASMX de .NET, Apache Axis y Axis2, CXF, JAX-WS, Spring-WS) con sus rarezas, y un framework genérico las normaliza. WSFEv1 lee y escribe con `XmlSerializer`, el mismo serializador que usa ASMX: acepta los elementos en cualquier orden, ignora los desconocidos y los que vienen sin namespace, y responde con el mismo formato.
+- **Un motor que lee el WSDL.** Los demás servicios no tienen un contrato escrito a mano: el motor lee el WSDL y los XSD de ARCA, valida el ticket y responde en el dialecto del servicio, con sus prefijos, encabezados y faults. El catálogo (`docs/arca/servicios.json`) dice cómo rechaza cada uno un ticket y qué valores fijos manda. Las reglas de un servicio son una clase que se registra sola, y su estado va a un almacén de documentos que funciona en memoria y en PostgreSQL.
 - **Reglas como datos.** Cada validación es una regla con el código que lleva en `FECAESolicitar` y el que lleva en `FECAEARegInformativo` (donde muchas observan en lugar de rechazar). Si rechaza u observa, y el texto, salen de la tabla del manual.
 - **Perfiles.** Ambiente (homologación o producción: textos del encabezado, ventana anti-repetición de 10 o 2 minutos) y versión del manual (4.7 o 4.8), que por defecto sigue la fecha del reloj de ArcaSim.
 - **Un bus de eventos entre las partes.** El control de tráfico, WSAA y WSFEv1 publican lo que pasa (pedido atendido o rechazado, ticket emitido, comprobante autorizado o rechazado); el medidor y el registro en vivo solo escuchan. La API de administración son controllers MVC, uno por recurso; los endpoints de ARCA van por la capa SOAP, que escribe los bytes exactos.
 - **Claves persistentes.** La autoridad certificante y la clave que firma los tickets se guardan en el directorio de datos: una aplicación guarda su ticket 12 horas y no tiene que perderlo porque ArcaSim se reinició.
 
-El estudio completo de la API de ARCA está en [`docs/arca/`](docs/arca/): [WSAA](docs/arca/wsaa.md), [WSFEv1](docs/arca/wsfev1.md), [sus códigos](docs/arca/wsfev1-codigos.md), el [catálogo de servicios](docs/arca/catalogo.md) y la [normativa](docs/arca/normativa.md). El diseño, en [docs/diseno.md](docs/diseno.md).
+El estudio completo de la API de ARCA está en [`docs/arca/`](docs/arca/): [WSAA](docs/arca/wsaa.md), [WSFEv1](docs/arca/wsfev1.md), [sus códigos](docs/arca/wsfev1-codigos.md), el [catálogo de servicios](docs/arca/catalogo.md), [cada servicio](docs/arca/servicios/) con sus códigos, y la [normativa](docs/arca/normativa.md). El diseño, en [docs/diseno.md](docs/diseno.md).
 
 ### Correrlo
 
@@ -125,7 +132,7 @@ Los clientes generados del WSDL oficial esperan HTTPS, porque las direcciones de
 
 ### API de administración y referencia completa
 
-Las 22 operaciones, los errores, la API de administración, los escenarios de prueba y cómo integrarlo desde cualquier lenguaje están en la **[referencia de la API](docs/api.md)**. [`docs/ejemplos/curl.sh`](docs/ejemplos/curl.sh) pide un CAE con openssl y curl, sin ninguna librería.
+Las 22 operaciones de WSFEv1, los demás servicios, los errores, la API de administración, los escenarios de prueba y cómo integrarlo desde cualquier lenguaje están en la **[referencia de la API](docs/api.md)**. [`docs/ejemplos/curl.sh`](docs/ejemplos/curl.sh) pide un CAE con openssl y curl, sin ninguna librería.
 
 ## Licencia
 
