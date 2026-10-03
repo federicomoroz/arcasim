@@ -199,6 +199,69 @@ public class WscpeRulesTests
     }
 
     [Fact]
+    public async Task A_rail_CPE_takes_type_75_and_a_rail_CTG_and_answers_only_to_its_own_operations()
+    {
+        await using var sim = Start();
+        var cpe = await ConnectAsync(sim);
+
+        var authorized = await cpe.CallAsync(Issuer, "autorizarCPEFerroviaria", "AutorizarCPEFerroviariaReq",
+            "<solicitud><cabecera><sucursal>171</sucursal><nroOrden>1</nroOrden><planta>1938</planta></cabecera>" +
+            "<correspondeRetiroProductor>false</correspondeRetiroProductor>" +
+            "<datosCarga><codGrano>23</codGrano><cosecha>2526</cosecha><pesoBruto>60000</pesoBruto><pesoTara>20000</pesoTara></datosCarga>" +
+            $"<destino><cuit>{Destination}</cuit><esDestinoCampo>false</esDestinoCampo><codProvincia>12</codProvincia><codLocalidad>3058</codLocalidad><planta>1</planta></destino>" +
+            $"<destinatario><cuit>{Destination}</cuit></destinatario>" +
+            "<transporte><cuitTransportista>30500000005</cuitTransportista><nroVagon>12345678</nroVagon><nroPrecinto>P1</nroPrecinto><nroOperativo>77</nroOperativo>" +
+            "<fechaHoraPartidaTren>2026-10-01T06:00:00</fechaHoraPartidaTren><kmRecorrer>400</kmRecorrer></transporte></solicitud>");
+        Assert.Equal("75", authorized.Value("tipoCartaPorte"));
+        Assert.Equal("20200000001", authorized.Value("nroCTG"));
+        Assert.Equal("1938", authorized.Descendants("origen").Single().Element("planta")!.Value);
+
+        var read = await cpe.CallAsync(Destination, "consultarCPEFerroviaria", "ConsultarCPEFerroviariaReq",
+            $"<solicitud><cuitSolicitante>{Issuer}</cuitSolicitante><cartaPorte><tipoCPE>75</tipoCPE><sucursal>171</sucursal><nroOrden>1</nroOrden></cartaPorte></solicitud>");
+        Assert.Equal("12345678", read.Value("nroVagon"));
+
+        var asTruck = await cpe.CallAsync(Issuer, "consultarCPEAutomotor", "ConsultarCPEAutomotorReq", "<solicitud><nroCTG>20200000001</nroCTG></solicitud>");
+        Assert.Equal("1302", asTruck.FirstError()!.Value.Code);
+
+        var key = $"<cuitSolicitante>{Issuer}</cuitSolicitante><cartaPorte><tipoCPE>75</tipoCPE><sucursal>171</sucursal><nroOrden>1</nroOrden></cartaPorte>";
+        await cpe.CallAsync(Destination, "confirmarArriboCPE", "ConfirmarArriboCPEReq", $"<solicitud>{key}</solicitud>");
+        var wrongFamily = await cpe.CallAsync(Destination, "confirmacionDefinitivaCPEAutomotor", "ConfirmacionDefinitivaCPEAutomotorReq",
+            $"<solicitud>{key}<pesoBrutoDescarga>59000</pesoBrutoDescarga><pesoTaraDescarga>20000</pesoTaraDescarga></solicitud>");
+        Assert.Equal(("2055", "Operación no disponible para el tipo de CPE actual."), wrongFamily.FirstError());
+    }
+
+    [Fact]
+    public async Task Edits_change_the_data_by_CTG_up_to_the_limit_and_not_after_voiding()
+    {
+        await using var sim = Start();
+        var cpe = await ConnectAsync(sim);
+        var ctg = (await AuthorizeAsync(cpe, 1)).Value("nroCTG");
+
+        for (var edit = 1; edit <= 3; edit++)
+        {
+            var edited = await cpe.CallAsync(Issuer, "editarCPEAutomotor", "EditarCPEAutomotorReq",
+                $"<solicitud><nroCTG>{ctg}</nroCTG><cuitChofer>20444444445</cuitChofer><pesoBruto>{31000 + edit}</pesoBruto><codGrano>23</codGrano>" +
+                "<dominio>AC456EF</dominio><dominio>AD789GH</dominio></solicitud>");
+            Assert.Equal("AC", edited.Value("estado"));
+        }
+        var read = await cpe.CallAsync(Issuer, "consultarCPEAutomotor", "ConsultarCPEAutomotorReq", $"<solicitud><nroCTG>{ctg}</nroCTG></solicitud>");
+        Assert.Equal("31003", read.Value("pesoBruto"));
+        Assert.Equal("20444444445", read.Value("cuitChofer"));
+        Assert.Equal(["AC456EF", "AD789GH"], read.Descendants("dominio").Select(d => d.Value));
+
+        var fourth = await cpe.CallAsync(Issuer, "editarCPEAutomotor", "EditarCPEAutomotorReq",
+            $"<solicitud><nroCTG>{ctg}</nroCTG><pesoBruto>32000</pesoBruto><codGrano>23</codGrano></solicitud>");
+        Assert.Equal(("2238", "La Carta de Porte no puede modificarse porque alcanzó el tope máximo de modificaciones realizadas."), fourth.FirstError());
+
+        var second = (await AuthorizeAsync(cpe, 2)).Value("nroCTG");
+        await cpe.CallAsync(Issuer, "anularCPE", "AnularCPEReq",
+            "<solicitud><cartaPorte><tipoCPE>74</tipoCPE><sucursal>1</sucursal><nroOrden>2</nroOrden></cartaPorte><anulacionMotivo>1</anulacionMotivo></solicitud>");
+        var voided = await cpe.CallAsync(Issuer, "editarCPEAutomotor", "EditarCPEAutomotorReq",
+            $"<solicitud><nroCTG>{second}</nroCTG><pesoBruto>32000</pesoBruto><codGrano>23</codGrano></solicitud>");
+        Assert.Equal(("2004", "Estado no válido"), voided.FirstError());
+    }
+
+    [Fact]
     public async Task Dummy_and_provinces_answer_what_ARCA_shows()
     {
         await using var sim = Start();
