@@ -1,11 +1,13 @@
 using System.Text.Json.Serialization;
 using ArcaSim.Api.Admin;
+using ArcaSim.Api.Rest;
 using ArcaSim.Api.Soap;
 using ArcaSim.Application;
 using ArcaSim.Application.Access;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Events;
 using ArcaSim.Application.Padron;
+using ArcaSim.Application.Setiws;
 using ArcaSim.Application.Traffic;
 using ArcaSim.Application.Wsaa;
 using ArcaSim.Application.Wsfe;
@@ -70,6 +72,8 @@ builder.Services.AddSingleton<PadronService>();
 builder.Services.AddSingleton<WsaaService>();
 builder.Services.AddSingleton<WsfeEndpoint>();
 builder.Services.AddSingleton<WsaaEndpoint>();
+builder.Services.AddSingleton<SetiwsGateway>();
+builder.Services.AddSingleton<VepService>();
 
 // The rest of ARCA's services, answered from their WSDL; IServiceBehavior adds a service's rules on top.
 // Every rule set in the Application assembly is picked up: adding a service's rules is adding a class.
@@ -95,6 +99,7 @@ app.UseStaticFiles();
 WsaaEndpoint.Map(app);
 WsfeEndpoint.Map(app);
 PadronModule.Map(app);
+SetiwsEndpoint.Map(app);
 ContractEndpoint.Map(app, app.Services.GetRequiredService<ContractHost>());
 app.MapControllers();
 app.MapGet("/", () => Results.Redirect("/arcasim/"));

@@ -25,6 +25,7 @@ public sealed record WebService(string Id, string Description)
         new("ws_sr_constancia_inscripcion", "Constancia de inscripción"),
         new("ws_sr_padron_a5", "Constancia de inscripción (nombre anterior)"),
         new("ws_sr_padron_a13", "Padrón A13"),
+        new("seti-setipago-api", "SETIWS-PAGO-API: VEPs de organismos (REST)"),
     ];
 
     /// <summary>The services ArcaSim answers for. WSAA rejects any other id with wsn.notFound.</summary>

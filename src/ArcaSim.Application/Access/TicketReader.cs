@@ -33,6 +33,9 @@ public sealed record TicketCheck(
     public bool Failed => Problem != TicketProblem.None;
 }
 
+/// <summary>What a token says, read whole: whether it parses, whether the sign holds, its service, dates and relations.</summary>
+public sealed record TicketFacts(bool Readable, bool Signed, string Service, long GenerationTime, long ExpirationTime, IReadOnlyList<long> Relations);
+
 /// <summary>
 /// Reads the token and sign WSAA handed out and checks them for one service:
 /// present, readable, within its dates, signed by ArcaSim, issued for this
@@ -75,6 +78,30 @@ public sealed class TicketReader(IClock clock, ITokenSigner signer)
         if (!relations.Contains(cuit.ToString())) return new(TicketProblem.CuitNotRelated, Cuit: cuit);
 
         return new(TicketProblem.None, Cuit: cuit);
+    }
+
+    /// <summary>
+    /// Everything a token says and whether its signature holds, without stopping
+    /// at the first problem: what SETIWS's gateway reports, every problem at once.
+    /// </summary>
+    public TicketFacts Inspect(string token, string sign)
+    {
+        var signed = signer.Verify(token, sign);
+        try
+        {
+            var document = new XmlDocument();
+            document.LoadXml(Decode(token));
+            var id = document.SelectSingleNode("/sso/id") as XmlElement;
+            var login = document.SelectSingleNode("/sso/operation/login") as XmlElement;
+            var relations = document.SelectNodes("/sso/operation/login/relations/relation")?.OfType<XmlElement>()
+                .Select(r => long.TryParse(r.GetAttribute("key"), out var key) ? key : 0).ToList() ?? [];
+            return new TicketFacts(true, signed, login?.GetAttribute("service") ?? "",
+                EpochAttribute(id, "gen_time"), EpochAttribute(id, "exp_time"), relations);
+        }
+        catch (XmlException)
+        {
+            return new TicketFacts(false, signed, "", 0, 0, []);
+        }
     }
 
     /// <summary>
