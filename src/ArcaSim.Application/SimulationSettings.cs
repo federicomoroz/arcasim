@@ -73,6 +73,13 @@ public sealed class ServiceChaos
     /// <summary>The next FECAESolicitar gets its CAE recorded but the connection is dropped before the answer.</summary>
     public bool DropNextResponse { get; set; }
 
+    /// <summary>
+    /// What fwshomo's F5 does in homologación: every answer that would go out
+    /// with HTTP 500 (a fault) goes out as 200, without Content-Type, with the
+    /// text "BL&lt;n&gt; &lt;yyyy-MM-dd HH:mm:ss&gt; 500" (wsmtxca.md, wsct.md, wsfecred.md).
+    /// </summary>
+    public bool BalancerMask { get; set; }
+
     public void ForceNextRejection(int code) => _forcedObservations.Enqueue(code);
 
     public bool TryTakeForcedRejection(out int code) => _forcedObservations.TryDequeue(out code);

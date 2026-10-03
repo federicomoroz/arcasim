@@ -17,6 +17,12 @@ public sealed record OperationContract(
     IReadOnlyList<XName> OutputHeaders);
 
 /// <summary>
+/// An operation the WSDL also binds to plain HTTP GET (the ASMX services'
+/// dummy): its path under the address and the element it answers, sent bare.
+/// </summary>
+public sealed record HttpOperation(string Name, string Location, XName Output);
+
+/// <summary>
 /// What an ARCA WSDL promises, read from the file ARCA publishes: its
 /// operations (document/literal, as every ARCA service is), the schemas of
 /// their messages, the address path and whether the binding speaks SOAP 1.2.
@@ -29,6 +35,7 @@ public sealed class ServiceContract
     private static readonly XNamespace Xsd = "http://www.w3.org/2001/XMLSchema";
     private static readonly XNamespace Soap11 = "http://schemas.xmlsoap.org/wsdl/soap/";
     private static readonly XNamespace Soap12 = "http://schemas.xmlsoap.org/wsdl/soap12/";
+    private static readonly XNamespace Http = "http://schemas.xmlsoap.org/wsdl/http/";
 
     private readonly Dictionary<XName, OperationContract> _byInput = [];
     private readonly Dictionary<string, OperationContract> _byAction = new(StringComparer.Ordinal);
@@ -42,6 +49,9 @@ public sealed class ServiceContract
 
     /// <summary>The files the WSDL imports, by the name it uses for them, so they can be served next to it.</summary>
     public IReadOnlyDictionary<string, string> Imports { get; }
+
+    /// <summary>The operations the WSDL binds to HTTP GET besides SOAP; none in most services.</summary>
+    public IReadOnlyList<HttpOperation> HttpOperations { get; private init; } = [];
 
     private ServiceContract(string file, string targetNamespace, string addressPath, bool soap12,
         List<OperationContract> operations, XmlSchemaSet schemas, Dictionary<string, string> imports)
@@ -138,8 +148,19 @@ public sealed class ServiceContract
             operations.Add(new OperationContract(name, action, input, output, headers));
         }
 
+        var httpOperations = (
+            from httpBinding in portBindings.Where(b => b.Element(Http + "binding")?.Attribute("verb")?.Value == "GET").Distinct()
+            let httpType = portTypes[Resolve(httpBinding, httpBinding.Attribute("type")!.Value)]
+            from op in httpBinding.Elements(Wsdl + "operation")
+            let location = op.Element(Http + "operation")?.Attribute("location")?.Value
+            let abstractOp = httpType.Elements(Wsdl + "operation").FirstOrDefault(o => o.Attribute("name")?.Value == op.Attribute("name")?.Value)
+            let output = abstractOp?.Element(Wsdl + "output")
+            let part = output is null ? null : messages[Resolve(output, output.Attribute("message")!.Value)].Elements(Wsdl + "part").FirstOrDefault(p => p.Attribute("element") is not null)
+            where location is not null && part is not null
+            select new HttpOperation(op.Attribute("name")!.Value, location, Resolve(part, part.Attribute("element")!.Value))).ToList();
+
         return new ServiceContract(Path.GetFullPath(file), main.Root!.Attribute("targetNamespace")?.Value ?? "",
-            PathOf(address), soap12, operations, schemas, imports);
+            PathOf(address), soap12, operations, schemas, imports) { HttpOperations = httpOperations };
     }
 
     /// <summary>The absolute path of the address, without a trailing slash or the port ARCA sometimes prints.</summary>

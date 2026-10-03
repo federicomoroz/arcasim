@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using System.Xml.Schema;
+using ArcaSim.Application.Access;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Domain;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,7 +58,7 @@ public class CatalogServiceTests
                 problems.Add($"{operation.Name}: HTTP {status} {body[Math.Max(0, body.IndexOf("<faultstring", StringComparison.Ordinal))..]}");
                 continue;
             }
-            var answer = XDocument.Parse(body).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
+            var answer = XDocument.Parse(Soap(body)).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
             if (answer.Name != operation.Output) problems.Add($"{operation.Name}: answered {answer.Name}");
             new XDocument(answer).Validate(contract.Schemas, (_, e) =>
             {
@@ -82,16 +83,29 @@ public class CatalogServiceTests
         Sign(request, "abc", "abc");
         var (status, body) = await sim.PostSoapAsync(new Uri("http://localhost" + contract.AddressPath), Envelope(request), operation.Action ?? "");
 
-        if (definition.Errors.InBody)
+        // "abc" is an unreadable token: the service's row for it, or for any problem, says what comes back.
+        var errors = definition.Errors;
+        var row = errors.Rows?.FirstOrDefault(r => r.Key == "Unreadable").Value?.FirstOrDefault()
+                  ?? errors.Rows?.FirstOrDefault(r => r.Key == "*").Value?.FirstOrDefault() ?? new AuthRow();
+        if (errors.InBody && !row.Fault)
         {
             Assert.Equal(200, status);
-            Assert.True(body.Contains($">{definition.Errors.Code}<"), body);
+            var code = row.Code != 0 ? row.Code : errors.CodeFor(TicketProblem.Unreadable);
+            Assert.True(body.Contains($">{code}<"), body);
         }
         else
         {
-            Assert.Equal(500, status);
+            Assert.Equal(row.Status ?? errors.Status, status);
             Assert.True(body.Contains("Fault"), body);
         }
+    }
+
+    /// <summary>The SOAP envelope of an answer, out of its MTOM package when the service sends one.</summary>
+    public static string Soap(string body)
+    {
+        if (!body.TrimStart().StartsWith("--", StringComparison.Ordinal)) return body;
+        var start = body.IndexOf('<', body.IndexOf("\r\n\r\n", StringComparison.Ordinal));
+        return body[start..(body.LastIndexOf('>') + 1)];
     }
 
     /// <summary>Puts the ticket where the request carries it, and the caller's CUIT in the CUIT next to it (cuit, cuitRepresentada, CUITDelegado...).</summary>
