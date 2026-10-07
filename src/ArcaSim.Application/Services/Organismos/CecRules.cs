@@ -111,22 +111,22 @@ public sealed class CecRules(IDocumentStore store, PadronDirectory padron, ICloc
         var queries = (await store.ListAsync<ExportQuery>(Queries, "", ct))
             .Where(q => q.Organism == call.Cuit && (cuit is null || q.Cuit == cuit) && (from is null || (q.Date >= from && q.Date <= to)))
             .ToList();
-        var shown = queries.Skip((page - 1) * PageSize).Take(PageSize).ToList();
+        var (shown, more) = PageOf(queries, page);
         var answer = new XElement(call.Operation.Output, new XElement("obtenerConsultasReturn",
             shown.Count == 0 ? null : new XElement("consultas", shown.Select(q => Data("consulta", q))),
             new XElement("pagina", page),
-            new XElement("hayMas", queries.Count > page * PageSize ? "S" : "N")));
+            new XElement("hayMas", more ? "S" : "N")));
         return call.Ok(answer);
     }
 
     private static ContractAnswer Result(ServiceCall call, ExportQuery query, int page)
     {
-        var shown = query.Vouchers.Skip((page - 1) * PageSize).Take(PageSize).ToList();
+        var (shown, more) = PageOf(query.Vouchers, page);
         var result = new XElement("consultarComprobantesExpoReturn",
             Data("datosConsulta", query),
             shown.Count == 0 ? null : new XElement("comprobantesExportacion", shown.Select(Voucher)),
             new XElement("pagina", page),
-            new XElement("hayMas", query.Vouchers.Count > page * PageSize ? "S" : "N"),
+            new XElement("hayMas", more ? "S" : "N"),
             query.Vouchers.Count == 0
                 ? ErrorBlock(4010, $"No se encontraron datos. No se encontraron comprobantes para la consulta de código {query.Code}.")
                 : null);
@@ -171,6 +171,17 @@ public sealed class CecRules(IDocumentStore store, PadronDirectory padron, ICloc
         new("errores", new XElement("error", new XElement("codigo", code), new XElement("descripcion", text)));
 
     private static string ReturnOf(ServiceCall call) => call.Name == "obtenerConsultas" ? "obtenerConsultasReturn" : "consultarComprobantesExpoReturn";
+
+    /// <summary>
+    /// A page of 1-based number page (never below 1 here), and whether more follow it. The sums are in long: a page
+    /// number near the int limit is a page past the last, not a wrapped number that shows the first.
+    /// </summary>
+    private static (List<T> Shown, bool More) PageOf<T>(IReadOnlyList<T> items, int page)
+    {
+        var skipped = (long)(page - 1) * PageSize;
+        var shown = skipped >= items.Count ? [] : items.Skip((int)skipped).Take(PageSize).ToList();
+        return (shown, items.Count > skipped + PageSize);
+    }
 
     private static int Period(DateOnly date) => date.Year * 100 + date.Month;
 
