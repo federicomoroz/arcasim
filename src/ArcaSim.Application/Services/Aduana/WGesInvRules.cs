@@ -7,7 +7,7 @@ namespace ArcaSim.Application.Services.Aduana;
 /// <summary>A wine export despacho blocked until the INV approves it: PEND, then APRO (with its secuencia) or DENE.</summary>
 public sealed record InvDespacho(
     long Cuit, string Aduana, string Id, long Transaccion, DateTimeOffset Oficializacion, long CuitExportador, string Exportador,
-    string Estado = "PEND", long NroSecuencia = 0, string Motivo = "");
+    string Estado = "PEND", long NroSecuencia = 0);
 
 /// <summary>A VUCEA form waiting for the INV to approve (A) or reject (R) it.</summary>
 public sealed record VuceaForm(long Cuit, long NroTramite, long Transaccion, string IdDestinacion, long CuitRegistro, DateTimeOffset Registro, string Estado = "");
@@ -106,7 +106,7 @@ public sealed class WGesInvRules(IDocumentStore store, IClock clock) : IServiceB
 
         if (despacho.Estado == "APRO") return call.Fail(30687, $"Desbloqueo ya registrado {id}");
         if (despacho.Estado == "DENE") return call.Fail(30688, $"Denegacion de desbloqueo ya registrado {id}");
-        await store.PutAsync(Despachos, $"{call.Cuit}/{id}", despacho with { Estado = "DENE", Motivo = arg.Field("MotivoDenegacion") }, ct);
+        await store.PutAsync(Despachos, $"{call.Cuit}/{id}", despacho with { Estado = "DENE" }, ct);
         return call.Done(call.Sample().Receipt(20304, Ok));
     }
 

@@ -8,7 +8,7 @@ using SoapFault = ArcaSim.Application.Soap.SoapFault;
 namespace ArcaSim.Application.Services.Organismos;
 
 /// <summary>A sworn statement presented through the web service, under its transaction number.</summary>
-public sealed record Presentation(long Transaction, long Cuit, int Form, string FileName, string Md5, long Size, DateTimeOffset PresentedAt);
+public sealed record Presentation(long Transaction, long Cuit, int Form, string FileName, string Md5, DateTimeOffset PresentedAt);
 
 /// <summary>
 /// Presentación de DDJJ (uploadPresentacionService,
@@ -74,7 +74,7 @@ public sealed partial class DdjjRules(IDocumentStore store, IClock clock) : ISer
         var existing = await store.GetAsync<Presentation>(Presentations, key, ct);
         if (existing is null)
         {
-            existing = new Presentation(FirstTransaction + await store.NextAsync(Presentations, ct), call.Cuit, form, fileName, md5, content.LongLength, clock.Now);
+            existing = new Presentation(FirstTransaction + await store.NextAsync(Presentations, ct), call.Cuit, form, fileName, md5, clock.Now);
             await store.PutAsync(Presentations, key, existing, ct);
         }
         return call.Ok(call.Sample().Set("return", existing.Transaction));
