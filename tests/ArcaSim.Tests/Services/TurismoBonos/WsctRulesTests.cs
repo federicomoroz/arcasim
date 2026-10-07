@@ -93,6 +93,23 @@ public class WsctRulesTests
     }
 
     [Fact]
+    public async Task The_relative_margin_of_the_total_is_measured_on_the_total_informed_as_the_manual_defines_it()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var desk = await OpenAsync(sim);
+        const string longStay = "<item><tipo>0</tipo><codigoTurismo>1</codigoTurismo><descripcion>Estadia larga</descripcion><codigoAlicuotaIVA>5</codigoAlicuotaIVA><importeIVA>21000.00</importeIVA><importeItem>121000.00</importeItem></item>";
+        string Invoice(string total) =>
+            HotelInvoice(1, refund: "<importeReintegro>-21000.00</importeReintegro>", total: total, items: longStay, vat: "21000.00", taxed: "100000.00");
+
+        // The amounts add up to 100001.00. 10.00 under it is 0.01 % of the sum but over 0.01 % of the 99991.00 informed (wsct.md, Aritmética: error relativo = error absoluto / |real|).
+        var under = await AuthorizeAsync(desk, Invoice("99991.00"));
+        var over = await AuthorizeAsync(desk, Invoice("100011.00"));
+
+        Assert.Equal(["369"], Codes(under));
+        Assert.Equal("A", over.Descendants("resultado").Single().Value);
+    }
+
+    [Fact]
     public async Task A_voucher_sent_again_is_refused_as_out_of_sequence()
     {
         await using var sim = ArcaSimHarness.Start();

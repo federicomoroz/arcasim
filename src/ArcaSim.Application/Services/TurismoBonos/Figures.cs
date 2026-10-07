@@ -20,16 +20,6 @@ internal static class Figures
     public static DateOnly? ParseIsoDay(string? text) =>
         DateOnly.TryParseExact(text?.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day) ? day : null;
 
-    /// <summary>
-    /// ARCA's margin for sums: a relative error up to 0.01 %, or an absolute
-    /// one up to 0.01 per element added (wsct.md, Aritmética).
-    /// </summary>
-    public static bool Close(decimal expected, decimal actual, int count)
-    {
-        var error = Math.Abs(expected - actual);
-        return error <= 0.01m * Math.Max(1, count) || (expected != 0 && error / Math.Abs(expected) <= 0.0001m);
-    }
-
     /// <summary>The direct child with that local name, whatever its namespace.</summary>
     public static XElement? Child(this XElement element, string name) =>
         element.Elements().FirstOrDefault(e => e.Name.LocalName == name);

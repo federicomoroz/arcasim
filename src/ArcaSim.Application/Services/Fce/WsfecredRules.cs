@@ -587,7 +587,7 @@ public sealed class WsfecredRules(
         if (rate <= 0) Add(2006);
         else if (pesos && rate != 1) Add(12000);
         else if (!pesos && await rates.RateAsync(account.Currency, book.Today, ct) is { } official
-                 && (rate < official.Rate * 0.02m || rate > official.Rate * 4m)) Add(2009);
+                 && !Amounts.WithinRateBand(rate, official.Rate)) Add(2009);
 
         if (new[] { cancelled, withheld, embargo }.Any(a => a < 0)) Add(2010);
 

@@ -94,6 +94,29 @@ public class MtxcaRulesTests
     }
 
     [Fact]
+    public async Task The_relative_margin_of_the_total_is_measured_on_the_total_informed()
+    {
+        await using var sim = await StartAsync();
+        var client = await MtxcaClient.LoginAsync(sim);
+        string Voucher(string total) =>
+            "<codigoTipoComprobante>1</codigoTipoComprobante><numeroPuntoVenta>1</numeroPuntoVenta><numeroComprobante>1</numeroComprobante>" +
+            $"<fechaEmision>2026-10-01</fechaEmision><codigoTipoDocumento>80</codigoTipoDocumento><numeroDocumento>{Receiver}</numeroDocumento><condicionIVAReceptor>1</condicionIVAReceptor>" +
+            "<importeGravado>100000.00</importeGravado><importeSubtotal>100000.00</importeSubtotal>" +
+            $"<importeTotal>{total}</importeTotal><codigoMoneda>PES</codigoMoneda><cotizacionMoneda>1</cotizacionMoneda><codigoConcepto>1</codigoConcepto>" +
+            "<arrayItems><item><unidadesMtx>1</unidadesMtx><codigoMtx>7790001000012</codigoMtx><codigo>P-1</codigo><descripcion>Producto caro</descripcion>" +
+            "<cantidad>1</cantidad><codigoUnidadMedida>7</codigoUnidadMedida><precioUnitario>100000</precioUnitario><codigoCondicionIVA>5</codigoCondicionIVA>" +
+            "<importeIVA>21000.00</importeIVA><importeItem>121000.00</importeItem></item></arrayItems>" +
+            "<arraySubtotalesIVA><subtotalIVA><codigo>5</codigo><importe>21000.00</importe></subtotalIVA></arraySubtotalesIVA>";
+
+        // The items and the VAT add up to 121000.00. 12.10 under it is exactly 0.01 % of the sum but a little over 0.01 % of the 120987.90 informed.
+        var under = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{Voucher("120987.90")}</comprobanteCAERequest>");
+        var over = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{Voucher("121012.10")}</comprobanteCAERequest>");
+
+        Assert.Equal(["115", "116"], Codes(under, "arrayErrores").Order());
+        Assert.Equal("A", over.Element("resultado")!.Value);
+    }
+
+    [Fact]
     public async Task Class_A_needs_a_CUIT_and_a_CAE_point_of_sale()
     {
         await using var sim = await StartAsync();

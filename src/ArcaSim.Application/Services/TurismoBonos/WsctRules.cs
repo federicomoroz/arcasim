@@ -371,7 +371,7 @@ public sealed class WsctRules(
             return official?.Rate ?? 0;
         }
         if (same && official is { } bna && rate != bna.Rate) fail(320);
-        if (await rates.RateAsync(currency!, today, ct) is { } latest && (rate < latest.Rate * 0.02m || rate > latest.Rate * 5)) fail(306);
+        if (await rates.RateAsync(currency!, today, ct) is { } latest && !Amounts.WithinRateBand(rate.Value, latest.Rate, ceiling: 5m)) fail(306);
         return rate.Value;
     }
 
@@ -440,7 +440,7 @@ public sealed class WsctRules(
             if (line.Type == 99 && line.Amount >= 0) fail(408);
             if (line.Type == 0 && line.VatAmount < 0) fail(409);
             if (line.Type == 99 && line.VatAmount >= 0) fail(411);
-            if (line.Vat == Vat21 && !Figures.Close(Math.Round(line.Amount * 21 / 121, 2, MidpointRounding.ToEven), line.VatAmount, 1)) fail(413);
+            if (line.Vat == Vat21 && !Amounts.WithinMargin(Math.Round(line.Amount * 21 / 121, 2, MidpointRounding.ToEven), line.VatAmount, 1)) fail(413);
             if (line.VatAmount > 0 && line.Amount < 0 || line.VatAmount < 0 && line.Amount > 0) fail(414);
         }
         if (type == 195 && lines.Count > 0 && lines.All(l => l.Tourism == 5)) fail(415);
@@ -456,7 +456,7 @@ public sealed class WsctRules(
             foreach (var rate in lines.Select(l => l.Vat).Concat(subtotals.Select(s => s.Code)).Distinct())
             {
                 var items = lines.Where(l => l.Vat == rate).ToList();
-                if (!Figures.Close(items.Sum(l => l.VatAmount), subtotals.Where(s => s.Code == rate).Sum(s => s.Amount), items.Count)) fail(504);
+                if (!Amounts.WithinMargin(items.Sum(l => l.VatAmount), subtotals.Where(s => s.Code == rate).Sum(s => s.Amount), items.Count)) fail(504);
             }
         }
 
@@ -478,7 +478,7 @@ public sealed class WsctRules(
         var refund = request.Amount("importeReintegro");
         var total = request.Amount("importeTotal") ?? 0;
         if (taxed is null or < 0) fail(360);
-        else if (!Figures.Close(lines.Sum(l => l.Amount - l.VatAmount), taxed.Value, lines.Count)) fail(361);
+        else if (!Amounts.WithinMargin(lines.Sum(l => l.Amount - l.VatAmount), taxed.Value, lines.Count)) fail(361);
         if (untaxed != 0) fail(362);
         if (exempt != 0) fail(363);
 
@@ -486,15 +486,15 @@ public sealed class WsctRules(
         if (hotel.Count > 0)
         {
             if (refund is null or > 0) fail(364);
-            else if (!Figures.Close(hotel.Sum(l => l.VatAmount), -refund.Value, hotel.Count)) fail(366);
+            else if (!Amounts.WithinMargin(hotel.Sum(l => l.VatAmount), -refund.Value, hotel.Count)) fail(366);
         }
         if (type is 196 or 197 && lines.Count > 0 && lines.All(l => l.Tourism == 5) && refund is { } excess && excess != 0) fail(365);
 
         if (others < 0) fail(367);
-        if ((taxes.Count > 0 || others is not null) && !Figures.Close(taxes.Sum(t => t.Amount("importe") ?? 0), others ?? 0, taxes.Count)) fail(368);
+        if ((taxes.Count > 0 || others is not null) && !Amounts.WithinMargin(taxes.Sum(t => t.Amount("importe") ?? 0), others ?? 0, taxes.Count)) fail(368);
 
         var sum = (taxed ?? 0) + untaxed + exempt + (refund ?? 0) + (others ?? 0) + (subtotals?.Sum(s => s.Amount) ?? 0);
-        if (!Figures.Close(sum, total, lines.Count)) fail(369);
+        if (!Amounts.WithinMargin(sum, total, lines.Count)) fail(369);
     }
 
     /// <summary>700-732: each payment form with the fields its kind asks for.</summary>

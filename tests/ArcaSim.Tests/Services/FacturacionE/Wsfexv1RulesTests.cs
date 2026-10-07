@@ -96,6 +96,20 @@ public class Wsfexv1RulesTests
     }
 
     [Fact]
+    public async Task The_relative_margin_of_the_total_is_measured_on_the_total_informed()
+    {
+        var (sim, _, soap) = await StartAsync();
+        await using var _s = sim;
+
+        // The items add up to 1000. 0.10 under it is exactly 0.01 % of the sum but a little over 0.01 % of the 999.90 informed.
+        var under = await soap.CallAsync(Fex, "FEXAuthorize", Export(id: 1, number: 1, total: "999.90"));
+        var over = await soap.CallAsync(Fex, "FEXAuthorize", Export(id: 2, number: 1, total: "1000.10"));
+
+        Assert.Equal("1610", under.Value("FEXErr/ErrCode"));
+        Assert.Equal("A", over.Value("FEXResultAuth/Resultado"));
+    }
+
+    [Fact]
     public async Task A_point_of_sale_not_registered_for_web_services_is_refused_with_1510_and_1607()
     {
         var (sim, _, soap) = await StartAsync();

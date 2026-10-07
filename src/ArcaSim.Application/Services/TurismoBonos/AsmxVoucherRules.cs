@@ -288,7 +288,7 @@ public abstract class AsmxVoucherRules(
     protected static AsmxRefusal? CheckItemsTotal(AsmxCmp cmp, IReadOnlyList<XElement> items)
     {
         var sum = items.Sum(i => i.Amount("Imp_total") ?? 0);
-        return sum > cmp.Total && !Figures.Close(cmp.Total, sum, items.Count) ? new AsmxRefusal(1014, Text1014.Items) : null;
+        return sum > cmp.Total && !Amounts.WithinMargin(sum, cmp.Total, items.Count) ? new AsmxRefusal(1014, Text1014.Items) : null;
     }
 
     protected static IReadOnlyList<XElement> Items(AsmxCmp cmp) =>

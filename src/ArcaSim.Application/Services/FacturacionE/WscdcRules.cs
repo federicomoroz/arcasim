@@ -141,7 +141,7 @@ public sealed class WscdcRules(
         if (q.Number is < 1 or > VoucherLimits.MaxNumber) errors.Add(5);
         if (!Fev1Dates.TryParse(q.Date, out _)) errors.Add(6);
         if (q.Total < 0 || Math.Abs(q.Total) >= 10_000_000_000_000m || q.Total != Math.Round(q.Total, 2)) errors.Add(7);
-        if (q.DocType is not null && (q.DocType.Length > 2 || !q.DocType.All(char.IsAsciiDigit) || !tables.HasDocumentType(int.Parse(q.DocType))))
+        if (q.DocType is not null && (q.DocType.Length > 2 || !q.DocType.All(char.IsAsciiDigit) || !tables.HasDocumentType(int.Parse(q.DocType, CultureInfo.InvariantCulture))))
             errors.Add(8);
         if (q.DocNumber is not null && (q.DocNumber.Length > 11 || !q.DocNumber.All(char.IsAsciiDigit))) errors.Add(9);
         if (q.Code is not { Length: 14 } || !q.Code.All(char.IsAsciiDigit)) errors.Add(10);
@@ -190,13 +190,20 @@ public sealed class WscdcRules(
         return observations;
     }
 
+    /// <summary>
+    /// The request against what was registered. 110's tolerance is wscdc's own
+    /// (wscdc.md, pág. 13 and 27): the absolute error up to 1 peso whatever the
+    /// amount, or the relative error up to 0.01 % of the registered total, not
+    /// the 0.01 per element the other invoicing services' sums use, so
+    /// Amounts.WithinMargin does not apply.
+    /// </summary>
     private void Compare(Query q, DateOnly date, Registered registered, List<int> observations)
     {
         if (date != registered.Date) observations.Add(107);
         var error = Math.Abs(q.Total - registered.Total);
         if (error > 1 && (registered.Total == 0 || error / Math.Abs(registered.Total) > 0.0001m)) observations.Add(110);
-        if (q.DocType is not null && int.Parse(q.DocType) != registered.DocType) observations.Add(111);
-        if (q.DocNumber is not null && long.Parse(q.DocNumber) != registered.DocNumber) observations.Add(112);
+        if (q.DocType is not null && int.Parse(q.DocType, CultureInfo.InvariantCulture) != registered.DocType) observations.Add(111);
+        if (q.DocNumber is not null && long.Parse(q.DocNumber, CultureInfo.InvariantCulture) != registered.DocNumber) observations.Add(112);
     }
 
     /// <summary>113 to 118, which hold whatever was registered.</summary>
