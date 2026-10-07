@@ -106,7 +106,10 @@ internal static class Dia
 
     public static XElement? Arg(this ServiceCall call, string name) => call.Request.Child(name);
 
-    /// <summary>The DIA's dd/mm/aaaa dates (ActualizaDispositivo, InicioCargaSuelta).</summary>
+    /// <summary>The DIA's dd/mm/aaaa dates, written (ConsultaDispositivo, ConsultaContenedor).</summary>
+    public static string DayMonthYear(DateOnly day) => day.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
+
+    /// <summary>The DIA's dd/mm/aaaa dates, read (ActualizaDispositivo, InicioCargaSuelta).</summary>
     public static bool TryDayMonthYear(string text, out DateOnly date) =>
         DateOnly.TryParseExact(text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
 

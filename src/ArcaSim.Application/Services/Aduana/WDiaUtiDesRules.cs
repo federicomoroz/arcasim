@@ -145,7 +145,7 @@ public sealed class WDiaUtiDesRules(IDocumentStore store, ITaxpayerRepository ta
         if (Dia.FirstMissing(arg, required) is { } missing) return call.Fail(42034, Dia.MissingText(missing));
         if (!Dia.TryDayMonthYear(arg.Field(dateField), out var date)) return call.Fail(10238, "Formato fecha inválido");
         var target = stateField is null ? "ZGSA" : arg.Field(stateField);
-        if (!AduanaTables.Has("ETAPEMA_DESC", target))
+        if (!AduanaTables.Has("ETAPEMA_DESC", target) || !From.TryGetValue(target, out var allowedFrom))
             return call.Fail(31353, "El campo Estado tiene un formato erroneo. Debe ser ZGSA, PASA, ZGAR, DISP o PFER");
 
         var id = arg.Field("IdentificadorDispositivo");
@@ -160,8 +160,8 @@ public sealed class WDiaUtiDesRules(IDocumentStore store, ITaxpayerRepository ta
             return use.Destinacion == destination
                 ? call.Fail(12623, "Dispositivo asignado a otro Medio Transportador")
                 : call.Fail(12409, "El dispositivo se encuentra asignado.");
-        if (!From[target].Contains(current))
-            return call.Fail(12403, "El dispositivo está en estado incorrecto debe ser : " + string.Join(" o ", From[target].Where(s => s != "")));
+        if (!allowedFrom.Contains(current))
+            return call.Fail(12403, "El dispositivo está en estado incorrecto debe ser : " + string.Join(" o ", allowedFrom.Where(s => s != "")));
 
         var next = target switch
         {
@@ -186,7 +186,7 @@ public sealed class WDiaUtiDesRules(IDocumentStore store, ITaxpayerRepository ta
             .Set("CuitPrestador", u.Cuit)
             .Set("IdentificadorDispositivo", u.Id)
             .Set("EstadoOperacion", u.Operacion)
-            .Set("FechaEstadoOperacion", Day(u.FechaOperacion))
+            .Set("FechaEstadoOperacion", Dia.DayMonthYear(u.FechaOperacion))
             .Set("IdentificadorDestinacion", u.Destinacion)
             .Set("IdentificadorContenedor", u.Contenedor)
             .Set("IdentificadorAduana", u.Aduana)
@@ -216,8 +216,8 @@ public sealed class WDiaUtiDesRules(IDocumentStore store, ITaxpayerRepository ta
             .Set("IndUsaDES", "S")
             .Set("CUITPrestador", u.Cuit)
             .Set("EstadoOperacion", u.Operacion)
-            .Set("FechaEstadoOperacion", Day(u.FechaOperacion))
-            .Set("FechaEstadoContenedor", Day(u.FechaEstado)));
+            .Set("FechaEstadoOperacion", Dia.DayMonthYear(u.FechaOperacion))
+            .Set("FechaEstadoContenedor", Dia.DayMonthYear(u.FechaEstado)));
         return call.Done(answer);
     }
 
@@ -240,8 +240,6 @@ public sealed class WDiaUtiDesRules(IDocumentStore store, ITaxpayerRepository ta
 
     /// <summary>The aduana inside a destinación's number (AA BBB ...): its third to fifth characters.</summary>
     private static string AduanaOf(string destination) => destination.Length >= 5 ? destination[2..5] : "";
-
-    private static string Day(DateOnly date) => date.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
 
     private static string Or(string value, string fallback) => value == "" ? fallback : value;
 }

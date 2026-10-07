@@ -206,7 +206,7 @@ public sealed class WDigDepFielRules(IDocumentStore store) : IServiceBehavior
         if (Mismatch(call, legajo, r) is { } refused) return refused;
         if (legajo.Estado != "ENDO") return call.Fail(111, "Legajo Duplicado");
 
-        await store.PutAsync(Legajos.Collection, key, legajo with { Estado = "PSAD", Recepcion = Moment(r.Date("fechaHoraAcept")) }, ct);
+        await store.PutAsync(Legajos.Collection, key, legajo with { Estado = "PSAD", Recepcion = r.Date("fechaHoraAcept") is { } accepted ? ArgentinaTime.StartOf(accepted) : null }, ct);
         return Ok(call, "OK Procesado");
     }
 
@@ -260,9 +260,6 @@ public sealed class WDigDepFielRules(IDocumentStore store) : IServiceBehavior
         if (r.Field("cuitIE") != legajo.Ie.ToString()) return call.Fail(108, "El Legajo no se corresponde con el importador/exportador informado");
         return null;
     }
-
-    private static DateTimeOffset? Moment(DateOnly? date) =>
-        date is { } day ? ArgentinaTime.StartOf(day) : null;
 
     private static ContractAnswer Ok(ServiceCall call, string text) => call.Done(call.Sample().Receipt(0, text, "descError"));
 }

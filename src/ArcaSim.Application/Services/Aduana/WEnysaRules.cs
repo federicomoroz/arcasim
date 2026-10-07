@@ -61,7 +61,7 @@ public sealed class WEnysaRules(IDocumentStore store, IClock clock) : IServiceBe
         var kind = data.Field("tipoTransaccion");
         if (!Events.Contains(kind)) return Error(call, 6, "Operación inválida", "tipoTransaccion");
         if (FormProblem(data) is { } invalid) return Error(call, 3, "Datos inválidos", invalid);
-        if (Day(data.Field("fechaVencimiento")) is { } expiry && expiry < clock.Today())
+        if (DayOf(data.Field("fechaVencimiento")) is { } expiry && expiry < clock.Today())
             return Error(call, 3, "Datos inválidos", "fechaVencimiento");
 
         var key = Key(call, data);
@@ -106,7 +106,7 @@ public sealed class WEnysaRules(IDocumentStore store, IClock clock) : IServiceBe
         $"{call.Cuit}/{data.Field("aduanaFormulario")}/{data.Field("anioFormulario")}/{data.Field("numeroFormulario")}";
 
     /// <summary>The manual's "yyyy/mm/dd hh:mi:ss tz" dates, by their day.</summary>
-    private static DateOnly? Day(string text) =>
+    private static DateOnly? DayOf(string text) =>
         text.Length >= 10 && DateOnly.TryParseExact(text[..10], "yyyy/MM/dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day) ? day : null;
 
     private static ContractAnswer Correct(ServiceCall call) => call.Done(call.Sample().Receipt(0, "Operación correcta", "descripcion"));
