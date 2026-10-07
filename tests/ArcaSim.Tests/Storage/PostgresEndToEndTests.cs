@@ -1,20 +1,17 @@
-using Arca.Client;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Storage;
 
 [Collection(PostgresCollection.Name)]
+[RequiresDocker]
 public class PostgresEndToEndTests(PostgresContainer postgres)
 {
-    [Fact]
+    [DockerFact]
     public async Task On_PostgreSQL_an_invoice_is_authorized_and_found_again_after_a_restart()
     {
         var database = await postgres.NewDatabaseAsync();
         var (sim, wsfe) = await ArcaSimHarness.StartWithIssuerAsync(postgres: database);
-        var issued = await wsfe.AuthorizeNextAsync(1, 6, new Voucher
-        {
-            Concept = 1, DocumentType = 99, DocumentNumber = 0, Total = 121, Net = 100, Vat = 21,
-            ReceiverVatCondition = 5, VatLines = [new VatLine(5, 100, 21)],
-        });
+        var issued = await wsfe.AuthorizeNextAsync(1, 6, Vouchers.ConsumerInvoice());
         await sim.DisposeAsync();
 
         var (restarted, again) = await ArcaSimHarness.StartWithIssuerAsync(postgres: database);
