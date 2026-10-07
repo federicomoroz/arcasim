@@ -172,7 +172,7 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
         if (Dia.FirstMissing(arg, "idDIFE") is { } missing) return Refused(call, 42034, $"Falta el dato obligatorio {missing}");
         var key = $"{call.Cuit}/{arg.Field("idDIFE").PadLeft(10, '0')}";
         if (await store.GetAsync<TlDife>(Difes, key, ct) is not { Estado: "REG" or "REC" } dife) return Refused(call, 30286, NoData);
-        var reasons = arg.Elements().FirstOrDefault(e => e.Name.LocalName == "listaJustificacion")?.Elements().ToList() ?? [];
+        var reasons = arg.Child("listaJustificacion")?.Elements().ToList() ?? [];
         if (reasons.Count == 0) return Refused(call, 42034, "Falta el dato obligatorio listaJustificacion");
         if (reasons.FirstOrDefault(r => r.Field("codJustificacion") == "") is not null) return Refused(call, 42034, "Falta el dato obligatorio codJustificacion");
         var total = reasons.Sum(r => r.Decimal("cantidadJustificacion"));
@@ -297,7 +297,7 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
             additional is null ? null : new XElement(call.Name("DescripcionAdicional"), additional)));
 
     private static List<TlItem> Items(XElement arg, string list, string? origin) =>
-        arg.Elements().FirstOrDefault(e => e.Name.LocalName == list)?.Elements()
+        arg.Child(list)?.Elements()
             .Select(i => new TlItem(i.Field("NCM"), i.Field("codProducto"), origin ?? i.Field("origen"), i.Field("descProducto"), i.Decimal("cantidad"), i.Decimal("valorUnitarioDol")))
             .ToList() ?? [];
 

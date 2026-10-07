@@ -140,7 +140,7 @@ public sealed class WgesTabRefRules : IServiceBehavior
             // Direct children only: Descripcion, Opcion and LugarOperativo are also the names of their rows.
             foreach (var (field, text) in new[] { ("Codigo", value.Codigo), ("Descripcion", value.Descripcion), ("VigenciaDesde", value.Desde),
                          ("VigenciaHasta", value.Hasta), ("CodigoIso", value.Codigo) })
-                if (row.Elements().FirstOrDefault(e => e.Name.LocalName == field) is { } child) child.Value = text;
+                if (row.Child(field) is { } child) child.Value = text;
         });
         return call.Done(answer);
     }

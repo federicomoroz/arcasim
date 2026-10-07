@@ -56,7 +56,7 @@ internal static class Dia
         body.Clean();
         if (additional is not null && block is not null)
         {
-            if (block.Elements().FirstOrDefault(e => e.Name.LocalName == additionalField) is { } existing) existing.Value = additional;
+            if (block.Child(additionalField) is { } existing) existing.Value = additional;
             else block.Add(new XElement(codeElement!.Name.Namespace + additionalField, additional));
         }
         return answer;
@@ -71,14 +71,12 @@ internal static class Dia
 
     /// <summary>The first of the fields that came empty, to answer 42034 with its name.</summary>
     public static string? FirstMissing(XElement? scope, params string[] fields) =>
-        fields.FirstOrDefault(f => string.IsNullOrWhiteSpace(scope?.Elements().FirstOrDefault(e => e.Name.LocalName == f)?.Value));
+        fields.FirstOrDefault(f => string.IsNullOrWhiteSpace(scope.Child(f)?.Value));
 
     /// <summary>A field of the business argument itself, not one with the same name deeper down or in the authentication.</summary>
-    public static string Field(this XElement? scope, string name) =>
-        scope?.Elements().FirstOrDefault(e => e.Name.LocalName == name)?.Value.Trim() ?? "";
+    public static string Field(this XElement? scope, string name) => scope.ChildText(name) ?? "";
 
-    public static XElement? Arg(this ServiceCall call, string name) =>
-        call.Request.Elements().FirstOrDefault(e => e.Name.LocalName == name);
+    public static XElement? Arg(this ServiceCall call, string name) => call.Request.Child(name);
 
     /// <summary>The DIA's dd/mm/aaaa dates (ActualizaDispositivo, InicioCargaSuelta).</summary>
     public static bool TryDayMonthYear(string text, out DateOnly date) =>
