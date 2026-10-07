@@ -3,7 +3,9 @@ namespace ArcaSim.Application;
 /// <summary>
 /// The real time, moved by an offset or frozen at a moment. The admin API and
 /// the tests use it to expire tickets, cross the 01/12/2026 change or open a
-/// CAEA window without waiting.
+/// CAEA window without waiting. It always reads in Argentina's time, the one
+/// ARCA's servers write, whatever offset the moment it was frozen at carried:
+/// what formats it or takes its date gets ARCA's day and -03:00.
 /// </summary>
 public sealed class SimulatedClock(TimeProvider time) : IClock
 {
@@ -15,7 +17,7 @@ public sealed class SimulatedClock(TimeProvider time) : IClock
     {
         get
         {
-            lock (_gate) return _frozenAt ?? time.GetUtcNow() + _offset;
+            lock (_gate) return (_frozenAt ?? time.GetUtcNow() + _offset).ToArgentina();
         }
     }
 
