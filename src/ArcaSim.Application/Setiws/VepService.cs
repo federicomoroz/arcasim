@@ -62,7 +62,7 @@ public sealed class VepService(IDocumentStore store, IClock clock)
 {
     private const string Veps = "setiws-veps";
     private const string Owners = "setiws-owners";
-    public static readonly int[] PaymentEntities = [0, 1001, 1002, 1003];
+    public static readonly IReadOnlyList<int> PaymentEntities = [0, 1001, 1002, 1003];
 
     // A create finds out whether its owner's transaction already has a VEP before it makes one, and a payment
     // reads the VEP it writes back: requests that arrive together (a retry after a timeout) take turns.
@@ -156,9 +156,9 @@ public sealed class VepService(IDocumentStore store, IClock clock)
             stored.EntidadDePago > 0 ? $"https://edp-{stored.EntidadDePago}.arcasim.invalid/vep/{stored.Vep.NroVEP}" : null);
 
     /// <summary>The manual's TIPO_SUCURSAL and FORMA_PAGO codes, the ones a simulated payment may carry.</summary>
-    public static readonly int[] BranchTypes = [3, 6, 7, 8, 9, 11, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40];
+    public static readonly IReadOnlyList<int> BranchTypes = [3, 6, 7, 8, 9, 11, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40];
 
-    public static readonly int[] PaymentForms = [1, 2, 3, 4, 5, 41, 42, 43, 62, 63, 64, 68, 69, 91];
+    public static readonly IReadOnlyList<int> PaymentForms = [1, 2, 3, 4, 5, 41, 42, 43, 62, 63, 64, 68, 69, 91];
 
     private const string BlankJpeg =
         "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/wAALCAABAAEBAREA/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/9oACAEBAAA/APQK/9k=";
