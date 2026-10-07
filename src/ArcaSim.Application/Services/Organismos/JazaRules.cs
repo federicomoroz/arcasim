@@ -173,9 +173,9 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
         if (date > Today) refused.Add((1020, "La fecha de presentación no puede ser futura."));
         var machine = await store.GetAsync<GamingMachine>(Machines, MachineKey(call.Cuit, point, machineId), ct);
         if (machine is not { Active: true })
-            return Result(call, [.. refused, (1001, $"La máquina {machineId} no está declarada en JAzA para la CUIT, el punto de explotación {point} y la fecha {Show(date)}.")]);
+            return Result(call, [.. refused, (1001, $"La máquina {machineId} no está declarada en JAzA para la CUIT, el punto de explotación {point} y la fecha {date.DayMonthYear()}.")]);
         if (machine.StartedOn is { } started && date < started)
-            refused.Add((1002, $"La fecha {Show(date)} es anterior al inicio de operaciones de la máquina, el {Show(started)}."));
+            refused.Add((1002, $"La fecha {date.DayMonthYear()} es anterior al inicio de operaciones de la máquina, el {started.DayMonthYear()}."));
 
         string[] names = ["juegos jugados", "coin-in", "coin-out", "jackpot"];
         var initial = Values(sequence.Initial);
@@ -192,7 +192,7 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
         {
             var pending = days.Count > 0 ? days.Max(d => d.Date).AddDays(1) : machine.StartedOn;
             if (pending is { } first && first < date)
-                refused.Add((1003, $"Antes de informar los datos para la fecha {Show(date)} debe informar los datos para la fecha {Show(first)}"));
+                refused.Add((1003, $"Antes de informar los datos para la fecha {date.DayMonthYear()} debe informar los datos para la fecha {first.DayMonthYear()}"));
             if (presentation != 1) refused.Add((1005, "En el primer envío de una fecha el número de presentación debe ser 1."));
             if (sequence.Number != 1) refused.Add((1006, "En el primer envío de una fecha la secuencia debe ser 1."));
         }
@@ -241,7 +241,7 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
         var machineId = call.Request.Text("idMaquina") ?? "";
         if (date > Today) return Return(call, ErrorList([(3001, "La fecha de presentación no puede ser futura.")]));
         var day = await store.GetAsync<MachineDay>(Days, DayKey(call.Cuit, point, machineId, date), ct);
-        if (day is null) return Return(call, ErrorList([(3003, $"No existe una presentación para la máquina {machineId} en la fecha {Show(date)}.")]));
+        if (day is null) return Return(call, ErrorList([(3003, $"No existe una presentación para la máquina {machineId} en la fecha {date.DayMonthYear()}.")]));
         return Return(call, new XElement("arrayDetalleMaquinasElectronicas", day.Sequences.Select(s => new XElement("detalleMaquinaElectronica",
             new XElement("idMaquina", day.Machine),
             new XElement("secuencia", s.Number),
@@ -260,7 +260,7 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
         var machines = (await store.ListAsync<MachineDay>(Days, $"{call.Cuit}/{point:D5}/", ct)).Where(d => d.Date == date).Select(d => d.Machine);
         return Return(call,
             new XElement("nroPuntoExplotacion", point),
-            new XElement("fechaPresentacion", Iso(date)),
+            new XElement("fechaPresentacion", date.Iso()),
             new XElement("arrayIdsMaquinasElectronicas", machines.Select(m => new XElement("idMaquina", m))));
     }
 
@@ -278,7 +278,7 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
         return Return(call,
             new XElement("nroPuntoExplotacion", point),
             new XElement("arrayIdsFechasMaquinasElectronicas", pending.Select(p => new XElement("idFechaMaquina",
-                new XElement("idMaquina", p.Machine), new XElement("fecha", Iso(p.Since))))));
+                new XElement("idMaquina", p.Machine), new XElement("fecha", p.Since.Iso())))));
     }
 
     private async Task<ContractAnswer> RemoveDayAsync(ServiceCall call, CancellationToken ct)
@@ -322,8 +322,14 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
         ? new MachineCounters(0, 0, 0, 0)
         : new MachineCounters(counters.Long("juegosJugados"), counters.Long("coinIn"), counters.Long("coinOut"), counters.Long("jackpot"));
 
+    /// <summary>
+    /// An xsd:dateTime, MinValue when it does not read. One without an offset is Argentina's time, as the customs
+    /// services read it (Dia.Moment): the host's zone would make the same request pass on one machine and fail on another.
+    /// </summary>
     private static DateTimeOffset Moment(string text) =>
-        DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var moment) ? moment : DateTimeOffset.MinValue;
+        DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var moment)
+            ? moment.Kind == DateTimeKind.Unspecified ? new DateTimeOffset(moment, ArgentinaTime.Offset) : new DateTimeOffset(moment)
+            : DateTimeOffset.MinValue;
 
     private static long[] Values(MachineCounters c) => [c.Games, c.CoinIn, c.CoinOut, c.Jackpot];
 
@@ -346,8 +352,4 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
         $"{cuit}/{point:D5}/{machine}/{date.ToString("yyyyMMdd", CultureInfo.InvariantCulture)}";
 
     private static string LotKey(long cuit, long number) => $"{cuit}/{number:D10}";
-
-    private static string Show(DateOnly date) => date.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
-
-    private static string Iso(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 }

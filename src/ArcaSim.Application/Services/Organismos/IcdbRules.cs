@@ -95,7 +95,7 @@ public sealed class IcdbRules(IDocumentStore store, IClock clock) : IServiceBeha
                         new XElement("cuit", a.Cuit),
                         new XElement("cbu", a.Cbu),
                         new XElement("codBeneficio", a.Benefit),
-                        new XElement("fechaVigencia", Iso(a.History.Last(h => h.From <= today).From)))));
+                        new XElement("fechaVigencia", a.History.Last(h => h.From <= today).From.Iso()))));
             case "consultarEnteExentoLey25413":
             {
                 var cuit = request.Long("cuitCliente");
@@ -134,7 +134,7 @@ public sealed class IcdbRules(IDocumentStore store, IClock clock) : IServiceBeha
         new XElement("cbu", account.Cbu),
         new XElement("codigoBeneficio", account.Benefit),
         new XElement("codigoEstado", state.State),
-        new XElement("fechaVigencia", Iso(state.From)));
+        new XElement("fechaVigencia", state.From.Iso()));
 
     private static XElement Entity(ExemptEntity entity) => new("ente", new XElement("cuit", entity.Cuit), new XElement("razonSocial", entity.Name));
 
@@ -153,6 +153,4 @@ public sealed class IcdbRules(IDocumentStore store, IClock clock) : IServiceBeha
 
     private static ContractAnswer Answer(ServiceCall call, params object[] content) =>
         call.Ok(new XElement(call.Operation.Output, new XElement("respuesta", content)));
-
-    private static string Iso(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 }

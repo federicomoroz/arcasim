@@ -102,9 +102,9 @@ public sealed class CecRules(IDocumentStore store, PadronDirectory padron, ICloc
         if (from is { } start && to is { } end)
         {
             if (end < start)
-                return Errors(call, 2003, $"Rango de fechas inválido. 'fechaHasta' tiene que ser más antigua que 'fechaDesde': {Iso(end)} es una fecha previa a {Iso(start)}.");
+                return Errors(call, 2003, $"Rango de fechas inválido. 'fechaHasta' tiene que ser más antigua que 'fechaDesde': {end.Iso()} es una fecha previa a {start.Iso()}.");
             if (end.DayNumber - start.DayNumber > 31)
-                return Errors(call, 2003, $"Rango de fechas inválido. La diferencia entre {Iso(end)} y {Iso(start)} son {end.DayNumber - start.DayNumber} días: el intervalo máximo de dias es 31.");
+                return Errors(call, 2003, $"Rango de fechas inválido. La diferencia entre {end.Iso()} y {start.Iso()} son {end.DayNumber - start.DayNumber} días: el intervalo máximo de dias es 31.");
         }
         if (page < 1) return Errors(call, 2005, "Número de página inválido. El número de página no puede ser menor a 1.");
 
@@ -135,7 +135,7 @@ public sealed class CecRules(IDocumentStore store, PadronDirectory padron, ICloc
 
     private static XElement Data(string name, ExportQuery query) => new(name,
         new XElement("codigoConsulta", query.Code),
-        new XElement("fechaConsulta", Iso(query.Date)),
+        new XElement("fechaConsulta", query.Date.Iso()),
         new XElement("cuit", query.Cuit),
         new XElement("estado", query.State),
         new XElement("periodoDesde", query.From),
@@ -184,8 +184,6 @@ public sealed class CecRules(IDocumentStore store, PadronDirectory padron, ICloc
     }
 
     private static int Period(DateOnly date) => date.Year * 100 + date.Month;
-
-    private static string Iso(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     private static string Key(long code) => code.ToString("D10", CultureInfo.InvariantCulture);
 }

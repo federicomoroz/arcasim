@@ -234,7 +234,7 @@ public sealed class VentanillaRules(IDocumentStore store, IClock clock) : IServi
         .Set("idComunicacion", c.Id)
         .Set("cuitDestinatario", c.Cuit)
         .Set("fechaPublicacion", published)
-        .SetOrDrop("fechaVencimiento", c.ExpiresOn?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))
+        .SetOrDrop("fechaVencimiento", c.ExpiresOn?.Iso())
         .Set("sistemaPublicador", c.PublisherId)
         .Set("sistemaPublicadorDesc", publishers.GetValueOrDefault(c.PublisherId, ""))
         .Set("estado", c.State)
