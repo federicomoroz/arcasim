@@ -29,6 +29,9 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
     private const string NoData = "No hay datos para los criterios ingresados";
     private const int PerLote = 2;
 
+    /// <summary>The first query at an aduana and lugar operativo finds its declarations; requests that arrive together make them once.</summary>
+    private readonly KeyedLocks<string> _seeding = new();
+
     public string Service => "WutiGOPDeclaraciones";
 
     public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct)
@@ -153,6 +156,7 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
 
     private async Task SeedAsync(long cuit, string aduana, string lugar, string place, CancellationToken ct)
     {
+        using var turn = await _seeding.AcquireAsync(place, ct);
         if ((await store.ListAsync<GopDeclaration>(Collection, place, ct)).Count > 0) return;
         var now = clock.Now.ToArgentina();
         for (var i = 0; i < 2; i++)

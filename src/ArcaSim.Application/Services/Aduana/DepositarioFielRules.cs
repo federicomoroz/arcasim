@@ -78,6 +78,9 @@ public sealed class WConsDepFielRules(IDocumentStore store, IClock clock) : ISer
 {
     private const string Ok = "OK Procesado";
 
+    /// <summary>The first PndListaEndo of a PSAD endorses its legajos; requests that arrive together endorse them once.</summary>
+    private readonly KeyedLocks<long> _endorsing = new();
+
     public string Service => "wConsDepFiel";
 
     public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct) => call.Name switch
@@ -100,7 +103,7 @@ public sealed class WConsDepFielRules(IDocumentStore store, IClock clock) : ISer
         if (code != "" && !Legajos.Codes.Contains(code)) return call.Fail(4, Legajos.BadCode);
         var declarant = arg.Field("CuitDeclarante");
 
-        await Legajos.SeedAsync(store, call.Cuit, clock.Now.ToArgentina(), ct);
+        using (await _endorsing.AcquireAsync(call.Cuit, ct)) await Legajos.SeedAsync(store, call.Cuit, clock.Now.ToArgentina(), ct);
         var found = (await store.ListAsync<Legajo>(Legajos.Collection, "", ct))
             .Where(l => l.Psad == call.Cuit && l.Estado == "ENDO"
                         && DateOnly.FromDateTime(l.FechaEndo.DateTime) is var endo && endo >= from && endo <= to

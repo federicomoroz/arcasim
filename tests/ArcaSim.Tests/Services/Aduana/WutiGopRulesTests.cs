@@ -1,3 +1,7 @@
+using ArcaSim.Application;
+using ArcaSim.Application.Services.Aduana;
+using ArcaSim.Infrastructure.InMemory;
+
 namespace ArcaSim.Tests.Services.Aduana;
 
 /// <summary>WutiGOPDeclaraciones: a depositario takes its declarations from the queues and reads each one.</summary>
@@ -66,5 +70,18 @@ public class WutiGopRulesTests
         Assert.Equal("No hay datos para los criterios ingresados", unknown.V("DesError"));
         Assert.Equal("30286", blocks.Code());
         Assert.Equal("4200", liquidacion.V("MontoPagar"));
+    }
+
+    [Fact]
+    public async Task A_depositario_that_asks_twice_at_once_finds_two_declarations_not_more()
+    {
+        var clock = new SimulatedClock(TimeProvider.System);
+        clock.Freeze(AduanaKit.Today);
+        var gop = new RulesProbe(new WutiGopRules(new YieldingDocumentStore(new InMemoryStore()), clock), AduanaKit.Today);
+        var ask = $"<argPndListaGOPDetallada>{Place}</argPndListaGOPDetallada>";
+
+        await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => gop.CallAsync("PndListaGOPDetallada", ask, AduanaKit.Caller)));
+
+        Assert.Equal(2, (await gop.CallAsync("PndListaGOPDetallada", ask, AduanaKit.Caller)).All("IdDecla").Count());
     }
 }

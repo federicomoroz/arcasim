@@ -1,3 +1,7 @@
+using ArcaSim.Application;
+using ArcaSim.Application.Services.Aduana;
+using ArcaSim.Infrastructure.InMemory;
+
 namespace ArcaSim.Tests.Services.Aduana;
 
 /// <summary>WGesINV: the INV finds pending wine despachos, approves or denies them, and they stop being pending.</summary>
@@ -93,5 +97,18 @@ public class WGesInvRulesTests
         Assert.Equal("411", invalid.Code());
         Assert.Equal("20304", approved.Code());
         Assert.Equal("10121", after.Code());
+    }
+
+    [Fact]
+    public async Task A_CUIT_that_asks_twice_at_once_finds_three_despachos_not_more()
+    {
+        var clock = new SimulatedClock(TimeProvider.System);
+        clock.Freeze(AduanaKit.Today);
+        var inv = new RulesProbe(new WGesInvRules(new YieldingDocumentStore(new InMemoryStore()), clock), AduanaKit.Today);
+        const string ask = "<argIdTransaccion>0</argIdTransaccion>";
+
+        await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => inv.CallAsync("ConsultaDespachosPendientes", ask, AduanaKit.Caller)));
+
+        Assert.Equal(3, (await inv.CallAsync("ConsultaDespachosPendientes", ask, AduanaKit.Caller)).All("Oficializacion").Count());
     }
 }

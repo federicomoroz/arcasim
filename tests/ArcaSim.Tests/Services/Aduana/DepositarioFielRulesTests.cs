@@ -1,3 +1,7 @@
+using ArcaSim.Application;
+using ArcaSim.Application.Services.Aduana;
+using ArcaSim.Infrastructure.InMemory;
+
 namespace ArcaSim.Tests.Services.Aduana;
 
 /// <summary>A legajo endorsed to a PSAD, received and digitized through wDigDepFiel, and followed in wConsDepFiel.</summary>
@@ -95,5 +99,17 @@ public class DepositarioFielRulesTests
         Assert.Equal("7", backwards.Code());
         Assert.Equal("5", future.Code());
         Assert.Equal("5", ticketless.Code());
+    }
+
+    [Fact]
+    public async Task A_PSAD_that_asks_twice_at_once_is_endorsed_two_legajos_not_four()
+    {
+        var clock = new SimulatedClock(TimeProvider.System);
+        clock.Freeze(AduanaKit.Today);
+        var cons = new RulesProbe(new WConsDepFielRules(new YieldingDocumentStore(new InMemoryStore()), clock), AduanaKit.Today);
+
+        await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => cons.CallAsync("PndListaEndo", Pending(), AduanaKit.Caller)));
+
+        Assert.Equal(2, (await cons.CallAsync("PndListaEndo", Pending(), AduanaKit.Caller)).All("Legajo").Count());
     }
 }

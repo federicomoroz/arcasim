@@ -1,4 +1,6 @@
 using ArcaSim.Application.Services.Organismos;
+using ArcaSim.Infrastructure.InMemory;
+using ArcaSim.Tests.Services.Aduana;
 
 namespace ArcaSim.Tests.Services.Organismos;
 
@@ -115,4 +117,16 @@ public class VentanillaRulesTests
     private static string Auth(ServiceProbe ve) =>
         $"<authRequest><c:token xmlns:c=\"{Core}\">{ve.Token}</c:token><c:sign xmlns:c=\"{Core}\">{ve.Sign}</c:sign>" +
         $"<c:cuitRepresentada xmlns:c=\"{Core}\">{Caller}</c:cuitRepresentada></authRequest>";
+
+    [Fact]
+    public async Task An_inbox_asked_for_by_requests_that_arrive_together_is_seeded_once()
+    {
+        var store = new YieldingDocumentStore(new InMemoryStore());
+        var now = new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3));
+
+        await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => VentanillaInbox.SeedAsync(store, Caller, now, CancellationToken.None)));
+
+        var inbox = await store.ListAsync<Communication>(VentanillaInbox.Communications);
+        Assert.Equal([1L, 2L, 3L], inbox.Where(c => c.Cuit == Caller).Select(c => c.Id).Order());
+    }
 }

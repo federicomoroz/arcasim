@@ -30,6 +30,9 @@ public sealed class WGesInvRules(IDocumentStore store, IClock clock) : IServiceB
     private const string Ok = "Procedimiento terminado OK.";
     private const string NoData = "No hay datos para los criterios ingresados.";
 
+    /// <summary>The first query of a CUIT finds its despachos; requests that arrive together make them once.</summary>
+    private readonly KeyedLocks<long> _seeding = new();
+
     public string Service => "WGesINV";
 
     public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct) => call.Name switch
@@ -155,6 +158,7 @@ public sealed class WGesInvRules(IDocumentStore store, IClock clock) : IServiceB
     /// <summary>Three oficializaciones from aduana 001, each with its transaction, the first with a VUCEA form.</summary>
     private async Task SeedAsync(long cuit, CancellationToken ct)
     {
+        using var turn = await _seeding.AcquireAsync(cuit, ct);
         if ((await store.ListAsync<InvDespacho>(Despachos, $"{cuit}/", ct)).Count > 0) return;
         var now = clock.Now.ToArgentina();
         for (var i = 0; i < 3; i++)

@@ -65,25 +65,27 @@ public static class VentanillaInbox
     public static async Task SeedAsync(IDocumentStore store, long cuit, DateTimeOffset now, CancellationToken ct)
     {
         await store.SeedAsync(Publishers, Publishers, DefaultPublishers(), ct);
-        if (await store.IsSeededAsync(Scope(cuit), ct)) return;
-        var today = new DateTimeOffset(now.ToArgentina().Date, ArgentinaTime.Offset);
-        var ids = new List<long>();
-        for (var i = 0; i < 3; i++) ids.Add(await store.NextAsync(Communications, ct));
-        await store.SeedAsync<Communication>(Scope(cuit), Communications,
-        [
-            (Key(ids[0]), new Communication(ids[0], cuit, today.AddDays(-10).AddHours(9), DateOnly.FromDateTime(today.AddDays(20).Date), 1,
-                "Comunicacion de prueba de ArcaSim",
-                "Esta comunicacion es ficticia: la publica ArcaSim para que la bandeja no este vacia.",
-                2, 1, null, null, false, [])),
-            (Key(ids[1]), new Communication(ids[1], cuit, today.AddDays(-3).AddHours(11), DateOnly.FromDateTime(today.AddDays(10).Date), 2,
-                null,
-                "Recordatorio ficticio de ArcaSim: vence un plazo de prueba. No es una comunicacion de ARCA.",
-                1, 1, "ARCASIM-0001", null, false, [])),
-            (Key(ids[2]), new Communication(ids[2], cuit, today.AddDays(-1).AddHours(15), null, 1,
-                "Adjunto de prueba de ArcaSim",
-                "Comunicacion ficticia de ArcaSim con un adjunto de texto.",
-                3, 1, null, null, false, [new("constancia-arcasim.txt", "Adjunto ficticio generado por ArcaSim."u8.ToArray())])),
-        ], ct);
+        await store.SeedAsync<Communication>(Scope(cuit), Communications, async token =>
+        {
+            var today = ArgentinaTime.StartOf(now.ArgentinaDate());
+            var ids = new List<long>();
+            for (var i = 0; i < 3; i++) ids.Add(await store.NextAsync(Communications, token));
+            return
+            [
+                (Key(ids[0]), new Communication(ids[0], cuit, today.AddDays(-10).AddHours(9), DateOnly.FromDateTime(today.AddDays(20).Date), 1,
+                    "Comunicacion de prueba de ArcaSim",
+                    "Esta comunicacion es ficticia: la publica ArcaSim para que la bandeja no este vacia.",
+                    2, 1, null, null, false, [])),
+                (Key(ids[1]), new Communication(ids[1], cuit, today.AddDays(-3).AddHours(11), DateOnly.FromDateTime(today.AddDays(10).Date), 2,
+                    null,
+                    "Recordatorio ficticio de ArcaSim: vence un plazo de prueba. No es una comunicacion de ARCA.",
+                    1, 1, "ARCASIM-0001", null, false, [])),
+                (Key(ids[2]), new Communication(ids[2], cuit, today.AddDays(-1).AddHours(15), null, 1,
+                    "Adjunto de prueba de ArcaSim",
+                    "Comunicacion ficticia de ArcaSim con un adjunto de texto.",
+                    3, 1, null, null, false, [new("constancia-arcasim.txt", "Adjunto ficticio generado por ArcaSim."u8.ToArray())])),
+            ];
+        }, ct);
     }
 }
 
