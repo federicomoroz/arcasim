@@ -14,44 +14,74 @@ public sealed record AccessTicket(string Token, string Sign, DateTimeOffset Gene
 /// <summary>
 /// WSAA's loginCms: signs a TRA with the certificate, asks for a TA and keeps
 /// it until it is about to expire. One instance per certificate; it is safe to
-/// share between threads.
+/// share between threads. It owns one semaphore and nothing else, so disposing
+/// it is optional; a disposed client refuses to hand out tickets.
 /// </summary>
-public sealed class WsaaClient(HttpClient http, ArcaOptions options, TimeProvider? time = null)
+public sealed class WsaaClient(HttpClient http, ArcaOptions options, TimeProvider? time = null) : IDisposable
 {
     private const string WsaaNamespace = "http://wsaa.view.sua.dvadac.desein.afip.gov";
     private readonly TimeProvider _time = time ?? TimeProvider.System;
-    private readonly SemaphoreSlim _gate = new(1, 1);
+
+    // One login at a time, whatever the service: ARCA refuses a second TA while the first one lives.
+    private readonly SemaphoreSlim _login = new(1, 1);
+
+    // Guards _tickets. It is held for a lookup or an update and never across an await, so a ticket
+    // that is still valid is returned without waiting for a login that is in progress.
+    private readonly object _memory = new();
     private readonly Dictionary<string, AccessTicket> _tickets = [];
+    private bool _disposed;
 
     /// <summary>A valid ticket for the service: the one in memory, the one on disk, or a new one.</summary>
     public async Task<AccessTicket> GetTicketAsync(string service, CancellationToken ct = default)
     {
-        await _gate.WaitAsync(ct);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (FreshInMemory(service) is { } known) return known;
+
+        await _login.WaitAsync(ct);
         try
         {
-            if (_tickets.TryGetValue(service, out var known) && IsFresh(known)) return known;
-            if (ReadCached(service) is { } cached && IsFresh(cached))
+            // Another caller may have logged in while this one waited its turn.
+            if (FreshInMemory(service) is { } renewed) return renewed;
+            if (ReadCached(service) is { } cached)
             {
-                _tickets[service] = cached;
+                Remember(service, cached);
                 return cached;
             }
 
             var ticket = await LoginAsync(service, ct);
-            _tickets[service] = ticket;
+            Remember(service, ticket);
             WriteCached(service, ticket);
             return ticket;
         }
         finally
         {
-            _gate.Release();
+            _login.Release();
         }
     }
 
-    /// <summary>Drops a ticket the business service refused, so the next call asks for a new one.</summary>
+    /// <summary>
+    /// Drops the ticket of a service, so the next call asks for a new one. Prefer
+    /// <see cref="Forget(string, AccessTicket)"/> when a call was refused: it cannot
+    /// drop a newer ticket that another caller has obtained in the meantime.
+    /// </summary>
     public void Forget(string service)
     {
-        _tickets.Remove(service);
-        if (CachePath(service) is { } path && File.Exists(path)) File.Delete(path);
+        lock (_memory) _tickets.Remove(service);
+        DeleteCached(service, only: null);
+    }
+
+    /// <summary>
+    /// Drops a ticket the business service refused, if it is still the one in use:
+    /// several callers refused with the same ticket drop it once, and the one a
+    /// first caller has already replaced is left alone (ARCA would answer
+    /// coe.alreadyAuthenticated to a login that was not needed).
+    /// </summary>
+    public void Forget(string service, AccessTicket refused)
+    {
+        lock (_memory)
+            if (_tickets.TryGetValue(service, out var current) && current == refused)
+                _tickets.Remove(service);
+        DeleteCached(service, only: refused);
     }
 
     /// <summary>One call to loginCms, without looking at the cache.</summary>
@@ -126,20 +156,82 @@ public sealed class WsaaClient(HttpClient http, ArcaOptions options, TimeProvide
 
     private bool IsFresh(AccessTicket ticket) => ticket.ExpiresAt - options.TicketRenewalMargin > _time.GetUtcNow();
 
+    private AccessTicket? FreshInMemory(string service)
+    {
+        lock (_memory) return _tickets.TryGetValue(service, out var ticket) && IsFresh(ticket) ? ticket : null;
+    }
+
+    private void Remember(string service, AccessTicket ticket)
+    {
+        lock (_memory) _tickets[service] = ticket;
+    }
+
+    // ---- The ticket cache on disk. It is a convenience, never a reason to fail: whatever the file
+    // ---- system or a damaged file can do is skipped, and the client logs in as it would without one.
+
+    /// <summary>
+    /// The file that keeps a service's ticket between runs, or null without a cache
+    /// directory. Its name carries the certificate, the WSAA address with its port
+    /// (two simulators on localhost have different tickets) and the service.
+    /// </summary>
     private string? CachePath(string service) =>
+        CacheFile(FileSafe(options.WsaaUrl.Authority), FileSafe(service));
+
+    /// <summary>
+    /// The file an earlier version wrote, named by the host alone, or null when it
+    /// is the file CachePath names (an address on its scheme's default port). A
+    /// ticket still alive when the client is updated is still found, because ARCA
+    /// refuses a second login while it lives.
+    /// </summary>
+    private string? LegacyCachePath(string service)
+    {
+        var legacy = CacheFile(options.WsaaUrl.Host, service);
+        return legacy == CachePath(service) ? null : legacy;
+    }
+
+    private string? CacheFile(string endpoint, string service) =>
         options.TicketCacheDirectory is null
             ? null
-            : Path.Combine(options.TicketCacheDirectory, $"ta-{options.Certificate.Thumbprint}-{options.WsaaUrl.Host}-{service}.json");
+            : Path.Combine(options.TicketCacheDirectory, $"ta-{options.Certificate.Thumbprint}-{endpoint}-{service}.json");
 
+    private static string FileSafe(string text) =>
+        string.Create(text.Length, text, (chars, source) =>
+        {
+            for (var i = 0; i < chars.Length; i++)
+                chars[i] = char.IsAsciiLetterOrDigit(source[i]) || source[i] is '.' or '-' or '_' ? source[i] : '_';
+        });
+
+    private static bool IsCacheFailure(Exception ex) =>
+        ex is IOException or UnauthorizedAccessException or JsonException or ArgumentException or NotSupportedException
+            or InvalidOperationException or System.Security.SecurityException;
+
+    /// <summary>The freshest ticket on disk that is worth using, under the current name or the earlier one; null when there is none.</summary>
     private AccessTicket? ReadCached(string service)
     {
-        var path = CachePath(service);
-        if (path is null || !File.Exists(path)) return null;
         try
         {
-            return JsonSerializer.Deserialize<AccessTicket>(File.ReadAllText(path));
+            if (CachePath(service) is not { } path) return null;
+            var current = ReadFile(path);
+            var legacy = LegacyCachePath(service) is { } legacyPath ? ReadFile(legacyPath) : null;
+            var best = new[] { current, legacy }.Where(t => t is not null && IsFresh(t)).MaxBy(t => t!.ExpiresAt);
+            if (best is not null && ReferenceEquals(best, legacy)) WriteCached(service, best);
+            return best;
         }
-        catch (JsonException)
+        catch (Exception ex) when (IsCacheFailure(ex))
+        {
+            return null;
+        }
+    }
+
+    private static AccessTicket? ReadFile(string path)
+    {
+        try
+        {
+            if (!File.Exists(path)) return null;
+            var ticket = JsonSerializer.Deserialize<AccessTicket>(File.ReadAllText(path));
+            return ticket is { Token.Length: > 0, Sign.Length: > 0 } ? ticket : null;
+        }
+        catch (Exception ex) when (IsCacheFailure(ex))
         {
             return null;
         }
@@ -147,10 +239,52 @@ public sealed class WsaaClient(HttpClient http, ArcaOptions options, TimeProvide
 
     private void WriteCached(string service, AccessTicket ticket)
     {
-        var path = CachePath(service);
-        if (path is null) return;
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, JsonSerializer.Serialize(ticket));
+        try
+        {
+            if (CachePath(service) is not { } path) return;
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            // Written aside and moved in, so a process that reads at the same moment never sees half a ticket.
+            var partial = $"{path}.{Guid.NewGuid():N}.tmp";
+            try
+            {
+                File.WriteAllText(partial, JsonSerializer.Serialize(ticket));
+                File.Move(partial, path, overwrite: true);
+            }
+            catch
+            {
+                try { File.Delete(partial); } catch (Exception ex) when (IsCacheFailure(ex)) { }
+                throw;
+            }
+        }
+        catch (Exception ex) when (IsCacheFailure(ex))
+        {
+        }
+    }
+
+    /// <summary>
+    /// Deletes the files of a service, or only those that hold <paramref name="only"/> (or cannot be read),
+    /// so a newer ticket another process has written is kept.
+    /// </summary>
+    private void DeleteCached(string service, AccessTicket? only)
+    {
+        try
+        {
+            foreach (var path in new[] { CachePath(service), LegacyCachePath(service) }.OfType<string>())
+            {
+                if (!File.Exists(path)) continue;
+                if (only is not null && ReadFile(path) is { } stored && stored != only) continue;
+                File.Delete(path);
+            }
+        }
+        catch (Exception ex) when (IsCacheFailure(ex))
+        {
+        }
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _login.Dispose();
     }
 }
 

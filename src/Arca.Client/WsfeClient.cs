@@ -201,21 +201,23 @@ public sealed class WsfeClient(HttpClient http, WsaaClient wsaa, ArcaOptions opt
 
     /// <summary>
     /// One operation: Auth first when the operation takes it, then the
-    /// parameters. A token WSFEv1 refuses is dropped and the call made once
-    /// more with a new one.
+    /// parameters. A token WSFEv1 refuses is dropped, and only that one (a
+    /// caller that already replaced it keeps its new ticket), and the call is
+    /// made once more with a new one.
     /// </summary>
     private async Task<XElement> CallAsync(string operation, Action<XmlWriter> parameters, bool authenticated, CancellationToken ct)
     {
-        var result = await SendAsync(operation, parameters, authenticated, ct);
-        if (authenticated && Messages(result.Element(X + "Errors")).Any(e => e.Code == 600 && IsTicketProblem(e.Message)))
+        var (result, ticket) = await SendAsync(operation, parameters, authenticated, ct);
+        if (ticket is not null && Messages(result.Element(X + "Errors")).Any(e => e.Code == 600 && IsTicketProblem(e.Message)))
         {
-            wsaa.Forget(Service);
-            result = await SendAsync(operation, parameters, authenticated, ct);
+            wsaa.Forget(Service, ticket);
+            (result, _) = await SendAsync(operation, parameters, authenticated, ct);
         }
         return result;
     }
 
-    private async Task<XElement> SendAsync(string operation, Action<XmlWriter> parameters, bool authenticated, CancellationToken ct)
+    /// <summary>One request and its answer's result element, with the ticket the request carried (null when the operation takes none).</summary>
+    private async Task<(XElement Result, AccessTicket? Ticket)> SendAsync(string operation, Action<XmlWriter> parameters, bool authenticated, CancellationToken ct)
     {
         var ticket = authenticated ? await wsaa.GetTicketAsync(Service, ct) : null;
         var builder = new StringBuilder();
@@ -258,7 +260,7 @@ public sealed class WsfeClient(HttpClient http, WsaaClient wsaa, ArcaOptions opt
         var errors = Messages(result.Element(X + "Errors"));
         if (errors.Count > 0 && errors.All(e => e.Code is 500 or 501 or 502) && !errors.Any(e => e.Message.StartsWith("Campo Auth", StringComparison.Ordinal)))
             throw new ArcaUnavailableException("WSFEv1: " + string.Join("; ", errors.Select(e => $"{e.Code} {e.Message}")));
-        return result;
+        return (result, ticket);
     }
 
     private static bool IsTicketProblem(string message) =>

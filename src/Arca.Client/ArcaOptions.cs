@@ -24,6 +24,9 @@ public sealed class ArcaOptions
     /// Where to keep the access ticket between runs. WSAA refuses a new ticket
     /// while the last one is valid (coe.alreadyAuthenticated), so a process that
     /// restarts needs the one it already had. Null keeps it in memory only.
+    /// The file name carries the certificate, the WSAA address with its port and
+    /// the service. The cache is best effort: a directory that cannot be read or
+    /// written is skipped, and the client logs in as it would without one.
     /// </summary>
     public string? TicketCacheDirectory { get; init; }
 
