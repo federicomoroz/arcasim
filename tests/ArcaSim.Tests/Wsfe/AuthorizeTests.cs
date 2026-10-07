@@ -228,15 +228,30 @@ public class AuthorizeTests
     }
 
     [Fact]
-    public async Task With_the_service_down_the_client_gets_a_retryable_failure()
+    public async Task With_the_service_down_WSAA_will_not_give_a_ticket_and_the_failure_is_retryable()
     {
         var (sim, wsfe) = await ArcaSimHarness.StartWithIssuerAsync();
         await using var _ = sim;
         sim.Settings.ChaosFor("wsfe").Down = true;
 
         // WSAA itself answers wsn.unavailable for a service that is down, before WSFEv1 is even called.
-        var failure = await Assert.ThrowsAnyAsync<ArcaException>(() => wsfe.AuthorizeNextAsync(1, 6, ConsumerInvoice()));
+        var failure = await Assert.ThrowsAsync<WsaaFaultException>(() => wsfe.AuthorizeNextAsync(1, 6, ConsumerInvoice()));
+
+        Assert.Equal("wsn.unavailable", failure.Code);
+        Assert.True(failure.Retryable);
+    }
+
+    [Fact]
+    public async Task With_the_service_down_and_a_ticket_in_hand_WSFEv1_answers_503_and_the_failure_is_retryable()
+    {
+        var (sim, wsfe) = await ArcaSimHarness.StartWithIssuerAsync();
+        await using var _ = sim;
+        await wsfe.LastAuthorizedAsync(1, 6);
+        sim.Settings.ChaosFor("wsfe").Down = true;
+
+        var failure = await Assert.ThrowsAsync<ArcaUnavailableException>(() => wsfe.AuthorizeNextAsync(1, 6, ConsumerInvoice()));
 
         Assert.True(failure.Retryable);
+        Assert.Contains("HTTP 503", failure.Message);
     }
 }

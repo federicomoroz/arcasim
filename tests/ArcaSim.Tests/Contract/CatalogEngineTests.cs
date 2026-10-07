@@ -224,9 +224,14 @@ public class CatalogEngineTests
         var ticket = await TicketOfAsync(sim, "wEnysa");
         var (status, body, _) = await CallAsync(sim, "wEnysa", "CargaEventoEntradaSalida", ticket.Token, ticket.Sign);
 
+        // The ticket passed, so the rules answered: they refuse the sample's tipoTransaccion (6), where a ticket
+        // that did not act for the caller would have got 500, 501 or 504.
         Assert.Equal(200, status);
-        Assert.DoesNotContain("No autorizado para utilizar este servicio", body);
-        Assert.DoesNotContain("relaciones", body);
+        var result = Soap.Body(body).Elements().Single();
+        Assert.Equal("6", result.Element(result.Name.Namespace + "codigoError")!.Value);
+        Assert.Equal("Operación inválida", result.Element(result.Name.Namespace + "descripcion")!.Value);
+        Assert.Equal("tipoTransaccion", result.Element(result.Name.Namespace + "descripcionAdicional")!.Value);
+        ValidateBody(body, "wEnysa");
     }
 
     [Fact]

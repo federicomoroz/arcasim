@@ -102,7 +102,7 @@ public class LoginTests
         sim.Settings.ReplayWindowEnabled = true;
         var certificate = await sim.IssueCertificateAsync(Cuit, "facturacion");
         var wsaa = sim.Wsaa(Cuit, certificate);
-        await wsaa.LoginAsync("wsfe");
+        var first = await wsaa.LoginAsync("wsfe");
 
         var failure = await Assert.ThrowsAsync<WsaaFaultException>(() => wsaa.LoginAsync("wsfe"));
         sim.Clock.Advance(TimeSpan.FromMinutes(11));
@@ -110,7 +110,9 @@ public class LoginTests
 
         Assert.Equal("coe.alreadyAuthenticated", failure.Code);
         Assert.Equal("El CEE ya posee un TA valido para el acceso al WSN solicitado", failure.FaultMessage);
-        Assert.NotNull(later);
+        Assert.False(failure.Retryable);
+        Assert.NotEqual(first.Token, later.Token);
+        Assert.True(later.ExpiresAt >= first.ExpiresAt + TimeSpan.FromMinutes(11), "the new ticket is issued eleven minutes after the first");
     }
 
     [Fact]
