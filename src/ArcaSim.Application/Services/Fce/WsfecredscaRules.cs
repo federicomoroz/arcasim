@@ -28,11 +28,11 @@ namespace ArcaSim.Application.Services.Fce;
 ///   has none.
 /// dummy keeps the contract's answer.
 /// </summary>
-public sealed class WsfecredscaRules(IDocumentStore store, IVoucherStore vouchers, ITaxpayerRepository taxpayers, IClock clock) : IServiceBehavior
+public sealed class WsfecredscaRules(FceLedger ledger) : IServiceBehavior
 {
     private static readonly IReadOnlyDictionary<int, string> Texts = FceTexts.Sca;
 
-    private readonly FceLedger _ledger = new(store, vouchers, taxpayers, clock);
+    private readonly FceLedger _ledger = ledger;
 
     public string Service => "wsfecredsca";
 

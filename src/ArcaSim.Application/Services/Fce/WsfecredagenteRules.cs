@@ -34,11 +34,11 @@ namespace ArcaSim.Application.Services.Fce;
 /// obtenerCuitsEmisores, which homologación does not implement, and dummy keep
 /// the contract's answer.
 /// </summary>
-public sealed class WsfecredagenteRules(IDocumentStore store, IVoucherStore vouchers, ITaxpayerRepository taxpayers, IClock clock) : IServiceBehavior
+public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServiceBehavior
 {
     private static readonly IReadOnlyDictionary<int, string> Texts = FceTexts.Agente;
 
-    private readonly FceLedger _ledger = new(store, vouchers, taxpayers, clock);
+    private readonly FceLedger _ledger = ledger;
 
     public string Service => "wsfecredagente";
 

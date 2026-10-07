@@ -7,6 +7,7 @@ using ArcaSim.Application.Access;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Events;
 using ArcaSim.Application.Padron;
+using ArcaSim.Application.Services.Fce;
 using ArcaSim.Application.Setiws;
 using ArcaSim.Application.Traffic;
 using ArcaSim.Application.Wsaa;
@@ -74,6 +75,7 @@ builder.Services.AddSingleton<WsfeEndpoint>();
 builder.Services.AddSingleton<WsaaEndpoint>();
 builder.Services.AddSingleton<SetiwsGateway>();
 builder.Services.AddSingleton<VepService>();
+builder.Services.AddSingleton<FceLedger>();
 
 // The rest of ARCA's services, answered from their WSDL; IServiceBehavior adds a service's rules on top.
 // Every rule set in the Application assembly is picked up: adding a service's rules is adding a class.

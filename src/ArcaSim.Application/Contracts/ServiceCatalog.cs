@@ -137,11 +137,13 @@ public sealed record ServiceDefinition(
 /// <summary>The services of docs/arca/servicios.json: every ARCA web service ArcaSim answers through its WSDL.</summary>
 public sealed class ServiceCatalog
 {
+    /// <summary>The catalog's JSON: comments allowed, and a key no property reads is an error rather than a setting silently lost to a typo.</summary>
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
         Converters = { new JsonStringEnumConverter() },
         ReadCommentHandling = JsonCommentHandling.Skip,
         AllowTrailingCommas = true,
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
     };
 
     public IReadOnlyList<ServiceDefinition> Services { get; }

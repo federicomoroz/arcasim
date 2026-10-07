@@ -49,11 +49,11 @@ namespace ArcaSim.Application.Services.Fce;
 /// The deprecated consultarObligadoRecepcion and dummy keep the contract's answer.
 /// </summary>
 public sealed class WsfecredRules(
-    IDocumentStore store, IVoucherStore vouchers, ITaxpayerRepository taxpayers, IClock clock, IExchangeRates rates) : IServiceBehavior
+    FceLedger ledger, ITaxpayerRepository taxpayers, IExchangeRates rates) : IServiceBehavior
 {
     public const int PageSize = 100;
 
-    private readonly FceLedger _ledger = new(store, vouchers, taxpayers, clock);
+    private readonly FceLedger _ledger = ledger;
 
     public string Service => "wsfecred";
 

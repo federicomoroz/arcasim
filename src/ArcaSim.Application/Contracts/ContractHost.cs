@@ -50,6 +50,18 @@ public sealed class ServiceCall(
 
     public ContractAnswer Ok(XElement body) => new(body, Headers(), null);
 
+    /// <summary>
+    /// The value the catalog says this service always sends in that element (by
+    /// name or "Parent/Child" path), its placeholders filled for this call; null
+    /// when it sets none. Answers the rules build by hand put it where Sample()
+    /// would have, so the service sends the same fixed values whatever builds
+    /// the answer: the event a server attaches to everything, its address.
+    /// </summary>
+    public string? Fixed(string name) =>
+        Definition.Values?.GetValueOrDefault(name) is { } value
+            ? Placeholders.Fill(value, new PlaceholderValues(Context.Now) { Service = Definition.Id, Cuit = Context.Cuit })
+            : null;
+
     /// <summary>A business error the way the service reports it: in its error block when the response has one, else as a fault.</summary>
     public ContractAnswer Error(long code, string message) => Errors([(code, message)]);
 
@@ -76,7 +88,7 @@ public sealed class ContractHost(
     ILogger<ContractHost>? logger = null)
 {
     private readonly ConcurrentDictionary<string, (ServiceContract Contract, SchemaSampler Sampler)> _contracts = new(StringComparer.OrdinalIgnoreCase);
-    private readonly ILookup<string, IServiceBehavior> _behaviors = behaviors.ToLookup(b => b.Service, StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, IServiceBehavior> _behaviors = RulesByService(behaviors);
 
     public ServiceCatalog Catalog => catalog;
 
@@ -99,7 +111,17 @@ public sealed class ContractHost(
     public string? HeaderOf(ServiceDefinition definition) =>
         definition.Header is { } header ? Placeholders.Fill(header, new PlaceholderValues(clock.Now) { Service = definition.Id }) : null;
 
-    public bool HasRules(ServiceDefinition definition) => _behaviors.Contains(definition.Id);
+    public bool HasRules(ServiceDefinition definition) => _behaviors.ContainsKey(definition.Id);
+
+    /// <summary>One rules class per service: a second class for the same service stops ArcaSim from starting instead of hiding behind the first.</summary>
+    private static Dictionary<string, IServiceBehavior> RulesByService(IEnumerable<IServiceBehavior> behaviors)
+    {
+        var byService = new Dictionary<string, IServiceBehavior>(StringComparer.OrdinalIgnoreCase);
+        foreach (var behavior in behaviors)
+            if (!byService.TryAdd(behavior.Service, behavior))
+                throw new InvalidOperationException($"{behavior.GetType().Name} and {byService[behavior.Service].GetType().Name} both answer {behavior.Service}.");
+        return byService;
+    }
 
     private (ServiceContract Contract, SchemaSampler Sampler) Load(ServiceDefinition definition) =>
         _contracts.GetOrAdd(definition.Id, _ =>
@@ -133,8 +155,7 @@ public sealed class ContractHost(
         ContractAnswer? answer = null;
         try
         {
-            foreach (var behavior in _behaviors[definition.Id])
-                if ((answer = await behavior.AnswerAsync(call, ct)) is not null) break;
+            if (_behaviors.TryGetValue(definition.Id, out var behavior)) answer = await behavior.AnswerAsync(call, ct);
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
         {
@@ -149,13 +170,11 @@ public sealed class ContractHost(
         return answer;
     }
 
-    /// <summary>Fixed values the service always sends, by element name: FEHeaderInfo's ambiente and version, a server name.</summary>
-    public static XElement Apply(XElement answer, ServiceDefinition definition) => Apply(answer, definition, new SampleContext(0, DateTimeOffset.Now));
-
     /// <summary>
-    /// The same, with the placeholders filled for this answer: values go by
-    /// element name or by "Parent/Child" path, the path winning; the elements
-    /// in Drop are taken out.
+    /// The fixed values the service always sends (FEHeaderInfo's ambiente and
+    /// version, a server name), with the placeholders filled for this answer:
+    /// values go by element name or by "Parent/Child" path, the path winning;
+    /// the elements in Drop are taken out.
     /// </summary>
     public static XElement Apply(XElement answer, ServiceDefinition definition, SampleContext context)
     {

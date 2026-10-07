@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Wsfe;
 
@@ -61,22 +60,19 @@ public sealed class FceLedger(IDocumentStore store, IVoucherStore wsfe, ITaxpaye
     public const int AcceptanceDays = 30;
     public const int OperableAfterDays = 2;
 
-    private static readonly ConditionalWeakTable<IDocumentStore, SemaphoreSlim> Gates = new();
+    private readonly SemaphoreSlim _gate = new(1, 1);
 
-    /// <summary>One operation at a time per store: the three services read and write the same accounts.</summary>
+    /// <summary>One operation at a time: the three services read and write the same accounts, through this one ledger.</summary>
     public async Task<IDisposable> LockAsync(CancellationToken ct)
     {
-        var gate = Gates.GetValue(store, _ => new SemaphoreSlim(1, 1));
-        await gate.WaitAsync(ct);
-        return new Release(gate);
+        await _gate.WaitAsync(ct);
+        return new Release(_gate);
     }
 
-    public static DateTimeOffset StartOf(DateOnly day) => new(day.ToDateTime(TimeOnly.MinValue), ArgentinaTime.Offset);
-
     /// <summary>When the buyer may first operate on a voucher (1106), and when it turns Recepcionado.</summary>
-    public static DateTimeOffset OperableFrom(FceVoucher voucher) => StartOf(voucher.AvailableOn.AddDays(OperableAfterDays));
+    public static DateTimeOffset OperableFrom(FceVoucher voucher) => ArgentinaTime.StartOf(voucher.AvailableOn.AddDays(OperableAfterDays));
 
-    public static DateTimeOffset TacitAcceptanceAt(FceAccount account) => StartOf(account.AcceptanceDue.AddDays(1));
+    public static DateTimeOffset TacitAcceptanceAt(FceAccount account) => ArgentinaTime.StartOf(account.AcceptanceDue.AddDays(1));
 
     /// <summary>The accounts and vouchers as they stand now: new FCE vouchers registered, deadlines applied, changes saved.</summary>
     public async Task<FceBook> OpenAsync(CancellationToken ct)
@@ -182,7 +178,7 @@ public sealed class FceLedger(IDocumentStore store, IVoucherStore wsfe, ITaxpaye
         foreach (var other in await store.ListAsync<AuthorizedVoucher>(AuthorizedVouchers.Collection, "", ct))
             if (FceTypes.IsInvoice(other.VoucherType)
                 && !book.Vouchers.ContainsKey(new FceId(other.Cuit, other.VoucherType, other.PointOfSale, other.Number).Key))
-                arrivals.Add(new Arrival(FromOther(other), StartOf(other.Date)));
+                arrivals.Add(new Arrival(FromOther(other), ArgentinaTime.StartOf(other.Date)));
 
         foreach (var arrival in arrivals.OrderBy(a => a.Voucher.IsInvoice ? 0 : 1).ThenBy(a => a.At))
         {
