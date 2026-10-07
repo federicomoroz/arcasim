@@ -148,7 +148,7 @@ public sealed class Wsfexv1Rules : IServiceBehavior
     /// </summary>
     private async Task<bool> ExportPointOfSaleAsync(long cuit, int number, CancellationToken ct)
     {
-        if (number is < 1 or > 99_998) return false;
+        if (number is < 1 or > VoucherLimits.MaxPointOfSale) return false;
         var issuer = await _taxpayers.FindAsync(cuit, ct);
         if (_settings.OpenAccess && (issuer is null ? Cuits.IsValid(cuit) : issuer.FindPointOfSale(number) is null))
         {

@@ -117,7 +117,7 @@ public sealed partial class WsfeService
         if (header.CantReg != sent)
             errors.Add(catalog.WithMessage(method, 10002, $"Campo CantReg debe ser igual a lo informado en detalle. Informado: {header.CantReg}, Enviado:{sent}").ToErr());
         if (sent > settings.MaxRecordsPerRequest || (type is { Fce: true } && sent > 1)) errors.Add(catalog.For(method, 10003).ToErr());
-        if (header.PtoVta is < 1 or > 99_998) errors.Add(catalog.For(method, caea ? 1300 : 10004).ToErr());
+        if (header.PtoVta is < 1 or > VoucherLimits.MaxPointOfSale) errors.Add(catalog.For(method, caea ? 1300 : 10004).ToErr());
         if (caea)
         {
             if (type is null) errors.Add(catalog.For(method, 700).ToErr());
@@ -130,7 +130,7 @@ public sealed partial class WsfeService
 
         var point = issuer?.FindPointOfSale(header.PtoVta);
         var usable = point is not null && point.Kind == expectedKind && !point.Blocked && !(point.DeactivatedOn <= today);
-        if (header.PtoVta is >= 1 and <= 99_998 && !usable) errors.Add(catalog.For(method, caea ? 701 : 10005).ToErr());
+        if (header.PtoVta is >= 1 and <= VoucherLimits.MaxPointOfSale && !usable) errors.Add(catalog.For(method, caea ? 701 : 10005).ToErr());
         return errors;
     }
 

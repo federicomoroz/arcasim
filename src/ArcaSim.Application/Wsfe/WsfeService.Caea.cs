@@ -201,7 +201,7 @@ public sealed partial class WsfeService
         }
 
         var errors = new List<Err>();
-        if (request.PtoVta is < 1 or > 99_998) errors.Add(catalog.For(method, 1206).ToErr());
+        if (request.PtoVta is < 1 or > VoucherLimits.MaxPointOfSale) errors.Add(catalog.For(method, 1206).ToErr());
         var caea = request.CAEA is { Length: 14 } code && code.All(char.IsAsciiDigit)
             ? await caeas.FindByCodeAsync(code, ct)
             : null;
@@ -233,7 +233,7 @@ public sealed partial class WsfeService
 
         if (request.CAEA is not { Length: 14 } code || !code.All(char.IsAsciiDigit))
             return new FECAEASinMovConsResponse { Errors = [catalog.For(method, 10100).ToErr()] };
-        if (request.PtoVta is < 0 or > 99_998)
+        if (request.PtoVta is < 0 or > VoucherLimits.MaxPointOfSale)
             return new FECAEASinMovConsResponse { Errors = [catalog.For(method, 10101).ToErr()] };
 
         var reports = (await caeas.WithoutMovementAsync(auth.Cuit, code, ct))

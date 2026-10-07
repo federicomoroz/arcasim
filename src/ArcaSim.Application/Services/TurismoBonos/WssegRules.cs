@@ -121,8 +121,8 @@ public sealed class WssegRules(
         var type = Types.FirstOrDefault(t => t.Id == cmp.VoucherType);
         if (cmp.Id <= 0) return new AsmxRefusal(1014, Text1014.Id);
         if (type is null) return new AsmxRefusal(1014, Text1014.VoucherType);
-        if (cmp.PointOfSale is < 1 or > 99998) return new AsmxRefusal(1014, Text1014.PointOfSale);
-        if (cmp.Number is < 1 or > 99999999) return new AsmxRefusal(1014, Text1014.Number);
+        if (cmp.PointOfSale is < 1 or > VoucherLimits.MaxPointOfSale) return new AsmxRefusal(1014, Text1014.PointOfSale);
+        if (cmp.Number is < 1 or > VoucherLimits.MaxNumber) return new AsmxRefusal(1014, Text1014.Number);
         if (type.Class == VoucherClass.A && cmp.DocType != 80) return new AsmxRefusal(1014, Text1014.DocType);
         if (CheckDate(cmp.DateText, today) is { } date) return date;
         if (await CheckCurrencyAsync(cmp, today, ct) is { } currency) return currency;

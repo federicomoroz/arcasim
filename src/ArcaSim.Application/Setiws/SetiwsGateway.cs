@@ -18,9 +18,6 @@ public sealed class SetiwsGateway(TicketReader reader, IClock clock)
     public const string TokenHeader = "WSAA-AUTH-PROXY-TOKEN";
     public const string SignHeader = "WSAA-AUTH-PROXY-SIGN";
 
-    /// <summary>The gateway writes its dates in Argentina's time, with the offset.</summary>
-    public static readonly TimeSpan Argentina = TimeSpan.FromHours(-3);
-
     private const string MissingRepresented = "Falta header con representado seleccionado (\"WSAA-AUTH-PROXY-REPRESENTADO\").";
     private const string MissingCredentials = "Faltan headers requeridos de autenticación/autorización (\"Authorization\" o \"WSAA-AUTH-PROXY-TOKEN\" y \"WSAA-AUTH-PROXY-SIGN\").";
     private const string InvalidJwt = "El header \"Authorization\" no contiene un JWT válido.";
@@ -53,5 +50,5 @@ public sealed class SetiwsGateway(TicketReader reader, IClock clock)
     }
 
     public static string Format(DateTimeOffset moment) =>
-        moment.ToOffset(Argentina).ToString("yyyy-MM-dd'T'HH:mm:sszzz", CultureInfo.InvariantCulture);
+        moment.ToArgentina().ToString("yyyy-MM-dd'T'HH:mm:sszzz", CultureInfo.InvariantCulture);
 }

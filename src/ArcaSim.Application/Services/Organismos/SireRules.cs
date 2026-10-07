@@ -105,7 +105,7 @@ public sealed partial class SireRules(IDocumentStore store, PadronDirectory padr
         var known = table.Count == 0 ? regime is >= 1 and <= 999 : table.Any(r => r.Code == regime);
         if (!known) return $"No existe el regimen {regime} para el impuesto 216.";
 
-        var today = DateOnly.FromDateTime(clock.Now.ToArgentina().DateTime);
+        var today = clock.Today();
         if (data.Date("fechaRetencion") is not { } withheldOn) return "La fecha de retencion es obligatoria.";
         if (withheldOn < FirstDay) return "La fecha de retencion no puede ser anterior al 01/12/2019.";
         if (withheldOn > today) return "La fecha de retencion no puede ser posterior a la fecha actual.";

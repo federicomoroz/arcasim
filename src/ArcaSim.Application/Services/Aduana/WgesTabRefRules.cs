@@ -67,7 +67,7 @@ public static class AduanaTables
     public static bool Has(string table, string code) => Find(table)?.Rows.Any(r => r.Codigo == code) == true;
 
     /// <summary>When ArcaSim's tables were last loaded: one fixed moment, ArcaSim's choice.</summary>
-    public static readonly DateTimeOffset LastUpdate = new(2026, 1, 2, 0, 0, 0, TimeSpan.FromHours(-3));
+    public static readonly DateTimeOffset LastUpdate = ArgentinaTime.StartOf(new DateOnly(2026, 1, 2));
 }
 
 /// <summary>

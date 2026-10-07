@@ -155,7 +155,7 @@ public static class SetiwsEndpoint
     private static async Task ErrorAsync(HttpContext context, VepError error)
     {
         var request = context.Request;
-        var now = context.RequestServices.GetRequiredService<IClock>().Now.ToOffset(SetiwsGateway.Argentina);
+        var now = context.RequestServices.GetRequiredService<IClock>().Now.ToArgentina();
         context.Response.StatusCode = error.Status;
         await context.Response.WriteAsJsonAsync(new
         {

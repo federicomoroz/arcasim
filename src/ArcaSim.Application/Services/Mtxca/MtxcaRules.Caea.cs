@@ -172,7 +172,7 @@ public sealed partial class MtxcaRules
             new XElement("resultado", errors.Count == 0 ? "A" : "R"),
             new XElement("fechaProceso", Day(today)),
             new XElement("CAEA", code),
-            pointOfSale is { } echoed ? new XElement("numeroPuntoVenta", Math.Clamp(echoed, 1, 99_998)) : null,
+            pointOfSale is { } echoed ? new XElement("numeroPuntoVenta", Math.Clamp(echoed, 1, VoucherLimits.MaxPointOfSale)) : null,
             errors.Count > 0 ? Codes("arrayErrores", errors) : null));
     }
 

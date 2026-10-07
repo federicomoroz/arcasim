@@ -48,7 +48,7 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
 
     public string Service => "wsjaza";
 
-    private DateOnly Today => DateOnly.FromDateTime(clock.Now.ToArgentina().DateTime);
+    private DateOnly Today => clock.Today();
 
     public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct) => call.Name switch
     {
@@ -149,7 +149,7 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
             new XElement("arrayLotesME", lots.Select(l => new XElement("loteME",
                 new XElement("nroLote", l.Number),
                 new XElement("estado", l.State),
-                new XElement("fechaEnvio", l.SentOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + "-03:00"),
+                new XElement("fechaEnvio", ArgentinaTime.DateWithOffset(l.SentOn)),
                 new XElement("origen", "WS"),
                 new XElement("observaciones", l.Observations),
                 l.Errors.Count == 0 ? null : new XElement("arrayErrores", l.Errors.Select(e => new XElement("errorME",

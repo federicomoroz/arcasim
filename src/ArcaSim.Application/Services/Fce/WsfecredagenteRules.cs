@@ -108,7 +108,7 @@ public sealed class WsfecredagenteRules(IDocumentStore store, IVoucherStore vouc
         var items = AccountItems(call.Request);
         if (CheckItems(items) is { Count: > 0 } format) return Refused(call, null, FormatErrors(Texts, format));
 
-        var today = DateOnly.FromDateTime(clock.Now.ToArgentina().DateTime);
+        var today = clock.Today();
         var results = new List<XElement>();
         foreach (var item in items)
         {
@@ -136,7 +136,7 @@ public sealed class WsfecredagenteRules(IDocumentStore store, IVoucherStore vouc
         var items = AccountItems(call.Request);
         if (CheckItems(items) is { Count: > 0 } format) return Refused(call, null, FormatErrors(Texts, format));
 
-        var today = DateOnly.FromDateTime(clock.Now.ToArgentina().DateTime);
+        var today = clock.Today();
         var results = new List<XElement>();
         foreach (var item in items)
         {

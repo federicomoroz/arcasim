@@ -27,7 +27,6 @@ public sealed record PlaceholderValues(DateTimeOffset Now)
 /// </summary>
 public static partial class Placeholders
 {
-    private static readonly TimeSpan Argentina = TimeSpan.FromHours(-3);
     private static readonly ConcurrentDictionary<string, long> Counters = new(StringComparer.OrdinalIgnoreCase);
 
     [GeneratedRegex(@"\{(\w+)(?::([^{}]*))?\}")]
@@ -63,7 +62,7 @@ public static partial class Placeholders
     {
         null => (milliseconds / 1000).ToString(CultureInfo.InvariantCulture),
         "ms" => milliseconds.ToString(CultureInfo.InvariantCulture),
-        _ => DateTimeOffset.FromUnixTimeMilliseconds(milliseconds).ToOffset(Argentina).ToString(format, CultureInfo.InvariantCulture),
+        _ => DateTimeOffset.FromUnixTimeMilliseconds(milliseconds).ToArgentina().ToString(format, CultureInfo.InvariantCulture),
     };
 
     /// <summary>How many bytes a lenient base64 decoder (Java's) reads from the text: "abc" gives 2.</summary>

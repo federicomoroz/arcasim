@@ -136,9 +136,9 @@ public sealed class WscdcRules(
         var errors = new List<int>();
         if (q.Mode is not ("CAE" or "CAEA" or "CAI")) errors.Add(1);
         if (!Cuits.IsValid(q.Cuit)) errors.Add(2);
-        if (q.PointOfSale is < 1 or > 99_998) errors.Add(3);
+        if (q.PointOfSale is < 1 or > VoucherLimits.MaxPointOfSale) errors.Add(3);
         if (!VoucherTypes.Any(t => t.Id == q.VoucherType)) errors.Add(4);
-        if (q.Number is < 1 or > 99_999_999) errors.Add(5);
+        if (q.Number is < 1 or > VoucherLimits.MaxNumber) errors.Add(5);
         if (!Fev1Dates.TryParse(q.Date, out _)) errors.Add(6);
         if (q.Total < 0 || Math.Abs(q.Total) >= 10_000_000_000_000m || q.Total != Math.Round(q.Total, 2)) errors.Add(7);
         if (q.DocType is not null && (q.DocType.Length > 2 || !q.DocType.All(char.IsAsciiDigit) || !tables.HasDocumentType(int.Parse(q.DocType))))

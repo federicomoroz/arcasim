@@ -58,7 +58,7 @@ public static class FceSpring
     }
 
     public static bool InRange(DateTimeOffset? moment, (string? Kind, DateOnly? From, DateOnly? To) range) =>
-        moment is { } at && DateOnly.FromDateTime(at.ToArgentina().DateTime) is var day && day >= range.From && day <= range.To;
+        moment is { } at && at.ArgentinaDate() is var day && day >= range.From && day <= range.To;
 
     /// <summary>The empty answer of a query that failed: the list empty, page 0 and hayMas N, as the real one sends it.</summary>
     public static object?[] FailedQuery(string list, XElement? errors, XElement? formatErrors) =>

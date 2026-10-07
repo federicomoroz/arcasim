@@ -285,7 +285,7 @@ public sealed partial class MtxcaRules(
             issuer = new Taxpayer(cuit, $"Contribuyente {cuit}", VatCondition.ResponsableInscripto);
             changed = true;
         }
-        if (pointOfSale is >= 1 and <= 99_998 && issuer.FindPointOfSale(pointOfSale) is null)
+        if (pointOfSale is >= 1 and <= VoucherLimits.MaxPointOfSale && issuer.FindPointOfSale(pointOfSale) is null)
         {
             issuer.AddPointOfSale(new PointOfSale(pointOfSale, kind));
             changed = true;

@@ -300,8 +300,8 @@ public sealed class WsfecredRules(
             "PuestaDispo" => voucher.AvailableOn,
             "VenPago" => voucher.PaymentDue,
             "VenAcep" => voucher.CountsInBalance ? account.AcceptanceDue : null,
-            "Acep" => voucher.AcceptanceKind is not null && voucher.DecidedAt is { } at ? DateOnly.FromDateTime(at.ToArgentina().DateTime) : null,
-            "InfoAgDptoCltv" => account.Agent is { } report ? DateOnly.FromDateTime(report.AvailableAt.ToArgentina().DateTime) : null,
+            "Acep" => voucher.AcceptanceKind is not null && voucher.DecidedAt is { } at ? at.ArgentinaDate() : null,
+            "InfoAgDptoCltv" => account.Agent is { } report ? report.AvailableAt.ArgentinaDate() : null,
             _ => null,
         };
     }

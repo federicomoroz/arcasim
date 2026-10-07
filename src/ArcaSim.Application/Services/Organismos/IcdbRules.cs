@@ -69,7 +69,7 @@ public sealed class IcdbRules(IDocumentStore store, IClock clock) : IServiceBeha
     {
         if (call.Name == "dummy") return null;
         await IcdbRegistry.SeedAsync(store, call.Cuit, ct);
-        var today = DateOnly.FromDateTime(clock.Now.ToArgentina().DateTime);
+        var today = clock.Today();
         var request = call.Request.Find("solicitud") ?? new XElement("solicitud");
 
         switch (call.Name)

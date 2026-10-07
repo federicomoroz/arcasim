@@ -90,7 +90,7 @@ public sealed class WConsDepFielRules(IDocumentStore store, IClock clock) : ISer
     private async Task<ContractAnswer> PendingAsync(ServiceCall call, CancellationToken ct)
     {
         var arg = call.Arg("argInPndListaEndo");
-        var today = DateOnly.FromDateTime(clock.Now.ToArgentina().DateTime);
+        var today = clock.Today();
         if (arg?.Date("FechaDesde") is not { } from) return call.Fail(2, Legajos.Required("FechaDesde"));
         if (arg.Date("FechaHasta") is not { } to) return call.Fail(2, Legajos.Required("FechaHasta"));
         if (from > today) return call.Fail(5, "Error Fecha Desde mayor a fecha del dia");
@@ -264,7 +264,7 @@ public sealed class WDigDepFielRules(IDocumentStore store) : IServiceBehavior
     }
 
     private static DateTimeOffset? Moment(DateOnly? date) =>
-        date is { } day ? new DateTimeOffset(day.ToDateTime(TimeOnly.MinValue), TimeSpan.FromHours(-3)) : null;
+        date is { } day ? ArgentinaTime.StartOf(day) : null;
 
     private static ContractAnswer Ok(ServiceCall call, string text) => call.Done(call.Sample().Receipt(0, text, "descError"));
 }

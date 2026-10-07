@@ -165,7 +165,6 @@ public sealed class DialectWriter(ServiceDefinition definition, SoapVersion vers
 {
     private const string Xsi = "http://www.w3.org/2001/XMLSchema-instance";
     private const string Xsd = "http://www.w3.org/2001/XMLSchema";
-    private static readonly TimeSpan Argentina = TimeSpan.FromHours(-3);
 
     public string? ServiceHeader { get; init; }
 
@@ -259,7 +258,7 @@ public sealed class DialectWriter(ServiceDefinition definition, SoapVersion vers
     /// </summary>
     private async Task WriteMaskAsync(HttpContext context)
     {
-        var line = $"BL{RandomDigits(13)} {Now.ToOffset(Argentina).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)} 500";
+        var line = $"BL{RandomDigits(13)} {Now.ToArgentina().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)} 500";
         var bytes = Encoding.ASCII.GetBytes(line);
         context.Response.StatusCode = StatusCodes.Status200OK;
         context.Response.ContentLength = bytes.Length;

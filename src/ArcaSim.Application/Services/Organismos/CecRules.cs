@@ -43,7 +43,7 @@ public sealed class CecRules(IDocumentStore store, PadronDirectory padron, ICloc
     {
         var page = call.Request.Int("pagina");
         var cuit = call.Request.Long("cuit");
-        var today = DateOnly.FromDateTime(clock.Now.ToArgentina().DateTime);
+        var today = clock.Today();
         int from, to;
         if (byPeriod)
         {

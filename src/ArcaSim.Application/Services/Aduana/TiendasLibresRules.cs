@@ -238,7 +238,7 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
         if (arg is null) return call.Ok(Refused(call, 7026, "Los parametros en la llamada al web method son obligatorios"));
         var (from, to) = (arg.Date("fechaDesde") ?? DateOnly.MinValue, arg.Date("fechaHasta") ?? DateOnly.MaxValue);
         if (to < from) return call.Ok(Refused(call, 20337, "La fecha HASTA debe ser mayor o igual a la fecha DESDE"));
-        if (to > DateOnly.FromDateTime(clock.Now.ToArgentina().DateTime)) return call.Ok(Refused(call, 20341, "La fecha HASTA debe ser menor o igual a la del dia"));
+        if (to > clock.Today()) return call.Ok(Refused(call, 20341, "La fecha HASTA debe ser menor o igual a la del dia"));
         bool Matches(string field, string value) => arg.Field(field) is var wanted && (wanted == "" || wanted == value);
         var found = (await store.ListAsync<TlDife>(Difes, $"{call.Cuit}/", ct))
             .Where(d => Matches("idDIFE", d.Id) && Matches("idMovimiento", d.IdMovimiento) && Matches("tipoComprobante", d.TipoComprobante)

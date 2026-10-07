@@ -32,6 +32,18 @@ public enum PointOfSaleKind
 public sealed record PointOfSale(int Number, PointOfSaleKind Kind, bool Blocked = false, DateOnly? DeactivatedOn = null);
 
 /// <summary>
+/// The ranges the invoicing manuals give a point of sale (1 to 99998) and a
+/// voucher number (1 to 99999999). A rule whose manual words its range another
+/// way (below 99998, nine digits, zero allowed) writes its own bounds next to its text.
+/// </summary>
+public static class VoucherLimits
+{
+    public const int MaxPointOfSale = 99_998;
+
+    public const int MaxNumber = 99_999_999;
+}
+
+/// <summary>
 /// A made-up taxpayer. WSFEv1, and later the padrón services, read the same
 /// records, so looking up a CUIT and invoicing it never disagree.
 /// </summary>

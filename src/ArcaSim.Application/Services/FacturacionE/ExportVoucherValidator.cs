@@ -20,7 +20,7 @@ internal sealed partial class ExportVoucherValidator(ParameterTables tables, IEx
     {
         if (v.VoucherType is not (19 or 20 or 21)) return 1530;
         if (!pointOfSaleEnabled) return 1510;
-        if (v.Number is < 1 or > 99_999_999) return 1520;
+        if (v.Number is < 1 or > VoucherLimits.MaxNumber) return 1520;
 
         DateOnly date = today;
         if (!string.IsNullOrEmpty(v.Date))
@@ -163,7 +163,7 @@ internal sealed partial class ExportVoucherValidator(ParameterTables tables, IEx
         foreach (var associated in v.Associated)
         {
             if (!Wsfexv1Tables.AssociableTypes.Contains(associated.Type)) return 1680;
-            if (associated.PointOfSale is < 1 or > 99_998) return 1690;
+            if (associated.PointOfSale is < 1 or > VoucherLimits.MaxPointOfSale) return 1690;
             if (associated.Number is < 1 or > 999_999_999) return 1700;
         }
         var vouchers = v.Associated.Where(a => !Wsfexv1Tables.DeliveryNoteTypes.Contains(a.Type)).ToList();

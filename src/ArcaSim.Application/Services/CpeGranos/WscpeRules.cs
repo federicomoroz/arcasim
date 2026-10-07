@@ -171,7 +171,7 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
             var departure = Departure(stored);
             return DestinationCuit(stored) == call.Cuit && stored.Child("destino")?.Long("planta") == plant
                    && (type == 0 || cpe.Type == type)
-                   && departure is { } d && DateOnly.FromDateTime(d.ToArgentina().DateTime) is var day && day >= from && day <= to;
+                   && departure is { } d && d.ArgentinaDate() is var day && day >= from && day <= to;
         }).ToList();
         return Summaries(call, found);
     }

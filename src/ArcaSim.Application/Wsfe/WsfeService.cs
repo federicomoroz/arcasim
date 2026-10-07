@@ -46,7 +46,7 @@ public sealed partial class WsfeService(
         if (auth.Failed) return new FERecuperaLastCbteResponse { Errors = [auth.Error!] };
 
         var errors = new List<Err>();
-        if (request.PtoVta is < 1 or > 99_998) errors.Add(catalog.For(method, 11000).ToErr());
+        if (request.PtoVta is < 1 or > VoucherLimits.MaxPointOfSale) errors.Add(catalog.For(method, 11000).ToErr());
         if (tables.VoucherType(request.CbteTipo) is null) errors.Add(catalog.For(method, 11001).ToErr());
         if (errors.Count == 0)
         {
@@ -73,9 +73,9 @@ public sealed partial class WsfeService(
 
         var query = request.FeCompConsReq ?? new FECompConsultaReq();
         var errors = new List<Err>();
-        if (query.PtoVta is < 1 or > 99_998) errors.Add(catalog.For(method, 10200).ToErr());
+        if (query.PtoVta is < 1 or > VoucherLimits.MaxPointOfSale) errors.Add(catalog.For(method, 10200).ToErr());
         if (tables.VoucherType(query.CbteTipo) is null) errors.Add(catalog.For(method, 10201).ToErr());
-        if (query.CbteNro is < 1 or > 99_999_999) errors.Add(catalog.For(method, 10202).ToErr());
+        if (query.CbteNro is < 1 or > VoucherLimits.MaxNumber) errors.Add(catalog.For(method, 10202).ToErr());
         if (errors.Count == 0 && !settings.OpenAccess && (await taxpayers.FindAsync(auth.Cuit, ct))?.FindPointOfSale(query.PtoVta) is null)
             errors.Add(catalog.For(method, 10104).ToErr());
         if (errors.Count > 0) return new FECompConsultaResponse { Errors = [.. errors] };
@@ -255,7 +255,7 @@ public sealed partial class WsfeService(
             issuer = new Taxpayer(cuit, $"Contribuyente {cuit}", condition);
             changed = true;
         }
-        if (pointOfSale is >= 1 and <= 99_998 && issuer.FindPointOfSale(pointOfSale.Value) is null)
+        if (pointOfSale is >= 1 and <= VoucherLimits.MaxPointOfSale && issuer.FindPointOfSale(pointOfSale.Value) is null)
         {
             issuer.AddPointOfSale(new PointOfSale(pointOfSale.Value, kind));
             changed = true;

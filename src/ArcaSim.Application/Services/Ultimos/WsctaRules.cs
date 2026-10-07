@@ -239,5 +239,5 @@ public sealed class WsctaRules(IDocumentStore store, IClock clock, SequenceLocks
     private static string? Moment(DateTimeOffset? at) => at?.ToArgentina().ToString("dd-MM-yyyy HH:mm:ss", CultureInfo.InvariantCulture);
 
     private static int Days(DateTimeOffset from, DateTimeOffset to) =>
-        DateOnly.FromDateTime(to.ToArgentina().DateTime).DayNumber - DateOnly.FromDateTime(from.ToArgentina().DateTime).DayNumber;
+        to.ArgentinaDate().DayNumber - from.ArgentinaDate().DayNumber;
 }

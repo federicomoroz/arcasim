@@ -176,5 +176,5 @@ internal static class PadronRules
         new XElement("servidor", "arcasim"));
 
     public static string Timestamp(DateOnly date) =>
-        new DateTimeOffset(date.ToDateTime(TimeOnly.MinValue), TimeSpan.FromHours(-3)).ToString("yyyy-MM-dd'T'HH:mm:ssK", CultureInfo.InvariantCulture);
+        ArgentinaTime.StartOf(date).ToString("yyyy-MM-dd'T'HH:mm:ssK", CultureInfo.InvariantCulture);
 }

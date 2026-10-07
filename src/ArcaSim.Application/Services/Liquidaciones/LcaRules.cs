@@ -284,7 +284,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
     }
 
     /// <summary>xsd:date with the zone, as the manual's answers show them (2019-05-06-03:00).</summary>
-    private static string Stamp(DateOnly date) => Iso(date) + "-03:00";
+    private static string Stamp(DateOnly date) => ArgentinaTime.DateWithOffset(date);
 
     private XElement Authorization(long cae) => new("autorizacion",
         new XElement("cae", cae),

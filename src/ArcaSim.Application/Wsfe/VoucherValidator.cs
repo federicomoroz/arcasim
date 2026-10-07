@@ -76,8 +76,8 @@ public sealed class VoucherValidator(
 
     private static void CheckNumbers(FEDetRequest d, VoucherTypeInfo type, Action<Rule> add)
     {
-        if (d.CbteDesde is < 1 or > 99_999_999) add(Rule.FromRange);
-        if (d.CbteHasta is < 1 or > 99_999_999) add(Rule.ToRange);
+        if (d.CbteDesde is < 1 or > VoucherLimits.MaxNumber) add(Rule.FromRange);
+        if (d.CbteHasta is < 1 or > VoucherLimits.MaxNumber) add(Rule.ToRange);
         if (type.Class == VoucherClass.B && !type.Fce && d.CbteHasta < d.CbteDesde) add(Rule.BatchOrder);
         if ((type.Class != VoucherClass.B || type.Fce) && d.CbteHasta != d.CbteDesde)
             add(type.Class == VoucherClass.C ? Rule.SingleNumberClassC : Rule.SingleNumber);

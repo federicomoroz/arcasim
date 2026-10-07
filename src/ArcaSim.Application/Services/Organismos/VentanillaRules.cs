@@ -131,7 +131,7 @@ public sealed class VentanillaRules(IDocumentStore store, IClock clock) : IServi
     private async Task<ContractAnswer> ListAsync(ServiceCall call, CancellationToken ct)
     {
         var filter = call.Request.Find("filter") ?? new XElement("filter");
-        var today = DateOnly.FromDateTime(clock.Now.ToArgentina().DateTime);
+        var today = clock.Today();
 
         var fromText = filter.Text("fechaDesde") ?? "";
         if (ParseDate(fromText) is not { } from) return Failure(call, 102, $"Formato de fecha no soportado para [{fromText}]. Se esperaba [yyyy-MM-dd]");
@@ -167,7 +167,7 @@ public sealed class VentanillaRules(IDocumentStore store, IClock clock) : IServi
         var reference2 = filter.Optional("referencia2");
         var found = (await store.ListAsync<Communication>(VentanillaInbox.Communications, "", ct))
             .Where(c => c.Cuit == call.Cuit && !c.Internal)
-            .Where(c => DateOnly.FromDateTime(c.PublishedAt.ToArgentina().DateTime) is var day && day >= from && (to is null || day <= to))
+            .Where(c => c.PublishedAt.ArgentinaDate() is var day && day >= from && (to is null || day <= to))
             .Where(c => (idFrom is null || c.Id >= idFrom) && (idTo is null || c.Id <= idTo))
             .Where(c => state is null || c.State == state)
             .Where(c => publisher is null || c.PublisherId == publisher)

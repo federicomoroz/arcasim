@@ -13,7 +13,7 @@ namespace ArcaSim.Application.Services.Fce;
 public sealed class FceBook(DateTimeOffset now)
 {
     public DateTimeOffset Now { get; } = now;
-    public DateOnly Today => DateOnly.FromDateTime(Now.ToArgentina().DateTime);
+    public DateOnly Today => Now.ArgentinaDate();
     public Dictionary<long, FceAccount> Accounts { get; } = [];
     public Dictionary<string, FceVoucher> Vouchers { get; } = [];
     internal Dictionary<long, string> Names { get; } = [];
@@ -237,7 +237,7 @@ public sealed class FceLedger(IDocumentStore store, IVoucherStore wsfe, ITaxpaye
             AuthorizationKind = stored.EmissionType == EmissionType.Cae ? "E" : "A",
             AuthorizationCode = long.TryParse(stored.AuthorizationCode, NumberStyles.None, CultureInfo.InvariantCulture, out var code) ? code : 0,
             Date = stored.Date,
-            AvailableOn = DateOnly.FromDateTime(stored.ProcessedAt.ToArgentina().DateTime),
+            AvailableOn = stored.ProcessedAt.ArgentinaDate(),
             PaymentDue = Fev1Dates.TryParse(detail.FchVtoPago, out var due) ? due : null,
             Total = Money(detail.ImpTotal),
             Currency = string.IsNullOrWhiteSpace(detail.MonId) ? "PES" : detail.MonId.Trim(),

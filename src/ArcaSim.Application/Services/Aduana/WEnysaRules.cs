@@ -61,7 +61,7 @@ public sealed class WEnysaRules(IDocumentStore store, IClock clock) : IServiceBe
         var kind = data.Field("tipoTransaccion");
         if (!Events.Contains(kind)) return Error(call, 6, "Operación inválida", "tipoTransaccion");
         if (FormProblem(data) is { } invalid) return Error(call, 3, "Datos inválidos", invalid);
-        if (Day(data.Field("fechaVencimiento")) is { } expiry && expiry < DateOnly.FromDateTime(clock.Now.ToArgentina().DateTime))
+        if (Day(data.Field("fechaVencimiento")) is { } expiry && expiry < clock.Today())
             return Error(call, 3, "Datos inválidos", "fechaVencimiento");
 
         var key = Key(call, data);

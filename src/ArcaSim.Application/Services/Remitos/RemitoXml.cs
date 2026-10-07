@@ -19,7 +19,7 @@ public static class RemitoXml
 
     public static XElement Parse(string xml) => XElement.Parse(xml);
 
-    public static string Date(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + "-03:00";
+    public static string Date(DateOnly date) => ArgentinaTime.DateWithOffset(date);
 
     public static string? Child(this XElement? element, string name) => element?.Element(name)?.Value.Trim();
 
