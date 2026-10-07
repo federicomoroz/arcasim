@@ -8,6 +8,10 @@ namespace ArcaSim.Application.Contracts;
 /// service's rules work on the contract: the sample already has every element
 /// in schema order, so the rules only set values, repeat list items and drop
 /// what does not apply.
+/// Two families read: Find, Text, Long, Int, Decimal and Date look anywhere
+/// below the element, ignoring case; Child, Children, ChildText, ChildLong,
+/// ChildDecimal and ChildDate look only at its direct children, by exact local
+/// name in any namespace, the way the Java services bind their unqualified fields.
 /// </summary>
 public static class ContractXml
 {
@@ -23,31 +27,46 @@ public static class ContractXml
     public static long Long(this XElement element, string name) =>
         long.TryParse(element.Text(name), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : 0;
 
-    public static int Int(this XElement element, string name) => (int)element.Long(name);
+    /// <summary>The number, or 0 when it does not read or does not fit an int: 4294967297 is not 1.</summary>
+    public static int Int(this XElement element, string name) =>
+        element.Long(name) is var value and >= int.MinValue and <= int.MaxValue ? (int)value : 0;
 
     public static decimal Decimal(this XElement element, string name) =>
         decimal.TryParse(element.Text(name), NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : 0;
 
     /// <summary>A date as ARCA's services send them: yyyyMMdd, yyyy-MM-dd or an xsd:dateTime.</summary>
-    public static DateOnly? Date(this XElement element, string name)
+    public static DateOnly? Date(this XElement element, string name) => ParseDate(element.Text(name));
+
+    private static DateOnly? ParseDate(string? text)
     {
-        var text = element.Text(name);
         if (string.IsNullOrEmpty(text)) return null;
         if (DateOnly.TryParseExact(text, ["yyyyMMdd", "yyyy-MM-dd", "dd/MM/yyyy"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)) return date;
         return DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var moment) ? DateOnly.FromDateTime(moment.DateTime) : null;
     }
 
+    /// <summary>The first direct child with that local name, whatever its namespace; null without one.</summary>
+    public static XElement? Child(this XElement? element, string name) =>
+        element?.Elements().FirstOrDefault(e => e.Name.LocalName == name);
+
+    public static IEnumerable<XElement> Children(this XElement? element, string name) =>
+        element?.Elements().Where(e => e.Name.LocalName == name) ?? [];
+
+    /// <summary>The direct child's text, trimmed; null without the child.</summary>
+    public static string? ChildText(this XElement? element, string name) => element.Child(name)?.Value.Trim();
+
+    public static long? ChildLong(this XElement? element, string name) =>
+        long.TryParse(element.ChildText(name), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : null;
+
+    public static decimal? ChildDecimal(this XElement? element, string name) =>
+        decimal.TryParse(element.ChildText(name), NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : null;
+
+    /// <summary>The direct child's date, in any of the forms Date reads.</summary>
+    public static DateOnly? ChildDate(this XElement? element, string name) => ParseDate(element.ChildText(name));
+
     /// <summary>Sets the first element with that name, if the answer has one. Numbers and dates are written invariantly.</summary>
     public static XElement Set(this XElement element, string name, object? value)
     {
         if (element.Find(name) is { } target) target.Value = Format(value);
-        return element;
-    }
-
-    /// <summary>Sets every element with that name.</summary>
-    public static XElement SetAll(this XElement element, string name, object? value)
-    {
-        foreach (var target in element.FindAll(name)) target.Value = Format(value);
         return element;
     }
 

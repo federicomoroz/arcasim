@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Xml.Linq;
 using ArcaSim.Application.Access;
+using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Soap;
 using ArcaSim.Domain;
 
@@ -51,19 +52,19 @@ public sealed class PadronService(TicketReader tickets, PadronDirectory director
 
         if (!list)
         {
-            var id = request.Long("idPersona");
+            var id = request.ChildLong("idPersona") ?? 0;
             var taxpayer = Cuits.IsValid(id) ? await directory.FindAsync(id, ct) : null;
             if (taxpayer is null) return SoapResult.Fail(Fault(Cuits.IsValid(id) ? "No existe persona con ese Id" : "La clave ingresada no es una CUIT", A5Namespace));
             return SoapResult.Ok(new XElement(ns + $"{operation}Response",
                 new XElement("personaReturn", ConstanciaOf(taxpayer, current), Metadata())));
         }
 
-        var ids = request.Texts("idPersona").ToList();
+        var ids = request.Children("idPersona").Select(e => e.Value).ToList();
         if (ids.Count > MaxListSize) return SoapResult.Fail(Fault($"La cantidad de claves a consultar no puede superar {MaxListSize}", A5Namespace));
         var people = new List<XElement>();
         foreach (var text in ids)
         {
-            long.TryParse(text.Trim(), out var id);
+            var id = long.TryParse(text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) ? parsed : 0;
             var taxpayer = Cuits.IsValid(id) ? await directory.FindAsync(id, ct) : null;
             people.Add(taxpayer is null
                 ? new XElement("persona", new XElement("errorConstancia",
@@ -169,7 +170,7 @@ public sealed class PadronService(TicketReader tickets, PadronDirectory director
     private async Task<SoapResult> A13PersonaAsync(string operation, XElement request, CancellationToken ct)
     {
         if (Authenticate(request, A13Services, A13Namespace) is { } fault) return SoapResult.Fail(fault);
-        var id = request.Long("idPersona");
+        var id = request.ChildLong("idPersona") ?? 0;
         if (!Cuits.IsValid(id)) return SoapResult.Fail(Fault("El Id de la persona no es valido", A13Namespace));
         var taxpayer = await directory.FindAsync(id, ct);
         if (taxpayer is null) return SoapResult.Fail(Fault("La Clave (CUIT/CUIL) consultada es inexistente", A13Namespace));
@@ -220,7 +221,7 @@ public sealed class PadronService(TicketReader tickets, PadronDirectory director
     private async Task<SoapResult> A13ByDocumentAsync(XElement request, CancellationToken ct)
     {
         if (Authenticate(request, A13Services, A13Namespace) is { } fault) return SoapResult.Fail(fault);
-        var document = (request.Text("documento") ?? "").Trim();
+        var document = request.ChildText("documento") ?? "";
         var ids = await directory.ByDocumentAsync(document, ct);
         if (ids.Count == 0) return SoapResult.Fail(Fault("No existe persona con ese documento", A13Namespace));
         XNamespace ns = A13Namespace;
@@ -243,8 +244,8 @@ public sealed class PadronService(TicketReader tickets, PadronDirectory director
     /// </summary>
     private SoapFault? Authenticate(XElement request, string[] services, string ns)
     {
-        var cuit = request.Long("cuitRepresentada");
-        var check = tickets.Check(request.Text("token"), request.Text("sign"), cuit, services);
+        var cuit = request.ChildLong("cuitRepresentada") ?? 0;
+        var check = tickets.Check(request.Child("token")?.Value, request.Child("sign")?.Value, cuit, services);
         return check.Problem switch
         {
             TicketProblem.None => null,
