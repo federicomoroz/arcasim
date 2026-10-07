@@ -59,7 +59,7 @@ public sealed class ServiceCall(
     /// </summary>
     public string? Fixed(string name) =>
         Definition.Values?.GetValueOrDefault(name) is { } value
-            ? Placeholders.Fill(value, new PlaceholderValues(Context.Now) { Service = Definition.Id, Cuit = Context.Cuit })
+            ? Placeholders.Fill(value, new PlaceholderValues(Context.Now) { Service = Definition.Id, Cuit = Context.Cuit, Counters = Context.Counters })
             : null;
 
     /// <summary>A business error the way the service reports it: in its error block when the response has one, else as a fault.</summary>
@@ -85,8 +85,9 @@ public sealed class ServiceCall(
 /// </summary>
 public sealed class ContractHost(
     ServiceCatalog catalog, string wsdlFolder, TicketReader tickets, IClock clock, EventManager events, IEnumerable<IServiceBehavior> behaviors,
-    ILogger<ContractHost>? logger = null)
+    PlaceholderCounters? counters = null, ILogger<ContractHost>? logger = null)
 {
+    private readonly PlaceholderCounters _counters = counters ?? new();
     private readonly ConcurrentDictionary<string, (ServiceContract Contract, SchemaSampler Sampler)> _contracts = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, IServiceBehavior> _behaviors = RulesByService(behaviors);
 
@@ -97,19 +98,22 @@ public sealed class ContractHost(
 
     public ServiceContract ContractOf(ServiceDefinition definition) => Load(definition).Contract;
 
+    /// <summary>The sequences {seq:start} draws from, for what the endpoint fills on its own (an unknown operation's text).</summary>
+    public PlaceholderCounters Counters => _counters;
+
     /// <summary>ArcaSim's clock, for what the endpoint writes on its own (the balancer's mask).</summary>
     public DateTimeOffset Now => clock.Now;
 
     /// <summary>Any element of the service's schema with data and the service's fixed values, as an answer outside SOAP needs it (the HTTP GET dummy).</summary>
     public XElement SampleOf(ServiceDefinition definition, XName element)
     {
-        var context = new SampleContext(0, clock.Now) { Always = definition.Always };
+        var context = new SampleContext(0, clock.Now) { Always = definition.Always, Counters = _counters };
         return Apply(Load(definition).Sampler.Sample(element, context), definition, context);
     }
 
     /// <summary>The header the service sends that its WSDL does not declare, with this moment's values; null when it sends none.</summary>
     public string? HeaderOf(ServiceDefinition definition) =>
-        definition.Header is { } header ? Placeholders.Fill(header, new PlaceholderValues(clock.Now) { Service = definition.Id }) : null;
+        definition.Header is { } header ? Placeholders.Fill(header, new PlaceholderValues(clock.Now) { Service = definition.Id, Counters = _counters }) : null;
 
     public bool HasRules(ServiceDefinition definition) => _behaviors.ContainsKey(definition.Id);
 
@@ -133,7 +137,7 @@ public sealed class ContractHost(
     public async Task<ContractAnswer> AnswerAsync(ServiceDefinition definition, OperationContract operation, XElement? request, CancellationToken ct)
     {
         var (contract, sampler) = Load(definition);
-        var context = new SampleContext(0, clock.Now) { Always = definition.Always };
+        var context = new SampleContext(0, clock.Now) { Always = definition.Always, Counters = _counters };
         long cuit = 0;
 
         if (operation.Input is not null && sampler.CarriesTicket(operation.Input))
@@ -143,7 +147,7 @@ public sealed class ContractHost(
             var check = tickets.Check(auth.Token, auth.Sign, cuit, definition.Wsaa);
             if (check.Failed)
             {
-                var rows = RowsFor(definition, check, auth, context.Now);
+                var rows = RowsFor(definition, check, auth, context);
                 var refusal = Refuse(definition, contract, sampler, operation, rows, context with { Cuit = cuit });
                 events.Publish(new ServiceCalled(DateTimeOffset.UtcNow, definition.Id, operation.Name, cuit, "error", rows[0].Text));
                 return refusal;
@@ -182,7 +186,7 @@ public sealed class ContractHost(
             foreach (var element in answer.Descendants().Where(e => drop.Any(d => Matches(e, d))).ToList())
                 element.Remove();
         if (definition.Values is not { Count: > 0 } values) return answer;
-        var fill = new PlaceholderValues(context.Now) { Service = definition.Id, Cuit = context.Cuit };
+        var fill = new PlaceholderValues(context.Now) { Service = definition.Id, Cuit = context.Cuit, Counters = context.Counters };
         foreach (var element in answer.DescendantsAndSelf().Where(e => !e.HasElements))
         {
             var path = element.Parent is { } parent ? $"{parent.Name.LocalName}/{element.Name.LocalName}" : null;
@@ -241,7 +245,7 @@ public sealed class ContractHost(
     {
         try
         {
-            var login = XDocument.Parse(System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token ?? "")));
+            var login = SafeXml.Parse(System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token ?? "")));
             var key = login.Descendants("relation").Select(r => r.Attribute("key")?.Value).FirstOrDefault();
             return long.TryParse(key, NumberStyles.None, CultureInfo.InvariantCulture, out var cuit) ? cuit : 0;
         }
@@ -259,12 +263,13 @@ public sealed class ContractHost(
     /// when the elements did not come, then the problem, then "*"), each
     /// completed with the service's code and text; or one error with them.
     /// </summary>
-    private static List<Refusal> RowsFor(ServiceDefinition definition, TicketCheck check, Auth auth, DateTimeOffset now)
+    private static List<Refusal> RowsFor(ServiceDefinition definition, TicketCheck check, Auth auth, SampleContext context)
     {
         var errors = definition.Errors;
         var configured = (auth.HasTicket ? null : Row(errors, "NoTicket")) ?? Row(errors, check.Problem.ToString()) ?? Row(errors, "*");
-        var values = new PlaceholderValues(check.Now != 0 ? DateTimeOffset.FromUnixTimeSeconds(check.Now) : now)
+        var values = new PlaceholderValues(check.Now != 0 ? DateTimeOffset.FromUnixTimeSeconds(check.Now) : context.Now)
         {
+            Counters = context.Counters,
             Service = definition.Id,
             Cuit = check.Cuit,
             Detail = check.Detail,

@@ -27,14 +27,6 @@ public sealed record WsaaFault(string Code, string Message)
     public static readonly WsaaFault ServiceUnavailable = new("wsn.unavailable", "El servicio al que se desea acceder se encuentra momentáneamente fuera de servicio");
     public static readonly WsaaFault WsaaUnavailable = new("wsaa.unavailable", "El servicio de autenticación/autorización se encuentra momentáneamente fuera de servicio");
     public static readonly WsaaFault InternalError = new("wsaa.internalError", "No se ha podido procesar el requerimiento");
-
-    public static IReadOnlyList<WsaaFault> All { get; } =
-    [
-        BadBase64, BadCms, CertificateNotFound, InvalidSignature, CertificateExpired, CertificateNotYetValid,
-        CertificateUntrusted, BadXml, BadSource, BadDestination, VersionNotSupported, BadGenerationTime, Expired,
-        BadExpirationTime, ServiceNotFound, NotAuthorized, AlreadyAuthenticated, ServiceUnavailable, WsaaUnavailable,
-        InternalError,
-    ];
 }
 
 /// <summary>Either the TA as text (what goes in loginCmsReturn) or the fault.</summary>

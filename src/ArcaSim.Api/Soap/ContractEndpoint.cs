@@ -88,6 +88,7 @@ public static class ContractEndpoint
         var address = WsdlDocuments.BaseUrl(context.Request) + contract.AddressPath;
         var values = new PlaceholderValues(host.Now)
         {
+            Counters = host.Counters,
             Service = definition.Id,
             Element = element is null ? "" : $"{{{element.NamespaceName}}}{element.LocalName}",
             Expected = expected is null ? "" : $"{{{expected.NamespaceName}}}{expected.LocalName}",
@@ -128,7 +129,7 @@ public static class ContractEndpoint
         XElement? body;
         try
         {
-            var document = XDocument.Parse(request.Body);
+            var document = SafeXml.Parse(request.Body);
             var soapBody = document.Root?.Elements().FirstOrDefault(e => e.Name.LocalName == "Body")
                            ?? throw new XmlException("The SOAP envelope has no Body.");
             body = soapBody.Elements().FirstOrDefault();
@@ -196,10 +197,6 @@ public sealed class DialectWriter(ServiceDefinition definition, SoapVersion vers
         Dialect.Axis2 => "Acceso Denegado  - " + message,
         _ => "Couldn't create SOAP message due to exception: " + message,
     };
-
-    public string UnknownOperation(XName? element, string? action) => UnknownOperation(element, action, "");
-
-    public string UnknownOperation(XName? element, string? action, string address) => UnknownOperation(element, action, address, null);
 
     /// <summary>
     /// The fault for a request no operation takes. Axis2 names the endpoint's

@@ -29,7 +29,7 @@ public sealed class SimulationSettings
     /// <summary>Null follows the calendar: v4.8 from 01/12/2026, v4.7 before.</summary>
     public ManualVersion? ManualVersionOverride { get; set; }
 
-    /// <summary>WSAA's anti-repeat window. Off by default for tests, which ask for tickets in a loop.</summary>
+    /// <summary>WSAA's anti-repeat window. On, as in ARCA; the test harness turns it off, since tests ask for tickets in a loop.</summary>
     public bool ReplayWindowEnabled { get; set; } = true;
 
     /// <summary>The amount from which a final consumer has to be identified (RG 1415, texto RG 5700/2025).</summary>

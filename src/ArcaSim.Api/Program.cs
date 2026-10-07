@@ -61,6 +61,7 @@ builder.Services.AddSingleton(_ => ParameterTables.Load());
 builder.Services.AddSingleton<IAuthorizationCodes, RandomAuthorizationCodes>();
 builder.Services.AddSingleton<SequenceLocks>();
 builder.Services.AddSingleton<ServiceDirectory>();
+builder.Services.AddSingleton<PlaceholderCounters>();
 builder.Services.AddSingleton<EventManager>();
 builder.Services.AddSingleton<TrafficGate>();
 builder.Services.AddSingleton<TrafficMeter>();
@@ -87,7 +88,7 @@ builder.Services.AddSingleton(_ => ServiceCatalog.Load(Path.Combine(AppContext.B
 builder.Services.AddSingleton(sp => new ContractHost(
     sp.GetRequiredService<ServiceCatalog>(), WsdlDocuments.Directory, sp.GetRequiredService<TicketReader>(),
     sp.GetRequiredService<IClock>(), sp.GetRequiredService<EventManager>(), sp.GetServices<IServiceBehavior>(),
-    sp.GetRequiredService<ILogger<ContractHost>>()));
+    sp.GetRequiredService<PlaceholderCounters>(), sp.GetRequiredService<ILogger<ContractHost>>()));
 
 var app = builder.Build();
 

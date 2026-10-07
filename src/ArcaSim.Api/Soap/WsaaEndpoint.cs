@@ -77,9 +77,9 @@ public sealed class WsaaEndpoint(WsaaService service, SimulationSettings setting
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !context.RequestAborted.IsCancellationRequested)
         {
-            // Axis answers an exception nobody handled as a userException fault, never a bare HTTP 500.
+            // An exception nobody handled is WSAA's own internal error, as its manual lists it, never a bare HTTP 500.
             logger.LogError(ex, "WSAA loginCms failed");
-            await SendAsync(context, request, 500, Fault(request, "soapenv:Server.userException", $"{ex.GetType().FullName}: {ex.Message}", exceptionName: false));
+            await SendAsync(context, request, 500, Fault(request, $"ns1:{WsaaFault.InternalError.Code}", WsaaFault.InternalError.Message, exceptionName: true));
             return;
         }
         if (result.Fault is { } fault)

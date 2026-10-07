@@ -45,7 +45,7 @@ public static class JavaSoapEndpoint
             XElement request;
             try
             {
-                var document = XDocument.Parse(body);
+                var document = SafeXml.Parse(body);
                 request = document.Root?.Elements().FirstOrDefault(e => e.Name.LocalName == "Body")?.Elements().FirstOrDefault()
                           ?? throw new XmlException("The SOAP body has no element.");
             }

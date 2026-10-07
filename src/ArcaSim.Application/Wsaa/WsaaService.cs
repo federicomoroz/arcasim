@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using ArcaSim.Application.Events;
+using ArcaSim.Application.Soap;
 using ArcaSim.Domain;
 
 namespace ArcaSim.Application.Wsaa;
@@ -165,7 +166,7 @@ public sealed partial class WsaaService(
         XDocument document;
         try
         {
-            document = XDocument.Parse(Encoding.UTF8.GetString(content).TrimStart('﻿'));
+            document = SafeXml.Parse(Encoding.UTF8.GetString(content).TrimStart('﻿'));
         }
         catch (XmlException)
         {

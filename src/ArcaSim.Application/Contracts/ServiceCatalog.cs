@@ -89,7 +89,8 @@ public sealed record AuthErrors(
 /// always travel the same (by element name or "Parent/Child" path, with the
 /// same placeholders as AuthErrors' texts), and how far the simulation goes
 /// ("reglas" when it keeps state and applies ARCA's rules, "contrato" when it
-/// answers the contract with valid data).
+/// answers the contract with valid data: a note for whoever reads the catalog,
+/// the engine does not read it).
 /// Header is the SOAP header the service sends that its WSDL does not declare
 /// (FEHeaderInfo, info, serverTime...), as an XML fragment with placeholders;
 /// it replaces the declared headers and, with HeaderOnFaults, travels on

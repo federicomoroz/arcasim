@@ -28,6 +28,7 @@ public sealed class KeyMaterial : ITrustStore, ITokenSigner
     {
         Directory.CreateDirectory(directory);
         _authority = LoadOrCreateAuthority(Path.Combine(directory, "ca.crt"), Path.Combine(directory, "ca.key"));
+        // 1024 bits: the sign ARCA hands out is 128 bytes, 172 characters of base64 (wsaa.md, the 2018 capture), what RSA-1024 gives.
         _tokenKey = LoadOrCreateKey(Path.Combine(directory, "token-signing.key"), 1024);
     }
 

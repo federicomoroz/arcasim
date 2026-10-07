@@ -14,6 +14,9 @@ namespace ArcaSim.Application.Contracts;
 public sealed record SampleContext(long Cuit, DateTimeOffset Now)
 {
     public IReadOnlyCollection<string>? Always { get; init; }
+
+    /// <summary>The host's sequences, for the placeholders of the values this answer carries.</summary>
+    public PlaceholderCounters Counters { get; init; } = new();
 }
 
 /// <summary>
