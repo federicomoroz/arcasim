@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
+using ArcaSim.Application.Wsfe;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArcaSim.Tests.Services.TurismoBonos;
@@ -129,6 +130,43 @@ public class BfeRulesTests
         var fromOld = await old.CallAsync("BFEGetCMP", Auth(old) + "<x:Cmp><x:Tipo_cbte>1</x:Tipo_cbte><x:Punto_vta>5</x:Punto_vta><x:Cbte_nro>2</x:Cbte_nro></x:Cmp>");
         Assert.Equal(Value(next, "Cae"), Value(fromOld, "Cae"));
         Assert.Equal("2", Value(await LastAsync(old), "Cbte_nro"));
+    }
+
+    [Fact]
+    public async Task Wsbfev1_waits_for_the_lock_of_the_book_it_shares_with_wsbfe()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var desk = await OpenAsync(sim);
+        var locks = sim.Services.GetRequiredService<SequenceLocks>();
+
+        Task<XElement> authorizing;
+        // The book's name is wsbfe, whichever of the two services numbers: its lock for point of sale 5 and type 1.
+        using (await locks.AcquireAsync("wsbfe", ServiceDesk.Issuer, 5, 1, CancellationToken.None))
+        {
+            authorizing = AuthorizeAsync(desk, Cmp(RequestId, 1));
+            Assert.NotSame(authorizing, await Task.WhenAny(authorizing, Task.Delay(300)));
+        }
+
+        Assert.Equal("A", Value(await authorizing, "Resultado"));
+    }
+
+    [Fact]
+    public async Task The_highest_Id_of_a_CUIT_is_read_and_written_under_a_lock_of_its_own()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var desk = await OpenAsync(sim);
+        var locks = sim.Services.GetRequiredService<SequenceLocks>();
+
+        Task<XElement> authorizing;
+        // Two points of sale hold different sequence locks but share the CUIT's highest Id: the book keeps it under "<book>-ultimo-id".
+        using (await locks.AcquireAsync("wsbfe-ultimo-id", ServiceDesk.Issuer, 0, 0, CancellationToken.None))
+        {
+            authorizing = AuthorizeAsync(desk, Cmp(RequestId, 1));
+            Assert.NotSame(authorizing, await Task.WhenAny(authorizing, Task.Delay(300)));
+        }
+
+        Assert.Equal("A", Value(await authorizing, "Resultado"));
+        Assert.Equal(RequestId.ToString(), Value(await desk.CallAsync("BFEGetLast_ID", Auth(desk)), "Id"));
     }
 
     [Fact]

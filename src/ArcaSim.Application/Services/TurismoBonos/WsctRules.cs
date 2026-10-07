@@ -65,7 +65,7 @@ public sealed class WsctRules(
     SimulationSettings settings,
     EventManager events) : IServiceBehavior
 {
-    private readonly VoucherBook _book = new(documents, "wsct");
+    private readonly VoucherBook _book = new(documents, "wsct", locks);
     private readonly ConcurrentDictionary<string, XName> _returns = new();
 
     public string Service => "wsct";

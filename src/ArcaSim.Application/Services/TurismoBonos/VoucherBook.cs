@@ -1,4 +1,5 @@
 using ArcaSim.Application.Contracts;
+using ArcaSim.Application.Wsfe;
 
 namespace ArcaSim.Application.Services.TurismoBonos;
 
@@ -42,7 +43,7 @@ public sealed record BookedLastId(long Id);
 /// requirement Ids already authorized and the highest of them. Every voucher
 /// is also recorded in AuthorizedVouchers, for constatación.
 /// </summary>
-public sealed class VoucherBook(IDocumentStore store, string family)
+public sealed class VoucherBook(IDocumentStore store, string family, SequenceLocks locks)
 {
     private string Vouchers => $"{family}-comprobantes";
     private string Lasts => $"{family}-ultimos";
@@ -74,8 +75,12 @@ public sealed class VoucherBook(IDocumentStore store, string family)
         if (voucher.RequestId > 0)
         {
             await store.PutAsync(Requests, $"{voucher.Cuit}/{voucher.RequestId}", new BookedRequest(voucher.PointOfSale, voucher.VoucherType, voucher.Number), ct);
-            if (voucher.RequestId > await LastRequestIdAsync(voucher.Cuit, ct))
-                await store.PutAsync(LastIds, voucher.Cuit.ToString(), new BookedLastId(voucher.RequestId), ct);
+
+            // The caller holds the lock of this point of sale and type; the CUIT's highest Id is shared by all of
+            // them, so it is read and written under a lock of its own, apart from the sequences' (another key space).
+            using (await locks.AcquireAsync(LastIds, voucher.Cuit, 0, 0, ct))
+                if (voucher.RequestId > await LastRequestIdAsync(voucher.Cuit, ct))
+                    await store.PutAsync(LastIds, voucher.Cuit.ToString(), new BookedLastId(voucher.RequestId), ct);
         }
         await store.PutAsync(authorized, ct);
     }

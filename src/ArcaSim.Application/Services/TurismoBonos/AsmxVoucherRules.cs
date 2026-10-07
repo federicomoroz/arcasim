@@ -140,7 +140,7 @@ public abstract class AsmxVoucherRules(
 
     protected SimulationSettings Settings => settings;
 
-    protected VoucherBook Book => _book ??= new VoucherBook(documents, Family);
+    protected VoucherBook Book => _book ??= new VoucherBook(documents, Family, locks);
 
     private VoucherBook? _book;
 
@@ -216,7 +216,8 @@ public abstract class AsmxVoucherRules(
         var today = clock.Today();
         if (await CheckAsync(call, cmp, today, ct) is { } refusal) return Rejected(call, cmp, refusal);
 
-        using (await locks.AcquireAsync(Service, call.Cuit, cmp.PointOfSale, cmp.VoucherType, ct))
+        // The family's name, not the service's: wsbfev1 and wsbfe number one book, so one lock covers a sequence for both.
+        using (await locks.AcquireAsync(Family, call.Cuit, cmp.PointOfSale, cmp.VoucherType, ct))
         {
             if (await Book.FindByRequestAsync(call.Cuit, cmp.Id, ct) is { } raced)
                 return Answer(call, Authorized(ns, raced, reprocessed: true));
