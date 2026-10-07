@@ -56,7 +56,6 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
 
     public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct) => call.Name switch
     {
-        "dummy" => RemitoFamily.Dummy(call),
         "generarRemito" => await GenerateAsync(call, ct),
         "autorizarRemitoTitular" => await AuthorizeAsync(call, ct),
         "emitirRemito" => await IssueAsync(call, ct),
@@ -69,15 +68,11 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
         "consultarRemito" => await ConsultAsync(call, ct),
         "consultarEstadosRemito" => await HistoryAsync(call, ct),
         "consultarRemitosEmisor" or "consultarRemitosTitular" or "consultarRemitosReceptor" => await ListAsync(call, ct),
-        "consultarTiposComprobante" => call.Ok(new XElement(call.Operation.Output, new XElement("consultarTiposComprobanteReturn",
-            RemitoXml.Codes("arrayTiposComprobante", "codigoDescripcion", RemitoTables.SugarVoucherTypes)))),
-        "consultarTiposEstado" => call.Ok(new XElement(call.Operation.Output, new XElement("consultarTiposEstadoReturn",
-            RemitoXml.Codes("arrayTiposEstado", "codigoDescripcionString", RemitoTables.SugarStates)))),
-        "consultarTiposTitular" => call.Ok(new XElement(call.Operation.Output, new XElement("codigoDescripcionReturn",
-            RemitoXml.Codes("arrayCodigoDescripcion", "codigoDescripcion", RemitoTables.SugarHolderTypes)))),
-        "consultarPuntosEmision" => call.Ok(new XElement(call.Operation.Output, new XElement("consultarPuntosEmisionReturn",
-            RemitoXml.Codes("arrayPuntosEmision", "codigoDescripcion", await RemitoFamily.PointsAsync(directory, call.Cuit, RemitoFamily.MaxPointOfEmission, ct))))),
-        "consultarCodigosDomicilio" => await AddressesAsync(call, ct),
+        "consultarTiposComprobante" => RemitoFamily.Table(call, "consultarTiposComprobanteReturn", "arrayTiposComprobante", "codigoDescripcion", RemitoTables.SugarVoucherTypes),
+        "consultarTiposEstado" => RemitoFamily.Table(call, "consultarTiposEstadoReturn", "arrayTiposEstado", "codigoDescripcionString", RemitoTables.SugarStates),
+        "consultarTiposTitular" => RemitoFamily.Table(call, "codigoDescripcionReturn", "arrayCodigoDescripcion", "codigoDescripcion", RemitoTables.SugarHolderTypes),
+        "consultarPuntosEmision" => await RemitoFamily.PointsAnswerAsync(call, directory, RemitoFamily.MaxPointOfEmission, ct),
+        "consultarCodigosDomicilio" => await RemitoFamily.AddressesAnswerAsync(call, directory, ct),
         _ => null,
     };
 
@@ -144,10 +139,10 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
         if (request.ChildDate("fechaInicioViaje") is { } start)
         {
             if (start < _ledger.Today) return RemitoAnswer(call, "emitirRemitoReturn", null, [TripBeforeToday]);
-            Edit(remito, document => document.Element("viaje")?.Element("fechaInicioViaje")?.SetValue(start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
+            RemitoXml.Edit(remito, document => document.Element("viaje")?.Element("fechaInicioViaje")?.SetValue(start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
         }
         if (request.Element("transporte") is { } transport)
-            Edit(remito, document => ChangeTruck(document, transport.Element("conductor"), transport.ChildText("dominioVehiculo"), transport.ChildText("dominioAcoplado")));
+            RemitoXml.Edit(remito, document => ChangeTruck(document, transport.Element("conductor"), transport.ChildText("dominioVehiculo"), transport.ChildText("dominioAcoplado")));
         await _ledger.IssueAsync(remito, call.Cuit, ct);
         return RemitoAnswer(call, "emitirRemitoReturn", remito, []);
     }
@@ -219,7 +214,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
         if (await FindAsync(request.ChildLong("codRemito") ?? 0, call.Cuit, ct) is not { } remito) return Simple(call, "modificarConductorReturn", NotFound);
         if (remito.Issuer != call.Cuit || remito.State != RemitoStates.Issued || _ledger.Now > remito.IssuedAt!.Value.AddHours(RemitoTerms.FlatChangeHours))
             return Simple(call, "modificarConductorReturn", NotAllowed);
-        Edit(remito, document => ChangeTruck(document, request.Element("conductor"), request.ChildText("dominioVehiculo"), request.ChildText("dominioAcoplado")));
+        RemitoXml.Edit(remito, document => ChangeTruck(document, request.Element("conductor"), request.ChildText("dominioVehiculo"), request.ChildText("dominioAcoplado")));
         await _ledger.SaveAsync(remito, ct);
         return Simple(call, "modificarConductorReturn", null);
     }
@@ -266,7 +261,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
         var steps = remito?.History ?? [];
         return call.Ok(new XElement(call.Operation.Output, new XElement("consultarEstadosRemitoReturn",
             new XElement("arrayEstadosRemito", steps.Select((step, i) => new XElement("historialAcciones",
-                new XElement("fecha", RemitoXml.Date(DateOnly.FromDateTime(step.At.DateTime))),
+                new XElement("fecha", RemitoXml.Date(step.At)),
                 new XElement("estado", step.State),
                 new XElement("activo", i == steps.Count - 1 ? "S" : "N")))),
             remito is null ? RemitoXml.Errors([NotFound]) : null)));
@@ -307,19 +302,9 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
             new XElement("maxRegistros", found.Count))));
     }
 
-    private async Task<ContractAnswer> AddressesAsync(ServiceCall call, CancellationToken ct)
-    {
-        var address = await RemitoFamily.FiscalAddressAsync(directory, call.Request.Long("cuitTitularDomicilio"), ct);
-        return call.Ok(new XElement(call.Operation.Output, new XElement("consultarCodigosDomicilioReturn",
-            address is { } found
-                ? RemitoXml.Codes("arrayDomicilios", "codigoDescripcion", [found])
-                : RemitoXml.Errors([RemitoFamily.NotRegistered]))));
-    }
-
     // ---- Shapes ------------------------------------------------------------------------
 
-    private async Task<Remito?> FindAsync(long code, long cuit, CancellationToken ct) =>
-        await _ledger.FindAsync(code, ct) is { } remito && remito.Involves(cuit) ? remito : null;
+    private Task<Remito?> FindAsync(long code, long cuit, CancellationToken ct) => _ledger.FindForAsync(code, cuit, ct);
 
     /// <summary>The element azúcar wraps a write operation's data in (emitirRemito, autorizarRemitoTitular...).</summary>
     private static XElement Wrapped(ServiceCall call, string name) => RemitoXml.Plain(call.Request).Element(name) ?? new XElement(name);
@@ -328,13 +313,6 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
         XElement.Parse(remito.Xml).Element("arrayMercaderias")?.Elements("mercaderia")
             .GroupBy(m => (int)(m.ChildLong("orden") ?? 0))
             .ToDictionary(g => g.Key, g => g.Sum(m => m.ChildLong("cantidad") ?? 0)) ?? [];
-
-    private static void Edit(Remito remito, Action<XElement> change)
-    {
-        var document = XElement.Parse(remito.Xml);
-        change(document);
-        remito.Xml = document.ToString(SaveOptions.DisableFormatting);
-    }
 
     /// <summary>A new driver, vehicle or trailer on the remito's truck legs.</summary>
     private static void ChangeTruck(XElement document, XElement? driver, string? vehicle, string? trailer)
@@ -366,7 +344,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
                 remito.Number is { } number ? new XElement("nroComprobante", number) : null,
                 new XElement("idTipoComprobante", remito.Type),
                 remito.AuthorizationCode is { } cre ? new XElement("codigoAutorizacion", cre) : null,
-                remito.IssuedAt is { } issued ? new XElement("fechaEmision", RemitoXml.Date(DateOnly.FromDateTime(issued.DateTime))) : null,
+                remito.IssuedAt is { } issued ? new XElement("fechaEmision", RemitoXml.Date(issued)) : null,
                 new XElement("fechaVencimiento", RemitoXml.Date(remito.ExpiresOn ?? _ledger.Today.AddDays(RemitoTerms.ValidityDays(remito.DistanceKm)))),
                 new XElement("estado", remito.State)),
             RemitoXml.Errors(problems))));
@@ -402,7 +380,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
                     new XElement("nroComprobante", remito.Number),
                     new XElement("idTipoComprobante", remito.Type),
                     new XElement("codigoAutorizacion", remito.AuthorizationCode),
-                    new XElement("fechaEmision", RemitoXml.Date(DateOnly.FromDateTime(remito.IssuedAt!.Value.DateTime))),
+                    new XElement("fechaEmision", RemitoXml.Date(remito.IssuedAt!.Value)),
                     new XElement("fechaVencimiento", RemitoXml.Date(remito.ExpiresOn!.Value)))
                 : null,
         });

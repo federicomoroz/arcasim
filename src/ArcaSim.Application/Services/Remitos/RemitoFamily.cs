@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Padron;
@@ -8,9 +9,17 @@ namespace ArcaSim.Application.Services.Remitos;
 public sealed record RemitoCodes(RemitoProblem NotFound, RemitoProblem NotAllowed, RemitoProblem NotPending, RemitoProblem NotAuthorizer);
 
 /// <summary>
+/// The names carne and harina give the same things in consultarRemitos*:
+/// the request's date range and point of emission, and in each item of the
+/// answer its wrapper, its type and its request id.
+/// </summary>
+public sealed record RemitoListNames(string DateRange, string Point, string ItemName, string ItemType, string ItemRequestId);
+
+/// <summary>
 /// What the three remito services share: the authorizations a new remito
 /// owes, the lifecycle (authorize, deny, cancel), the lists by role with
-/// their paging, and the registral checks on the parties
+/// their paging, the parameter tables they answer alike, and the registral
+/// checks on the parties
 /// (wsremharina.md, wsremcarne.md, wsremazucar.md, "Máquina de estados").
 /// </summary>
 public static class RemitoFamily
@@ -55,7 +64,7 @@ public static class RemitoFamily
             remito.MoveTo(RemitoStates.Denied, now, cuit);
             return null;
         }
-        remito.AuthorizedOn = DateOnly.FromDateTime(now.DateTime);
+        remito.AuthorizedOn = now.ArgentinaDate();
         remito.MoveTo(remito.Pending is { } next ? RemitoStates.PendingState(next) : RemitoStates.PendingIssue, now, cuit);
         return null;
     }
@@ -67,6 +76,32 @@ public static class RemitoFamily
         if (remito.State is not (RemitoStates.PendingHolder or RemitoStates.PendingDepositary or RemitoStates.PendingIssue)) return codes.NotAllowed;
         remito.MoveTo(RemitoStates.CancelledUnissued, now, cuit);
         return null;
+    }
+
+    /// <summary>
+    /// autorizarRemito of carne and harina: the holder or the depositary says A
+    /// to authorize and anything else to deny. <paramref name="find"/> gives the
+    /// remito by its code when the caller is a party to it.
+    /// </summary>
+    public static async Task<ContractAnswer> AuthorizeAsync(
+        ServiceCall call, RemitoLedger ledger, RemitoCodes codes, string wrapper, Func<long, Task<Remito?>> find, CancellationToken ct)
+    {
+        var code = call.Request.Long("codRemito");
+        if (await find(code) is not { } remito) return OperationAnswer(call, wrapper, code, codes.NotFound);
+        var problem = Authorize(remito, call.Cuit, call.Request.Text("estado") == "A", ledger.Now, codes);
+        if (problem is null) await ledger.SaveAsync(remito, ct);
+        return OperationAnswer(call, wrapper, code, problem);
+    }
+
+    /// <summary>anularRemito of carne and harina: the issuer cancels a remito that was never issued.</summary>
+    public static async Task<ContractAnswer> CancelAsync(
+        ServiceCall call, RemitoLedger ledger, RemitoCodes codes, string wrapper, Func<long, Task<Remito?>> find, CancellationToken ct)
+    {
+        var code = call.Request.Long("codRemito");
+        if (await find(code) is not { } remito) return OperationAnswer(call, wrapper, code, codes.NotFound);
+        var problem = Cancel(remito, call.Cuit, ledger.Now, codes);
+        if (problem is null) await ledger.SaveAsync(remito, ct);
+        return OperationAnswer(call, wrapper, code, problem);
     }
 
     /// <summary>A party must be in the registry and active (codes 100 and 101).</summary>
@@ -110,21 +145,46 @@ public static class RemitoFamily
     }
 
     /// <summary>
-    /// The list answer harina and carne share (consultarRemitosReturn): the
-    /// page, its number and whether more follow, or 3034 when nothing matched.
+    /// The consultarRemitos* answer carne and harina share: the remitos the
+    /// caller has as issuer, as holder or depositary, or as receiver (the date
+    /// range only filters what was decided or received), one page of them with
+    /// its number and whether more follow, or 3034 when nothing matched.
     /// </summary>
-    public static ContractAnswer ListAnswer(ServiceCall call, IEnumerable<Remito> remitos, Func<Remito, XElement> item, string itemName)
+    public static ContractAnswer ListAnswer(ServiceCall call, IReadOnlyList<Remito> all, RemitoListNames names)
     {
+        var request = RemitoXml.Plain(call.Request);
+        var range = request.Element(names.DateRange);
+        var (from, to) = (range.ChildDate("fechaDesde"), range.ChildDate("fechaHasta"));
+        var issuer = request.ChildLong("cuitEmisor");
+        var found = call.Name switch
+        {
+            "consultarRemitosEmisor" => ForIssuer(all, call.Cuit, (int)(request.ChildLong(names.Point) ?? 0),
+                (int?)request.ChildLong("tipoComprobante"), request.ChildText("estado"), from, to),
+            "consultarRemitosAutorizador" => ForAuthorizer(all, call.Cuit, request.ChildText("rolAutorizador") ?? "",
+                request.ChildText("estadoAutorizacion") ?? "", issuer, from, to),
+            _ => ForReceiver(all, call.Cuit, request.ChildText("estadoRecepcion") ?? "", issuer, from, to),
+        };
+
         var page = Math.Max(call.Request.Int("nroPagina"), 1);
-        var (items, more) = Page(remitos, page);
+        var (items, more) = Page(found, page);
         var body = items.Count == 0
             ? new XElement("consultarRemitosReturn", RemitoXml.Errors([new RemitoProblem(3034, "Remitos no encontrados")]))
             : new XElement("consultarRemitosReturn",
-                new XElement("arrayRemitos", items.Select(r => item(r).WithName(itemName))),
+                new XElement("arrayRemitos", items.Select(r => ListItem(r, names))),
                 new XElement("nroPagina", page),
                 new XElement("hayMas", more ? "S" : "N"));
         return call.Ok(new XElement(call.Operation.Output, body));
     }
+
+    private static XElement ListItem(Remito r, RemitoListNames names) => new(names.ItemName,
+        new XElement("cuitEmisor", r.Issuer),
+        new XElement("codRemito", r.Code),
+        new XElement("puntoEmision", r.Point),
+        new XElement(names.ItemType, r.Type),
+        r.Number is { } number ? new XElement("nroRemito", number) : null,
+        new XElement(names.ItemRequestId, r.RequestId),
+        new XElement("estadoActual", r.State),
+        new XElement("fechaOper", RemitoXml.Date(r.History[^1].At)));
 
     /// <summary>The short answer of the operations that only change state: codRemito, resultado and the errors.</summary>
     public static ContractAnswer OperationAnswer(ServiceCall call, string wrapper, long code, IReadOnlyCollection<RemitoProblem> problems) =>
@@ -143,7 +203,7 @@ public static class RemitoFamily
         foreach (var step in remito.History)
             steps.Add(new XElement("estados",
                 new XElement("estado", step.State),
-                new XElement("fecha", RemitoXml.Date(DateOnly.FromDateTime(step.At.DateTime))),
+                new XElement("fecha", RemitoXml.Date(step.At)),
                 new XElement("cuitUsuario", step.Cuit),
                 new XElement(userText, await NameOfAsync(directory, step.Cuit, ct))));
         return new XElement("arrayEstados", steps);
@@ -154,11 +214,29 @@ public static class RemitoFamily
     /// remitos have no registry of their own), those a code of the service's
     /// answer can hold.
     /// </summary>
-    public static async Task<IEnumerable<(object Code, string Text)>> PointsAsync(PadronDirectory directory, long cuit, int maxCode, CancellationToken ct) =>
+    private static async Task<IEnumerable<(object Code, string Text)>> PointsAsync(PadronDirectory directory, long cuit, int maxCode, CancellationToken ct) =>
         (await directory.FindAsync(cuit, ct))?.PointsOfSale
             .Where(p => !p.Blocked && p.Number <= maxCode)
             .OrderBy(p => p.Number)
             .Select(p => ((object)p.Number, $"PUNTO DE EMISION {p.Number}")) ?? [];
+
+    /// <summary>consultarPuntosEmision: the issuer's points of emission that a code of the service can hold.</summary>
+    public static async Task<ContractAnswer> PointsAnswerAsync(ServiceCall call, PadronDirectory directory, int maxCode, CancellationToken ct) =>
+        Table(call, "consultarPuntosEmisionReturn", "arrayPuntosEmision", "codigoDescripcion", await PointsAsync(directory, call.Cuit, maxCode, ct));
+
+    /// <summary>consultarCodigosDomicilio: the fiscal address of the CUIT asked about, or 100 when the registry does not have it.</summary>
+    public static async Task<ContractAnswer> AddressesAnswerAsync(ServiceCall call, PadronDirectory directory, CancellationToken ct)
+    {
+        var address = await FiscalAddressAsync(directory, call.Request.Long("cuitTitularDomicilio"), ct);
+        return call.Ok(new XElement(call.Operation.Output, new XElement("consultarCodigosDomicilioReturn",
+            address is { } found
+                ? RemitoXml.Codes("arrayDomicilios", "codigoDescripcion", [found])
+                : RemitoXml.Errors([NotRegistered]))));
+    }
+
+    /// <summary>A parameter table: its rows as codigo and descripcion, under the wrapper, array and item names the service gives them.</summary>
+    public static ContractAnswer Table(ServiceCall call, string wrapper, string array, string item, IEnumerable<(object Code, string Text)> rows) =>
+        call.Ok(new XElement(call.Operation.Output, new XElement(wrapper, RemitoXml.Codes(array, item, rows))));
 
     /// <summary>Code 0, the fiscal address, the one every carne manual example uses as destination.</summary>
     public static async Task<(object Code, string Text)?> FiscalAddressAsync(PadronDirectory directory, long cuit, CancellationToken ct)
@@ -176,21 +254,10 @@ public static class RemitoFamily
     {
         var problems = new List<RemitoProblem>();
         foreach (var cuit in RemitoXml.Plain(call.Request).Descendants("cuitReceptor").Select(e => e.Value.Trim()))
-            if (!long.TryParse(cuit, out var number) || await directory.FindAsync(number, ct) is not { Active: true })
+            if (!long.TryParse(cuit, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number) || await directory.FindAsync(number, ct) is not { Active: true })
                 problems.Add(new RemitoProblem(2602, $"Actualmente, la CUIT {cuit} NO está habilitada para ser destinatario de nuevos remitos de mercadería"));
         return call.Ok(new XElement(call.Operation.Output, new XElement("consultarReceptoresValidosReturn",
             new XElement("resultado", problems.Count == 0 ? "A" : "R"),
             RemitoXml.Errors(problems))));
-    }
-
-    /// <summary>dummy: OK for the three servers, as captured in homologación (2026-10-02).</summary>
-    public static ContractAnswer Dummy(ServiceCall call) =>
-        call.Ok(new XElement(call.Operation.Output, new XElement("dummyReturn",
-            new XElement("appserver", "OK"), new XElement("authserver", "OK"), new XElement("dbserver", "OK"))));
-
-    private static XElement WithName(this XElement element, string name)
-    {
-        element.Name = name;
-        return element;
     }
 }

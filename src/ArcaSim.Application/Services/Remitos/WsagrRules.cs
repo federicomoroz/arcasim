@@ -114,7 +114,6 @@ public sealed partial class WsagrRules(IDocumentStore store, IClock clock, Padro
         "ConsultaCodResp" => Answer(call, Table(call, "Rsp", "WsResp", Responses)),
         "ConsultaObs" => Answer(call, Table(call, "Obs", "WsObs", Observations)),
         "ConsultaCantCuit" => Answer(call, Q(call, "Cantidad", await store.LimitAsync(ct))),
-        "dummy" => Answer(call, Q(call, "AppServer", "OK"), Q(call, "DbServer", "OK"), Q(call, "AuthServer", "OK")),
         _ => null,
     };
 

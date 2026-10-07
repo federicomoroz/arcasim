@@ -19,6 +19,17 @@ public static class RemitoXml
 
     public static string Date(DateOnly date) => ArgentinaTime.DateWithOffset(date);
 
+    /// <summary>The day it is in Argentina at that moment, written the way the remitos write a date.</summary>
+    public static string Date(DateTimeOffset moment) => Date(moment.ArgentinaDate());
+
+    /// <summary>Changes the remito's XML where it is kept: parses it, lets the callback edit it and writes it back.</summary>
+    public static void Edit(Remito remito, Action<XElement> change)
+    {
+        var document = XElement.Parse(remito.Xml);
+        change(document);
+        remito.Xml = document.ToString(SaveOptions.DisableFormatting);
+    }
+
     public static string Number(decimal value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 
     /// <summary>

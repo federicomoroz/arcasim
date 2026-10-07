@@ -38,6 +38,8 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         "pesoNetoKg", "pesoNetoRecKg", "pesoNetoPerKg", "pesoNetoRedKg", "pesoNetoReiKg",
     ];
 
+    private static readonly RemitoListNames ListNames = new("rangoFecha", "ptoEmision", "infoRemito", "tipoCmp", "idReqCliente");
+
     private static readonly RemitoProblem NotFound = new(3022, "Remito no encontrado");
     private static readonly RemitoProblem NotAllowed = new(3070, "Operación no permitida");
     private static readonly RemitoProblem Required = new(1000, "Debe informar este valor");
@@ -50,10 +52,9 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
 
     public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct) => call.Name switch
     {
-        "dummy" => RemitoFamily.Dummy(call),
         "generarRemito" => await GenerateAsync(call, ct),
-        "autorizarRemito" => await AuthorizeAsync(call, ct),
-        "anularRemito" => await CancelAsync(call, ct),
+        "autorizarRemito" => await RemitoFamily.AuthorizeAsync(call, _ledger, Codes, "operacionReturn", code => _ledger.FindForAsync(code, call.Cuit, ct), ct),
+        "anularRemito" => await RemitoFamily.CancelAsync(call, _ledger, Codes, "operacionReturn", code => _ledger.FindForAsync(code, call.Cuit, ct), ct),
         "emitirRemito" => await IssueAsync(call, ct),
         "registrarRecepcion" => await ReceiveAsync(call, export: false, ct),
         "registrarExportacion" => await ReceiveAsync(call, export: true, ct),
@@ -64,18 +65,14 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         "consultarRemito" => await ConsultAsync(call, ct),
         "consultarEstadosRemito" => await HistoryAsync(call, ct),
         "consultarUltimoRemitoEmitido" => await LastAsync(call, ct),
-        "consultarRemitosEmisor" => await ListAsync(call, ct),
-        "consultarRemitosAutorizador" => await ListAsync(call, ct),
-        "consultarRemitosReceptor" => await ListAsync(call, ct),
+        "consultarRemitosEmisor" or "consultarRemitosAutorizador" or "consultarRemitosReceptor" => RemitoFamily.ListAnswer(call, await _ledger.AllAsync(ct), ListNames),
         "consultarReceptoresValidos" => await RemitoFamily.ValidReceiversAsync(call, directory, ct),
         "consultarTiposComprobante" => Table(call, RemitoTables.FlourVoucherTypes),
         "consultarTiposContingencia" => Table(call, RemitoTables.FlourContingencies),
         "consultarUnidadesVenta" => Table(call, RemitoTables.SaleUnits),
-        "consultarTiposEstado" => call.Ok(new XElement(call.Operation.Output, new XElement("codigoDescripcionReturn",
-            RemitoXml.Codes("arrayCodigoDescripcion", "codigoDescripcionString", RemitoTables.States)))),
-        "consultarPuntosEmision" => call.Ok(new XElement(call.Operation.Output, new XElement("consultarPuntosEmisionReturn",
-            RemitoXml.Codes("arrayPuntosEmision", "codigoDescripcion", await RemitoFamily.PointsAsync(directory, call.Cuit, RemitoFamily.MaxShortCode, ct))))),
-        "consultarCodigosDomicilio" => await AddressesAsync(call, ct),
+        "consultarTiposEstado" => RemitoFamily.Table(call, "codigoDescripcionReturn", "arrayCodigoDescripcion", "codigoDescripcionString", RemitoTables.States),
+        "consultarPuntosEmision" => await RemitoFamily.PointsAnswerAsync(call, directory, RemitoFamily.MaxShortCode, ct),
+        "consultarCodigosDomicilio" => await RemitoFamily.AddressesAnswerAsync(call, directory, ct),
         _ => null,
     };
 
@@ -122,24 +119,6 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         await _ledger.AddAsync(remito, ct);
         if (remito.Pending is null) await _ledger.IssueAsync(remito, call.Cuit, ct);
         return RemitoAnswer(call, "generarRemitoReturn", remito, []);
-    }
-
-    private async Task<ContractAnswer> AuthorizeAsync(ServiceCall call, CancellationToken ct)
-    {
-        var code = call.Request.Long("codRemito");
-        if (await FindAsync(code, call.Cuit, ct) is not { } remito) return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotFound);
-        var problem = RemitoFamily.Authorize(remito, call.Cuit, call.Request.Text("estado") == "A", _ledger.Now, Codes);
-        if (problem is null) await _ledger.SaveAsync(remito, ct);
-        return RemitoFamily.OperationAnswer(call, "operacionReturn", code, problem);
-    }
-
-    private async Task<ContractAnswer> CancelAsync(ServiceCall call, CancellationToken ct)
-    {
-        var code = call.Request.Long("codRemito");
-        if (await FindAsync(code, call.Cuit, ct) is not { } remito) return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotFound);
-        var problem = RemitoFamily.Cancel(remito, call.Cuit, _ledger.Now, Codes);
-        if (problem is null) await _ledger.SaveAsync(remito, ct);
-        return RemitoFamily.OperationAnswer(call, "operacionReturn", code, problem);
     }
 
     /// <summary>PEM to EMI; a trip sent here replaces the one the remito was generated with.</summary>
@@ -306,9 +285,7 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         var delivery = remito.Movement == "REP" && remito.State == RemitoStates.Issued;
         if (remito.Issuer != call.Cuit || !(delivery || remito.State is RemitoStates.PartlyAccepted or RemitoStates.NotAccepted))
             return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotAllowed);
-        var document = XElement.Parse(remito.Xml);
-        RemitoXml.Put(document, "reingresado", "S", RemitoOrder);
-        remito.Xml = document.ToString(SaveOptions.DisableFormatting);
+        RemitoXml.Edit(remito, document => RemitoXml.Put(document, "reingresado", "S", RemitoOrder));
         await _ledger.SaveAsync(remito, ct);
         return RemitoFamily.OperationAnswer(call, "operacionReturn", code, []);
     }
@@ -341,55 +318,16 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         return call.Ok(new XElement(call.Operation.Output, new XElement("consultarUltimoRemitoReturn", last is null ? null : Output(last))));
     }
 
-    private async Task<ContractAnswer> ListAsync(ServiceCall call, CancellationToken ct)
-    {
-        var request = RemitoXml.Plain(call.Request);
-        var range = request.Element("rangoFecha");
-        var (from, to) = (range.ChildDate("fechaDesde"), range.ChildDate("fechaHasta"));
-        var issuer = request.ChildLong("cuitEmisor");
-        var all = await _ledger.AllAsync(ct);
-        var found = call.Name switch
-        {
-            "consultarRemitosEmisor" => RemitoFamily.ForIssuer(all, call.Cuit, (int)(request.ChildLong("ptoEmision") ?? 0),
-                (int?)request.ChildLong("tipoComprobante"), request.ChildText("estado"), from, to),
-            "consultarRemitosAutorizador" => RemitoFamily.ForAuthorizer(all, call.Cuit, request.ChildText("rolAutorizador") ?? "",
-                request.ChildText("estadoAutorizacion") ?? "", issuer, from, to),
-            _ => RemitoFamily.ForReceiver(all, call.Cuit, request.ChildText("estadoRecepcion") ?? "", issuer, from, to),
-        };
-        return RemitoFamily.ListAnswer(call, found, r => new XElement("item",
-            new XElement("cuitEmisor", r.Issuer),
-            new XElement("codRemito", r.Code),
-            new XElement("puntoEmision", r.Point),
-            new XElement("tipoCmp", r.Type),
-            r.Number is { } number ? new XElement("nroRemito", number) : null,
-            new XElement("idReqCliente", r.RequestId),
-            new XElement("estadoActual", r.State),
-            new XElement("fechaOper", RemitoXml.Date(DateOnly.FromDateTime(r.History[^1].At.DateTime)))), "infoRemito");
-    }
-
-    private async Task<ContractAnswer> AddressesAsync(ServiceCall call, CancellationToken ct)
-    {
-        var address = await RemitoFamily.FiscalAddressAsync(directory, call.Request.Long("cuitTitularDomicilio"), ct);
-        return call.Ok(new XElement(call.Operation.Output, new XElement("consultarCodigosDomicilioReturn",
-            address is { } found
-                ? RemitoXml.Codes("arrayDomicilios", "codigoDescripcion", [found])
-                : RemitoXml.Errors([RemitoFamily.NotRegistered]))));
-    }
-
     private static ContractAnswer Table(ServiceCall call, IEnumerable<(object Code, string Text)> rows) =>
-        call.Ok(new XElement(call.Operation.Output, new XElement("codigoDescripcionReturn",
-            RemitoXml.Codes("arrayCodigoDescripcion", "codigoDescripcion", rows))));
+        RemitoFamily.Table(call, "codigoDescripcionReturn", "arrayCodigoDescripcion", "codigoDescripcion", rows);
 
     // ---- Shapes ------------------------------------------------------------------------
 
-    private async Task<Remito?> FindAsync(long code, long cuit, CancellationToken ct) =>
-        await _ledger.FindAsync(code, ct) is { } remito && remito.Involves(cuit) ? remito : null;
+    private Task<Remito?> FindAsync(long code, long cuit, CancellationToken ct) => _ledger.FindForAsync(code, cuit, ct);
 
     private static void ReplaceTrip(Remito remito, XElement trip)
     {
-        var document = XElement.Parse(remito.Xml);
-        RemitoXml.Put(document, new XElement(trip), RemitoOrder);
-        remito.Xml = document.ToString(SaveOptions.DisableFormatting);
+        RemitoXml.Edit(remito, document => RemitoXml.Put(document, new XElement(trip), RemitoOrder));
         remito.DistanceKm = trip.ChildDecimal("distanciaKm") ?? remito.DistanceKm;
     }
 
@@ -410,7 +348,7 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
             ? new XElement("datosAutAFIP",
                 new XElement("nroRemito", remito.Number),
                 new XElement("codAutorizacion", remito.AuthorizationCode),
-                new XElement("fechaEmision", RemitoXml.Date(DateOnly.FromDateTime(remito.IssuedAt!.Value.DateTime))),
+                new XElement("fechaEmision", RemitoXml.Date(remito.IssuedAt!.Value)),
                 new XElement("fechaVencimiento", RemitoXml.Date(remito.ExpiresOn!.Value)))
             : null,
         new XElement("estadoRemito", remito.State),

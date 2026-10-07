@@ -24,6 +24,10 @@ public sealed class RemitoLedger(string service, IDocumentStore store, SequenceL
 
     public Task<Remito?> FindAsync(long code, CancellationToken ct) => store.GetAsync<Remito>(service, RemitoKey(code), ct);
 
+    /// <summary>The remito by its code, when the caller is a party to it: nobody else sees a remito.</summary>
+    public async Task<Remito?> FindForAsync(long code, long cuit, CancellationToken ct) =>
+        await FindAsync(code, ct) is { } remito && remito.Involves(cuit) ? remito : null;
+
     public async Task<Remito?> FindByRequestAsync(long issuer, int point, long requestId, CancellationToken ct) =>
         await store.GetAsync<Reference>(service, $"idreq/{issuer}/{point:D5}/{requestId:D15}", ct) is { } reference
             ? await FindAsync(reference.Code, ct)
