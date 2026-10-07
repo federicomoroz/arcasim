@@ -109,7 +109,7 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
             RequestId = requestId,
             Point = point,
             Type = (int)(sent.ChildLong("tipoCmp") ?? 993),
-            Movement = sent.Child("tipoMovimiento") ?? "ENV",
+            Movement = sent.ChildText("tipoMovimiento") ?? "ENV",
             Holder = holder,
             Depositary = depositary,
             Receiver = receiver,
@@ -172,9 +172,9 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         var allowed = remito.State == RemitoStates.Issued && (export ? remito.Foreign && remito.Issuer == call.Cuit : remito.Receiver == call.Cuit);
         if (!allowed) return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotAllowed);
 
-        var document = RemitoXml.Parse(remito.Xml);
+        var document = XElement.Parse(remito.Xml);
         var goods = document.Element("arrayMercaderia")?.Elements("mercaderia").ToList() ?? [];
-        var accepted = request.Child("aceptado") == "S";
+        var accepted = request.ChildText("aceptado") == "S";
         var reported = request.Element("arrayRecepcionMercaderia") is { } list
             ? RemitoXml.ByOrder(list.Elements("recepcionMercaderia"), e => e.ChildDecimal("pesoNetoKG") ?? 0)
             : null;
@@ -185,7 +185,7 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
             var received = !accepted ? 0 : reported is null ? sent ?? 0 : reported.GetValueOrDefault(item.ChildLong("orden") ?? 0);
             if (received > sent)
                 return RemitoFamily.OperationAnswer(call, "operacionReturn", code,
-                    new RemitoProblem(3023, $"El peso neto recibido del ítem {item.Child("orden")} no puede superar el peso neto enviado"));
+                    new RemitoProblem(3023, $"El peso neto recibido del ítem {item.ChildText("orden")} no puede superar el peso neto enviado"));
             RemitoXml.Put(item, "pesoNetoRecKg", RemitoXml.Number(received), GoodsOrder);
             sentTotal += sent ?? 0;
             receivedTotal += received;
@@ -252,7 +252,7 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         var receiver = request.ChildLong("cuitReceptor") ?? 0;
         if (await RemitoFamily.CheckPartyAsync(directory, receiver, ct) is { } problem) return RemitoAnswer(call, "registrarRedestinoReturn", null, [problem]);
 
-        var document = RemitoXml.Parse(original.Xml);
+        var document = XElement.Parse(original.Xml);
         var goods = document.Element("arrayMercaderia")?.Elements("mercaderia").ToList() ?? [];
         var weights = request.Element("arrayRedestinoMercaderia")?.Elements("recepcionMercaderia").ToList() ?? [];
         var redirected = weights
@@ -270,13 +270,13 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         RemitoXml.Put(document, "tipoMovimiento", "RED", RemitoOrder);
         RemitoXml.Put(document, new XElement("arrayMercaderia", redirected), RemitoOrder);
         RemitoXml.Put(document, "codRemRedestinar", original.Code, RemitoOrder);
-        var cuitPais = document.Element("receptor")?.Child("cuitPaisReceptor");
+        var cuitPais = document.Element("receptor")?.ChildText("cuitPaisReceptor");
         RemitoXml.Put(document, new XElement("receptor",
             cuitPais is null ? null : new XElement("cuitPaisReceptor", cuitPais),
             new XElement("receptorNacional",
                 new XElement("cuitReceptor", receiver),
-                new XElement("tipoDomReceptor", request.Child("tipoDomReceptor")),
-                new XElement("codDomReceptor", request.Child("codDomReceptor")))), RemitoOrder);
+                new XElement("tipoDomReceptor", request.ChildText("tipoDomReceptor")),
+                new XElement("codDomReceptor", request.ChildText("codDomReceptor")))), RemitoOrder);
 
         var remito = new Remito
         {
@@ -306,7 +306,7 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         var delivery = remito.Movement == "REP" && remito.State == RemitoStates.Issued;
         if (remito.Issuer != call.Cuit || !(delivery || remito.State is RemitoStates.PartlyAccepted or RemitoStates.NotAccepted))
             return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotAllowed);
-        var document = RemitoXml.Parse(remito.Xml);
+        var document = XElement.Parse(remito.Xml);
         RemitoXml.Put(document, "reingresado", "S", RemitoOrder);
         remito.Xml = document.ToString(SaveOptions.DisableFormatting);
         await _ledger.SaveAsync(remito, ct);
@@ -351,10 +351,10 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         var found = call.Name switch
         {
             "consultarRemitosEmisor" => RemitoFamily.ForIssuer(all, call.Cuit, (int)(request.ChildLong("ptoEmision") ?? 0),
-                (int?)request.ChildLong("tipoComprobante"), request.Child("estado"), from, to),
-            "consultarRemitosAutorizador" => RemitoFamily.ForAuthorizer(all, call.Cuit, request.Child("rolAutorizador") ?? "",
-                request.Child("estadoAutorizacion") ?? "", issuer, from, to),
-            _ => RemitoFamily.ForReceiver(all, call.Cuit, request.Child("estadoRecepcion") ?? "", issuer, from, to),
+                (int?)request.ChildLong("tipoComprobante"), request.ChildText("estado"), from, to),
+            "consultarRemitosAutorizador" => RemitoFamily.ForAuthorizer(all, call.Cuit, request.ChildText("rolAutorizador") ?? "",
+                request.ChildText("estadoAutorizacion") ?? "", issuer, from, to),
+            _ => RemitoFamily.ForReceiver(all, call.Cuit, request.ChildText("estadoRecepcion") ?? "", issuer, from, to),
         };
         return RemitoFamily.ListAnswer(call, found, r => new XElement("item",
             new XElement("cuitEmisor", r.Issuer),
@@ -387,7 +387,7 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
 
     private static void ReplaceTrip(Remito remito, XElement trip)
     {
-        var document = RemitoXml.Parse(remito.Xml);
+        var document = XElement.Parse(remito.Xml);
         RemitoXml.Put(document, new XElement(trip), RemitoOrder);
         remito.Xml = document.ToString(SaveOptions.DisableFormatting);
         remito.DistanceKm = trip.ChildDecimal("distanciaKm") ?? remito.DistanceKm;
@@ -405,7 +405,7 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         new XElement("codRemito", remito.Code),
         new XElement("idReqCliente", remito.RequestId),
         new XElement("cuitEmisor", remito.Issuer),
-        RemitoXml.Parse(remito.Xml),
+        XElement.Parse(remito.Xml),
         remito.Issued
             ? new XElement("datosAutAFIP",
                 new XElement("nroRemito", remito.Number),
@@ -415,7 +415,7 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
             : null,
         new XElement("estadoRemito", remito.State),
         remito.Issued ? new XElement("qr", RemitoTerms.Qr(remito)) : null,
-        remito.Contingencies.Count == 0 ? null : new XElement("arrayContingencias", remito.Contingencies.Select(RemitoXml.Parse)),
+        remito.Contingencies.Count == 0 ? null : new XElement("arrayContingencias", remito.Contingencies.Select(xml => XElement.Parse(xml))),
         remito.AuthorizedOn is { } authorized ? new XElement("fechaAut", RemitoXml.Date(authorized)) : null,
         remito.ReceivedOn is { } received ? new XElement("fechaRec", RemitoXml.Date(received)) : null);
 }

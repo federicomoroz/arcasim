@@ -17,19 +17,7 @@ public static class RemitoXml
             element.Attributes().Where(a => !a.IsNamespaceDeclaration).Select(a => new XAttribute(a.Name.LocalName, a.Value)),
             element.Nodes().Select(n => n is XElement child ? Plain(child) : n is XText text ? new XText(text.Value) : (XNode?)null));
 
-    public static XElement Parse(string xml) => XElement.Parse(xml);
-
     public static string Date(DateOnly date) => ArgentinaTime.DateWithOffset(date);
-
-    public static string? Child(this XElement? element, string name) => element?.Element(name)?.Value.Trim();
-
-    public static long? ChildLong(this XElement? element, string name) =>
-        long.TryParse(element.Child(name), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : null;
-
-    public static decimal? ChildDecimal(this XElement? element, string name) =>
-        decimal.TryParse(element.Child(name), NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : null;
-
-    public static DateOnly? ChildDate(this XElement? element, string name) => element?.Element(name)?.Date(name);
 
     public static string Number(decimal value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 

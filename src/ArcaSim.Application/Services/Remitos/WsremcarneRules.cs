@@ -85,7 +85,7 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
         var request = RemitoXml.Plain(call.Request);
         var sent = request.Element("remito") ?? new XElement("remito");
         var requestId = request.ChildLong("idReq") ?? 0;
-        var movement = sent.Child("tipoMovimiento") ?? "ENV";
+        var movement = sent.ChildText("tipoMovimiento") ?? "ENV";
         var uncategorized = call.Name.Contains("RecNoCateg", StringComparison.Ordinal);
         var trip = sent.Element("viaje");
 
@@ -196,7 +196,7 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
         var request = RemitoXml.Plain(call.Request);
         var code = request.ChildLong("codRemito") ?? 0;
         if (await FindAsync(code, call.Cuit, ct) is not { } remito) return RemitoFamily.OperationAnswer(call, "registrarRecepcionReturn", code, NotFound);
-        var state = request.Child("estado");
+        var state = request.ChildText("estado");
         if (remito.Receiver != call.Cuit || remito.State != RemitoStates.Issued
             || state is not (RemitoStates.Accepted or RemitoStates.PartlyAccepted or RemitoStates.NotAccepted))
             return RemitoFamily.OperationAnswer(call, "registrarRecepcionReturn", code, NotAllowed);
@@ -232,8 +232,8 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
         {
             var trip = document.Element("viaje");
             if (trip is null) return;
-            RemitoXml.Put(trip, "cuitTransportista", request.Child("cuitTransportista") ?? "", TripOrder);
-            if (request.Child("cuitConductor") is { } driver) RemitoXml.Put(trip, "cuitConductor", driver, TripOrder);
+            RemitoXml.Put(trip, "cuitTransportista", request.ChildText("cuitTransportista") ?? "", TripOrder);
+            if (request.ChildText("cuitConductor") is { } driver) RemitoXml.Put(trip, "cuitConductor", driver, TripOrder);
             if (request.Element("vehiculo") is { } vehicle) RemitoXml.Put(trip, new XElement(vehicle), TripOrder);
         });
         await _ledger.SaveAsync(remito, ct);
@@ -292,10 +292,10 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
         var found = call.Name switch
         {
             "consultarRemitosEmisor" => RemitoFamily.ForIssuer(all, call.Cuit, (int)(request.ChildLong("puntoEmision") ?? 0),
-                (int?)request.ChildLong("tipoComprobante"), request.Child("estado"), from, to),
-            "consultarRemitosAutorizador" => RemitoFamily.ForAuthorizer(all, call.Cuit, request.Child("rolAutorizador") ?? "",
-                request.Child("estadoAutorizacion") ?? "", issuer, from, to),
-            _ => RemitoFamily.ForReceiver(all, call.Cuit, request.Child("estadoRecepcion") ?? "", issuer, from, to),
+                (int?)request.ChildLong("tipoComprobante"), request.ChildText("estado"), from, to),
+            "consultarRemitosAutorizador" => RemitoFamily.ForAuthorizer(all, call.Cuit, request.ChildText("rolAutorizador") ?? "",
+                request.ChildText("estadoAutorizacion") ?? "", issuer, from, to),
+            _ => RemitoFamily.ForReceiver(all, call.Cuit, request.ChildText("estadoRecepcion") ?? "", issuer, from, to),
         };
         return RemitoFamily.ListAnswer(call, found, r => new XElement("item",
             new XElement("cuitEmisor", r.Issuer),
@@ -335,7 +335,7 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
 
     private static void Edit(Remito remito, Action<XElement> change)
     {
-        var document = RemitoXml.Parse(remito.Xml);
+        var document = XElement.Parse(remito.Xml);
         change(document);
         remito.Xml = document.ToString(SaveOptions.DisableFormatting);
     }
@@ -358,13 +358,13 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
     /// <summary>ConsultarRemitoReturnType: idReq, the remito in RemitoType (or RemitoImporteType) with ARCA's fields filled, and the qr.</summary>
     private static XElement Consulted(string wrapper, Remito remito, string[] order) => new(wrapper,
         new XElement("idReq", remito.RequestId),
-        RemitoXml.Shape("remito", RemitoXml.Parse(remito.Xml), order, new Dictionary<string, object?>
+        RemitoXml.Shape("remito", XElement.Parse(remito.Xml), order, new Dictionary<string, object?>
         {
             ["codRemito"] = remito.Code,
             ["tipoComprobante"] = remito.Type,
             ["estado"] = remito.State,
             ["datosEmision"] = Emission(remito),
-            ["arrayContingencias"] = remito.Contingencies.Count == 0 ? null : new XElement("arrayContingencias", remito.Contingencies.Select(RemitoXml.Parse)),
+            ["arrayContingencias"] = remito.Contingencies.Count == 0 ? null : new XElement("arrayContingencias", remito.Contingencies.Select(xml => XElement.Parse(xml))),
         }),
         remito.Issued ? new XElement("qr", RemitoTerms.Qr(remito)) : null);
 
