@@ -44,7 +44,7 @@ public class TiendasLibresRulesTests
             $"<argConsultarMovimientosParams>{Query}<FechaDesde>2026-10-01T00:00:00</FechaDesde><FechaHasta>2026-10-01T23:59:59</FechaHasta></argConsultarMovimientosParams>");
 
         Assert.Equal("0", entered.Code());
-        Assert.Equal("arcasim", entered.V("Server"));
+        Assert.Equal("10.30.32.108", entered.V("Server")); // the address the catalog says the service always sends (live capture)
         Assert.Equal("0", sold.Code());
         Assert.Equal(sold.V("idMovimiento"), replay.V("idMovimiento"));
         Assert.Equal(6m, await StockAsync(shop));
@@ -78,6 +78,7 @@ public class TiendasLibresRulesTests
         Assert.Equal("Se registra diferencia por stock en negativo", sold.V("DescripcionAdicional"));
         Assert.Equal(-3m, await StockAsync(shop));
         Assert.Equal("21526", repeated.Code());
+        Assert.Equal("10.30.32.108", repeated.V("Server")); // a refusal sends the same server as a success
         Assert.Equal("Venta ya registrada TIQ 0001-00000002", repeated.V("Descripcion"));
         Assert.Equal("3", dife.V("cantidad"));
         Assert.Equal("2026-10-31", dife.V("fechaVenc")[..10]);

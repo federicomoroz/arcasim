@@ -260,25 +260,26 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
 
     // ---- Shapes and state --------------------------------------------------------------
 
-    /// <summary>A successful answer: Codigo 0 in ListaErrores, the server, and the result's own fields as the callback fills them.</summary>
+    /// <summary>
+    /// A successful answer: Codigo 0 in ListaErrores, the server (the address the catalog says the service always sends, which
+    /// the sample already carries) and the result's own fields as the callback fills them.
+    /// </summary>
     private static XElement Answer(ServiceCall call, Action<XElement> fill, string? additional = null)
     {
         var answer = call.Sample();
         var result = answer.Elements().First();
         fill(result);
         result.AddFirst(Errors(call, 0, null, additional));
-        result.Set("Server", "arcasim");
         return answer.Clean();
     }
 
-    /// <summary>A refused call: its error in ListaErrores, the server and the moment, nothing else.</summary>
+    /// <summary>A refused call: its error in ListaErrores, the server (the catalog's) and the moment, nothing else.</summary>
     private static XElement Refused(ServiceCall call, long code, string text)
     {
         var answer = call.Sample();
         var result = answer.Elements().First();
         result.Elements().Where(e => e.Name.LocalName is not ("Server" or "TimeStamp")).Remove();
         result.AddFirst(Errors(call, code, text, null));
-        result.Set("Server", "arcasim");
         return answer;
     }
 
