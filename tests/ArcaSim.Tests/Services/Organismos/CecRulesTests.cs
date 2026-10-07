@@ -34,6 +34,8 @@ public class CecRulesTests
     [Theory]
     [InlineData("consultarComprobantesExpoPeriodo", "<cuit>20111111112</cuit><periodo>202610</periodo><pagina>1</pagina>", "errores", "4016",
         "Periodo de consulta igual al actual. El periodo actual 202610 todavía no venció. Vence el día 5 del mes que le sigue.")]
+    [InlineData("consultarComprobantesExpoPeriodo", "<cuit>20111111112</cuit><periodo>999912</periodo><pagina>1</pagina>", "errores", "4016",
+        "Periodo de consulta igual al actual. El periodo actual 999912 todavía no venció. Vence el día 5 del mes que le sigue.")]
     [InlineData("consultarComprobantesExpoPeriodo", "<cuit>20111111112</cuit><periodo>202613</periodo><pagina>1</pagina>", "erroresFormato", "2009",
         "El periodo de consulta debe respetar el formato 'YYYYMM', con año (YYYY) y mes (MM) válidos. El mes 13 no es válido.")]
     [InlineData("consultarComprobantesExpoPeriodo", "<cuit>20222222223</cuit><periodo>202608</periodo><pagina>1</pagina>", "errores", "4009",

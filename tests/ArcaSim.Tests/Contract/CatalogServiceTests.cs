@@ -109,7 +109,7 @@ public class CatalogServiceTests
     }
 
     /// <summary>Puts the ticket where the request carries it, and the caller's CUIT in the CUIT next to it (cuit, cuitRepresentada, CUITDelegado...).</summary>
-    private static void Sign(XElement request, string token, string sign)
+    internal static void Sign(XElement request, string token, string sign)
     {
         var tokenElement = request.Descendants().FirstOrDefault(e => e.Name.LocalName.Equals("token", StringComparison.OrdinalIgnoreCase));
         if (tokenElement is null) return;
@@ -124,6 +124,6 @@ public class CatalogServiceTests
         }
     }
 
-    private static string Envelope(XElement? request) =>
+    internal static string Envelope(XElement? request) =>
         $"<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"><soapenv:Header/><soapenv:Body>{request?.ToString(SaveOptions.DisableFormatting)}</soapenv:Body></soapenv:Envelope>";
 }

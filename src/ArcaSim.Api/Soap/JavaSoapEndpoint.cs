@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using ArcaSim.Application;
+using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Soap;
 
 namespace ArcaSim.Api.Soap;
@@ -68,7 +69,17 @@ public static class JavaSoapEndpoint
                 return;
             }
 
-            var result = await service.Handle(context.RequestServices, request.Name.LocalName, request, context.RequestAborted);
+            SoapResult result;
+            try
+            {
+                result = await service.Handle(context.RequestServices, request.Name.LocalName, request, context.RequestAborted);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException || !context.RequestAborted.IsCancellationRequested)
+            {
+                // CXF answers an exception nobody handled with its generic fault, never a bare HTTP 500.
+                context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(JavaSoapEndpoint)).LogError(ex, "{Path} failed", service.Path);
+                result = SoapResult.Fail(new SoapFault("soap:Server", ContractHost.Unexpected(Dialect.Cxf, ex)));
+            }
             if (result.Fault is { } fault) await WriteAsync(context, 500, Fault(fault));
             else await WriteAsync(context, 200, Content(result.Body!, service.Namespace));
         });

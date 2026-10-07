@@ -53,7 +53,8 @@ public sealed class CecRules(IDocumentStore store, PadronDirectory padron, ICloc
             if (month is < 1 or > 12) return FormatError(call, $"El periodo de consulta debe respetar el formato 'YYYYMM', con año (YYYY) y mes (MM) válidos. El mes {month} no es válido.");
             if (page < 1) return Errors(call, 2005, "Número de página inválido. El número de página no puede ser menor a 1.");
             if (await padron.FindAsync(cuit, ct) is null) return Errors(call, 4009, $"La CUIT no se encuentra en los Registros de AFIP. '{cuit}' no está en el padrón.");
-            if (today < new DateOnly(year, month, 5).AddMonths(1).AddDays(1))
+            // December 9999 falls due in a year DateOnly does not have: it has not fallen due yet either.
+            if ((year, month) == (9999, 12) || today < new DateOnly(year, month, 5).AddMonths(1).AddDays(1))
                 return Errors(call, 4016, $"Periodo de consulta igual al actual. El periodo actual {period} todavía no venció. Vence el día 5 del mes que le sigue.");
             (from, to) = (period, period);
         }

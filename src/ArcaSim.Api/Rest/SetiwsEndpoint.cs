@@ -59,12 +59,22 @@ public static class SetiwsEndpoint
 
         var operation = HttpMethods.IsPost(context.Request.Method) ? "createVep"
             : HttpMethods.IsGet(context.Request.Method) ? "findMyVEPByTransactionId" : null;
-        var error = operation switch
+        VepError? error;
+        try
         {
-            "createVep" => await CreateAsync(context, represented),
-            "findMyVEPByTransactionId" => await FindAsync(context, represented),
-            _ => new VepError(400, "HttpRequestMethodNotSupportedException", $"Request method '{context.Request.Method}' is not supported"),
-        };
+            error = operation switch
+            {
+                "createVep" => await CreateAsync(context, represented),
+                "findMyVEPByTransactionId" => await FindAsync(context, represented),
+                _ => new VepError(400, "HttpRequestMethodNotSupportedException", $"Request method '{context.Request.Method}' is not supported"),
+            };
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !context.RequestAborted.IsCancellationRequested)
+        {
+            // What Spring Boot answers for an exception nobody handled: a 500 with the error body, never a bare one.
+            services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(SetiwsEndpoint)).LogError(ex, "SETIWS {Operation} failed", operation);
+            error = new VepError(StatusCodes.Status500InternalServerError, ex.GetType().Name, ex.Message);
+        }
         if (error is not null) await ErrorAsync(context, error);
         services.GetRequiredService<EventManager>().Publish(new ServiceCalled(DateTimeOffset.UtcNow, SetiwsGateway.Service,
             operation ?? context.Request.Method, represented, error is null ? "ok" : "error", error?.Message ?? ""));

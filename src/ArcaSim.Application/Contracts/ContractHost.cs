@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using ArcaSim.Application.Access;
 using ArcaSim.Application.Events;
 using ArcaSim.Application.Soap;
+using Microsoft.Extensions.Logging;
 
 namespace ArcaSim.Application.Contracts;
 
@@ -71,7 +72,8 @@ public sealed class ServiceCall(
 /// when it has them, and otherwise answers the contract with schema-valid data.
 /// </summary>
 public sealed class ContractHost(
-    ServiceCatalog catalog, string wsdlFolder, TicketReader tickets, IClock clock, EventManager events, IEnumerable<IServiceBehavior> behaviors)
+    ServiceCatalog catalog, string wsdlFolder, TicketReader tickets, IClock clock, EventManager events, IEnumerable<IServiceBehavior> behaviors,
+    ILogger<ContractHost>? logger = null)
 {
     private readonly ConcurrentDictionary<string, (ServiceContract Contract, SchemaSampler Sampler)> _contracts = new(StringComparer.OrdinalIgnoreCase);
     private readonly ILookup<string, IServiceBehavior> _behaviors = behaviors.ToLookup(b => b.Service, StringComparer.OrdinalIgnoreCase);
@@ -129,8 +131,17 @@ public sealed class ContractHost(
 
         var call = new ServiceCall(definition, contract, sampler, operation, request, cuit, context);
         ContractAnswer? answer = null;
-        foreach (var behavior in _behaviors[definition.Id])
-            if ((answer = await behavior.AnswerAsync(call, ct)) is not null) break;
+        try
+        {
+            foreach (var behavior in _behaviors[definition.Id])
+                if ((answer = await behavior.AnswerAsync(call, ct)) is not null) break;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+        {
+            // A request the rules did not foresee is a server fault, as on ARCA's servers, never a bare HTTP 500.
+            logger?.LogError(ex, "{Service}.{Operation} failed", definition.Id, operation.Name);
+            answer = call.Fault(Unexpected(definition.Dialect, ex), "soap:Server");
+        }
         answer ??= call.Ok(call.Sample());
 
         events.Publish(new ServiceCalled(DateTimeOffset.UtcNow, definition.Id, operation.Name, cuit,
@@ -328,6 +339,19 @@ public sealed class ContractHost(
             [TicketProblem.WrongService] = $"El token no corresponde al servicio {service}.",
             [TicketProblem.CuitNotRelated] = "La CUIT {cuit} no se encuentra entre los representados del token.",
         },
+    };
+
+    /// <summary>
+    /// The fault text a server of each family gives for an error nobody
+    /// handled: ASMX wraps the exception the way WSFEv1's own faults read,
+    /// CXF says its generic sentence, and the Java stacks pass the message on.
+    /// These are the frameworks' defaults, not texts captured from ARCA.
+    /// </summary>
+    public static string Unexpected(Dialect dialect, Exception ex) => dialect switch
+    {
+        Dialect.Asmx => $"System.Web.Services.Protocols.SoapException: Server was unable to process request. ---> {ex.GetType().FullName}: {ex.Message}",
+        Dialect.Cxf => "Fault occurred while processing.",
+        _ => ex.Message,
     };
 
     /// <summary>The expired token as the Java services print it (wsmtxca live, wsct 2021, the wscta manual).</summary>

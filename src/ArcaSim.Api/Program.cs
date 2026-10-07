@@ -83,7 +83,8 @@ foreach (var behavior in typeof(ContractHost).Assembly.GetTypes()
 builder.Services.AddSingleton(_ => ServiceCatalog.Load(Path.Combine(AppContext.BaseDirectory, "arca-servicios.json")));
 builder.Services.AddSingleton(sp => new ContractHost(
     sp.GetRequiredService<ServiceCatalog>(), WsdlDocuments.Directory, sp.GetRequiredService<TicketReader>(),
-    sp.GetRequiredService<IClock>(), sp.GetRequiredService<EventManager>(), sp.GetServices<IServiceBehavior>()));
+    sp.GetRequiredService<IClock>(), sp.GetRequiredService<EventManager>(), sp.GetServices<IServiceBehavior>(),
+    sp.GetRequiredService<ILogger<ContractHost>>()));
 
 var app = builder.Build();
 

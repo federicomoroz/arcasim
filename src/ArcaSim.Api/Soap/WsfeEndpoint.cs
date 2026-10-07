@@ -4,6 +4,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using ArcaSim.Application;
+using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Wsfe;
 
 namespace ArcaSim.Api.Soap;
@@ -16,7 +17,7 @@ namespace ArcaSim.Api.Soap;
 /// FEHeaderInfo header. Requests and answers go through XmlSerializer, the
 /// serializer ASMX itself uses, so its tolerances and its output come for free.
 /// </summary>
-public sealed class WsfeEndpoint(WsfeService service, SimulationSettings settings, IClock clock)
+public sealed class WsfeEndpoint(WsfeService service, SimulationSettings settings, IClock clock, ILogger<WsfeEndpoint> logger)
 {
     private const string Path = "/wsfev1/service.asmx";
 
@@ -108,7 +109,18 @@ public sealed class WsfeEndpoint(WsfeService service, SimulationSettings setting
             return;
         }
 
-        var result = await operation.Invoke(service, input, context.RequestAborted);
+        object result;
+        try
+        {
+            result = await operation.Invoke(service, input, context.RequestAborted);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !context.RequestAborted.IsCancellationRequested)
+        {
+            // ASMX answers an exception nobody handled with a fault, never a bare HTTP 500.
+            logger.LogError(ex, "WSFEv1 {Operation} failed", name);
+            await WriteFaultAsync(context, request, ContractHost.Unexpected(Dialect.Asmx, ex));
+            return;
+        }
 
         if (name == "FECAESolicitar" && chaos.DropNextResponse)
         {
