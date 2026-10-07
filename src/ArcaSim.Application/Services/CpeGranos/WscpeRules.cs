@@ -113,7 +113,7 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
         if (branch < 1) return call.Error(962, Codes.WrongBranch);
         var order = header.Int("nroOrden");
 
-        using var _ = await locks.AcquireAsync(call.Cuit, branch, type, ct);
+        using var _ = await locks.AcquireAsync(Service, call.Cuit, branch, type, ct);
         if (await store.GetAsync<StoredCpe>(Collection, Key(call.Cuit, type, branch, order), ct) is { } issued)
             return call.Error(2241, Fill(Codes.AlreadyIssued, issued.Ctg));
         if (order != await LastAsync(call.Cuit, type, branch, ct) + 1) return call.Error(961, Codes.WrongOrderNumber);
@@ -230,7 +230,7 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
         var type = key.Int("tipoCPE");
         var branch = key.Int("sucursal");
 
-        using var _ = await locks.AcquireAsync(issuer, branch, type, ct);
+        using var _ = await locks.AcquireAsync(Service, issuer, branch, type, ct);
         var cpe = await store.GetAsync<StoredCpe>(Collection, Key(issuer, type, branch, key.Int("nroOrden")), ct);
         if (cpe is null) return call.Error(1302, Codes.NotFound);
         if (!Names(cpe).Contains(call.Cuit))
@@ -322,7 +322,7 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
         var request = Solicitud(call);
         if (request.Child("nroCTG") is null) return call.Error(950, Fill(Codes.Required, "nroCTG"));
         if (await ByCtgAsync(request.Long("nroCTG"), ct) is not { } found) return call.Error(1302, Codes.NotFound);
-        using var _ = await locks.AcquireAsync(found.Issuer, found.Branch, found.Type, ct);
+        using var _ = await locks.AcquireAsync(Service, found.Issuer, found.Branch, found.Type, ct);
         var cpe = await store.GetAsync<StoredCpe>(Collection, Key(found), ct) ?? found;
         if (!Names(cpe).Contains(call.Cuit)) return call.Error(2039, Codes.NotYourRequest);
         if (!edit.Families.Contains(cpe.Family)) return call.Error(2055, Codes.NotForThisType);

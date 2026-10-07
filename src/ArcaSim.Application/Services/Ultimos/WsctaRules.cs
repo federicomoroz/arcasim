@@ -228,7 +228,7 @@ public sealed class WsctaRules(IDocumentStore store, IClock clock, SequenceLocks
     }
 
     /// <summary>One certificate at a time; its 14-digit number never meets an 11-digit CUIT among the vouchers' locks.</summary>
-    private Task<IDisposable> LockAsync(long number, CancellationToken ct) => locks.AcquireAsync(number, -1, 381, ct);
+    private Task<IDisposable> LockAsync(long number, CancellationToken ct) => locks.AcquireAsync(Service, number, -1, 381, ct);
 
     private static ContractAnswer Refuse(ServiceCall call, string message) => call.Fault(message, BusinessFault);
 

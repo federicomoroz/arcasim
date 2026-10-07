@@ -111,7 +111,7 @@ public sealed partial class WsfeService
             return response;
         }
 
-        using (await locks.AcquireAsync(auth.Cuit, header.PtoVta, header.CbteTipo, ct))
+        using (await locks.AcquireAsync(Name, auth.Cuit, header.PtoVta, header.CbteTipo, ct))
         {
             var last = await vouchers.LastAsync(auth.Cuit, header.PtoVta, header.CbteTipo, ct);
             var next = (last?.To ?? 0) + 1;

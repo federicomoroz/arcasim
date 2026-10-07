@@ -75,8 +75,8 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
     public static string Key(long cuit, int pointOfSale, int voucherType, long number) =>
         $"{cuit}/{pointOfSale:D5}/{voucherType:D3}/{number:D8}";
 
-    public Task<IDisposable> LockAsync(long cuit, int pointOfSale, int voucherType, CancellationToken ct) =>
-        locks.AcquireAsync(cuit, pointOfSale, voucherType, ct);
+    public Task<IDisposable> LockAsync(string service, long cuit, int pointOfSale, int voucherType, CancellationToken ct) =>
+        locks.AcquireAsync(service, cuit, pointOfSale, voucherType, ct);
 
     public Task<LastSettlement?> LastAsync(string service, long cuit, int pointOfSale, int voucherType, CancellationToken ct) =>
         store.GetAsync<LastSettlement>(service, $"ultimo/{cuit}/{pointOfSale:D5}/{voucherType:D3}", ct);

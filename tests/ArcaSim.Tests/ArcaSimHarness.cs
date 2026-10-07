@@ -122,14 +122,14 @@ public sealed class ArcaSimHarness : IAsyncDisposable
     }
 
     /// <summary>A raw SOAP 1.1 call, for the tests that look at the exact bytes.</summary>
-    public async Task<(int Status, string Body)> PostSoapAsync(Uri url, string envelope, string? soapAction)
+    public async Task<(int Status, string Body)> PostSoapAsync(Uri url, string envelope, string? soapAction, CancellationToken ct = default)
     {
         using var content = new StringContent(envelope, Encoding.UTF8);
         content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml") { CharSet = "utf-8" };
         using var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
         if (soapAction is not null) request.Headers.Add("SOAPAction", soapAction);
-        using var response = await Http.SendAsync(request);
-        return ((int)response.StatusCode, await response.Content.ReadAsStringAsync());
+        using var response = await Http.SendAsync(request, ct);
+        return ((int)response.StatusCode, await response.Content.ReadAsStringAsync(ct));
     }
 
     /// <summary>A WSFEv1 envelope around an operation's element, written the way the manual's examples are.</summary>

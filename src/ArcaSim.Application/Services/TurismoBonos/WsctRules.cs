@@ -304,7 +304,7 @@ public sealed class WsctRules(
         CheckPayments(request, Fail);
         await CheckAssociatedAsync(request, call.Cuit, type, date, observations, Fail, ct);
 
-        using (await locks.AcquireAsync(call.Cuit, point, type, ct))
+        using (await locks.AcquireAsync(Service, call.Cuit, point, type, ct))
         {
             var last = await _book.LastAsync(call.Cuit, point, type, ct);
             if (number != (last?.Number ?? 0) + 1) Fail(302);

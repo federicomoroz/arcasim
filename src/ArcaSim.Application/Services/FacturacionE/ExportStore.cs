@@ -41,8 +41,8 @@ internal sealed class ExportStore(IDocumentStore documents, SequenceLocks locks)
         await documents.PutAsync(Vouchers, key, authorized, ct);
         await documents.PutAsync(Requests, $"{authorized.Cuit}/{voucher.Id}", new RequestRef(key), ct);
 
-        // No sequence has point of sale -1: its lock guards the CUIT's last Id.
-        using (await locks.AcquireAsync(authorized.Cuit, -1, -1, ct))
+        // The CUIT's last Id has a lock of its own, apart from the sequence lock the caller holds.
+        using (await locks.AcquireAsync(LastIds, authorized.Cuit, 0, 0, ct))
             if (voucher.Id > await LastIdAsync(authorized.Cuit, ct))
                 await documents.PutAsync(LastIds, authorized.Cuit.ToString(), new LastId(voucher.Id), ct);
 

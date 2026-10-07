@@ -119,7 +119,7 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
             if (bales.Count(b => b == bale) > 1 || await store.GetAsync<SettlementByCae>(Service, $"fardo/{bale}", ct) is not null)
                 return Fail(call, 1039, "Un código de trazabilidad de un fardo que intenta agregar, ya fue utilizado en otra liquidación.");
 
-        using var _ = await _ledger.LockAsync(call.Cuit, pointOfSale, type, ct);
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, type, ct);
         if (await SequenceProblemAsync(call, pointOfSale, type, number, date, ct) is { } wrong) return wrong;
 
         var prices = request.Children("precioClase").GroupBy(p => p.Value("claseTabaco")).ToDictionary(g => g.Key ?? "", g => g.First().Amount("precio"));
@@ -183,7 +183,7 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
             return Fail(call, 1118, "Uno o más comprobantes que intenta ajustar, pertenecen a liquidaciones emitidas para distintos vendedores.");
         if (await CommonProblemAsync(call, pointOfSale, date, ct) is { } problem) return problem;
 
-        using var _ = await _ledger.LockAsync(call.Cuit, pointOfSale, type, ct);
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, type, ct);
         if (await SequenceProblemAsync(call, pointOfSale, type, number, date, ct) is { } wrong) return wrong;
 
         var classes = request.Children("precioClase").Select(p => ClassLine(p.Value("claseTabaco") ?? "", p.Number("totalFardos"),
@@ -224,7 +224,7 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
         if (original.VoucherType != type) return Fail(call, 1136, "El tipo de comprobante del ajuste debe ser el mismo que el del comprobante a ajustar.");
         if (await CommonProblemAsync(call, pointOfSale, date, ct) is { } problem) return problem;
 
-        using var _ = await _ledger.LockAsync(call.Cuit, pointOfSale, type, ct);
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, type, ct);
         if (await SequenceProblemAsync(call, pointOfSale, type, number, date, ct) is { } wrong) return wrong;
 
         var cae = _ledger.NewCae();

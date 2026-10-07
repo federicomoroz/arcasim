@@ -151,6 +151,21 @@ public class WsremcarneRulesTests
         Assert.Equal("0", addresses.Value("codigo"));
     }
 
+    [Fact]
+    public async Task A_remito_of_type_0_is_answered_instead_of_waiting_on_its_own_lock()
+    {
+        await using var sim = await StartAsync();
+        var issuer = await ServiceClient.LoginAsync(sim, Service, Issuer);
+        using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+
+        var (status, _) = await issuer.PostAsync("generarRemito",
+            Generate(issuer, 1).Replace("<tipoComprobante>995</tipoComprobante>", "<tipoComprobante>0</tipoComprobante>"), ct: limit.Token);
+        var next = await issuer.CallAsync("generarRemito", Generate(issuer, 2));
+
+        Assert.Equal(200, status);
+        Assert.Equal("A", next.Value("resultado"));
+    }
+
     private static string Generate(ServiceClient client, long requestId, long holder = Issuer, long? depositary = null, string? importe = null) =>
         client.Auth + $"<idReq>{requestId}</idReq><remito><tipoComprobante>995</tipoComprobante><tipoMovimiento>ENV</tipoMovimiento>" +
         $"<categoriaEmisor>1</categoriaEmisor><puntoEmision>9000</puntoEmision><cuitTitularMercaderia>{holder}</cuitTitularMercaderia>" +

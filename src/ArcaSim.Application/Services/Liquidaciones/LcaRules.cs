@@ -97,7 +97,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
         if (notes.Sum(n => n.Number("kilos")) != items.Sum(i => i.Number("cantidad")))
             return Fail(call, 1304, "La cantidad de kilos informada en los remitos debe ser igual a la cantidad de kilos en el detalle de la liquidación.");
 
-        using var _ = await _ledger.LockAsync(call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
         if (await SequenceProblemAsync(call, voucher, date, ct) is { } wrong) return wrong;
 
         var lines = items.Select((item, i) => Item(i + 1, item, item.Amount("precioUnitario"), type, null)).ToList();
@@ -149,7 +149,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
         if (first is null) return Fail(call, 1601, "La liquidación que intenta ajustar es inexistente: 0.");
         if (await IssuerProblemAsync(call, (int)voucher.Number("puntoVenta"), date, ct) is { } issuerProblem) return issuerProblem;
 
-        using var _ = await _ledger.LockAsync(call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
         if (await SequenceProblemAsync(call, voucher, date, ct) is { } wrong) return wrong;
 
         var concepts = request.Children("otroConcepto").Select(c => Concept(c, type)).ToList();
@@ -183,7 +183,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
         if (AdjustableProblem(call, target, original, type) is { } problem) return problem;
         if (await IssuerProblemAsync(call, (int)voucher.Number("puntoVenta"), date, ct) is { } issuerProblem) return issuerProblem;
 
-        using var _ = await _ledger.LockAsync(call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
         if (await SequenceProblemAsync(call, voucher, date, ct) is { } wrong) return wrong;
 
         var cae = _ledger.NewCae();

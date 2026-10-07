@@ -117,7 +117,7 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var date = data.Day("fechaComprobante") ?? _ledger.Today;
         if (OutOfWindow(date, avian) is { } window) return Fail(call, 2200, window);
 
-        using var _ = await _ledger.LockAsync(call.Cuit, pointOfSale, type, ct);
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, type, ct);
         if (await WrongNumberAsync(call, pointOfSale, type, number, ct) is { } wrong) return wrong;
 
         var lines = request.Children("itemDetalleLiquidacion").Select((item, i) => new Line(i + 1, item.Number("cantidad"),
@@ -210,7 +210,7 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         if (await PointProblemAsync(call, pointOfSale, ct) is { } pointProblem) return pointProblem;
         if (OutOfWindow(date, avian) is { } window) return Fail(call, 2200, window);
 
-        using var _ = await _ledger.LockAsync(call.Cuit, pointOfSale, original.VoucherType, ct);
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, original.VoucherType, ct);
         if (await WrongNumberAsync(call, pointOfSale, original.VoucherType, number, ct) is { } wrong) return wrong;
 
         var lines = items.Select((item, i) =>

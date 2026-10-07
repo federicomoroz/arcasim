@@ -103,7 +103,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
         ServiceCall call, string kind, long pointOfIssue, long order, XElement request,
         Func<long, DateTimeOffset, (XElement Answer, XElement Authorization)> build, CancellationToken ct, long? adjusted = null)
     {
-        using var _ = await locks.AcquireAsync(call.Cuit, (int)Math.Clamp(pointOfIssue, 0, int.MaxValue), SeriesCode(kind), ct);
+        using var _ = await locks.AcquireAsync(Service, call.Cuit, (int)Math.Clamp(pointOfIssue, 0, int.MaxValue), SeriesCode(kind), ct);
         if (order != await LastAsync(kind, call.Cuit, pointOfIssue, ct) + 1) return call.Error(1508, Codes.NotConsecutive);
         var now = clock.Now;
         var coe = long.Parse(CoePrefix(kind) + (await store.NextAsync("wslpg-coe", ct) % 100_000_000).ToString("D8", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);

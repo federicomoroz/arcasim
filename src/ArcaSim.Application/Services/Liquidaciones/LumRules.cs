@@ -145,7 +145,7 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
                 return Fail(call, 2123, "Para bonificaciones/penalizaciones con código distinto a 41 debe informar el campo <porcentajeAAplicar> y no <importe>.");
         }
 
-        using var _ = await _ledger.LockAsync(call.Cuit, pointOfSale, type, ct);
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, type, ct);
         var last = await _ledger.LastAsync(Service, call.Cuit, pointOfSale, type, ct);
         if (number != (last?.Number ?? 0) + 1)
             return Fail(call, 2074, "N° de comprobante incorrecto para el tipo de comprobante y punto de venta ingresados.");

@@ -99,7 +99,7 @@ public sealed class Wsfexv1Rules : IServiceBehavior
         var voucher = ExportVoucher.Read(call.Request.Child("Cmp"));
         if (voucher.Id < 0) return Fail(call, 1014);
 
-        using var _ = await _locks.AcquireAsync(call.Cuit, voucher.PointOfSale, voucher.VoucherType, ct);
+        using var _ = await _locks.AcquireAsync(Service, call.Cuit, voucher.PointOfSale, voucher.VoucherType, ct);
         if (await _store.ByRequestAsync(call.Cuit, voucher.Id, ct) is { } granted) return Approved(call, granted, reprocessed: true);
 
         var today = _clock.Today();

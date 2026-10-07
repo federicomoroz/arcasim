@@ -56,13 +56,13 @@ public sealed class ServiceClient
         return answer;
     }
 
-    public Task<(int Status, string Body)> PostAsync(string operation, string inner, string? element = null, string prefix = "ns")
+    public Task<(int Status, string Body)> PostAsync(string operation, string inner, string? element = null, string prefix = "ns", CancellationToken ct = default)
     {
         var name = element ?? operation + "Request";
         var envelope =
             $"<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:{prefix}=\"{Namespace}\">" +
             $"<soapenv:Header/><soapenv:Body><{prefix}:{name}>{inner}</{prefix}:{name}></soapenv:Body></soapenv:Envelope>";
-        return _sim.PostSoapAsync(new Uri("http://localhost" + _contract.AddressPath), envelope, $"\"{Namespace}{operation}\"");
+        return _sim.PostSoapAsync(new Uri("http://localhost" + _contract.AddressPath), envelope, $"\"{Namespace}{operation}\"", ct);
     }
 
     public static ServiceContract Load(string service) =>

@@ -193,7 +193,7 @@ public abstract class AsmxVoucherRules(
         var today = clock.Today();
         if (await CheckAsync(call, cmp, today, ct) is { } refusal) return Rejected(call, cmp, refusal);
 
-        using (await locks.AcquireAsync(call.Cuit, cmp.PointOfSale, cmp.VoucherType, ct))
+        using (await locks.AcquireAsync(Service, call.Cuit, cmp.PointOfSale, cmp.VoucherType, ct))
         {
             if (await Book.FindByRequestAsync(call.Cuit, cmp.Id, ct) is { } raced)
                 return Answer(call, Authorized(ns, raced, reprocessed: true));
