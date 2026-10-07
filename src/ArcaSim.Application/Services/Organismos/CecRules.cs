@@ -173,7 +173,7 @@ public sealed class CecRules(IDocumentStore store, PadronDirectory padron, ICloc
     private static string ReturnOf(ServiceCall call) => call.Name == "obtenerConsultas" ? "obtenerConsultasReturn" : "consultarComprobantesExpoReturn";
 
     /// <summary>
-    /// A page of 1-based number page (never below 1 here), and whether more follow it. The sums are in long: a page
+    /// The items of the 1-based page (never below 1 here), and whether more follow it. The sums are in long: a page
     /// number near the int limit is a page past the last, not a wrapped number that shows the first.
     /// </summary>
     private static (List<T> Shown, bool More) PageOf<T>(IReadOnlyList<T> items, int page)

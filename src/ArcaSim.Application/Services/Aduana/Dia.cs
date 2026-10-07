@@ -99,7 +99,8 @@ internal static class Dia
         fields.FirstOrDefault(f => string.IsNullOrWhiteSpace(scope.Child(f)?.Value));
 
     /// <summary>A query's filter on a field: the query left it empty, which asks for everything, or names this value.</summary>
-    public static bool Matches(this XElement? query, string field, string value) => query.Field(field) is var wanted && (wanted == "" || wanted == value);
+    public static bool Matches(this XElement? query, string field, string value) =>
+        query.Field(field) is var wanted && (wanted == "" || wanted == value);
 
     /// <summary>A field of the business argument itself, not one with the same name deeper down or in the authentication.</summary>
     public static string Field(this XElement? scope, string name) => scope.ChildText(name) ?? "";

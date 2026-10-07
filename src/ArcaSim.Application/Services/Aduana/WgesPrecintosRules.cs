@@ -22,8 +22,8 @@ public sealed record Cema(
 /// and the guard's first steps; SODE, the request to deactivate that ARCA's
 /// guards and depositarios make and ArcaSim has no service for, is a test or an
 /// operator putting the precinto's document with that Estado; an array with one
-/// bad item is refused whole, that item in DescAdicErr; NovedadPrecinto tells an alta
-/// from an actualización by whether the precinto exists, and Aduana or
+/// bad item is refused whole, that item in DescAdicErr; NovedadPrecinto tells
+/// an alta from an actualización by whether the precinto exists, and Aduana or
 /// LugarOperativo of the wrong length are 70222 and 10782.
 /// </summary>
 public sealed class WgesPrecintosRules(IDocumentStore store, IClock clock) : IServiceBehavior
