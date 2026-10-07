@@ -25,7 +25,10 @@ namespace ArcaSim.Application.Services.Remitos;
 /// 7015 and a role or state that does not allow the operation 3070; 140's
 /// text is harina's; the texts of 7106, 7108 and 7109 are ArcaSim's wording
 /// of the rules; validity is harina's table by distance; a list with no
-/// remitos answers an empty page.
+/// remitos answers an empty page; the parties' standing in the registry is not
+/// checked (the manual's 7000, 7001, 7006 and 7013 are not simulated, so no
+/// party is refused for being unregistered or inactive); a repeated orden in a
+/// reception counts once, as the manual documents no error for it.
 /// </summary>
 public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, IClock clock, PadronDirectory directory) : IServiceBehavior
 {
@@ -42,6 +45,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     private static readonly string[] TruckOrder = ["codPaisTransportista", "transporteNacional", "transporteExtranjero", "dominioVehiculo", "dominioAcoplado"];
 
     private static readonly RemitoProblem NotFound = new(7015, "Valor informado inválido");
+    // "permitda" is the manual's own typo (wsremazucar manual 14, "Códigos generales"); harina and carne print "permitida".
     private static readonly RemitoProblem NotAllowed = new(3070, "Operación no permitda");
     private static readonly RemitoProblem TripBeforeToday = new(140, "La fecha de inicio del viaje no puede ser anterior a hoy");
     private static readonly RemitoCodes Codes = new(NotFound, NotAllowed, NotAllowed, NotAllowed);
@@ -72,7 +76,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
         "consultarTiposTitular" => call.Ok(new XElement(call.Operation.Output, new XElement("codigoDescripcionReturn",
             RemitoXml.Codes("arrayCodigoDescripcion", "codigoDescripcion", RemitoTables.SugarHolderTypes)))),
         "consultarPuntosEmision" => call.Ok(new XElement(call.Operation.Output, new XElement("consultarPuntosEmisionReturn",
-            RemitoXml.Codes("arrayPuntosEmision", "codigoDescripcion", await RemitoFamily.PointsAsync(directory, call.Cuit, 99999, ct))))),
+            RemitoXml.Codes("arrayPuntosEmision", "codigoDescripcion", await RemitoFamily.PointsAsync(directory, call.Cuit, RemitoFamily.MaxPointOfEmission, ct))))),
         "consultarCodigosDomicilio" => await AddressesAsync(call, ct),
         _ => null,
     };
@@ -213,7 +217,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     {
         var request = Wrapped(call, "modificarConductor");
         if (await FindAsync(request.ChildLong("codRemito") ?? 0, call.Cuit, ct) is not { } remito) return Simple(call, "modificarConductorReturn", NotFound);
-        if (remito.Issuer != call.Cuit || remito.State != RemitoStates.Issued || _ledger.Now > remito.IssuedAt!.Value.AddHours(24))
+        if (remito.Issuer != call.Cuit || remito.State != RemitoStates.Issued || _ledger.Now > remito.IssuedAt!.Value.AddHours(RemitoTerms.FlatChangeHours))
             return Simple(call, "modificarConductorReturn", NotAllowed);
         Edit(remito, document => ChangeTruck(document, request.Element("conductor"), request.Child("dominioVehiculo"), request.Child("dominioAcoplado")));
         await _ledger.SaveAsync(remito, ct);

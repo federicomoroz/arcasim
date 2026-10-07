@@ -34,6 +34,18 @@ public static class RemitoXml
     public static string Number(decimal value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 
     /// <summary>
+    /// The lines of a reception by their orden. The manuals document no error
+    /// for an orden sent twice (harina 2.5.7.5 lists 120, 160, 1000, 3023-3027),
+    /// so the line informed last counts, as it would in a map keyed by orden.
+    /// </summary>
+    public static Dictionary<long, T> ByOrder<T>(IEnumerable<XElement> lines, Func<XElement, T> value)
+    {
+        var byOrder = new Dictionary<long, T>();
+        foreach (var line in lines) byOrder[line.ChildLong("orden") ?? 0] = value(line);
+        return byOrder;
+    }
+
+    /// <summary>
     /// Sets a child in its schema place: replaced when it is there, otherwise
     /// inserted after the last sibling that comes before it in the order.
     /// </summary>

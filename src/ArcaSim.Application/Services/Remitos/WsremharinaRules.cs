@@ -20,7 +20,9 @@ namespace ArcaSim.Application.Services.Remitos;
 /// state; registrarExportacion leaves EXT, EXP or EXR like a reception; a
 /// redirected remito is issued at once; consultarUltimoRemitoEmitido with
 /// nothing issued answers without remitoOutput. 3023's text and the
-/// contingency descriptions are ArcaSim's wording.
+/// contingency descriptions are ArcaSim's wording; an orden sent twice in a
+/// reception counts once, the last informed, since the manual (2.5.7.5)
+/// documents no error for it.
 /// </summary>
 public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, IClock clock, PadronDirectory directory) : IServiceBehavior
 {
@@ -72,7 +74,7 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         "consultarTiposEstado" => call.Ok(new XElement(call.Operation.Output, new XElement("codigoDescripcionReturn",
             RemitoXml.Codes("arrayCodigoDescripcion", "codigoDescripcionString", RemitoTables.States)))),
         "consultarPuntosEmision" => call.Ok(new XElement(call.Operation.Output, new XElement("consultarPuntosEmisionReturn",
-            RemitoXml.Codes("arrayPuntosEmision", "codigoDescripcion", await RemitoFamily.PointsAsync(directory, call.Cuit, short.MaxValue, ct))))),
+            RemitoXml.Codes("arrayPuntosEmision", "codigoDescripcion", await RemitoFamily.PointsAsync(directory, call.Cuit, RemitoFamily.MaxShortCode, ct))))),
         "consultarCodigosDomicilio" => await AddressesAsync(call, ct),
         _ => null,
     };
@@ -173,8 +175,9 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         var document = RemitoXml.Parse(remito.Xml);
         var goods = document.Element("arrayMercaderia")?.Elements("mercaderia").ToList() ?? [];
         var accepted = request.Child("aceptado") == "S";
-        var reported = request.Element("arrayRecepcionMercaderia")?.Elements("recepcionMercaderia")
-            .ToDictionary(e => e.ChildLong("orden") ?? 0, e => e.ChildDecimal("pesoNetoKG") ?? 0);
+        var reported = request.Element("arrayRecepcionMercaderia") is { } list
+            ? RemitoXml.ByOrder(list.Elements("recepcionMercaderia"), e => e.ChildDecimal("pesoNetoKG") ?? 0)
+            : null;
         decimal sentTotal = 0, receivedTotal = 0;
         foreach (var item in goods)
         {

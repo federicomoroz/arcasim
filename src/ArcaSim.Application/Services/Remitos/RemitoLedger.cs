@@ -99,12 +99,17 @@ public sealed class RemitoLedger(string service, IDocumentStore store, SequenceL
 }
 
 /// <summary>
-/// Validity and the window to change the trip, by distance: wsremharina's
-/// table (manual Anexo, p.140). Carne and azúcar document no table of their
-/// own (NO VERIFICADO); ArcaSim applies harina's to the three.
+/// The terms a remito runs by. Its validity depends on the distance by
+/// wsremharina's table (manual Anexo, p.140); carne documents no table and
+/// azúcar's only example does not match it (NO VERIFICADO), so ArcaSim applies
+/// harina's to the three. The window to change the trip is harina's table
+/// too, but carne (manual 2.5.8) and azúcar (manual 16.5) say 24 hours flat.
 /// </summary>
 public static class RemitoTerms
 {
+    /// <summary>The window carne's modificarViaje and azúcar's modificarConductor give, from the issue, whatever the distance.</summary>
+    public const int FlatChangeHours = 24;
+
     public static int ValidityDays(decimal km) => km switch
     {
         <= 100 => 2,
@@ -113,6 +118,7 @@ public static class RemitoTerms
         _ => 10,
     };
 
+    /// <summary>Harina's window to change the trip, by distance (manual Anexo, p.140).</summary>
     public static int ChangeHours(decimal km) => km switch
     {
         <= 100 => 24,

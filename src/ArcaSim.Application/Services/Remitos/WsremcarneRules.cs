@@ -21,7 +21,9 @@ namespace ArcaSim.Application.Services.Remitos;
 /// idReq); the state codes and the validity by distance are harina's; a
 /// redestino is issued at once; codes harina documents and carne does not
 /// (3022 not found, 3070 not allowed, 3034 no remitos, 2602 invalid receiver)
-/// are taken from harina; 2201's text is ArcaSim's wording of the rule.
+/// are taken from harina; 2201's text is ArcaSim's wording of the rule; an
+/// orden sent twice in a reception counts once, the last informed, since the
+/// manual documents no error for it.
 /// </summary>
 public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, IClock clock, PadronDirectory directory) : IServiceBehavior
 {
@@ -71,7 +73,7 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
         "consultarTiposEstado" => call.Ok(new XElement(call.Operation.Output, new XElement("consultarTiposEstadoReturn",
             RemitoXml.Codes("arrayTiposEstado", "codigoDescripcionString", RemitoTables.States)))),
         "consultarPuntosEmision" => call.Ok(new XElement(call.Operation.Output, new XElement("consultarPuntosEmisionReturn",
-            RemitoXml.Codes("arrayPuntosEmision", "codigoDescripcion", await RemitoFamily.PointsAsync(directory, call.Cuit, short.MaxValue, ct))))),
+            RemitoXml.Codes("arrayPuntosEmision", "codigoDescripcion", await RemitoFamily.PointsAsync(directory, call.Cuit, RemitoFamily.MaxShortCode, ct))))),
         "consultarCodigosDomicilio" => await AddressesAsync(call, ct),
         _ => null,
     };
@@ -199,7 +201,7 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
             || state is not (RemitoStates.Accepted or RemitoStates.PartlyAccepted or RemitoStates.NotAccepted))
             return RemitoFamily.OperationAnswer(call, "registrarRecepcionReturn", code, NotAllowed);
 
-        var reported = request.Element("arrayRecepcionMercaderia")?.Elements("recepcionMercaderia").ToDictionary(e => e.ChildLong("orden") ?? 0);
+        var reported = request.Element("arrayRecepcionMercaderia") is { } list ? RemitoXml.ByOrder(list.Elements("recepcionMercaderia"), e => e) : null;
         Edit(remito, document =>
         {
             foreach (var item in document.Element("arrayMercaderias")?.Elements("mercaderia") ?? [])
@@ -224,7 +226,7 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
         var request = RemitoXml.Plain(call.Request);
         var code = request.ChildLong("codRemito") ?? 0;
         if (await FindAsync(code, call.Cuit, ct) is not { } remito) return RemitoFamily.OperationAnswer(call, "modificarViajeReturn", code, NotFound);
-        if (remito.Issuer != call.Cuit || remito.State != RemitoStates.Issued || _ledger.Now > remito.IssuedAt!.Value.AddHours(24))
+        if (remito.Issuer != call.Cuit || remito.State != RemitoStates.Issued || _ledger.Now > remito.IssuedAt!.Value.AddHours(RemitoTerms.FlatChangeHours))
             return RemitoFamily.OperationAnswer(call, "modificarViajeReturn", code, NotAllowed);
         Edit(remito, document =>
         {

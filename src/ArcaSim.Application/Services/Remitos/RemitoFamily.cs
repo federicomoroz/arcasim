@@ -17,6 +17,16 @@ public static class RemitoFamily
 {
     public const int PageSize = 2000;
 
+    /// <summary>The top of a point of emission in the three WSDLs (PuntoEmisionSimpleType: 1 to 99999).</summary>
+    public const int MaxPointOfEmission = 99_999;
+
+    /// <summary>
+    /// The top of a code that carne and harina can list: their WSDLs type
+    /// CodigoDescripcionType.codigo as xsd:short, so a point of emission above
+    /// it cannot be written in their answer. Azúcar's codigo is xsd:long.
+    /// </summary>
+    public const int MaxShortCode = short.MaxValue;
+
     public static readonly RemitoProblem NotRegistered = new(100, "CUIT debe encontrarse en el Sistema Registral");
     public static readonly RemitoProblem Inactive = new(101, "Debe encontrarse activa y sin limitaciones");
 
@@ -139,10 +149,14 @@ public static class RemitoFamily
         return new XElement("arrayEstados", steps);
     }
 
-    /// <summary>The issuer's points of sale as points of emission (ArcaSim's choice: the remitos have no registry of their own).</summary>
-    public static async Task<IEnumerable<(object Code, string Text)>> PointsAsync(PadronDirectory directory, long cuit, int max, CancellationToken ct) =>
+    /// <summary>
+    /// The issuer's points of sale as points of emission (ArcaSim's choice: the
+    /// remitos have no registry of their own), those a code of the service's
+    /// answer can hold.
+    /// </summary>
+    public static async Task<IEnumerable<(object Code, string Text)>> PointsAsync(PadronDirectory directory, long cuit, int maxCode, CancellationToken ct) =>
         (await directory.FindAsync(cuit, ct))?.PointsOfSale
-            .Where(p => !p.Blocked && p.Number <= max)
+            .Where(p => !p.Blocked && p.Number <= maxCode)
             .OrderBy(p => p.Number)
             .Select(p => ((object)p.Number, $"PUNTO DE EMISION {p.Number}")) ?? [];
 
