@@ -24,7 +24,9 @@ namespace ArcaSim.Application.Services.FacturacionE;
 /// - export vouchers (19, 20, 21, from wsfexv1) can be constatados; their receiver is
 ///   the country CUIT, as document type 80;
 /// - no CAI is ever registered in ArcaSim, so mode CAI is always 100;
-/// - ComprobantesTipoConsultar serves WSFEv1's types plus E (19-21) and T (195-197);
+/// - ComprobantesTipoConsultar serves WSFEv1's types plus E (19-21) and T (195-197), and
+///   validation 4 also takes 30, 31, 37, 38 and 41, the types 115 and 116 name that no
+///   table of the manual describes (so they are not listed);
 ///   DocumentosTipoConsultar, WSFEv1's document types; ComprobantesModalidadConsultar,
 ///   CAE, CAEA and CAI with descriptions of ArcaSim's; OpcionalesTipoConsultar, none
 ///   ("reservado para usos futuros"), so any Opcional gets 151;
@@ -87,8 +89,14 @@ public sealed class WscdcRules(
         (197, "Nota de Crédito T"),
     ];
 
-    /// <summary>Types the manual makes 115 and 116 apply to beyond classes B and C (R, 30, 31, 37, 38, 41 and 49).</summary>
-    private static readonly IReadOnlySet<int> ThresholdTypes = new HashSet<int> { 30, 31, 37, 38, 41 };
+    /// <summary>
+    /// The types the manual names in 115 and 116 beyond classes B, C and 49
+    /// (30, 31, 37, 38 and 41; "R" has no number there). Constatación takes
+    /// them, so validation 4 lets them through and the identification rules
+    /// apply, but the manual gives them no description and the real list of
+    /// ComprobantesTipoConsultar is not verified, so that query does not list them.
+    /// </summary>
+    private static readonly IReadOnlySet<int> NamedTypes = new HashSet<int> { 30, 31, 37, 38, 41 };
 
     private IEnumerable<(int Id, string Desc)> VoucherTypes =>
         tables.VoucherTypes.Select(v => (v.Id, v.Desc)).Concat(Wsfexv1Tables.VoucherTypes).Concat(TouristVoucherTypes).OrderBy(v => v.Id);
@@ -137,7 +145,7 @@ public sealed class WscdcRules(
         if (q.Mode is not ("CAE" or "CAEA" or "CAI")) errors.Add(1);
         if (!Cuits.IsValid(q.Cuit)) errors.Add(2);
         if (q.PointOfSale is < 1 or > VoucherLimits.MaxPointOfSale) errors.Add(3);
-        if (!VoucherTypes.Any(t => t.Id == q.VoucherType)) errors.Add(4);
+        if (!NamedTypes.Contains(q.VoucherType) && !VoucherTypes.Any(t => t.Id == q.VoucherType)) errors.Add(4);
         if (q.Number is < 1 or > VoucherLimits.MaxNumber) errors.Add(5);
         if (!Fev1Dates.TryParse(q.Date, out _)) errors.Add(6);
         if (q.Total < 0 || Math.Abs(q.Total) >= 10_000_000_000_000m || q.Total != Math.Round(q.Total, 2)) errors.Add(7);
@@ -216,7 +224,7 @@ public sealed class WscdcRules(
             if (q.DocType != "80") observations.Add(113);
             if (q.DocNumber is null && !type.Fce) observations.Add(114);
         }
-        var threshold = type is { Class: VoucherClass.B or VoucherClass.C or VoucherClass.UsedGoods } || ThresholdTypes.Contains(q.VoucherType);
+        var threshold = type is { Class: VoucherClass.B or VoucherClass.C or VoucherClass.UsedGoods } || NamedTypes.Contains(q.VoucherType);
         if (threshold && q.Total > settings.FinalConsumerIdentificationThreshold)
         {
             if (q.DocType is null) observations.Add(115);

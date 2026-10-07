@@ -121,6 +121,25 @@ public class WscdcRulesTests
     }
 
     [Fact]
+    public async Task The_types_115_and_116_name_are_taken_and_need_the_receiver_above_ten_million()
+    {
+        var (sim, _, soap) = await StartAsync();
+        await using var _s = sim;
+
+        // 37 is not in any table of the manual, but 115 and 116 name it: it is no format error (4), and above $10.000.000 it must identify the receiver.
+        var small = await soap.CallAsync(Cdc, "ComprobanteConstatar", Constatar("CAI", Issuer, 1, 37, 1, "20261001", "1000", "71234567890123"));
+        var large = await soap.CallAsync(Cdc, "ComprobanteConstatar", Constatar("CAI", Issuer, 1, 37, 1, "20261001", "10000001", "71234567890123"));
+        var unknown = await soap.CallAsync(Cdc, "ComprobanteConstatar", Constatar("CAI", Issuer, 1, 36, 1, "20261001", "1000", "71234567890123"));
+        var types = await soap.CallAsync(Cdc, "ComprobantesTipoConsultar", "");
+
+        Assert.Equal(["100"], Codes(small, "Observaciones"));
+        Assert.Null(small.Child("Errors"));
+        Assert.Equal(["100", "115", "116"], Codes(large, "Observaciones").Order());
+        Assert.Equal(["4"], Codes(unknown, "Errors"));
+        Assert.DoesNotContain("37", Rows(types, "Id"));
+    }
+
+    [Fact]
     public async Task Format_errors_are_all_reported_in_Errors_without_looking_the_voucher_up()
     {
         var (sim, _, soap) = await StartAsync();
