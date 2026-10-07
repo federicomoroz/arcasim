@@ -1,3 +1,7 @@
+using ArcaSim.Application;
+using ArcaSim.Application.Services.Aduana;
+using ArcaSim.Infrastructure.InMemory;
+
 namespace ArcaSim.Tests.Services.Aduana;
 
 /// <summary>wgestiendaslibres: goods enter a free shop's depósito, are sold, destroyed or left short, and the stock follows.</summary>
@@ -111,5 +115,20 @@ public class TiendasLibresRulesTests
         Assert.Equal("42303", unknown.Code());
         Assert.Equal("0", destroyed.Code());
         Assert.Equal(7m, await StockAsync(shop));
+    }
+
+    [Fact]
+    public async Task Sales_that_run_together_all_take_their_units_off_the_stock()
+    {
+        var clock = new SimulatedClock(TimeProvider.System);
+        clock.Freeze(AduanaKit.Today);
+        var shop = new RulesProbe(new TiendasLibresRules(new YieldingDocumentStore(new InMemoryStore()), clock), AduanaKit.Today);
+        await shop.CallAsync("IngresarMercaderia", Entry("T-0", quantity: 100), AduanaKit.Caller);
+
+        await Task.WhenAll(Enumerable.Range(1, 20).Select(i =>
+            shop.CallAsync("VentaMercaderia", Sale($"T-{i}", $"0001-{i:D8}", 1), AduanaKit.Caller)));
+
+        var stock = await shop.CallAsync("ConsultarStock", $"<argConsultarStockParams>{Query}</argConsultarStockParams>", AduanaKit.Caller);
+        Assert.Equal("80", stock.V("Cantidad"));
     }
 }

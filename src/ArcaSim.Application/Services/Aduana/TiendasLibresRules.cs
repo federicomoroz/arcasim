@@ -49,6 +49,12 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
     private const string NoData = "No hay datos para los criterios ingresados";
     private readonly InFlight _running = new();
 
+    /// <summary>
+    /// One CUIT's goods move one call at a time: a sale reads the stock it writes back, and the check for a
+    /// sale already registered looks at every depósito, so the lock is the CUIT's and not the depósito's.
+    /// </summary>
+    private readonly KeyedLocks<long> _goods = new();
+
     public string Service => "wgestiendaslibres";
 
     public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct) => call.Name switch
@@ -80,7 +86,8 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
         using var running = _running.TryEnter(key);
         if (running is null) return call.Ok(Refused(call, 41973, $"La transaccion {transaction} ya se encuentra en proceso - acceso denegado."));
         if (await store.GetAsync<TlReplay>(Replays, key, ct) is { } meanwhile) return call.Ok(XElement.Parse(meanwhile.Xml));
-        var answer = await process(call, arg, ct);
+        XElement answer;
+        using (await _goods.AcquireAsync(call.Cuit, ct)) answer = await process(call, arg, ct);
         await store.PutAsync(Replays, key, new TlReplay(answer.ToString(SaveOptions.DisableFormatting)), ct);
         return call.Ok(answer);
     }

@@ -32,6 +32,9 @@ public sealed class WdepMovimientosRules(IDocumentStore store, IClock clock) : I
     private const string Ok = "Proceso OK";
     private readonly InFlight _running = new();
 
+    /// <summary>One CUIT's cargo moves one transaction at a time: an exit reads what is available and writes back what is left.</summary>
+    private readonly KeyedLocks<long> _cargo = new();
+
     public string Service => "wdepMovimientos";
 
     public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct) => call.Name switch
@@ -56,11 +59,13 @@ public sealed class WdepMovimientosRules(IDocumentStore store, IClock clock) : I
         if (running is null) return call.Fail(31209, "Aguarde, operacion en curso");
         if (await store.GetAsync<DepOutcome>(Transactions, key, ct) is { } meanwhile) return Answer(call, meanwhile);
 
-        var outcome = Dia.FirstMissing(arg, "Aduana", "LugarOperativo") is { } missing
-            ? new DepOutcome(22, "Campo obligatorio", missing)
-            : arg.Elements().FirstOrDefault(e => e.Name.LocalName == "Carga") is not { } cargo
-                ? new DepOutcome(22, "Campo obligatorio", "Carga")
-                : await process(call, cargo, $"{call.Cuit}/{arg.Field("Aduana")}/{arg.Field("LugarOperativo")}", ct);
+        DepOutcome outcome;
+        using (await _cargo.AcquireAsync(call.Cuit, ct))
+            outcome = Dia.FirstMissing(arg, "Aduana", "LugarOperativo") is { } missing
+                ? new DepOutcome(22, "Campo obligatorio", missing)
+                : arg.Elements().FirstOrDefault(e => e.Name.LocalName == "Carga") is not { } cargo
+                    ? new DepOutcome(22, "Campo obligatorio", "Carga")
+                    : await process(call, cargo, $"{call.Cuit}/{arg.Field("Aduana")}/{arg.Field("LugarOperativo")}", ct);
         await store.PutAsync(Transactions, key, outcome, ct);
         return Answer(call, outcome);
     }

@@ -1,3 +1,7 @@
+using ArcaSim.Application;
+using ArcaSim.Application.Services.Aduana;
+using ArcaSim.Infrastructure.InMemory;
+
 namespace ArcaSim.Tests.Services.Aduana;
 
 /// <summary>wdepMovimientos: cargo enters a depósito, leaves it with a salida, and a repeated transaction answers the same.</summary>
@@ -76,5 +80,20 @@ public class WdepMovimientosRulesTests
         Assert.Equal("10142", closed.Code());
         Assert.Equal("0", replay.Code());
         Assert.Equal("10142", refusedReplay.Code());
+    }
+
+    [Fact]
+    public async Task Exits_that_run_together_never_take_out_more_than_entered()
+    {
+        var clock = new SimulatedClock(TimeProvider.System);
+        clock.Freeze(AduanaKit.Today);
+        var dep = new RulesProbe(new WdepMovimientosRules(new YieldingDocumentStore(new InMemoryStore()), clock), AduanaKit.Today);
+        await dep.CallAsync("WdepIngresos", Entry(4001), AduanaKit.Caller);
+
+        // Line 1 holds 20 units: two exits of 10 fit, the other three do not.
+        var answers = await Task.WhenAll(Enumerable.Range(0, 5).Select(i => dep.CallAsync("WdepSalidas", Exit(4100 + i, 10, container: ""), AduanaKit.Caller)));
+
+        Assert.Equal(2, answers.Count(a => a.Code() == "0"));
+        Assert.Equal(3, answers.Count(a => a.Code() == "10034"));
     }
 }
