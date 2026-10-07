@@ -72,6 +72,22 @@ public class WssegRulesTests
     }
 
     [Fact]
+    public async Task Homologacion_carries_the_catalogs_event_39_on_every_answer()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var desk = await OpenAsync(sim);
+
+        var authorized = await AuthorizeAsync(desk, Cmp(45, 1));
+        var types = await desk.CallAsync("SEGGetPARAM_Tipo_Cbte", Auth(desk, "auth"));
+
+        foreach (var answer in new[] { authorized, types })
+        {
+            Assert.Equal("39", Value(answer, "EventCode"));
+            Assert.StartsWith("IMPORTANTE: Por motivos de mantenimiento", Value(answer, "EventMsg"));
+        }
+    }
+
+    [Fact]
     public async Task Production_announces_the_retirement_with_event_47_on_every_answer()
     {
         await using var sim = ArcaSimHarness.Start();

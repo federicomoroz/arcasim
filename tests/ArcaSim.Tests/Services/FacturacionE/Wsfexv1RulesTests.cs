@@ -180,6 +180,24 @@ public class Wsfexv1RulesTests
     }
 
     [Fact]
+    public async Task Every_answer_carries_the_event_the_catalog_records_for_the_service()
+    {
+        var (sim, _, soap) = await StartAsync();
+        await using var _s = sim;
+
+        var authorized = await soap.CallAsync(Fex, "FEXAuthorize", Export(id: 1001, number: 1));
+        var refused = await soap.CallAsync(Fex, "FEXAuthorize", Export(id: 1002, number: 7));
+        var table = await soap.CallAsync(Fex, "FEXGetPARAM_MON", "");
+
+        foreach (var answer in new[] { authorized, refused, table })
+        {
+            Assert.Equal("103", answer.Value("FEXEvents/EventCode"));
+            Assert.StartsWith("IMPORTANTE: Por motivos de mantenimiento", answer.Value("FEXEvents/EventMsg"));
+        }
+        Assert.Equal("1535", refused.Value("FEXErr/ErrCode"));
+    }
+
+    [Fact]
     public async Task The_parameter_tables_answer_the_manuals_values()
     {
         var (sim, _, soap) = await StartAsync();

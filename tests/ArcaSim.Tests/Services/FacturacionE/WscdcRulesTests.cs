@@ -169,6 +169,24 @@ public class WscdcRulesTests
     }
 
     [Fact]
+    public async Task Every_answer_carries_the_event_code_the_catalog_records_and_no_message()
+    {
+        var (sim, wsfe, soap) = await StartAsync();
+        await using var _s = sim;
+        var issued = await wsfe.AuthorizeNextAsync(1, 6, ConsumerInvoice);
+
+        var approved = await soap.CallAsync(Cdc, "ComprobanteConstatar",
+            Constatar("CAE", Issuer, 1, 6, issued.Number, "20261001", "1210", issued.Cae!));
+        var modes = await soap.CallAsync(Cdc, "ComprobantesModalidadConsultar", "");
+
+        foreach (var answer in new[] { approved, modes })
+        {
+            Assert.Equal("0", answer.Value("Events/Evt/Code"));
+            Assert.Null(answer.Child("Events")!.Child("Evt")!.Child("Msg"));
+        }
+    }
+
+    [Fact]
     public async Task The_parameter_queries_answer_the_tables_the_checks_use()
     {
         var (sim, _, soap) = await StartAsync();

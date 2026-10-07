@@ -20,11 +20,13 @@ namespace ArcaSim.Application.Services.TurismoBonos;
 ///
 /// In production every answer carries event 47, the notice that RG 5866/2026
 /// retires the service on 01/01/2027 in favor of WSFEv1, as production shows
-/// it today. Homologación's stale maintenance notice (39) is left out.
+/// it today. In homologación it carries the catalog's event 39, the maintenance
+/// notice seen live with every error (taken for the successful answers too, which
+/// are inferred).
 ///
 /// ArcaSim's choices on what the spec leaves NO VERIFICADO:
 /// - a refused SEGAuthorize carries SEGResultAuth with Id and Cuit 0, as
-///   wsbfev1 does; a successful answer carries SEGErr 0 "OK" and SEGEvents 0;
+///   wsbfev1 does; a successful answer carries SEGErr 0 "OK" and the event above;
 /// - numbers run "último + 1" per CUIT, point of sale and type (1014 otherwise);
 /// - the CAE has 14 digits and expires SimulationSettings.CaeLifetimeDays
 ///   after the voucher's date, as in WSFEv1;

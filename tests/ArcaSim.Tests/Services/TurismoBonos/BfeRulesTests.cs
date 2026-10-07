@@ -114,7 +114,7 @@ public class BfeRulesTests
     }
 
     [Fact]
-    public async Task Wsbfe_and_wsbfev1_number_the_same_book_and_wsbfe_carries_its_RG_5616_event()
+    public async Task Wsbfe_and_wsbfev1_number_the_same_book_and_each_carries_the_event_of_its_catalog_entry()
     {
         await using var sim = ArcaSimHarness.Start();
         var v1 = await OpenAsync(sim);
@@ -126,7 +126,8 @@ public class BfeRulesTests
         Assert.Equal("A", Value(authorized, "Resultado"));
         Assert.Equal("102", Value(authorized, "EventCode"));
         Assert.Equal("A", Value(next, "Resultado"));
-        Assert.Equal("0", Value(next, "EventCode"));
+        Assert.Equal("39", Value(next, "EventCode"));
+        Assert.StartsWith("IMPORTANTE: Por motivos de mantenimiento", Value(next, "EventMsg"));
         var fromOld = await old.CallAsync("BFEGetCMP", Auth(old) + "<x:Cmp><x:Tipo_cbte>1</x:Tipo_cbte><x:Punto_vta>5</x:Punto_vta><x:Cbte_nro>2</x:Cbte_nro></x:Cmp>");
         Assert.Equal(Value(next, "Cae"), Value(fromOld, "Cae"));
         Assert.Equal("2", Value(await LastAsync(old), "Cbte_nro"));

@@ -307,8 +307,9 @@ public sealed class WscdcRules(
 
     private static XNamespace Ns(ServiceCall call) => call.Operation.Output.Namespace;
 
+    /// <summary>Events/Evt with the code the catalog records (0, seen live) and no Msg, as production sends it.</summary>
     private static XElement Events(ServiceCall call) =>
-        new(Ns(call) + "Events", new XElement(Ns(call) + "Evt", new XElement(Ns(call) + "Code", 0)));
+        new(Ns(call) + "Events", new XElement(Ns(call) + "Evt", new XElement(Ns(call) + "Code", call.Fixed("Evt/Code") ?? "0")));
 
     private static ContractAnswer Table<T>(ServiceCall call, IEnumerable<T> rows, string item, Func<T, (string Name, object Value)[]> fields)
     {

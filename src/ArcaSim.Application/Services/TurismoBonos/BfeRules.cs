@@ -30,25 +30,20 @@ public sealed class WsbfeV1Rules(
 /// do not exist and are ignored if they come). Its manual (V1.1) predates the
 /// RG 5616 fields; ArcaSim checks them with wsbfev1's codes (4957-4967), the
 /// spec's most plausible reading. In homologación every answer carries event
-/// 102, the RG 5616 notice the service shows today.
+/// 102, the RG 5616 notice the service shows today (the catalog's); the notice
+/// names that environment, so production sends none.
 /// </summary>
 public sealed class WsbfeRules(
     ParameterTables parameters, IDocumentStore documents, IExchangeRates rates, IAuthorizationCodes codes,
     SequenceLocks locks, IClock clock, SimulationSettings settings, EventManager events)
     : BfeRules(parameters, documents, rates, codes, locks, clock, settings, events)
 {
-    public const string Rg5616Notice =
-        "IMPORTANTE: El dia 9 de junio de 2025 se actualizo la version del Web Service (WS) en el ambiente de Homologacion Externa en la cual " +
-        "se establece como obligatorio el campo Condicion Frente al IVA del receptor. Cabe destacar que la Resolucion General Nro 5616 indica " +
-        "que ese dato debe enviarse de manera obligatoria. Para mas informacion, consultar el manual en: https://www.arca.gob.ar/fe/ayuda/webservice.asp, " +
-        "https://www.arca.gob.ar/ws/documentacion/ws-factura-electronica.asp";
-
     public override string Service => "wsbfe";
 
     protected override bool CreditInvoices => false;
 
     protected override AsmxEvent Event(ServiceCall call) =>
-        Settings.Environment == ArcaEnvironment.Homologacion ? new AsmxEvent(102, Rg5616Notice) : base.Event(call);
+        Settings.Environment == ArcaEnvironment.Homologacion ? base.Event(call) : NoEvent(call);
 }
 
 /// <summary>

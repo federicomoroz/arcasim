@@ -156,8 +156,19 @@ public abstract class AsmxVoucherRules(
     /// <summary>The rest of the service's operations; null keeps the contract's answer.</summary>
     protected abstract Task<ContractAnswer?> OtherAsync(ServiceCall call, CancellationToken ct);
 
-    /// <summary>The event every answer carries. With none, 0 and "Ok" (an empty text in the authorization and its query, as wsbfev1 answers).</summary>
+    /// <summary>
+    /// The event every answer carries: the one the catalog says the service
+    /// always sends (servicios.json: the maintenance notice of wsbfev1, seen
+    /// live on every answer, and of wsseg, inferred for the successful ones), the
+    /// same one a contract answer of the service would have; with none, <see cref="NoEvent"/>.
+    /// </summary>
     protected virtual AsmxEvent Event(ServiceCall call) =>
+        call.Fixed("EventCode") is { } code && int.TryParse(code, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number)
+            ? new AsmxEvent(number, call.Fixed("EventMsg") ?? "")
+            : NoEvent(call);
+
+    /// <summary>No event: 0 and "Ok", with an empty text in the authorization and its query, as wsbfev1 answers.</summary>
+    protected static AsmxEvent NoEvent(ServiceCall call) =>
         new(0, call.Name.EndsWith("Authorize", StringComparison.Ordinal) || call.Name.EndsWith("GetCMP", StringComparison.Ordinal) ? "" : "Ok");
 
     public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct)

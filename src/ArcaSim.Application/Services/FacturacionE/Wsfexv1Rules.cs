@@ -13,8 +13,8 @@ namespace ArcaSim.Application.Services.FacturacionE;
 /// type, gives a CAE, and answers a repeated request Id with what it already
 /// granted and Reproceso S; FEXGetLast_ID, FEXGetLast_CMP and FEXGetCMP read
 /// that back; the FEXGetPARAM_* tables answer the values the spec documents.
-/// Every answer carries FEXErr (0 when there was no error) and FEXEvents 0/Ok,
-/// as production does.
+/// Every answer carries FEXErr (0 when there was no error) and FEXEvents, the
+/// event the catalog records as seen live on every answer (103).
 ///
 /// ArcaSim's choices where the spec says NO VERIFICADO:
 /// - a business error answers FEXErr alone, without FEXResultAuth, as a refused ticket does;
@@ -281,7 +281,7 @@ public sealed class Wsfexv1Rules : IServiceBehavior
 
     private static XNamespace Ns(ServiceCall call) => call.Operation.Output.Namespace;
 
-    /// <summary>{Op}Result with the data, FEXErr 0 and FEXEvents 0.</summary>
+    /// <summary>{Op}Result with the data, FEXErr 0 and the service's FEXEvents.</summary>
     private static ContractAnswer Answer(ServiceCall call, XElement data) =>
         call.Ok(new XElement(call.Operation.Output, new XElement(Ns(call) + (call.Name + "Result"), data, Err(call, 0, "OK"), Events(call))));
 
@@ -292,8 +292,11 @@ public sealed class Wsfexv1Rules : IServiceBehavior
     private static XElement Err(ServiceCall call, int code, string text) =>
         new(Ns(call) + "FEXErr", new XElement(Ns(call) + "ErrCode", code), new XElement(Ns(call) + "ErrMsg", text));
 
+    /// <summary>The event the catalog says every answer carries (103, a maintenance notice, seen live); 0 and "Ok" if it says none.</summary>
     private static XElement Events(ServiceCall call) =>
-        new(Ns(call) + "FEXEvents", new XElement(Ns(call) + "EventCode", 0), new XElement(Ns(call) + "EventMsg", "Ok"));
+        new(Ns(call) + "FEXEvents",
+            new XElement(Ns(call) + "EventCode", call.Fixed("EventCode") ?? "0"),
+            new XElement(Ns(call) + "EventMsg", call.Fixed("EventMsg") ?? "Ok"));
 
     /// <summary>A FEXGetPARAM_* list: one item per row, its fields in schema order.</summary>
     private static ContractAnswer Table<T>(ServiceCall call, IEnumerable<T> rows, string item, Func<T, (string Name, object Value)[]> fields)
