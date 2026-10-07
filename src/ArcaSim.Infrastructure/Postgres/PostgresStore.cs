@@ -101,9 +101,6 @@ public sealed partial class PostgresStore(NpgsqlDataSource db) :
             "WHERE client_cuit = $1 AND lower(alias) = lower($2) AND lower(service) = lower($3)",
             [clientCuit, alias, service], ReadAuthorization, ct);
 
-    public Task<IReadOnlyList<ClientAlias>> ListAliasesAsync(CancellationToken ct = default) =>
-        ListAsync("SELECT cuit, alias FROM aliases ORDER BY cuit, alias", [], r => new ClientAlias(r.GetInt64(0), r.GetString(1)), ct);
-
     public Task<IReadOnlyList<ServiceAuthorization>> ListAuthorizationsAsync(CancellationToken ct = default) =>
         ListAsync("SELECT client_cuit, alias, represented_cuit, service FROM authorizations ORDER BY client_cuit, alias, service",
             [], ReadAuthorization, ct);

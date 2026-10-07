@@ -18,6 +18,10 @@ const api = (path, options = {}) =>
 const $ = (selector) => document.querySelector(selector);
 const form = (element) => Object.fromEntries(new FormData(element));
 
+// Text that goes into innerHTML: service names come from the admin API, which anyone can write to.
+const esc = (text) =>
+  String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
 function toast(message, error = false) {
   const box = $("#toast");
   box.textContent = message;
@@ -71,6 +75,7 @@ async function loadStatus() {
     : Object.entries(status.chaos).map(([service, c]) =>
         `${service}: ${c.down ? "caído" : "arriba"}, demora ${c.delayMilliseconds} ms` +
         `${c.dropNextResponse ? ", corta la próxima respuesta" : ""}` +
+        `${c.balancerMask ? ", detrás de la máscara del balanceador" : ""}` +
         `${c.pendingForcedRejections ? `, ${c.pendingForcedRejections} rechazo(s) forzado(s)` : ""}`).join("\n");
 }
 
@@ -242,7 +247,7 @@ async function loadTraffic() {
     const el = document.createElement("div");
     el.className = "meter";
     const m = t.lastMinute;
-    el.innerHTML = `<h3>${names[t.service] ?? t.service}</h3>${gauge(t.saturationPercent)}
+    el.innerHTML = `<h3>${esc(names[t.service] ?? t.service)}</h3>${gauge(t.saturationPercent)}
       <dl>
         <dt>Pedidos (1 min)</dt><dd>${m.requests}</dd>
         <dt>Rechazados</dt><dd>${m.refused}</dd>

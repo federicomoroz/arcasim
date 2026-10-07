@@ -42,7 +42,7 @@ public sealed class SetiwsGateway(TicketReader reader, IClock clock)
         var now = clock.Now;
         if (now.ToUnixTimeSeconds() > facts.ExpirationTime)
             errors.Add($"El token está vencido. (Vencimiento: {Format(DateTimeOffset.FromUnixTimeSeconds(facts.ExpirationTime))}. Hora del servidor: {Format(now)}).");
-        var cuit = long.TryParse(represented!.Trim(), out var value) ? value : 0;
+        var cuit = long.TryParse(represented!.Trim(), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var value) ? value : 0;
         if (!facts.Relations.Contains(cuit))
             errors.Add($"La CUIT representada no está entre las autorizadas. (Seleccionada: {represented!.Trim()}. Autorizadas: {string.Join(", ", facts.Relations)}).");
         if (!facts.Signed) errors.Add(BadSignature);

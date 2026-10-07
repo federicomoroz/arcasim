@@ -1,3 +1,4 @@
+using ArcaSim.Application;
 using ArcaSim.Application.Traffic;
 
 namespace ArcaSim.Api.Soap;
@@ -10,7 +11,7 @@ namespace ArcaSim.Api.Soap;
 public static class TrafficMiddleware
 {
     public static string? ServiceOf(HttpRequest request) =>
-        HttpMethods.IsPost(request.Method) ? ServiceRoutes.ServiceOf(request.Path) : null;
+        HttpMethods.IsPost(request.Method) ? request.HttpContext.RequestServices.GetRequiredService<ServiceDirectory>().ServiceOf(request.Path.Value ?? "") : null;
 
     public static void Use(WebApplication app) => app.Use(async (context, next) =>
     {

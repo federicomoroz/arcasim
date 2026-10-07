@@ -34,7 +34,7 @@ public static class SetiwsEndpoint
 
     public static void Map(WebApplication app)
     {
-        ServiceRoutes.Register($"{Base}/{Veps}", SetiwsGateway.Service);
+        app.Services.GetRequiredService<ServiceDirectory>().Route($"{Base}/{Veps}", SetiwsGateway.Service);
         app.MapGet($"{Base}/dummy", () => Results.Json(new { appserver = "OK", dbserver = "OK" }));
         app.Map(Base + "/{**path}", (HttpContext context, string? path) => AnswerAsync(context, path ?? ""));
     }
@@ -42,6 +42,8 @@ public static class SetiwsEndpoint
     private static async Task AnswerAsync(HttpContext context, string path)
     {
         var services = context.RequestServices;
+        // The admin API's failures, as for every other service; the GET dummy stays up, as the ASMX ones do.
+        if (await ChaosGate.RefusedAsync(context, services.GetRequiredService<SimulationSettings>().ChaosOf(SetiwsGateway.Service))) return;
         var headers = context.Request.Headers;
         var (represented, problems) = services.GetRequiredService<SetiwsGateway>().Check(
             headers.Authorization, headers[SetiwsGateway.TokenHeader], headers[SetiwsGateway.SignHeader], headers[SetiwsGateway.RepresentedHeader]);

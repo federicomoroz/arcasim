@@ -11,11 +11,13 @@ namespace ArcaSim.Api.Admin;
 /// <summary>Failures on demand: a service down, slow, rejecting the next voucher, dropping the next answer, or behind fwshomo's F5 mask.</summary>
 [ApiController]
 [Route(AdminRoutes.Prefix + "/chaos")]
-public sealed class ChaosController(SimulationSettings settings, SimulatedClock clock) : ControllerBase
+public sealed class ChaosController(SimulationSettings settings, SimulatedClock clock, ServiceDirectory directory) : ControllerBase
 {
+    /// <summary>A name ArcaSim does not serve answers 404: a typo must not look like a failure switched on.</summary>
     [HttpPut("{service}")]
-    public StatusView Set(string service, ChaosBody body)
+    public ActionResult<StatusView> Set(string service, ChaosBody body)
     {
+        if (!directory.Serves(service)) return NotFound(new ErrorView($"ArcaSim no sirve el servicio {service}."));
         var chaos = settings.ChaosFor(service);
         if (body.Down is { } down) chaos.Down = down;
         if (body.DelayMilliseconds is { } delay) chaos.Delay = TimeSpan.FromMilliseconds(delay);

@@ -47,9 +47,6 @@ public sealed partial class InMemoryStore :
                         && string.Equals(a.Service, service, StringComparison.OrdinalIgnoreCase))
             .ToList());
 
-    public Task<IReadOnlyList<ClientAlias>> ListAliasesAsync(CancellationToken ct = default) =>
-        Read<IReadOnlyList<ClientAlias>>(() => _aliases.ToList());
-
     public Task<IReadOnlyList<ServiceAuthorization>> ListAuthorizationsAsync(CancellationToken ct = default) =>
         Read<IReadOnlyList<ServiceAuthorization>>(() => _authorizations.ToList());
 

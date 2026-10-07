@@ -34,7 +34,6 @@ public static class ArgentinaTime
 public interface IAccessRepository
 {
     Task<IReadOnlyList<ServiceAuthorization>> AuthorizationsForAsync(long clientCuit, string alias, string service, CancellationToken ct = default);
-    Task<IReadOnlyList<ClientAlias>> ListAliasesAsync(CancellationToken ct = default);
     Task<IReadOnlyList<ServiceAuthorization>> ListAuthorizationsAsync(CancellationToken ct = default);
     Task SaveAliasAsync(ClientAlias alias, CancellationToken ct = default);
     Task SaveAuthorizationAsync(ServiceAuthorization authorization, CancellationToken ct = default);

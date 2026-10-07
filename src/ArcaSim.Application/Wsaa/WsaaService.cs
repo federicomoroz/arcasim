@@ -25,7 +25,8 @@ public sealed partial class WsaaService(
     ITicketLog tickets,
     ITokenSigner signer,
     EventManager events,
-    TimeProvider time)
+    TimeProvider time,
+    ServiceDirectory directory)
 {
     public static readonly TimeSpan TicketLifetime = TimeSpan.FromHours(12);
     private static readonly TimeSpan Tolerance = TimeSpan.FromHours(24);
@@ -41,7 +42,7 @@ public sealed partial class WsaaService(
 
     private async Task<LoginResult> CheckAndIssueAsync(string? in0, CancellationToken ct)
     {
-        if (settings.ChaosFor("wsaa").Down) return LoginResult.Fail(WsaaFault.WsaaUnavailable);
+        if (settings.ChaosOf("wsaa").Down) return LoginResult.Fail(WsaaFault.WsaaUnavailable);
 
         // 1-2. Base64, then CMS.
         byte[] der;
@@ -108,7 +109,7 @@ public sealed partial class WsaaService(
         if (tra.ExpirationTime > now + Tolerance) return LoginResult.Fail(WsaaFault.BadExpirationTime);
 
         // 8. The service, the authorization and the anti-repeat window.
-        var service = WebService.Find(tra.Service);
+        var service = directory.Find(tra.Service);
         if (service is null) return LoginResult.Fail(WsaaFault.ServiceNotFound);
 
         var alias = DistinguishedNames.CommonNameOf(certificate.SubjectName) ?? "";
@@ -131,7 +132,7 @@ public sealed partial class WsaaService(
                     return LoginResult.Fail(WsaaFault.AlreadyAuthenticated);
             }
 
-            if (settings.ChaosFor(service.Id).Down) return LoginResult.Fail(WsaaFault.ServiceUnavailable);
+            if (settings.ChaosOf(service.Id).Down) return LoginResult.Fail(WsaaFault.ServiceUnavailable);
 
             generation = TruncateToMilliseconds(now);
             expiration = generation + TicketLifetime;

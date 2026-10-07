@@ -68,7 +68,8 @@ public sealed record StatusView(
             settings.MaxRecordsPerRequest,
             settings.CaeLifetimeDays,
             new ClockView(now, clock.Frozen),
-            settings.Chaos.ToDictionary(c => c.Key, c => new ChaosView(
+            // Only what is switched on: a service set back to normal no longer counts as a failure.
+            settings.Chaos.Where(c => c.Value.Active).ToDictionary(c => c.Key, c => new ChaosView(
                 c.Value.Down, (int)c.Value.Delay.TotalMilliseconds, c.Value.DropNextResponse, c.Value.PendingForcedRejections) { BalancerMask = c.Value.BalancerMask }));
     }
 }

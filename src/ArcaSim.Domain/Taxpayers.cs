@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace ArcaSim.Domain;
 
 /// <summary>Condición frente al IVA, with the ids of FEParamGetCondicionIvaReceptor.</summary>
@@ -146,12 +148,16 @@ public static class Cuits
     public static PersonKind KindOf(long cuit) => (cuit / 1_000_000_000) is 30 or 33 or 34 ? PersonKind.Juridica : PersonKind.Fisica;
 
     /// <summary>The DNI inside a person's CUIT: the eight digits between the prefix and the check digit.</summary>
-    public static string DocumentOf(long cuit) => (cuit / 10 % 100_000_000).ToString();
+    public static string DocumentOf(long cuit) => (cuit / 10 % 100_000_000).ToString(CultureInfo.InvariantCulture);
 
-    /// <summary>The CUIT a DNI gets with prefix 20, or 23 when 20 would need check digit 10, as ARCA assigns them.</summary>
+    /// <summary>
+    /// The CUIT a DNI gets with prefix 20, or 23 when 20 would need check
+    /// digit 10, as ARCA assigns a man's. A woman's would be 27, or 23 too:
+    /// ArcaSim does not know which the person is, and always takes the first.
+    /// </summary>
     public static long ForDocument(long document)
     {
-        foreach (var prefix in new[] { 20L, 27L, 23L })
+        foreach (var prefix in new[] { 20L, 23L })
         {
             var body = prefix * 100_000_000 + document;
             for (var check = 0; check <= 9; check++)
@@ -165,7 +171,7 @@ public static class Cuits
 
     private static bool IsCanonical(long cuit)
     {
-        var digits = cuit.ToString();
+        var digits = cuit.ToString(CultureInfo.InvariantCulture);
         var sum = 0;
         for (var i = 0; i < 10; i++) sum += (digits[i] - '0') * Weights[i];
         return 11 - sum % 11 != 10;
@@ -174,7 +180,7 @@ public static class Cuits
     /// <summary>The mod 11 check digit every CUIT carries.</summary>
     public static bool IsValid(long cuit)
     {
-        var digits = cuit.ToString();
+        var digits = cuit.ToString(CultureInfo.InvariantCulture);
         if (digits.Length != 11) return false;
         var sum = 0;
         for (var i = 0; i < 10; i++) sum += (digits[i] - '0') * Weights[i];

@@ -72,13 +72,20 @@ public sealed class TrafficMeter
         {
             if (!_log.TryGetValue(service, out var entries)) _log[service] = entries = new Queue<(DateTimeOffset, bool, double)>();
             entries.Enqueue((at, served, milliseconds));
+            // Trimmed as it grows, not only when the panel asks: a simulator nobody watches keeps a minute, not every request.
+            Drop(entries, at - Window);
         }
     }
 
     private static List<(DateTimeOffset At, bool Served, double Milliseconds)> Trim(
         Queue<(DateTimeOffset At, bool Served, double Milliseconds)> entries, DateTimeOffset since)
     {
-        while (entries.Count > 0 && entries.Peek().At < since) entries.Dequeue();
+        Drop(entries, since);
         return entries.ToList();
+    }
+
+    private static void Drop(Queue<(DateTimeOffset At, bool Served, double Milliseconds)> entries, DateTimeOffset before)
+    {
+        while (entries.Count > 0 && entries.Peek().At < before) entries.Dequeue();
     }
 }

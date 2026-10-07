@@ -28,7 +28,7 @@ public static class JavaSoapEndpoint
 
     public static void Map(WebApplication app, JavaSoapService service)
     {
-        ServiceRoutes.Register(service.Path, service.ChaosKey);
+        app.Services.GetRequiredService<ServiceDirectory>().Route(service.Path, service.ChaosKey);
 
         app.MapGet(service.Path, (HttpContext context) =>
             WsdlDocuments.AsksForWsdl(context.Request)
@@ -38,14 +38,7 @@ public static class JavaSoapEndpoint
 
         app.MapPost(service.Path, async (HttpContext context) =>
         {
-            var settings = context.RequestServices.GetRequiredService<SimulationSettings>();
-            var chaos = settings.ChaosFor(service.ChaosKey);
-            if (chaos.Delay > TimeSpan.Zero) await Task.Delay(chaos.Delay, context.RequestAborted);
-            if (chaos.Down)
-            {
-                context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-                return;
-            }
+            if (await ChaosGate.RefusedAsync(context, context.RequestServices.GetRequiredService<SimulationSettings>().ChaosOf(service.ChaosKey))) return;
 
             using var reader = new StreamReader(context.Request.Body);
             var body = await reader.ReadToEndAsync();
@@ -114,25 +107,5 @@ public static class JavaSoapEndpoint
         context.Response.ContentType = "text/xml;charset=UTF-8";
         context.Response.ContentLength = bytes.Length;
         await context.Response.Body.WriteAsync(bytes, context.RequestAborted);
-    }
-}
-
-/// <summary>Which ArcaSim service a path belongs to, for the traffic gate and its meter.</summary>
-public static class ServiceRoutes
-{
-    private static readonly Dictionary<string, string> Paths = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["/wsfev1/service.asmx"] = "wsfe",
-        ["/ws/services/LoginCms"] = "wsaa",
-    };
-
-    public static void Register(string path, string service)
-    {
-        lock (Paths) Paths[path] = service;
-    }
-
-    public static string? ServiceOf(PathString path)
-    {
-        lock (Paths) return Paths.TryGetValue(path.Value ?? "", out var service) ? service : null;
     }
 }

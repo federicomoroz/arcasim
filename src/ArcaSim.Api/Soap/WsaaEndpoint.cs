@@ -37,7 +37,7 @@ public sealed class WsaaEndpoint(WsaaService service, SimulationSettings setting
             return;
         }
 
-        var chaos = settings.ChaosFor("wsaa");
+        var chaos = settings.ChaosOf("wsaa");
         if (chaos.Delay > TimeSpan.Zero) await Task.Delay(chaos.Delay, context.RequestAborted);
 
         if (request.Version == SoapVersion.Soap11 && !context.Request.Headers.ContainsKey("SOAPAction"))

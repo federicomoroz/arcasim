@@ -20,11 +20,11 @@ public static class ContractEndpoint
 {
     public static void Map(WebApplication app, ContractHost host)
     {
+        var directory = app.Services.GetRequiredService<ServiceDirectory>();
         foreach (var definition in host.Catalog.Services)
         {
             var contract = host.ContractOf(definition);
-            foreach (var id in definition.Wsaa) WebService.Register(id, definition.Name);
-            ServiceRoutes.Register(contract.AddressPath, definition.Id);
+            directory.Route(contract.AddressPath, definition.Id);
 
             app.MapGet(contract.AddressPath, (Delegate)((HttpContext context) => DescribeAsync(context, host, definition, contract)));
             app.MapPost(contract.AddressPath, (HttpContext context) => AnswerAsync(context, host, definition, contract));
@@ -109,14 +109,8 @@ public static class ContractEndpoint
 
     private static async Task AnswerAsync(HttpContext context, ContractHost host, ServiceDefinition definition, ServiceContract contract)
     {
-        var settings = context.RequestServices.GetRequiredService<SimulationSettings>();
-        var chaos = settings.ChaosFor(definition.Id);
-        if (chaos.Delay > TimeSpan.Zero) await Task.Delay(chaos.Delay, context.RequestAborted);
-        if (chaos.Down)
-        {
-            context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-            return;
-        }
+        var chaos = context.RequestServices.GetRequiredService<SimulationSettings>().ChaosOf(definition.Id);
+        if (await ChaosGate.RefusedAsync(context, chaos)) return;
 
         var request = await SoapRequest.ReadAsync(context.Request);
         if (request is null)

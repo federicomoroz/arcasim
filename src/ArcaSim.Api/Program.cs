@@ -60,6 +60,7 @@ builder.Services.AddSingleton(_ => ValidationCatalog.Load());
 builder.Services.AddSingleton(_ => ParameterTables.Load());
 builder.Services.AddSingleton<IAuthorizationCodes, RandomAuthorizationCodes>();
 builder.Services.AddSingleton<SequenceLocks>();
+builder.Services.AddSingleton<ServiceDirectory>();
 builder.Services.AddSingleton<EventManager>();
 builder.Services.AddSingleton<TrafficGate>();
 builder.Services.AddSingleton<TrafficMeter>();

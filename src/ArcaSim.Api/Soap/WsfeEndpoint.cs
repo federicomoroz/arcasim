@@ -69,13 +69,8 @@ public sealed class WsfeEndpoint(WsfeService service, SimulationSettings setting
             return;
         }
 
-        var chaos = settings.ChaosFor(WsfeService.Name);
-        if (chaos.Delay > TimeSpan.Zero) await Task.Delay(chaos.Delay, context.RequestAborted);
-        if (chaos.Down)
-        {
-            context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-            return;
-        }
+        var chaos = settings.ChaosOf(WsfeService.Name);
+        if (await ChaosGate.RefusedAsync(context, chaos)) return;
 
         try
         {
@@ -122,10 +117,9 @@ public sealed class WsfeEndpoint(WsfeService service, SimulationSettings setting
             return;
         }
 
-        if (name == "FECAESolicitar" && chaos.DropNextResponse)
+        if (name == "FECAESolicitar" && chaos.TryTakeDropNextResponse())
         {
             // The voucher is already authorized and stored; the client never hears about it.
-            chaos.DropNextResponse = false;
             context.Abort();
             return;
         }
