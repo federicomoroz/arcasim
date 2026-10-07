@@ -52,22 +52,16 @@ public sealed class WdepMovimientosRules(IDocumentStore store, IClock clock) : I
         if (arg is null) return call.Fail(22, "Campo obligatorio", call.Name == "WdepIngresos" ? "argwdepIngresos" : "argwdepSalidas");
         var number = arg.Long("NroTransaccion");
         if (number <= 0) return call.Fail(36, "Valor invalido.", "NroTransaccion");
-        var key = $"{call.Cuit}/{number}";
-        if (await store.GetAsync<DepOutcome>(Transactions, key, ct) is { } done) return Answer(call, done);
-
-        using var running = _running.TryEnter(key);
-        if (running is null) return call.Fail(31209, "Aguarde, operacion en curso");
-        if (await store.GetAsync<DepOutcome>(Transactions, key, ct) is { } meanwhile) return Answer(call, meanwhile);
-
-        DepOutcome outcome;
-        using (await _cargo.AcquireAsync(call.Cuit, ct))
-            outcome = Dia.FirstMissing(arg, "Aduana", "LugarOperativo") is { } missing
-                ? new DepOutcome(22, "Campo obligatorio", missing)
-                : arg.Child("Carga") is not { } cargo
-                    ? new DepOutcome(22, "Campo obligatorio", "Carga")
-                    : await process(call, cargo, $"{call.Cuit}/{arg.Field("Aduana")}/{arg.Field("LugarOperativo")}", ct);
-        await store.PutAsync(Transactions, key, outcome, ct);
-        return Answer(call, outcome);
+        var outcome = await _running.OnceAsync(store, Transactions, $"{call.Cuit}/{number}", async () =>
+        {
+            using (await _cargo.AcquireAsync(call.Cuit, ct))
+                return Dia.FirstMissing(arg, "Aduana", "LugarOperativo") is { } missing
+                    ? new DepOutcome(22, "Campo obligatorio", missing)
+                    : arg.Child("Carga") is not { } cargo
+                        ? new DepOutcome(22, "Campo obligatorio", "Carga")
+                        : await process(call, cargo, $"{call.Cuit}/{arg.Field("Aduana")}/{arg.Field("LugarOperativo")}", ct);
+        }, ct);
+        return outcome is null ? call.Fail(31209, "Aguarde, operacion en curso") : Answer(call, outcome);
     }
 
     private static ContractAnswer Answer(ServiceCall call, DepOutcome outcome) =>

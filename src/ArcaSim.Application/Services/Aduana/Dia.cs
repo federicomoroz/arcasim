@@ -111,6 +111,23 @@ internal sealed class InFlight
 
     public IDisposable? TryEnter(string key) => _running.TryAdd(key, 0) ? new Exit(_running, key) : null;
 
+    /// <summary>
+    /// A transaction that is answered once (wdepMovimientos p.8, wgestiendaslibres pp.8-9): the same key again gets
+    /// the answer it had, whatever its data now; a key still running gets null, for the caller to word the refusal
+    /// its service words; otherwise the work runs and its answer is kept under the key.
+    /// </summary>
+    public async Task<T?> OnceAsync<T>(IDocumentStore store, string collection, string key, Func<Task<T>> work, CancellationToken ct) where T : class
+    {
+        if (await store.GetAsync<T>(collection, key, ct) is { } done) return done;
+        using var entered = TryEnter(key);
+        if (entered is null) return null;
+        // The first request may have finished between the read above and the turn.
+        if (await store.GetAsync<T>(collection, key, ct) is { } meanwhile) return meanwhile;
+        var answer = await work();
+        await store.PutAsync(collection, key, answer, ct);
+        return answer;
+    }
+
     private sealed class Exit(ConcurrentDictionary<string, byte> running, string key) : IDisposable
     {
         public void Dispose() => running.TryRemove(key, out _);

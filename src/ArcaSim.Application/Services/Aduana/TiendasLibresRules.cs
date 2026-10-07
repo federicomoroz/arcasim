@@ -79,16 +79,15 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
         if (arg is null) return call.Ok(Missing(call, $"arg{call.Name}Params"));
         var transaction = arg.Field("transaccion");
         if (transaction == "") return call.Ok(Missing(call, "transaccion"));
-        var key = $"{call.Cuit}/{call.Name}/{transaction}";
-        if (await store.GetAsync<TlReplay>(Replays, key, ct) is { } done) return call.Ok(XElement.Parse(done.Xml));
 
-        using var running = _running.TryEnter(key);
-        if (running is null) return call.Ok(Refused(call, 41973, $"La transaccion {transaction} ya se encuentra en proceso - acceso denegado."));
-        if (await store.GetAsync<TlReplay>(Replays, key, ct) is { } meanwhile) return call.Ok(XElement.Parse(meanwhile.Xml));
-        XElement answer;
-        using (await _goods.AcquireAsync(call.Cuit, ct)) answer = await process(call, arg, ct);
-        await store.PutAsync(Replays, key, new TlReplay(answer.ToString(SaveOptions.DisableFormatting)), ct);
-        return call.Ok(answer);
+        XElement? fresh = null;
+        var replay = await _running.OnceAsync(store, Replays, $"{call.Cuit}/{call.Name}/{transaction}", async () =>
+        {
+            using (await _goods.AcquireAsync(call.Cuit, ct)) fresh = await process(call, arg, ct);
+            return new TlReplay(fresh.ToString(SaveOptions.DisableFormatting));
+        }, ct);
+        if (replay is null) return call.Ok(Refused(call, 41973, $"La transaccion {transaction} ya se encuentra en proceso - acceso denegado."));
+        return call.Ok(fresh ?? XElement.Parse(replay.Xml));
     }
 
     private async Task<XElement> EnterAsync(ServiceCall call, XElement arg, CancellationToken ct)

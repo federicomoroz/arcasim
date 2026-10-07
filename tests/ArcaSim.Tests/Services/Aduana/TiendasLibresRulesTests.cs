@@ -131,4 +131,20 @@ public class TiendasLibresRulesTests
         var stock = await shop.CallAsync("ConsultarStock", $"<argConsultarStockParams>{Query}</argConsultarStockParams>", AduanaKit.Caller);
         Assert.Equal("80", stock.V("Cantidad"));
     }
+
+    [Fact]
+    public async Task The_same_transaction_sent_together_is_processed_once_and_the_others_wait_or_replay()
+    {
+        var clock = new SimulatedClock(TimeProvider.System);
+        clock.Freeze(AduanaKit.Today);
+        var shop = new RulesProbe(new TiendasLibresRules(new YieldingDocumentStore(new InMemoryStore()), clock), AduanaKit.Today);
+        await shop.CallAsync("IngresarMercaderia", Entry("T-0", quantity: 100), AduanaKit.Caller);
+
+        var answers = await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => shop.CallAsync("VentaMercaderia", Sale("T-1", "0001-00000001", 1), AduanaKit.Caller)));
+
+        Assert.All(answers, a => Assert.Contains(a.Code(), new[] { "0", "41973" })); // the answer it had, or "in course" (p.9)
+        Assert.Contains(answers, a => a.Code() == "0");
+        var stock = await shop.CallAsync("ConsultarStock", $"<argConsultarStockParams>{Query}</argConsultarStockParams>", AduanaKit.Caller);
+        Assert.Equal("99", stock.V("Cantidad"));
+    }
 }

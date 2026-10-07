@@ -96,4 +96,21 @@ public class WdepMovimientosRulesTests
         Assert.Equal(2, answers.Count(a => a.Code() == "0"));
         Assert.Equal(3, answers.Count(a => a.Code() == "10034"));
     }
+
+    [Fact]
+    public async Task The_same_transaction_sent_together_is_processed_once_and_the_others_wait_or_replay()
+    {
+        var clock = new SimulatedClock(TimeProvider.System);
+        clock.Freeze(AduanaKit.Today);
+        var dep = new RulesProbe(new WdepMovimientosRules(new YieldingDocumentStore(new InMemoryStore()), clock), AduanaKit.Today);
+        await dep.CallAsync("WdepIngresos", Entry(5001), AduanaKit.Caller);
+
+        var answers = await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => dep.CallAsync("WdepSalidas", Exit(5100, 10, container: ""), AduanaKit.Caller)));
+        var second = await dep.CallAsync("WdepSalidas", Exit(5101, 10, container: ""), AduanaKit.Caller);
+        var third = await dep.CallAsync("WdepSalidas", Exit(5102, 10, container: ""), AduanaKit.Caller);
+
+        Assert.All(answers, a => Assert.Contains(a.Code(), new[] { "0", "31209" })); // the answer it had, or "in course" (p.8)
+        Assert.Contains(answers, a => a.Code() == "0");
+        Assert.Equal(("0", "10034"), (second.Code(), third.Code())); // 10 of the 20 left with the first transaction, once
+    }
 }
