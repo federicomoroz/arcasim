@@ -31,8 +31,10 @@ public sealed record Subservice(string Name, string Description);
 /// <summary>
 /// The Ventanilla Electrónica inbox: where ARCA's systems publish what
 /// veconsumerws then lists and reads. Nobody publishes through ARCA's API, so
-/// each CUIT's inbox starts with three plainly fictitious communications;
-/// PublishAsync puts a test's own instead (the inbox then holds only those).
+/// each CUIT's inbox starts with three plainly fictitious communications. A
+/// test or an operator that wants its own puts them as documents in
+/// Communications; SkipSeedAsync of the CUIT's Scope first leaves the inbox
+/// with only those.
 /// </summary>
 public static class VentanillaInbox
 {
@@ -42,15 +44,6 @@ public static class VentanillaInbox
     public static string Key(long id) => id.ToString("D12", CultureInfo.InvariantCulture);
 
     public static string Scope(long cuit) => $"{Communications}/{cuit}";
-
-    /// <summary>Publishes a communication: a new id when it has none, and the CUIT's inbox no longer gets the defaults.</summary>
-    public static async Task<Communication> PublishAsync(IDocumentStore store, Communication communication, CancellationToken ct = default)
-    {
-        await store.SkipSeedAsync(Scope(communication.Cuit), ct);
-        if (communication.Id == 0) communication = communication with { Id = await store.NextAsync(Communications, ct) };
-        await store.PutAsync(Communications, Key(communication.Id), communication, ct);
-        return communication;
-    }
 
     /// <summary>
     /// ArcaSim's own publishing systems: ARCA's list is not in the manual, so

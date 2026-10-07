@@ -12,21 +12,6 @@ public sealed record Cema(
     string Estado, DateTimeOffset FUltEstado, string CodAlarma = "", DateTimeOffset? FUltEvento = null);
 
 /// <summary>
-/// The depósito's side of the precintos, which ARCA's guards and depositarios do
-/// and ArcaSim has no service for: asking to activate (SOAC) or deactivate (SODE)
-/// a precinto. Tests, and an admin endpoint if one is added, move them here.
-/// </summary>
-public static class CemaGuard
-{
-    public static async Task<bool> RequestAsync(IDocumentStore store, string id, string state, DateTimeOffset at, CancellationToken ct = default)
-    {
-        if (state is not ("SOAC" or "SODE") || await store.GetAsync<Cema>(WgesPrecintosRules.Collection, id, ct) is not { } cema) return false;
-        await store.PutAsync(WgesPrecintosRules.Collection, id, cema with { Estado = state, FUltEstado = at }, ct);
-        return true;
-    }
-}
-
-/// <summary>
 /// wgesprecintosdepfis, the CEMA prestadores' service (docs/arca/servicios/wgesprecintosdepfis.md):
 /// the padrón (NovedadPrecinto, ConsultaCemaPadron) and the monitoring cycle
 /// SOAC → ACTI (IniciarMonitoreo) → events (InformarEstadoPrecintos) → SODE →
@@ -34,8 +19,10 @@ public static class CemaGuard
 /// back with ConsultarPrecintos, with the manual's codes and 0 "OK". ArcaSim's
 /// choices where the manual is silent: an alta leaves the precinto accepted by
 /// the depósito (ACEP) and already asked to activate (SOAC), the depositario's
-/// and the guard's first steps; SODE comes from CemaGuard; an array with one bad
-/// item is refused whole, that item in DescAdicErr; NovedadPrecinto tells an alta
+/// and the guard's first steps; SODE, the request to deactivate that ARCA's
+/// guards and depositarios make and ArcaSim has no service for, is a test or an
+/// operator putting the precinto's document with that Estado; an array with one
+/// bad item is refused whole, that item in DescAdicErr; NovedadPrecinto tells an alta
 /// from an actualización by whether the precinto exists, and Aduana or
 /// LugarOperativo of the wrong length are 70222 and 10782.
 /// </summary>

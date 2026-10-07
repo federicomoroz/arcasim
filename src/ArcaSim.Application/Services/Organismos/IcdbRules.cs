@@ -15,9 +15,10 @@ public sealed record ExemptEntity(long Cuit, string Name);
 
 /// <summary>
 /// The register of accounts with benefits in the tax on bank debits and
-/// credits, which taxpayers load through another channel. ChangeStateAsync is
-/// the hook a test uses to move an account (and produce news); each bank
-/// starts with two plainly fictitious accounts, and the exempt entities with one.
+/// credits, which taxpayers load through another channel. A test or an operator
+/// moves an account by putting its document with another state in its history
+/// (and produces news); each bank starts with two plainly fictitious accounts,
+/// and the exempt entities with one.
 /// </summary>
 public static class IcdbRegistry
 {
@@ -25,16 +26,6 @@ public static class IcdbRegistry
     public const string Entities = "wsicdb.entes";
 
     public static string Key(long bank, long cuit, string cbu) => $"{bank}/{cuit}/{cbu}";
-
-    public static async Task<BankAccount> ChangeStateAsync(
-        IDocumentStore store, long bank, long cuit, string cbu, string benefit, string state, DateOnly from, CancellationToken ct = default)
-    {
-        var account = await store.GetAsync<BankAccount>(Accounts, Key(bank, cuit, cbu), ct) ?? new BankAccount(bank, cuit, cbu, benefit, []);
-        account = account with { Benefit = benefit, History = [.. account.History.Where(h => h.From != from), new AccountState(state, from)] };
-        account.History.Sort((a, b) => a.From.CompareTo(b.From));
-        await store.PutAsync(Accounts, Key(bank, cuit, cbu), account, ct);
-        return account;
-    }
 
     public static Task SeedAsync(IDocumentStore store, long bank, CancellationToken ct) => Task.WhenAll(
         store.SeedAsync<BankAccount>($"{Accounts}/{bank}", Accounts,
