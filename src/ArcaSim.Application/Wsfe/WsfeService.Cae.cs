@@ -128,8 +128,7 @@ public sealed partial class WsfeService
             else if (type is null) errors.Add(catalog.For(method, 10007).ToErr());
         }
 
-        var point = issuer?.FindPointOfSale(header.PtoVta);
-        var usable = point is not null && point.Kind == expectedKind && !point.Blocked && !(point.DeactivatedOn <= today);
+        var usable = issuer?.CanIssueFrom(header.PtoVta, expectedKind, today) == true;
         if (header.PtoVta is >= 1 and <= VoucherLimits.MaxPointOfSale && !usable) errors.Add(catalog.For(method, caea ? 701 : 10005).ToErr());
         return errors;
     }

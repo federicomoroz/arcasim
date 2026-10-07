@@ -31,6 +31,13 @@ public enum PointOfSaleKind
 
 public sealed record PointOfSale(int Number, PointOfSaleKind Kind, bool Blocked = false, DateOnly? DeactivatedOn = null);
 
+public static class VatConditions
+{
+    /// <summary>The three monotributo regimes, which the manuals' rules treat as one: the general, the social and the promoted independent worker.</summary>
+    public static bool IsMonotributo(this VatCondition condition) =>
+        condition is VatCondition.Monotributo or VatCondition.MonotributistaSocial or VatCondition.MonotributoTrabajadorIndependientePromovido;
+}
+
 /// <summary>
 /// The ranges the invoicing manuals give a point of sale (1 to 99998) and a
 /// voucher number (1 to 99999999). A rule whose manual words its range another
@@ -74,6 +81,10 @@ public sealed class Taxpayer
     }
 
     public PointOfSale? FindPointOfSale(int number) => _pointsOfSale.FirstOrDefault(p => p.Number == number);
+
+    /// <summary>Whether the point of sale exists for that kind of voucher, is not blocked and is not yet deactivated on that day.</summary>
+    public bool CanIssueFrom(int number, PointOfSaleKind kind, DateOnly today) =>
+        FindPointOfSale(number) is { } point && point.Kind == kind && !point.Blocked && !(point.DeactivatedOn <= today);
 
     public void AddPointOfSale(PointOfSale pointOfSale)
     {

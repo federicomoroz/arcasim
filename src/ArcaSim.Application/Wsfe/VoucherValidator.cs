@@ -100,7 +100,7 @@ public sealed class VoucherValidator(
                 if (d.DocTipo != 80) add(Rule.ClassADocumentType);
                 else if (unknownNumber) add(Rule.ReceiverInactiveClassA);
                 else if (receiver is not null && !IsActiveInVatOrMonotributo(receiver)) add(Rule.ReceiverNotInVatClassA);
-                if (receiver is not null && IsMonotributo(receiver.VatCondition)) add(Rule.MonotributoReceiver);
+                if (receiver is not null && receiver.VatCondition.IsMonotributo()) add(Rule.MonotributoReceiver);
                 break;
 
             case VoucherClass.B:
@@ -132,11 +132,8 @@ public sealed class VoucherValidator(
         if (d.DocNro == issuerCuit) add(Rule.SameAsIssuer);
     }
 
-    private static bool IsMonotributo(VatCondition condition) =>
-        condition is VatCondition.Monotributo or VatCondition.MonotributistaSocial or VatCondition.MonotributoTrabajadorIndependientePromovido;
-
     private static bool IsActiveInVatOrMonotributo(Taxpayer receiver) =>
-        receiver.Active && (receiver.VatCondition == VatCondition.ResponsableInscripto || IsMonotributo(receiver.VatCondition));
+        receiver.Active && (receiver.VatCondition == VatCondition.ResponsableInscripto || receiver.VatCondition.IsMonotributo());
 
     /// <summary>CbteFch around the day of the request (wsfev1.md §4.2). CAEA vouchers are checked against the CAEA's validity instead.</summary>
     private void CheckDateRange(FEDetRequest d, VoucherTypeInfo type, DateOnly today, List<Finding> findings, Action<Rule> add)
@@ -336,23 +333,4 @@ public sealed class VoucherValidator(
     }
 
     private static decimal Money(double value) => (decimal)value;
-}
-
-/// <summary>The arithmetic rules of the manual's "Margen de error" (wsfev1.md §4.3).</summary>
-public static class Amounts
-{
-    /// <summary>Equal within an absolute error of 0.01 per added line, or a relative error of 0.01 %.</summary>
-    public static bool WithinMargin(decimal expected, decimal actual, int lines)
-    {
-        var absolute = Math.Abs(expected - actual);
-        if (absolute <= 0.01m * Math.Max(lines, 1)) return true;
-        return actual != 0 && absolute / Math.Abs(actual) <= 0.0001m;
-    }
-
-    /// <summary>At most the given integer digits and decimals, as in "Double (13+2)".</summary>
-    public static bool HasPrecision(double value, int integers, int decimals)
-    {
-        var amount = Math.Abs((decimal)value);
-        return Math.Round(amount, decimals) == amount && Math.Truncate(amount).ToString().Length <= integers;
-    }
 }

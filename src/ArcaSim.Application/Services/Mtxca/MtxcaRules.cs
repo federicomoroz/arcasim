@@ -295,7 +295,7 @@ public sealed partial class MtxcaRules(
     }
 
     private static bool Usable(Taxpayer? issuer, int number, PointOfSaleKind kind, DateOnly today) =>
-        issuer?.FindPointOfSale(number) is { } point && point.Kind == kind && !point.Blocked && !(point.DeactivatedOn <= today);
+        issuer?.CanIssueFrom(number, kind, today) == true;
 
     /// <summary>The issuer's current activities, from the padrón; unknown with open access, where any activity goes.</summary>
     private IReadOnlyCollection<long>? Activities(Taxpayer? issuer) =>

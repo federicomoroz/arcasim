@@ -25,7 +25,7 @@ public sealed class PadronA4Rules(PadronDirectory directory, IClock clock) : ISe
         var period = PadronDirectory.PeriodOf(taxpayer);
         var registered = PadronRules.Timestamp(taxpayer.Profile.RegisteredOn ?? new DateOnly(period / 100, period % 100, 1));
         var (activityId, activity) = PadronDirectory.ActivityOf(taxpayer);
-        var monotributo = PadronRules.IsMonotributo(taxpayer.VatCondition);
+        var monotributo = taxpayer.VatCondition.IsMonotributo();
 
         var persona = new XElement("persona",
             monotributo ? null : new XElement("actividad",
@@ -142,13 +142,10 @@ internal static class PadronRules
             ? call.Fault("La Clave (CUIT/CUIL) consultada es inexistente")
             : call.Fault("El Id de la persona no es valido");
 
-    public static bool IsMonotributo(VatCondition condition) =>
-        condition is VatCondition.Monotributo or VatCondition.MonotributistaSocial or VatCondition.MonotributoTrabajadorIndependientePromovido;
-
     /// <summary>The taxes the padrón shows for a VAT condition, with the ids the constancia uses.</summary>
     public static IEnumerable<(int Id, string Description)> TaxesOf(Taxpayer taxpayer)
     {
-        if (IsMonotributo(taxpayer.VatCondition))
+        if (taxpayer.VatCondition.IsMonotributo())
         {
             yield return (20, "MONOTRIBUTO");
             yield break;

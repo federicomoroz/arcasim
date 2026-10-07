@@ -229,9 +229,9 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
         }
         if (type.Id is 1 or 2 or 3 or 51 or 52 or 53 && receiver is { Active: true })
         {
-            if (receiver.VatCondition is not (VatCondition.ResponsableInscripto or VatCondition.Exento) && !IsMonotributo(receiver.VatCondition))
+            if (receiver.VatCondition is not (VatCondition.ResponsableInscripto or VatCondition.Exento) && !receiver.VatCondition.IsMonotributo())
                 add(MtxcaRule.ReceiverNotInVat);
-            if (IsMonotributo(receiver.VatCondition)) add(MtxcaRule.MonotributoReceiver);
+            if (receiver.VatCondition.IsMonotributo()) add(MtxcaRule.MonotributoReceiver);
         }
 
         if (classB && v.DocType == 80 && v.DocNumber == NotCategorized && (v.Net ?? 0) + v.Subtotals.Sum(s => s.Amount) > 0
@@ -245,9 +245,6 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
         else if (tables.ReceiverConditions(type).All(c => c.Code != condition))
             add(MtxcaRule.ReceiverConditionClass);
     }
-
-    private static bool IsMonotributo(VatCondition condition) =>
-        condition is VatCondition.Monotributo or VatCondition.MonotributistaSocial or VatCondition.MonotributoTrabajadorIndependientePromovido;
 
     private async Task CheckCurrencyAsync(MtxcaVoucherInput v, MtxcaVoucherType type, DateOnly today, Action<MtxcaRule> add, CancellationToken ct)
     {
