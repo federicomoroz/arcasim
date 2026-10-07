@@ -96,6 +96,14 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
     }
 
     /// <summary>
+    /// One operation at a time on one document, by its COE: a void, an
+    /// adjustment, a counterdocument or the use of a certificate reads the
+    /// document as the last one left it. The lock lives apart from the series'
+    /// (its own name), and they nest in that order: the document, then the series.
+    /// </summary>
+    private Task<IDisposable> LockAsync(long coe, CancellationToken ct) => locks.AcquireAsync($"{Service}.coe", coe, 0, 0, ct);
+
+    /// <summary>
     /// Numbers and stores a new document: the order number must be the last
     /// + 1 of its series, the COE is new, and nothing is kept when it fails.
     /// </summary>
@@ -188,6 +196,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
     private async Task<ContractAnswer> VoidAsync(ServiceCall call, string kind, string otherCuit, CancellationToken ct)
     {
         var coe = call.Request.Long("coe");
+        using var gate = await LockAsync(coe, ct);
         var document = await ByCoeAsync(coe, ct);
         (long Code, string Text)? refusal = document switch
         {
@@ -210,7 +219,9 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
         {
             result.Child("pdf")?.Remove();
             fill.Done();
-            var errors = call.Error(r.Code, r.Text).Body!.Descendants("errores").First();
+            var rejection = call.Error(r.Code, r.Text);
+            // The refusal's error block goes into the answer built here; a response with none is refused with the fault.
+            if (rejection.Body?.Descendants("errores").FirstOrDefault() is not { } errors) return rejection;
             result.Add(new XElement(errors));
             return call.Ok(fill.Root);
         }
@@ -236,6 +247,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
     private async Task<ContractAnswer> CounterdocumentAsync(ServiceCall call, CancellationToken ct)
     {
         var basis = call.Request.Child("anulacionBase") ?? new XElement("anulacionBase");
+        using var gate = await LockAsync(basis.Long("coeAnular"), ct);
         var original = await ByCoeAsync(basis.Long("coeAnular"), ct);
         if (original is null) return call.Error(600, Codes.NoData);
         if (original.Cuit != call.Cuit) return call.Error(1510, Codes.VoidOnlyOwn);
@@ -271,6 +283,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
     private async Task<ContractAnswer> AdjustAsync(ServiceCall call, CancellationToken ct)
     {
         var basis = call.Request.Child("ajusteBase") ?? new XElement("ajusteBase");
+        using var gate = await LockAsync(basis.Long("coeAjustado"), ct);
         var adjusted = await ByCoeAsync(basis.Long("coeAjustado"), ct);
         if (adjusted is null || adjusted.State != "AC" || adjusted.Kind is Secondary or Certificate)
             return call.Error(1908, Codes.AdjustedMustExist);
@@ -464,8 +477,12 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
         // A retiro or transferencia uses the deposit certificates it names: they can no longer be voided (3500).
         if (answer.Body?.Descendants("coe").FirstOrDefault() is { } issued && answer.Body.Descendants("errores").FirstOrDefault() is null)
             foreach (var used in call.Request.Child("retiroTransferencia")?.Elements("certificadoDeposito") ?? [])
-                if (await ByCoeAsync(used.Long("coeCertificadoDeposito"), ct) is { Kind: Certificate } deposit)
+            {
+                var coe = used.Long("coeCertificadoDeposito");
+                using var gate = await LockAsync(coe, ct);
+                if (await ByCoeAsync(coe, ct) is { Kind: Certificate } deposit)
                     await SaveAsync(deposit with { UsedBy = long.Parse(issued.Value, CultureInfo.InvariantCulture) }, ct);
+            }
         return answer;
     }
 
@@ -492,7 +509,9 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
     /// </summary>
     private async Task<ContractAnswer> CertificateVoidAsync(ServiceCall call, bool confirm, CancellationToken ct)
     {
-        var document = await ByCoeAsync(call.Request.Long("coe"), ct);
+        var coe = call.Request.Long("coe");
+        using var gate = await LockAsync(coe, ct);
+        var document = await ByCoeAsync(coe, ct);
         if (document is null || document.Kind != Certificate) return call.Error(600, Codes.NoData);
         if (call.Cuit != (confirm ? Depositor(document) : document.Cuit)) return call.Error(3502, Codes.CertificatePermission);
         if (!confirm && document.UsedBy is not null) return call.Error(3500, Codes.CertificateInUse);
