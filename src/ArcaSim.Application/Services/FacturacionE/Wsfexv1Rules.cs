@@ -119,8 +119,7 @@ public sealed class Wsfexv1Rules : IServiceBehavior
     private async Task<decimal> RateOfAsync(ExportVoucher voucher, DateOnly date, CancellationToken ct)
     {
         if (voucher.Rate is > 0) return voucher.Rate.Value;
-        if (voucher.Currency == "PES") return 1;
-        return voucher.Currency is { } currency && await _rates.RateAsync(currency, Fev1Dates.PreviousBusinessDay(date), ct) is { } official
+        return voucher.Currency is { } currency && await _rates.QuoteAsync(currency, Fev1Dates.PreviousBusinessDay(date), ct) is { } official
             ? official.Rate
             : 0;
     }
@@ -143,20 +142,16 @@ public sealed class Wsfexv1Rules : IServiceBehavior
     }
 
     /// <summary>
-    /// Whether the issuer has the point of sale for export web services. With
+    /// Whether the issuer can use the point of sale for export web services
+    /// today: it exists for CAE, is not blocked and is not yet deactivated (a
+    /// deactivation date still to come does not block it, as in WSFEv1). With
     /// open access, an issuer or point of sale ArcaSim has not seen is created.
     /// </summary>
     private async Task<bool> ExportPointOfSaleAsync(long cuit, int number, CancellationToken ct)
     {
         if (number is < 1 or > VoucherLimits.MaxPointOfSale) return false;
-        var issuer = await _taxpayers.FindAsync(cuit, ct);
-        if (_settings.OpenAccess && (issuer is null ? Cuits.IsValid(cuit) : issuer.FindPointOfSale(number) is null))
-        {
-            issuer ??= new Taxpayer(cuit, $"Contribuyente {cuit}", VatCondition.ResponsableInscripto);
-            issuer.AddPointOfSale(new PointOfSale(number, PointOfSaleKind.WebServiceCae));
-            await _taxpayers.SaveAsync(issuer, ct);
-        }
-        return issuer is { Active: true } && issuer.FindPointOfSale(number) is { Kind: PointOfSaleKind.WebServiceCae, Blocked: false, DeactivatedOn: null };
+        var issuer = await _taxpayers.FindOrOpenAsync(_settings, cuit, number, PointOfSaleKind.WebServiceCae, firstClass: null, ct);
+        return issuer is { Active: true } && issuer.CanIssueFrom(number, PointOfSaleKind.WebServiceCae, _clock.Today());
     }
 
     // ---- Queries ---------------------------------------------------------------------
@@ -250,10 +245,7 @@ public sealed class Wsfexv1Rules : IServiceBehavior
         if (!Fev1Dates.TryParse(call.Request.Str("Fecha_CTZ"), out var day)) return Fail(call, 2054);
         var rated = new List<(string Id, string Desc, decimal Rate, DateOnly Day)>();
         foreach (var currency in _tables.Currencies)
-        {
-            if (currency.Id == "PES") rated.Add((currency.Id, currency.Desc, 1, day));
-            else if (await _rates.RateAsync(currency.Id, day, ct) is { } rate) rated.Add((currency.Id, currency.Desc, rate.Rate, rate.Day));
-        }
+            if (await _rates.QuoteAsync(currency.Id, day, ct) is { } rate) rated.Add((currency.Id, currency.Desc, rate.Rate, rate.Day));
         return Table(call, rated, "ClsFEXResponse_Mon_CON_Cotizacion",
             r => [("Mon_Id", r.Id), ("Mon_Ds", r.Desc), ("Mon_ctz", r.Rate), ("Fecha_ctz", Fev1Dates.Format(r.Day))]);
     }
@@ -269,11 +261,10 @@ public sealed class Wsfexv1Rules : IServiceBehavior
             return Fail(call, 1014, "El campo Mon_id no es valido.");
 
         var ns = Ns(call);
-        var rate = currency == "PES" ? (1m, day) : await _rates.RateAsync(currency, day, ct);
-        if (rate is not { } found) return Fail(call, 1014, "No existe cotizacion para la moneda y la fecha informadas.");
+        if (await _rates.QuoteAsync(currency, day, ct) is not { } found) return Fail(call, 1014, "No existe cotizacion para la moneda y la fecha informadas.");
         return Answer(call, new XElement(ns + "FEXResultGet",
-            new XElement(ns + "Mon_ctz", found.Item1),
-            new XElement(ns + "Mon_fecha", Fev1Dates.Format(found.Item2))));
+            new XElement(ns + "Mon_ctz", found.Rate),
+            new XElement(ns + "Mon_fecha", Fev1Dates.Format(found.Day))));
     }
 
     private ContractAnswer CheckPermit(ServiceCall call)

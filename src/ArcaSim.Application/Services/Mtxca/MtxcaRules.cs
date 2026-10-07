@@ -107,7 +107,7 @@ public sealed partial class MtxcaRules(
         var today = clock.Today();
         var date = voucher.Date ?? today;
         var type = MtxcaTables.VoucherType(voucher.Type);
-        var issuer = await IssuerAsync(call.Cuit, voucher.PointOfSale, PointOfSaleKind.WebServiceCae, ct);
+        var issuer = await IssuerAsync(call.Cuit, voucher.PointOfSale, PointOfSaleKind.WebServiceCae, ct, ClassOf(voucher.Type));
 
         var findings = new List<MtxcaFinding>();
         if (issuer is not { Active: true }) findings.Add(MtxcaCodes.Error(MtxcaTable.Cae, 10000));
@@ -244,7 +244,7 @@ public sealed partial class MtxcaRules(
         var currency = call.Request.Text("codigoMoneda") ?? "";
         if (!_tables.HasCurrency(currency)) return QueryError(call, 1600);
         var day = call.Request.Date("fechaCotizacion") ?? clock.Today();
-        var rate = currency == "PES" ? 1m : (await rates.RateAsync(currency, day, ct))?.Rate;
+        var rate = (await rates.QuoteAsync(currency, day, ct))?.Rate;
         return call.Ok(new XElement(call.Operation.Output, rate is { } value ? new XElement("cotizacionMoneda", value) : null));
     }
 
@@ -272,27 +272,22 @@ public sealed partial class MtxcaRules(
 
     // ---- Shared ----------------------------------------------------------------------
 
-    /// <summary>The issuer; with open access, created with the point of sale on first use, as WSFEv1 does.</summary>
-    private async Task<Taxpayer?> IssuerAsync(long cuit, int pointOfSale, PointOfSaleKind kind, CancellationToken ct)
-    {
-        var issuer = await taxpayers.FindAsync(cuit, ct);
-        if (!settings.OpenAccess) return issuer;
+    /// <summary>
+    /// The issuer; with open access, created with the point of sale on first use,
+    /// as WSFEv1 does: a Monotributo when its first voucher is class C, a
+    /// Responsable Inscripto otherwise.
+    /// </summary>
+    private Task<Taxpayer?> IssuerAsync(long cuit, int pointOfSale, PointOfSaleKind kind, CancellationToken ct, VoucherClass? firstClass = null) =>
+        taxpayers.FindOrOpenAsync(settings, cuit, pointOfSale, kind, firstClass, ct);
 
-        var changed = false;
-        if (issuer is null)
-        {
-            if (!Cuits.IsValid(cuit)) return null;
-            issuer = new Taxpayer(cuit, $"Contribuyente {cuit}", VatCondition.ResponsableInscripto);
-            changed = true;
-        }
-        if (pointOfSale is >= 1 and <= VoucherLimits.MaxPointOfSale && issuer.FindPointOfSale(pointOfSale) is null)
-        {
-            issuer.AddPointOfSale(new PointOfSale(pointOfSale, kind));
-            changed = true;
-        }
-        if (changed) await taxpayers.SaveAsync(issuer, ct);
-        return issuer;
-    }
+    /// <summary>
+    /// The class of a voucher type MTXCA authorizes, which is A, B or A with the
+    /// retention legend; none for any other type (class C is not MTXCA's: error
+    /// 100), so a wrong first request does not open a Monotributo that 10003
+    /// would then reject.
+    /// </summary>
+    private VoucherClass? ClassOf(int voucherType) =>
+        MtxcaTables.VoucherType(voucherType) is null ? null : parameters.VoucherType(voucherType)?.Class;
 
     private static bool Usable(Taxpayer? issuer, int number, PointOfSaleKind kind, DateOnly today) =>
         issuer?.CanIssueFrom(number, kind, today) == true;

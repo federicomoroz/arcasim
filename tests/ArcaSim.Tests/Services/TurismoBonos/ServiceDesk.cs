@@ -65,4 +65,17 @@ internal sealed class ServiceDesk
 
     public Task SetRateAsync(string currency, DateOnly day, decimal rate) =>
         _sim.Http.PutAsJsonAsync("/arcasim/api/rates", new { currency, day, rate }).ContinueWith(t => t.Result.EnsureSuccessStatusCode());
+
+    /// <summary>Registers (or replaces) one of the issuer's CAE points of sale, with the day ARCA will deactivate it.</summary>
+    public async Task PutPointOfSaleAsync(int number, DateOnly deactivatedOn)
+    {
+        var response = await _sim.Http.PutAsJsonAsync($"/arcasim/api/taxpayers/{Issuer}", new
+        {
+            name = "Hotel del Sur SA",
+            vatCondition = "ResponsableInscripto",
+            active = true,
+            pointsOfSale = new[] { new { number, kind = "WebServiceCae", blocked = false, deactivatedOn } },
+        });
+        response.EnsureSuccessStatusCode();
+    }
 }

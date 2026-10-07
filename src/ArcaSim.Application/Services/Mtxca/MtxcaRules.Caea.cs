@@ -35,9 +35,10 @@ public sealed partial class MtxcaRules
                     errors.Add(MtxcaCodes.Error(MtxcaTable.Request, 10027));
             }
         }
-        if (period is < 190_001 or > 999_912 || period % 100 is < 1 or > 12) errors.Add(MtxcaCodes.Error(MtxcaTable.Request, 600));
+        var periodValid = period is >= 190_001 and <= 999_912 && period % 100 is >= 1 and <= 12;
+        if (!periodValid) errors.Add(MtxcaCodes.Error(MtxcaTable.Request, 600));
         if (order is not (1 or 2)) errors.Add(MtxcaCodes.Error(MtxcaTable.Request, 601));
-        var fortnight = Fortnight(period, order);
+        (DateOnly From, DateOnly To)? fortnight = periodValid && order is 1 or 2 ? Fortnight(period, order) : null;
         if (fortnight is { } days && (today < days.From.AddDays(-5) || today > days.To)) errors.Add(MtxcaCodes.Error(MtxcaTable.Request, 602));
         if (errors.Count > 0 || fortnight is not { } granted) return CaeaErrors(call, errors);
 
@@ -60,10 +61,9 @@ public sealed partial class MtxcaRules
         }
     }
 
-    /// <summary>The days a fortnight covers: orden 1 is the 1st to the 15th, 2 the 16th to the end of the month.</summary>
-    private static (DateOnly From, DateOnly To)? Fortnight(int period, short order)
+    /// <summary>The days a valid fortnight covers: orden 1 is the 1st to the 15th, 2 the 16th to the end of the month.</summary>
+    private static (DateOnly From, DateOnly To) Fortnight(int period, short order)
     {
-        if (period is < 190_001 or > 999_912 || period % 100 is < 1 or > 12 || order is not (1 or 2)) return null;
         var first = new DateOnly(period / 100, period % 100, 1);
         return order == 1 ? (first, first.AddDays(14)) : (first.AddDays(15), first.AddMonths(1).AddDays(-1));
     }
@@ -183,7 +183,7 @@ public sealed partial class MtxcaRules
         var today = clock.Today();
         var date = voucher.Date ?? today;
         var type = MtxcaTables.VoucherType(voucher.Type);
-        var issuer = await IssuerAsync(call.Cuit, voucher.PointOfSale, PointOfSaleKind.WebServiceCaea, ct);
+        var issuer = await IssuerAsync(call.Cuit, voucher.PointOfSale, PointOfSaleKind.WebServiceCaea, ct, ClassOf(voucher.Type));
         var caea = voucher.AuthorizationCode is { } sent ? await _state.FindCaeaAsync(sent, ct) : null;
 
         var findings = new List<MtxcaFinding>();

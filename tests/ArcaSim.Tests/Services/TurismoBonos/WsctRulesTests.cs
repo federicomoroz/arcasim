@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
+using ArcaSim.Domain;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArcaSim.Tests.Services.TurismoBonos;
@@ -139,6 +140,23 @@ public class WsctRulesTests
         var consulted = await desk.CallAsync("consultarComprobanteTipoPVentaNro",
             Auth(desk) + "<codigoTipoComprobante>197</codigoTipoComprobante><numeroPuntoVenta>1</numeroPuntoVenta><numeroComprobante>1</numeroComprobante>");
         Assert.Equal(["807"], Codes(consulted, "arrayObservaciones"));
+    }
+
+    [Fact]
+    public async Task In_production_a_point_of_sale_still_to_be_deactivated_can_issue_and_one_already_deactivated_cannot()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var desk = await OpenAsync(sim);
+        sim.Settings.Environment = ArcaEnvironment.Produccion;
+        await desk.PutPointOfSaleAsync(1, new DateOnly(2026, 12, 31));
+        await desk.PutPointOfSaleAsync(2, new DateOnly(2026, 9, 30));
+        string Last(int point) => Auth(desk) + $"<codigoTipoComprobante>195</codigoTipoComprobante><numeroPuntoVenta>{point}</numeroPuntoVenta>";
+
+        var coming = await desk.CallAsync("consultarUltimoComprobanteAutorizado", Last(1));
+        var gone = await desk.CallAsync("consultarUltimoComprobanteAutorizado", Last(2));
+
+        Assert.Equal(["1002"], Codes(coming));
+        Assert.Equal(["1001"], Codes(gone));
     }
 
     [Fact]

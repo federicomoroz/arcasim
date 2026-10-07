@@ -193,9 +193,14 @@ public sealed class WsctRules(
 
     private bool Production => settings.Environment == ArcaEnvironment.Produccion;
 
+    /// <summary>
+    /// Whether the point of sale can issue today: in production, one of the
+    /// issuer's web service points that is not blocked and not yet deactivated
+    /// (104: "vigente, no bloqueado y no dado de baja"; a deactivation date still
+    /// to come does not block it, as in WSFEv1).
+    /// </summary>
     private async Task<bool> PointOfSaleUsableAsync(long cuit, int pointOfSale, CancellationToken ct) =>
-        !Production || (await taxpayers.FindAsync(cuit, ct))?.PointsOfSale.Any(p =>
-            p.Number == pointOfSale && p.Kind == PointOfSaleKind.WebServiceCae && !p.Blocked && p.DeactivatedOn is null) == true;
+        !Production || (await taxpayers.FindAsync(cuit, ct))?.CanIssueFrom(pointOfSale, PointOfSaleKind.WebServiceCae, clock.Today()) == true;
 
     // ---- Queries ------------------------------------------------------------------------
 
@@ -259,7 +264,7 @@ public sealed class WsctRules(
         var currency = call.Request.Field("codigoMoneda");
         if (parameters.Currencies.All(c => c.Id != currency)) return Return(call, Errors([WsctCodes.Note(210)]));
         var day = Figures.ParseIsoDay(call.Request.Field("fechaCotizacion")) ?? clock.Today();
-        var quote = currency == "PES" ? (1m, day) : await rates.RateAsync(currency!, day, ct);
+        var quote = await rates.QuoteAsync(currency!, day, ct);
         return quote is { } found ? Return(call, new XElement("cotizacionMoneda", Figures.Number(found.Rate))) : Return(call);
     }
 

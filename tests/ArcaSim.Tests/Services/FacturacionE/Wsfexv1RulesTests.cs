@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Xml.Linq;
 using static ArcaSim.Tests.Services.FacturacionE.FacturacionESoap;
 
@@ -120,6 +121,39 @@ public class Wsfexv1RulesTests
 
         Assert.Equal("1510", refused.Value("FEXErr/ErrCode"));
         Assert.Equal("1607", last.Value("FEXErr/ErrCode"));
+    }
+
+    [Fact]
+    public async Task A_point_of_sale_still_to_be_deactivated_can_issue_and_one_already_deactivated_cannot()
+    {
+        var (sim, _, soap) = await StartAsync();
+        await using var _s = sim;
+        await PutPointOfSaleAsync(sim, 1, new DateOnly(2026, 12, 31));
+        await PutPointOfSaleAsync(sim, 2, new DateOnly(2026, 9, 30));
+
+        var issued = await soap.CallAsync(Fex, "FEXAuthorize", Export(id: 1, number: 1));
+        var refused = await soap.CallAsync(Fex, "FEXAuthorize", Export(id: 2, number: 1, pointOfSale: 2));
+        var last = await soap.CallAsync(Fex, "FEXGetLast_CMP", LastCmp(2, 19));
+
+        Assert.Equal("A", issued.Value("FEXResultAuth/Resultado"));
+        Assert.Equal("1510", refused.Value("FEXErr/ErrCode"));
+        Assert.Equal("1607", last.Value("FEXErr/ErrCode"));
+    }
+
+    [Fact]
+    public async Task With_open_access_the_first_export_invoice_creates_a_Responsable_Inscripto_with_its_point_of_sale()
+    {
+        await using var sim = ArcaSimHarness.Start(open: true);
+        sim.Clock.Freeze(new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3)));
+        var soap = await ForAsync(sim);
+
+        var result = await soap.CallAsync(Fex, "FEXAuthorize", Export(id: 1, number: 1, pointOfSale: 7));
+        var taxpayer = await sim.Http.GetFromJsonAsync<System.Text.Json.JsonElement>($"/arcasim/api/taxpayers/{Issuer}");
+
+        Assert.Equal("A", result.Value("FEXResultAuth/Resultado"));
+        Assert.Equal("ResponsableInscripto", taxpayer.GetProperty("vatCondition").GetString());
+        Assert.Contains(taxpayer.GetProperty("pointsOfSale").EnumerateArray(),
+            p => p.GetProperty("number").GetInt32() == 7 && p.GetProperty("kind").GetString() == "WebServiceCae");
     }
 
     [Fact]

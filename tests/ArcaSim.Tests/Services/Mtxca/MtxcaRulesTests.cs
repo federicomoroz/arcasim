@@ -1,3 +1,5 @@
+using System.Net.Http.Json;
+using System.Text.Json;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
@@ -114,6 +116,40 @@ public class MtxcaRulesTests
 
         Assert.Equal(["115", "116"], Codes(under, "arrayErrores").Order());
         Assert.Equal("A", over.Element("resultado")!.Value);
+    }
+
+    [Fact]
+    public async Task With_open_access_the_first_voucher_creates_a_Responsable_Inscripto_with_its_point_of_sale()
+    {
+        await using var sim = ArcaSimHarness.Start(open: true);
+        sim.Clock.Freeze(new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3)));
+        var client = await MtxcaClient.LoginAsync(sim);
+
+        var answer = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{FacturaA(1)}</comprobanteCAERequest>");
+        var taxpayer = await sim.Http.GetFromJsonAsync<JsonElement>($"/arcasim/api/taxpayers/{Caller}");
+
+        Assert.Equal("A", answer.Element("resultado")!.Value);
+        Assert.Equal("ResponsableInscripto", taxpayer.GetProperty("vatCondition").GetString());
+        Assert.Contains(taxpayer.GetProperty("pointsOfSale").EnumerateArray(),
+            p => p.GetProperty("number").GetInt32() == 1 && p.GetProperty("kind").GetString() == "WebServiceCae");
+    }
+
+    [Fact]
+    public async Task A_first_voucher_of_a_type_wsmtxca_does_not_authorize_creates_no_Monotributo()
+    {
+        await using var sim = ArcaSimHarness.Start(open: true);
+        sim.Clock.Freeze(new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3)));
+        var client = await MtxcaClient.LoginAsync(sim);
+        var facturaC = FacturaA(1).Replace("<codigoTipoComprobante>1<", "<codigoTipoComprobante>11<");
+
+        // A Factura C is WSFEv1's way to open a Monotributo, but not an MTXCA type (100): the issuer stays what 10003 accepts.
+        var refused = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{facturaC}</comprobanteCAERequest>");
+        var taxpayer = await sim.Http.GetFromJsonAsync<JsonElement>($"/arcasim/api/taxpayers/{Caller}");
+        var next = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{FacturaA(1)}</comprobanteCAERequest>");
+
+        Assert.Equal(["100"], Codes(refused, "arrayErrores"));
+        Assert.Equal("ResponsableInscripto", taxpayer.GetProperty("vatCondition").GetString());
+        Assert.Equal("A", next.Element("resultado")!.Value);
     }
 
     [Fact]
