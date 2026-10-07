@@ -39,8 +39,13 @@ internal static class Dia
     /// it, with the counters the refused answer still carries back at zero and
     /// no sample filler around it.
     /// </summary>
-    /// <param name="additional">What goes in DescAdicErr: the item of an array that was refused.</param>
-    public static ContractAnswer Fail(this ServiceCall call, long code, string text, string? additional = null)
+    /// <param name="additional">
+    /// What goes in the block's additional text: the item of an array that was refused. call.Error has
+    /// already written the catalog's fixed value of that element (the server tag the DIA appends, or
+    /// nothing), and the item replaces it.
+    /// </param>
+    /// <param name="additionalField">The element of that text: DescAdicErr in the DIA's Recibo, descripcionAdicional in wEnysa's MsgError.</param>
+    public static ContractAnswer Fail(this ServiceCall call, long code, string text, string? additional = null, string additionalField = "DescAdicErr")
     {
         var answer = call.Error(code, text);
         if (answer.Body is not { } body) return answer;
@@ -51,8 +56,8 @@ internal static class Dia
         body.Clean();
         if (additional is not null && block is not null)
         {
-            if (block.Elements().FirstOrDefault(e => e.Name.LocalName == "DescAdicErr") is { } existing) existing.Value = additional;
-            else block.Add(new XElement(codeElement!.Name.Namespace + "DescAdicErr", additional));
+            if (block.Elements().FirstOrDefault(e => e.Name.LocalName == additionalField) is { } existing) existing.Value = additional;
+            else block.Add(new XElement(codeElement!.Name.Namespace + additionalField, additional));
         }
         return answer;
     }

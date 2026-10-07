@@ -111,12 +111,7 @@ public sealed class WEnysaRules(IDocumentStore store, IClock clock) : IServiceBe
 
     private static ContractAnswer Correct(ServiceCall call) => call.Done(call.Sample().Receipt(0, "Operación correcta", "descripcion"));
 
-    private static ContractAnswer Error(ServiceCall call, long code, string text, string? field)
-    {
-        var answer = call.Fail(code, text);
-        if (field is null || answer.Body?.Descendants().FirstOrDefault(e => e.Name.LocalName == "descripcion") is not { } description) return answer;
-        if (description.ElementsAfterSelf().FirstOrDefault(e => e.Name.LocalName == "descripcionAdicional") is { } existing) existing.Value = field;
-        else description.AddAfterSelf(new XElement(description.Name.Namespace + "descripcionAdicional", field));
-        return answer;
-    }
+    /// <summary>A MsgError with the manual's code and text, and the field that was refused in descripcionAdicional.</summary>
+    private static ContractAnswer Error(ServiceCall call, long code, string text, string? field) =>
+        call.Fail(code, text, field, "descripcionAdicional");
 }
