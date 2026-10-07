@@ -447,18 +447,18 @@ It does not exist at ARCA: it sets up test scenarios. JSON, no authentication (i
 
 | Method and path | What it does |
 |---|---|
-| `GET /status` | Environment, manual version, access, clock and active failures |
+| `GET /status` | Environment, manual version, access, clock and the failures switched on (a service set back to normal no longer appears) |
 | `PUT /settings` | `environment` (`Homologacion`/`Produccion`), `manualVersion` (`V4_7`/`V4_8`) or `followCalendar`, `replayWindowEnabled`, `openAccess`, `finalConsumerIdentificationThreshold`, `maxRecordsPerRequest`, `caeLifetimeDays` |
-| `POST /reset` | Clears taxpayers, vouchers, failures, limits and activity, and goes back to real time |
+| `POST /reset` | Clears taxpayers, vouchers, failures, limits, activity and the sequences that number the services' texts, and goes back to real time |
 | `GET /taxpayers` · `GET /taxpayers/{cuit}` | Taxpayers |
 | `PUT /taxpayers/{cuit}` | Creates or updates: `name`, `vatCondition` (`ResponsableInscripto`, `Monotributo`, `Exento`…), `active`, `pointsOfSale` (`number`, `kind`: `WebServiceCae`, `WebServiceCaea` or `Other`; `blocked`; `deactivatedOn`) |
-| `POST /certificates` | `cuit`, `alias`, `services` (default `["wsfe"]`), and `csr` (returns the certificate as PEM) or `password` (returns a PFX with the key) |
+| `POST /certificates` | `cuit`, `alias`, `services` (default `["wsfe"]`), and `csr` (returns the certificate as PEM) or `password` (returns a PFX with the key). A CSR that does not read answers 400 and saves nothing |
 | `GET /ca` | ArcaSim's certification authority, as PEM |
 | `GET /authorizations` · `POST` · `DELETE` | Which alias may act for which CUIT on which service |
-| `PUT /chaos/{service}` | `down`, `delayMilliseconds`, `dropNextResponse`, `forceRejection` (code) for `wsfe` and `wsaa`; `down`, `delayMilliseconds` and `balancerMask` for the rest, by their id (`wsmtxca`, `wscpe`…) |
-| `GET /traffic` · `PUT /traffic/{service}` | Last-minute meter and limits: `requestsPerMinute`, `capacity`, `serviceTimeMilliseconds`, `queueLimit` |
+| `PUT /chaos/{service}` | `down`, `delayMilliseconds`, `dropNextResponse`, `forceRejection` (code) for `wsfe` and `wsaa`; `down`, `delayMilliseconds` and `balancerMask` for the rest, by their id (`wsmtxca`, `wscpe`, `seti-setipago-api`…). A name ArcaSim does not serve answers 404 |
+| `GET /traffic` · `PUT /traffic/{service}` | Last-minute meter and limits: `requestsPerMinute`, `capacity`, `serviceTimeMilliseconds`, `queueLimit`. A name ArcaSim does not serve answers 404 |
 | `POST /clock` · `DELETE /clock` | `freezeAt` (a moment) and/or `advanceMinutes`; `DELETE` goes back to real time |
-| `GET /vouchers?cuit=&limit=` | Issued vouchers |
+| `GET /vouchers?cuit=&limit=` | Issued vouchers (a negative `limit` answers 400) |
 | `GET /activity?limit=` | Live log: tickets, CAEs, rejections, saturated requests |
 | `PUT /rates` | `currency`, `day`, `rate`: the rate foreign currency validations use |
 | `GET /documents/{collection}?prefix=` · `GET`, `PUT`, `DELETE /documents/{collection}/{key}` | The state of the rest of the services ([§6](#6-the-rest-of-arcas-services)): read what they stored, or load before a test the registries ARCA's API cannot write |
@@ -538,4 +538,5 @@ The application's code does not change.
 - The **taxpayer registry** is fictitious: taxpayers are the ones loaded or created on use, and an unknown CUIT with a valid check digit counts as active.
 - **Exchange rates** are loaded by hand with `PUT /rates`; without one, the validations that depend on it are skipped.
 - Some of the manual's codes answer with the manual's text, because ARCA's was never captured.
+- A request no rule foresaw (a letter where a number goes, for example) gets the fault of that service's server, with its framework's default text (ASMX, CXF, the Java stacks, WSAA's `wsaa.internalError`, Spring Boot's error body), not a text captured from ARCA. Never an empty HTTP 500.
 - The **TLS** certificate cannot be the one for `*.afip.gov.ar`.
