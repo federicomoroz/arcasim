@@ -161,7 +161,7 @@ public sealed class WgesPrecintosRules(IDocumentStore store, IClock clock) : ISe
                 .Set("Estado", c.Estado)
                 .Set("CodAlarma", c.CodAlarma)
                 .Set("FUltEstado", c.FUltEstado)
-                .Set("FUltEvento", c.FUltEvento ?? Legajos.None);
+                .Set("FUltEvento", c.FUltEvento ?? Dia.NoDate);
             if (c.CodAlarma == "") row.Drop("CodAlarma");
         });
         return call.Done(answer);

@@ -167,11 +167,11 @@ public sealed class WGesInvRules(IDocumentStore store, IClock clock) : IServiceB
         {
             var transaction = await store.NextAsync("WGesINV.transacciones", ct);
             var number = await store.NextAsync("WGesINV.destinaciones", ct);
-            var id = $"{now:yy}001EC01{number:D6}{(char)('A' + number % 26)}";
+            var id = Dia.DeclarationOf(now.ArgentinaDate(), "001", "EC01", number);
             await store.PutAsync(Despachos, $"{cuit}/{id}",
-                new InvDespacho(cuit, "001", id, transaction, now.AddHours(-i - 1), 30000000007, "BODEGA DEL SIMULADOR SA"), ct);
+                new InvDespacho(cuit, "001", id, transaction, now.AddHours(-i - 1), Dia.SeededCompany, "BODEGA DEL SIMULADOR SA"), ct);
             if (i > 0) continue;
-            var form = new VuceaForm(cuit, await store.NextAsync("WGesINV.tramites", ct), transaction, id, 30000000007, now.AddHours(-1));
+            var form = new VuceaForm(cuit, await store.NextAsync("WGesINV.tramites", ct), transaction, id, Dia.SeededCompany, now.AddHours(-1));
             await store.PutAsync(Forms, $"{cuit}/{form.NroTramite:D10}", form, ct);
         }
     }

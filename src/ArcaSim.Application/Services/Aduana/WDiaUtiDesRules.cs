@@ -166,7 +166,7 @@ public sealed class WDiaUtiDesRules(IDocumentStore store, ITaxpayerRepository ta
         var next = target switch
         {
             "ZGSA" => new PemaUse(call.Cuit, id, destination, carrier, target, date, "SALI", date,
-                $"{date:yy}{AduanaOf(destination)}SALI{await store.NextAsync("WDiaUtiDES.salidas", ct):D6}", AduanaOf(destination)),
+                Dia.NumberOf(date, AduanaOf(destination), "SALI", await store.NextAsync("WDiaUtiDES.salidas", ct)), AduanaOf(destination)),
             "ZGAR" => use! with { Estado = target, FechaEstado = date, Operacion = "ARRI", FechaOperacion = date },
             _ => (use ?? new PemaUse(call.Cuit, id, destination, carrier, "", date, "", date, "", AduanaOf(destination)))
                 with { Estado = target, FechaEstado = date },

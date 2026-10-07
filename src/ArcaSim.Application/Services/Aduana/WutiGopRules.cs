@@ -87,8 +87,8 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
             .Set("CuitDesp", d.CuitDesp)
             .Set("CodDivisaFob", "DOL")
             .Set("FechOfic", d.FechOfic)
-            .Set("FechCump", Legajos.None)
-            .Set("FechVencDestSusp", Legajos.None)
+            .Set("FechCump", Dia.NoDate)
+            .Set("FechVencDestSusp", Dia.NoDate)
             .Set("MontoFobTotDol", d.MontoFob)
             .Set("MontoFob", d.MontoFob)
             .Set("CantDiasAutDestSusp", 0)
@@ -148,7 +148,7 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
         var answer = call.Sample().Receipt(0, Ok);
         var states = answer.Find("EstadosDeclaracion")!;
         foreach (var date in states.Elements().Where(e => e.Name.LocalName.StartsWith("Fech", StringComparison.Ordinal)))
-            date.Value = ContractXml.Format(Legajos.None);
+            date.Value = ContractXml.Format(Dia.NoDate);
         states.Set("IdDecla", d.IdDecla)
             .Set("CuitImpoExpo", d.CuitImpoExpo)
             .Set("CodEstDecla", d.CodEstDecla)
@@ -166,9 +166,9 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
         for (var i = 0; i < 2; i++)
         {
             var number = await store.NextAsync("WutiGOPDeclaraciones.declaraciones", ct);
-            var id = $"{now:yy}{aduana}IC04{number:D6}{(char)('A' + number % 26)}";
-            await store.PutAsync(Collection, place + id, new GopDeclaration(cuit, aduana, lugar, id, "IC04", 30000000007, "IMPORTADORA DEL SIMULADOR SA",
-                20222222223, now.AddHours(-2 - i), "OFIC", "VERDE", 3 - i, 15000m * (i + 1), 4200m * (i + 1)), ct);
+            var id = Dia.DeclarationOf(now.ArgentinaDate(), aduana, "IC04", number);
+            await store.PutAsync(Collection, place + id, new GopDeclaration(cuit, aduana, lugar, id, "IC04", Dia.SeededCompany, "IMPORTADORA DEL SIMULADOR SA",
+                Dia.SeededBroker, now.AddHours(-2 - i), "OFIC", "VERDE", 3 - i, 15000m * (i + 1), 4200m * (i + 1)), ct);
         }
     }
 }

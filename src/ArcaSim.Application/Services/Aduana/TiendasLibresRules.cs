@@ -113,7 +113,7 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
         await store.PutAsync(Movements, $"{call.Cuit}/{entry.Id}", entry with { Estado = "AUTO" }, ct);
         await AddAsync(call, entry.Aduana, entry.Lugar, entry.Items, ct);
         var salida = await MoveAsync(call, "SAL", entry.Aduana, entry.Lugar, entry.Comprobante, "AUTO", entry.Items, ct);
-        return Answer(call, r => r.Set("nroSalida", $"{clock.Now.ToArgentina():yy}{entry.Aduana}SALP{salida.Id.PadLeft(6, '0')}"));
+        return Answer(call, r => r.Set("nroSalida", Dia.NumberOf(clock.Today(), entry.Aduana, "SALP", long.Parse(salida.Id, CultureInfo.InvariantCulture))));
     }
 
     private async Task<XElement> SellAsync(ServiceCall call, XElement arg, CancellationToken ct)
@@ -254,7 +254,7 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
             row.Set("idDIFE", d.Id).Set("aduana", d.Aduana).Set("lugarOperativo", d.Lugar).Set("NCM", d.Item.Ncm).Set("codProducto", d.Item.Codigo)
                 .Set("descProducto", d.Item.Descripcion).Set("origen", d.Item.Origen).Set("cantidad", d.Item.Cantidad)
                 .Set("tipoComprobante", d.TipoComprobante).Set("nroComprobante", d.NroComprobante).Set("fecha", d.Fecha).Set("fechaVenc", d.Vencimiento)
-                .Set("codEstado", d.Estado).Set("fechaCobroLMAN", Legajos.None).Set("montoLMAN", 0).Set("idMovimiento", d.IdMovimiento);
+                .Set("codEstado", d.Estado).Set("fechaCobroLMAN", Dia.NoDate).Set("montoLMAN", 0).Set("idMovimiento", d.IdMovimiento);
             row.Repeat("DetalleJustificacionDIFE", d.Justificaciones, (j, value) => j
                 .Set("codJustificacion", value.Codigo).Set("textoJustificacion", value.Texto).Set("fecJustificacion", value.Fecha)
                 .Set("cantidadJustificacion", value.Cantidad));

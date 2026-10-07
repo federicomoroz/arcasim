@@ -19,6 +19,26 @@ internal static class Dia
 
     public const string NoData = "No hay datos para los criterios ingresados";
 
+    /// <summary>How the DIA writes a date that does not exist yet: 0001-01-01.</summary>
+    public static readonly DateTimeOffset NoDate = new(1, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+    /// <summary>The fictitious company (CUIT 30000000007) the seeds of the customs services import or export for.</summary>
+    public const long SeededCompany = 30000000007;
+
+    /// <summary>The fictitious customs broker (CUIT 20222222223) who declares for it.</summary>
+    public const long SeededBroker = 20222222223;
+
+    /// <summary>
+    /// A number as the DIA writes the ones ArcaSim makes: AA (year) BBB (aduana) CCCC (kind: SALI, SALP, SZP, IC04...)
+    /// and DDDDDD (sequence).
+    /// </summary>
+    public static string NumberOf(DateOnly day, string aduana, string kind, long sequence) =>
+        day.ToString("yy", CultureInfo.InvariantCulture) + aduana + kind + sequence.ToString("D6", CultureInfo.InvariantCulture);
+
+    /// <summary>A detailed declaration's number: NumberOf closed by a check letter (ArcaSim's own; the manuals give no rule).</summary>
+    public static string DeclarationOf(DateOnly day, string aduana, string kind, long sequence) =>
+        NumberOf(day, aduana, kind, sequence) + (char)('A' + sequence % 26);
+
     /// <summary>
     /// 42034's text. Each manual words it its own way: "Falta dato obligatorio X" (WDiaUtiDES.md, WGesINV.md) and,
     /// with the article, "Falta el dato obligatorio X" (wgestiendaslibres.md, wgesprecintosdepfis.md).

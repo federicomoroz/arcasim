@@ -139,7 +139,7 @@ public sealed class WdepMovimientosRules(IDocumentStore store, IClock clock) : I
         }
 
         var aduana = place.Split('/')[1];
-        var number = $"{clock.Now.ToArgentina():yy}{aduana}SZP{await store.NextAsync("wdepMovimientos.salidas", ct):D6}";
+        var number = Dia.NumberOf(clock.Today(), aduana, "SZP", await store.NextAsync("wdepMovimientos.salidas", ct));
         foreach (var (title, document) in documents) await store.PutAsync(Documents, $"{place}/{title}", document, ct);
         foreach (var container in leaving) await store.PutAsync(Containers, $"{place}/{container.Id}", container with { Salida = number }, ct);
         return new(0, Ok, NroSalida: number);
