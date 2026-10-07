@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using ArcaSim.Application;
 using ArcaSim.Application.Events;
 using ArcaSim.Application.Traffic;
@@ -23,13 +24,27 @@ public sealed class CertificatesController(KeyMaterial keys, IAccessRepository a
         if (!Cuits.IsValid(body.Cuit)) return BadRequest(new ErrorView($"El CUIT {body.Cuit} tiene mal el dígito verificador."));
         if (string.IsNullOrWhiteSpace(body.Alias)) return BadRequest(new ErrorView("Falta el alias."));
 
+        // The certificate first: a CSR that does not read leaves nothing saved behind it.
+        IActionResult issued;
+        if (!string.IsNullOrWhiteSpace(body.Csr))
+        {
+            try
+            {
+                issued = Ok(new { certificate = keys.IssueFromCsr(body.Csr, body.Cuit, body.Alias, clock.Now) });
+            }
+            catch (Exception ex) when (ex is CryptographicException or ArgumentException)
+            {
+                return BadRequest(new ErrorView($"El CSR no se puede leer: {ex.Message}"));
+            }
+        }
+        else
+        {
+            issued = File(keys.IssueWithKey(body.Cuit, body.Alias, body.Password ?? "", clock.Now), "application/x-pkcs12", $"arcasim-{body.Cuit}-{body.Alias}.pfx");
+        }
+
         await access.SaveAliasAsync(new ClientAlias(body.Cuit, body.Alias), ct);
         foreach (var service in body.Services ?? [WsfeService.Name])
             await access.SaveAuthorizationAsync(new ServiceAuthorization(body.Cuit, body.Alias, body.Cuit, service), ct);
-
-        if (!string.IsNullOrWhiteSpace(body.Csr))
-            return Ok(new { certificate = keys.IssueFromCsr(body.Csr, body.Cuit, body.Alias, clock.Now) });
-        var pfx = keys.IssueWithKey(body.Cuit, body.Alias, body.Password ?? "", clock.Now);
-        return File(pfx, "application/x-pkcs12", $"arcasim-{body.Cuit}-{body.Alias}.pfx");
+        return issued;
     }
 }

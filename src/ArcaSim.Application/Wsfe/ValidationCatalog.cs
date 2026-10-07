@@ -33,6 +33,8 @@ public sealed class ValidationCatalog
         var file = JsonSerializer.Deserialize<CatalogFile>(stream, EmbeddedData.Json)
             ?? throw new InvalidOperationException("codigos.json is empty.");
         var codes = new Dictionary<(string, int), Entry>();
+        // The manual numbers two FECAEARegInformativo checks 1445 (an FCE rejection and a date
+        // observation). No rule raises 1445, so the first stays; a test keeps it the only repeat.
         foreach (var entry in file.Codes)
             codes.TryAdd((entry.Method, entry.Code), entry);
         return new ValidationCatalog(file.Literals, codes);
