@@ -31,6 +31,33 @@ public abstract class StoreContractTests
         Assert.Null(await store.FindAsync(30000000007));
     }
 
+    [Fact]
+    public async Task A_taxpayer_changed_after_reading_it_changes_nothing_until_saved()
+    {
+        var store = await CreateAsync();
+        await store.SaveAsync(new Taxpayer(20111111112, "Empresa", VatCondition.ResponsableInscripto, [new PointOfSale(1, PointOfSaleKind.WebServiceCae)]));
+
+        var read = await store.FindAsync(20111111112);
+        read!.AddPointOfSale(new PointOfSale(2, PointOfSaleKind.WebServiceCae));
+        var unsaved = await store.FindAsync(20111111112);
+        await store.SaveAsync(read);
+        var saved = await store.FindAsync(20111111112);
+
+        Assert.Null(unsaved!.FindPointOfSale(2));
+        Assert.NotNull(saved!.FindPointOfSale(2));
+    }
+
+    [Fact]
+    public async Task Documents_list_in_ordinal_key_order_whatever_the_culture()
+    {
+        var store = await CreateAsync();
+        foreach (var key in new[] { "b", "B", "a1", "a-1", "A" }) await store.PutAsync("orden", key, new Liquidation(1, key, []));
+
+        var keys = (await store.ListAsync<Liquidation>("orden")).Select(d => d.State).ToList();
+
+        Assert.Equal(["A", "B", "a-1", "a1", "b"], keys);
+    }
+
     private sealed record Liquidation(long Coe, string State, List<int> Items);
 
     [Fact]

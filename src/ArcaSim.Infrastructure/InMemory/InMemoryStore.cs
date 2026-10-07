@@ -76,14 +76,16 @@ public sealed partial class InMemoryStore :
     public Task AddAsync(IssuedTicket ticket, CancellationToken ct = default) => Write(() => _tickets.Add(ticket));
 
     // ---- Taxpayers ---------------------------------------------------------
+    // Copies in and out, as PostgreSQL's rows are: a caller that changes a taxpayer
+    // changes its own copy until it saves, and two requests never share one.
 
     public Task<Taxpayer?> FindAsync(long cuit, CancellationToken ct = default) =>
-        Read(() => _taxpayers.GetValueOrDefault(cuit));
+        Read(() => _taxpayers.GetValueOrDefault(cuit)?.Copy());
 
     public Task<IReadOnlyList<Taxpayer>> ListAsync(CancellationToken ct = default) =>
-        Read<IReadOnlyList<Taxpayer>>(() => _taxpayers.Values.OrderBy(t => t.Cuit).ToList());
+        Read<IReadOnlyList<Taxpayer>>(() => _taxpayers.Values.OrderBy(t => t.Cuit).Select(t => t.Copy()).ToList());
 
-    public Task SaveAsync(Taxpayer taxpayer, CancellationToken ct = default) => Write(() => _taxpayers[taxpayer.Cuit] = taxpayer);
+    public Task SaveAsync(Taxpayer taxpayer, CancellationToken ct = default) => Write(() => _taxpayers[taxpayer.Cuit] = taxpayer.Copy());
 
     // ---- Vouchers ----------------------------------------------------------
 

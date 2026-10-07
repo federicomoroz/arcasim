@@ -6,7 +6,9 @@ namespace ArcaSim.Infrastructure.InMemory;
 public sealed partial class InMemoryStore : IDocumentStore
 {
     // Kept as JSON, as PostgreSQL keeps them: what a caller changes after Put does not leak in.
-    private readonly SortedDictionary<(string Collection, string Key), string> _documents = [];
+    // Ordered ordinally, as PostgreSQL's COLLATE "C" orders them, whatever the machine's culture.
+    private readonly SortedDictionary<(string Collection, string Key), string> _documents = new(Comparer<(string Collection, string Key)>.Create(
+        (a, b) => string.CompareOrdinal(a.Collection, b.Collection) is var byCollection and not 0 ? byCollection : string.CompareOrdinal(a.Key, b.Key)));
     private readonly Dictionary<string, long> _counters = [];
 
     public Task<T?> GetAsync<T>(string collection, string key, CancellationToken ct = default) where T : class

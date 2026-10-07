@@ -73,8 +73,6 @@ public sealed class Taxpayer
 
     public PersonKind Kind => Cuits.KindOf(Cuit);
 
-    private Taxpayer() { }
-
     public Taxpayer(long cuit, string name, VatCondition vatCondition, IEnumerable<PointOfSale>? pointsOfSale = null)
     {
         if (!Cuits.IsValid(cuit)) throw new ArgumentException($"CUIT {cuit} has a wrong check digit.", nameof(cuit));
@@ -103,6 +101,9 @@ public sealed class Taxpayer
     }
 
     public void SetProfile(TaxpayerProfile profile) => Profile = profile;
+
+    /// <summary>A copy that shares nothing changeable with this one: what a store that serializes, as PostgreSQL's does, hands out.</summary>
+    public Taxpayer Copy() => new(Cuit, Name, VatCondition, _pointsOfSale) { Active = Active, Profile = Profile };
 }
 
 /// <summary>A person (DNI-based CUIT: 20, 23, 24, 27) or a company (30, 33, 34).</summary>
