@@ -88,7 +88,12 @@ public sealed class ContractHost(
     PlaceholderCounters? counters = null, ILogger<ContractHost>? logger = null)
 {
     private readonly PlaceholderCounters _counters = counters ?? new();
-    private readonly ConcurrentDictionary<string, (ServiceContract Contract, SchemaSampler Sampler)> _contracts = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>
+    /// Each WSDL read and compiled once per process: the files do not change while
+    /// ArcaSim runs, so every host shares them (the suite starts one per test).
+    /// </summary>
+    private static readonly ConcurrentDictionary<string, Lazy<(ServiceContract Contract, SchemaSampler Sampler)>> Contracts = new(StringComparer.OrdinalIgnoreCase);
+
     private readonly Dictionary<string, IServiceBehavior> _behaviors = RulesByService(behaviors);
 
     public ServiceCatalog Catalog => catalog;
@@ -128,11 +133,11 @@ public sealed class ContractHost(
     }
 
     private (ServiceContract Contract, SchemaSampler Sampler) Load(ServiceDefinition definition) =>
-        _contracts.GetOrAdd(definition.Id, _ =>
+        Contracts.GetOrAdd(Path.GetFullPath(Path.Combine(wsdlFolder, definition.Wsdl)), file => new(() =>
         {
-            var contract = ServiceContract.Load(Path.Combine(wsdlFolder, definition.Wsdl));
+            var contract = ServiceContract.Load(file);
             return (contract, new SchemaSampler(contract.Schemas));
-        });
+        })).Value;
 
     public async Task<ContractAnswer> AnswerAsync(ServiceDefinition definition, OperationContract operation, XElement? request, CancellationToken ct)
     {
