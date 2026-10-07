@@ -60,7 +60,7 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
                 await store.PutAsync(Collection, key, declaration with { CaratulaLeida = true }, ct);
                 return call.Done(Caratula(call, declaration));
             case "ListaGOPItemsDeta":
-                return ItemsOf(call, declaration, (int)arg!.Decimal("NroLote"));
+                return ItemsOf(call, declaration, arg!.Decimal("NroLote"));
             case "ListaGOPLiquiDeta":
                 return call.Done(Liquidacion(call, declaration));
             case "ListaGOPEstados":
@@ -102,15 +102,20 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
         return answer;
     }
 
-    private static ContractAnswer ItemsOf(ServiceCall call, GopDeclaration d, int lote)
+    /// <summary>
+    /// The items of one lote, PerLote at a time. A lote past the last has no data (30286, the manual's only business
+    /// code), however large the number; one below the first reads as the first, and a fraction as its whole part.
+    /// </summary>
+    private static ContractAnswer ItemsOf(ServiceCall call, GopDeclaration d, decimal requested)
     {
-        var first = (Math.Max(lote, 1) - 1) * PerLote + 1;
-        if (first > d.Items) return call.Fail(30286, NoData);
+        var lote = Math.Max(decimal.Truncate(requested), 1);
+        if (lote > (d.Items + PerLote - 1) / PerLote) return call.Fail(30286, NoData);
+        var first = ((int)lote - 1) * PerLote + 1;
         var numbers = Enumerable.Range(first, Math.Min(PerLote, d.Items - first + 1)).ToList();
         var answer = call.Sample().Receipt(0, Ok);
         answer.Find("Items")!
             .Set("IdDecla", d.IdDecla)
-            .Set("NroLote", Math.Max(lote, 1))
+            .Set("NroLote", (int)lote)
             .Set("IndUltLote", numbers[^1] == d.Items ? "S" : "N");
         answer.Repeat("Item", numbers, (row, n) => row
             .Set("NroItem", n)

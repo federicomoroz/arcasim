@@ -84,4 +84,37 @@ public class WutiGopRulesTests
 
         Assert.Equal(2, (await gop.CallAsync("PndListaGOPDetallada", ask, AduanaKit.Caller)).All("IdDecla").Count());
     }
+
+    [Theory]
+    [InlineData("3")] // the first lote past the last
+    [InlineData("2000000000")] // fits an int, but (lote - 1) * 2 does not
+    [InlineData("99999999999999999999")] // does not fit an int at all
+    public async Task A_lote_past_the_last_has_no_data_however_large_the_number(string lote)
+    {
+        await using var kit = await AduanaKit.StartAsync();
+        var gop = await GopAsync(kit);
+        var id = (await gop.CallAsync("PndListaGOPEstados", $"<argPndListaGOPEstados>{Place}</argPndListaGOPEstados>")).All("IdDecla").First().Value;
+
+        var items = await gop.CallAsync("ListaGOPItemsDeta", $"<argListaGOPItemsDeta>{Place}<NroLote>{lote}</NroLote><IdDecla>{id}</IdDecla></argListaGOPItemsDeta>");
+
+        Assert.Equal("30286", items.Code());
+        Assert.Equal("No hay datos para los criterios ingresados", items.V("DesError"));
+    }
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("-5")]
+    [InlineData("1.9")]
+    public async Task A_lote_below_the_first_or_with_a_fraction_reads_as_the_first(string lote)
+    {
+        await using var kit = await AduanaKit.StartAsync();
+        var gop = await GopAsync(kit);
+        var id = (await gop.CallAsync("PndListaGOPEstados", $"<argPndListaGOPEstados>{Place}</argPndListaGOPEstados>")).All("IdDecla").First().Value;
+
+        var items = await gop.CallAsync("ListaGOPItemsDeta", $"<argListaGOPItemsDeta>{Place}<NroLote>{lote}</NroLote><IdDecla>{id}</IdDecla></argListaGOPItemsDeta>");
+
+        Assert.Equal("0", items.Code());
+        Assert.Equal("1", items.V("NroLote"));
+        Assert.Equal(["1", "2"], items.All("NroItem").Select(i => i.Value));
+    }
 }
