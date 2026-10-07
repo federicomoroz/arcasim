@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Events;
@@ -43,7 +42,7 @@ namespace ArcaSim.Application.Services.TurismoBonos;
 public sealed class WssegRules(
     ParameterTables parameters, IDocumentStore documents, IExchangeRates rates, IAuthorizationCodes codes,
     SequenceLocks locks, IClock clock, SimulationSettings settings, EventManager events)
-    : AsmxVoucherRules(documents, codes, locks, clock, settings, events)
+    : AsmxVoucherRules(parameters, documents, rates, codes, locks, clock, settings, events)
 {
     public const string RetirementNotice =
         "El servicio WSSEG sera dado de baja. Cabe destacar que la Resolución General Nro 5866/2026 indica que este servicio sera reemplazado por " +
@@ -63,116 +62,70 @@ public sealed class WssegRules(
     protected override AsmxEvent Event(ServiceCall call) =>
         Settings.Environment == ArcaEnvironment.Produccion ? new AsmxEvent(47, RetirementNotice) : base.Event(call);
 
-    private IEnumerable<VoucherTypeInfo> Types => parameters.VoucherTypes.Where(t => TypeIds.Contains(t.Id));
+    private static readonly AsmxRefusal BadClass = new(1002,
+        "El valor ingresado para la clase de comprobante no es valido. La clase de Comprobante es opcional, de ingresar un valor solo puede ser A o B,");
+
+    private static readonly QuoteRefusals Quote = new(
+        MissingCurrency: new AsmxRefusal(1004, "No ingreso el código de moneda. Ingresar un valor valido. Ver método SEGGetPARAM_MON"),
+        UnknownCurrency: new AsmxRefusal(1003, "El código de moneda ingresado es invalido. Verificar los codigos mediante el método SEGGetPARAM_MON"),
+        BadDate: new AsmxRefusal(1005, "Campo FchCotiz No corresponde a una fecha valida con formato YYYYMMDD"),
+        NoRate: new AsmxRefusal(1006, "Sin Resultados: - Método SEGGetPARAM_Ctz"));
+
+    private static readonly CurrencyRefusals Currency = new(
+        Unknown: new AsmxRefusal(1014, Text1014.InvalidValue("Imp_moneda_Id", "la moneda no existe. Consultar método SEGGetPARAM_MON.")),
+        BadFlag: new AsmxRefusal(1033, "Si informa el campo CanMisMonExt, los valores posibles son S o N y no debe quedar vacío,"),
+        PesFlag: new AsmxRefusal(1035, "Si informa Imp_moneda_Id = PES, el campo CanMisMonExt no debe informarse o informarse con el valor N."),
+        RateRequired: new AsmxRefusal(1014, "El campo <Imp_moneda_ctz> es obligatorio si no informa el campo CanMisMonExt = S, y de informarse debe ser mayor a 0. " +
+            "Si se indica que el pago del comprobante se realiza en la misma moneda extranjera que la factura, la cotización de la moneda provista debe " +
+            "coincidir exactamente con la registrada en las bases de ARCA para el día hábil anterior a la fecha de emisión del comprobante, si esta es " +
+            "anterior a la fecha actual, o bien con la registrada para el día hábil anterior a la fecha actual, si la fecha de emisión es posterior a esta. " +
+            "En caso contrario, se puede omitir el campo de Cotización de Moneda."),
+        RateAbove: new AsmxRefusal(1034, "Si informa el campo Imp_moneda_ctz, el mismo no podrá superar en 1 a la cotizacion oficial. Ver Método SEGGetPARAM_Ctz.."));
+
+    private static readonly ReceiverRefusals Receiver = new(
+        Missing: new AsmxRefusal(1032, "El campo Condición Frente al IVA del receptor resultara obligatorio conforme lo reglamentado por la Resolución General N° 5616. Para mas información consular método SEGGetCondicionIvaReceptor"),
+        Unknown: new AsmxRefusal(1030, "El campo Condición IVA receptor no es un valor permitido. Para mas información consular método SEGGetCondicionIvaReceptor"),
+        WrongClass: new AsmxRefusal(1031, "El campo Condición IVA receptor no es valido para la clase de comprobante informado. Para mas información consular método SEGGetCondicionIvaReceptor"));
 
     protected override Task<ContractAnswer?> OtherAsync(ServiceCall call, CancellationToken ct)
     {
         var ns = Ns(call);
         return call.Name switch
         {
-            "SEGGetPARAM_Tipo_Cbte" => Done(Table(call, Types.Select(t => Row(ns, "ClsSEGResponse_Tipo_Cbte", "Cbte", t.Id, t.Desc, t.From, t.To)))),
-            "SEGGetPARAM_Tipo_doc" => Done(Table(call, parameters.DocumentTypes.Select(d => Row(ns, "ClsSEGResponse_Tipo_doc", "Doc", d.Id, d.Desc, d.From, d.To)))),
-            "SEGGetPARAM_Tipo_IVA" => Done(Table(call, parameters.VatRates.Select(r => Row(ns, "ClsSEGResponse_Tipo_IVA", "IVA", r.Id, r.Desc, r.From, r.To)))),
-            "SEGGetPARAM_MON" => Done(Table(call, parameters.Currencies.Select(c => Row(ns, "ClsSEGResponse_Mon", "Mon", c.Id, c.Desc, c.From, c.To)))),
-            "SEGGetPARAM_Ctz" => QuoteAsync(call, ct),
-            "SEGGetCondicionIvaReceptor" => Done(Conditions(call)),
-            _ => Task.FromResult<ContractAnswer?>(null),
+            "SEGGetPARAM_Tipo_Cbte" => Done(Table(call, Parameters.VoucherTypes.Where(t => TypeIds.Contains(t.Id))
+                .Select(t => Row(ns, "ClsSEGResponse_Tipo_Cbte", "Cbte", t.Id, t.Desc, t.From, t.To)))),
+            "SEGGetPARAM_Tipo_doc" => Done(Table(call, Parameters.DocumentTypes.Select(d => Row(ns, "ClsSEGResponse_Tipo_doc", "Doc", d.Id, d.Desc, d.From, d.To)))),
+            "SEGGetPARAM_Tipo_IVA" => Done(Table(call, Parameters.VatRates.Select(r => Row(ns, "ClsSEGResponse_Tipo_IVA", "IVA", r.Id, r.Desc, r.From, r.To)))),
+            "SEGGetPARAM_MON" => Done(Table(call, Parameters.Currencies.Select(c => Row(ns, "ClsSEGResponse_Mon", "Mon", c.Id, c.Desc, c.From, c.To)))),
+            "SEGGetPARAM_Ctz" => QuoteAsync(call, Quote, ct),
+            "SEGGetCondicionIvaReceptor" => Done(Conditions(call, BadClass)),
+            _ => Done(),
         };
-    }
-
-    private static Task<ContractAnswer?> Done(ContractAnswer answer) => Task.FromResult<ContractAnswer?>(answer);
-
-    private ContractAnswer Conditions(ServiceCall call)
-    {
-        var ns = Ns(call);
-        var wanted = call.Request.Field("ClaseCmp");
-        if (!string.IsNullOrEmpty(wanted) && wanted is not ("A" or "B"))
-            return Refuse(call, new AsmxRefusal(1002,
-                "El valor ingresado para la clase de comprobante no es valido. La clase de Comprobante es opcional, de ingresar un valor solo puede ser A o B,"));
-        return Table(call, ReceiverConditions.Annex.Where(c => string.IsNullOrEmpty(wanted) || c.Class == wanted)
-            .Select(c => new XElement(ns + "ClsSEGResponse_CondicionIvaReceptor",
-                new XElement(ns + "Id", c.Id), new XElement(ns + "Desc", c.Description), new XElement(ns + "Cmp_Clase", c.Class))));
-    }
-
-    private async Task<ContractAnswer?> QuoteAsync(ServiceCall call, CancellationToken ct)
-    {
-        var currency = call.Request.Field("MonId");
-        if (string.IsNullOrEmpty(currency))
-            return Refuse(call, new AsmxRefusal(1004, "No ingreso el código de moneda. Ingresar un valor valido. Ver método SEGGetPARAM_MON"));
-        if (parameters.Currencies.All(c => c.Id != currency))
-            return Refuse(call, new AsmxRefusal(1003, "El código de moneda ingresado es invalido. Verificar los codigos mediante el método SEGGetPARAM_MON"));
-        var asked = call.Request.Field("FchCotiz");
-        DateOnly day;
-        if (string.IsNullOrEmpty(asked)) day = Clock.Today();
-        else if (asked.Length == 8 && Figures.ParseDay(asked) is { } parsed) day = parsed;
-        else return Refuse(call, new AsmxRefusal(1005, "Campo FchCotiz No corresponde a una fecha valida con formato YYYYMMDD"));
-
-        var quote = currency == "PES" ? (1m, day) : await rates.RateAsync(currency, day, ct);
-        if (quote is not { } found) return Refuse(call, new AsmxRefusal(1006, "Sin Resultados: - Método SEGGetPARAM_Ctz"));
-        var ns = Ns(call);
-        return Answer(call, new XElement(ns + "SEGResultGet",
-            new XElement(ns + "MonId", currency), new XElement(ns + "MonCotiz", Figures.Number(found.Rate)), new XElement(ns + "FchCotiz", Figures.Day(found.Day))));
     }
 
     // ---- SEGAuthorize ----------------------------------------------------------------------
 
     protected override async Task<AsmxRefusal?> CheckAsync(ServiceCall call, AsmxCmp cmp, DateOnly today, CancellationToken ct)
     {
-        var type = Types.FirstOrDefault(t => t.Id == cmp.VoucherType);
-        if (cmp.Id <= 0) return new AsmxRefusal(1014, Text1014.Id);
-        if (type is null) return new AsmxRefusal(1014, Text1014.VoucherType);
-        if (cmp.PointOfSale is < 1 or > VoucherLimits.MaxPointOfSale) return new AsmxRefusal(1014, Text1014.PointOfSale);
-        if (cmp.Number is < 1 or > VoucherLimits.MaxNumber) return new AsmxRefusal(1014, Text1014.Number);
-        if (type.Class == VoucherClass.A && cmp.DocType != 80) return new AsmxRefusal(1014, Text1014.DocType);
+        var (header, type) = CheckHeader(cmp, TypeIds);
+        if (header is not null || type is null) return header;
+
         if (CheckDate(cmp.DateText, today) is { } date) return date;
-        if (await CheckCurrencyAsync(cmp, today, ct) is { } currency) return currency;
-        if (CheckReceiver(cmp, type.Class == VoucherClass.A ? "A" : "B") is { } receiver) return receiver;
+        if (await CheckCurrencyAsync(cmp, today, rateMayBeOmitted: true, Currency, ct) is { } currency) return currency;
+        if (CheckReceiver(cmp, type.Class, Receiver) is { } receiver) return receiver;
 
         var items = Items(cmp);
-        if (items.Count == 0) return new AsmxRefusal(1014, Text1014.InvalidValue("Items", "el comprobante debe informar al menos un ítem."));
+        if (CheckItemsSent(items) is { } none) return none;
         foreach (var item in items)
         {
             var vat = item.Field("Iva_id") ?? "";
-            if (parameters.VatRates.All(r => r.Id != vat))
+            if (Parameters.VatRates.All(r => r.Id != vat))
                 return new AsmxRefusal(1014, Text1014.InvalidValue("Iva_id", $"la alícuota {vat} no existe. Consultar método SEGGetPARAM_Tipo_IVA."));
         }
         var raw = cmp.Raw;
         if (new[] { "Imp_op_ex", "Imp_perc", "Imp_iibb", "Imp_perc_mun", "Imp_internos" }.Any(f => (raw.Amount(f) ?? 0) > cmp.Total))
             return new AsmxRefusal(1014, Text1014.Items);
         return CheckItemsTotal(cmp, items);
-    }
-
-    private async Task<AsmxRefusal?> CheckCurrencyAsync(AsmxCmp cmp, DateOnly today, CancellationToken ct)
-    {
-        if (string.IsNullOrEmpty(cmp.Currency) || parameters.Currencies.All(c => c.Id != cmp.Currency))
-            return new AsmxRefusal(1014, Text1014.InvalidValue("Imp_moneda_Id", "la moneda no existe. Consultar método SEGGetPARAM_MON."));
-        if (cmp.SameCurrency is { } same && same is not ("S" or "N"))
-            return new AsmxRefusal(1033, "Si informa el campo CanMisMonExt, los valores posibles son S o N y no debe quedar vacío,");
-        if (cmp.Currency == "PES" && cmp.SameCurrency == "S")
-            return new AsmxRefusal(1035, "Si informa Imp_moneda_Id = PES, el campo CanMisMonExt no debe informarse o informarse con el valor N.");
-
-        var official = cmp.Currency == "PES" ? (1m, today) : await rates.RateAsync(cmp.Currency, Figures.ParseDay(cmp.DateText) ?? today, ct);
-        if (cmp.Rate is null && !(cmp.SameCurrency == "S" && official is not null) || cmp.Rate <= 0)
-            return new AsmxRefusal(1014, "El campo <Imp_moneda_ctz> es obligatorio si no informa el campo CanMisMonExt = S, y de informarse debe ser mayor a 0. " +
-                "Si se indica que el pago del comprobante se realiza en la misma moneda extranjera que la factura, la cotización de la moneda provista debe " +
-                "coincidir exactamente con la registrada en las bases de ARCA para el día hábil anterior a la fecha de emisión del comprobante, si esta es " +
-                "anterior a la fecha actual, o bien con la registrada para el día hábil anterior a la fecha actual, si la fecha de emisión es posterior a esta. " +
-                "En caso contrario, se puede omitir el campo de Cotización de Moneda.");
-        if (cmp.Rate is { } rate && official is { } known && cmp.Currency != "PES" && rate > known.Rate + 1)
-            return new AsmxRefusal(1034, "Si informa el campo Imp_moneda_ctz, el mismo no podrá superar en 1 a la cotizacion oficial. Ver Método SEGGetPARAM_Ctz..");
-        return null;
-    }
-
-    private static AsmxRefusal? CheckReceiver(AsmxCmp cmp, string voucherClass)
-    {
-        if (string.IsNullOrEmpty(cmp.ReceiverConditionText))
-            return new AsmxRefusal(1032, "El campo Condición Frente al IVA del receptor resultara obligatorio conforme lo reglamentado por la Resolución General N° 5616. Para mas información consular método SEGGetCondicionIvaReceptor");
-        if (!int.TryParse(cmp.ReceiverConditionText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var condition)
-            || ReceiverConditions.ClassOf(condition) is not { } conditionClass)
-            return new AsmxRefusal(1030, "El campo Condición IVA receptor no es un valor permitido. Para mas información consular método SEGGetCondicionIvaReceptor");
-        if (conditionClass != voucherClass)
-            return new AsmxRefusal(1031, "El campo Condición IVA receptor no es valido para la clase de comprobante informado. Para mas información consular método SEGGetCondicionIvaReceptor");
-        return null;
     }
 
     /// <summary>Observation 22 when the receiver's CUIT cannot exist; the rest of the padrón checks (21, apócrifos) need ARCA's data.</summary>

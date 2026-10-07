@@ -61,28 +61,3 @@ internal static class Figures
         }
     }
 }
-
-/// <summary>
-/// The receiver's VAT conditions of annex 3.1, the same in wsbfev1 and wsseg
-/// (wsbfev1.md and wsseg.md, Tablas y datos): code, description and the one
-/// voucher class it is valid for.
-/// </summary>
-internal static class ReceiverConditions
-{
-    public static readonly IReadOnlyList<(int Id, string Description, string Class)> Annex =
-    [
-        (1, "IVA Responsable Inscripto", "A"),
-        (4, "IVA Sujeto Exento", "B"),
-        (5, "Consumidor Final", "B"),
-        (6, "Responsable Monotributo", "A"),
-        (7, "Sujeto No Categorizado", "B"),
-        (8, "Proveedor del Exterior", "B"),
-        (9, "Cliente del Exterior", "B"),
-        (10, "IVA Liberado – Ley N° 19.640", "B"),
-        (13, "Monotributista Social", "A"),
-        (15, "IVA No Alcanzado", "B"),
-        (16, "Monotributo Trabajador Independiente Promovido", "A"),
-    ];
-
-    public static string? ClassOf(int id) => Annex.FirstOrDefault(c => c.Id == id).Class;
-}

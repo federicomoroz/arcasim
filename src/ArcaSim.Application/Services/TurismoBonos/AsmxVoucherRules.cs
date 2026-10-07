@@ -3,6 +3,7 @@ using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Events;
 using ArcaSim.Application.Wsfe;
+using ArcaSim.Domain;
 
 namespace ArcaSim.Application.Services.TurismoBonos;
 
@@ -77,7 +78,23 @@ internal static class Text1014
     /// <summary>ArcaSim's text for a number that is not the next one: no manual has a code for it, so it goes out as 1014.</summary>
     public static string NotNext(long last) =>
         $"Valor inválido en campo Cbte_nro: el número no es el próximo a autorizar (último autorizado: {last}).";
+
+    public static readonly string NoItems = InvalidValue("Items", "el comprobante debe informar al menos un ítem.");
 }
+
+/// <summary>
+/// The refusals of the currency rules (a currency ARCA does not know, a
+/// CanMisMonExt that is not S or N or is S for pesos, a rate that is missing or
+/// not greater than zero, a rate more than one above ARCA's), which each
+/// manual numbers and words its own way.
+/// </summary>
+public sealed record CurrencyRefusals(AsmxRefusal Unknown, AsmxRefusal BadFlag, AsmxRefusal PesFlag, AsmxRefusal RateRequired, AsmxRefusal RateAbove);
+
+/// <summary>The refusals of the receiver's VAT condition rule: not sent, not one of the annex's, not valid for the voucher's class.</summary>
+public sealed record ReceiverRefusals(AsmxRefusal Missing, AsmxRefusal Unknown, AsmxRefusal WrongClass);
+
+/// <summary>The refusals of the rate query: no currency, a currency ARCA does not know, a date that is not yyyymmdd, no rate for it.</summary>
+public sealed record QuoteRefusals(AsmxRefusal MissingCurrency, AsmxRefusal UnknownCurrency, AsmxRefusal BadDate, AsmxRefusal NoRate);
 
 /// <summary>
 /// The authorization flow wsbfev1, wsbfe and wsseg share (one voucher per
@@ -98,7 +115,9 @@ internal static class Text1014
 /// not the next one, so it is refused with 1014 and a text of ArcaSim's.
 /// </summary>
 public abstract class AsmxVoucherRules(
+    ParameterTables parameters,
     IDocumentStore documents,
+    IExchangeRates rates,
     IAuthorizationCodes codes,
     SequenceLocks locks,
     IClock clock,
@@ -112,6 +131,10 @@ public abstract class AsmxVoucherRules(
 
     /// <summary>The collections' name: services that share it share numbering, Ids and vouchers.</summary>
     protected abstract string Family { get; }
+
+    protected ParameterTables Parameters => parameters;
+
+    protected IExchangeRates Rates => rates;
 
     protected IClock Clock => clock;
 
@@ -268,20 +291,73 @@ public abstract class AsmxVoucherRules(
             "Imp_perc!", "Imp_iibb!", "Imp_perc_mun!", "Imp_internos!", "Imp_moneda_Id", "Imp_moneda_ctz!"]),
     ];
 
-    // ---- Checks the two families share ------------------------------------------------------
+    /// <summary>The answer of an operation that has nothing to say, which keeps the contract's.</summary>
+    protected static Task<ContractAnswer?> Done(ContractAnswer? answer = null) => Task.FromResult(answer);
+
+    // ---- Checks the services share ----------------------------------------------------------
+
+    /// <summary>
+    /// The checks every service starts with, in this order, all 1014: the
+    /// requirement's Id, the voucher type (one of those the service takes), the
+    /// point of sale, the number and, for a class A voucher, the receiver's
+    /// document, which must be a CUIT. The refusal, or the type's WSFEv1 row
+    /// (class and kind) when nothing fails.
+    /// </summary>
+    protected (AsmxRefusal? Refusal, VoucherTypeInfo? Type) CheckHeader(AsmxCmp cmp, IEnumerable<int> takes)
+    {
+        if (cmp.Id <= 0) return (new AsmxRefusal(1014, Text1014.Id), null);
+        var type = takes.Contains(cmp.VoucherType) ? parameters.VoucherType(cmp.VoucherType) : null;
+        if (type is null) return (new AsmxRefusal(1014, Text1014.VoucherType), null);
+        if (cmp.PointOfSale is < 1 or > VoucherLimits.MaxPointOfSale) return (new AsmxRefusal(1014, Text1014.PointOfSale), type);
+        if (cmp.Number is < 1 or > VoucherLimits.MaxNumber) return (new AsmxRefusal(1014, Text1014.Number), type);
+        if (type.Class == VoucherClass.A && cmp.DocType != 80) return (new AsmxRefusal(1014, Text1014.DocType), type);
+        return (null, type);
+    }
 
     /// <summary>
     /// Fecha_cbte: yyyymmdd, within 5 days of today and not in a month after
     /// the current one (1014). "No podrá exceder el mes" is read as no later
     /// month: a date a few days back, in the previous month, is accepted.
     /// </summary>
-    protected static AsmxRefusal? CheckDate(string? text, DateOnly today, int daysBack = 5, int daysAhead = 5)
+    protected static AsmxRefusal? CheckDate(string? text, DateOnly today)
     {
         if (string.IsNullOrEmpty(text)) return null;
         if (text.Length != 8 || Figures.ParseDay(text) is not { } date) return new AsmxRefusal(1014, Text1014.DateFormat);
         if (date > today && (date.Month != today.Month || date.Year != today.Year)) return new AsmxRefusal(1014, Text1014.DateMonth);
-        if (date < today.AddDays(-daysBack) || date > today.AddDays(daysAhead)) return new AsmxRefusal(1014, Text1014.DateWindow);
+        if (date < today.AddDays(-5) || date > today.AddDays(5)) return new AsmxRefusal(1014, Text1014.DateWindow);
         return null;
+    }
+
+    /// <summary>
+    /// The currency, CanMisMonExt and Imp_moneda_ctz: the currency exists (1014),
+    /// the flag is S or N and not S for pesos, the rate is there and greater
+    /// than zero unless the voucher is paid in the same foreign currency and
+    /// ARCA has a rate to take for it (<paramref name="rateMayBeOmitted"/> says
+    /// whether this kind of voucher may omit it), and it is not more than one
+    /// above ARCA's. The refusals are each service's own.
+    /// </summary>
+    protected async Task<AsmxRefusal?> CheckCurrencyAsync(
+        AsmxCmp cmp, DateOnly today, bool rateMayBeOmitted, CurrencyRefusals refusals, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(cmp.Currency) || !parameters.HasCurrency(cmp.Currency)) return refusals.Unknown;
+        if (cmp.SameCurrency is { } same && same is not ("S" or "N")) return refusals.BadFlag;
+        if (cmp.Currency == "PES" && cmp.SameCurrency == "S") return refusals.PesFlag;
+
+        var official = await rates.QuoteAsync(cmp.Currency, Figures.ParseDay(cmp.DateText) ?? today, ct);
+        var mayOmit = cmp.SameCurrency == "S" && rateMayBeOmitted && official is not null;
+        if (cmp.Rate is null && !mayOmit || cmp.Rate <= 0) return refusals.RateRequired;
+        if (cmp.Rate is { } rate && official is { } known && cmp.Currency != "PES" && rate > known.Rate + 1) return refusals.RateAbove;
+        return null;
+    }
+
+    /// <summary>The receiver's VAT condition: sent, one of the annex's, and valid for the class of the voucher.</summary>
+    protected AsmxRefusal? CheckReceiver(AsmxCmp cmp, VoucherClass voucherClass, ReceiverRefusals refusals)
+    {
+        if (string.IsNullOrEmpty(cmp.ReceiverConditionText)) return refusals.Missing;
+        if (!int.TryParse(cmp.ReceiverConditionText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var id)
+            || parameters.ReceiverVatCondition(id) is not { } condition)
+            return refusals.Unknown;
+        return ParameterTables.Allows(condition, voucherClass) ? null : refusals.WrongClass;
     }
 
     /// <summary>The items' total against the voucher's (1014), within ARCA's usual margin.</summary>
@@ -293,4 +369,46 @@ public abstract class AsmxVoucherRules(
 
     protected static IReadOnlyList<XElement> Items(AsmxCmp cmp) =>
         cmp.Raw.Child("Items")?.Children("Item").ToList() ?? [];
+
+    /// <summary>The item list: at least one (1014).</summary>
+    protected static AsmxRefusal? CheckItemsSent(IReadOnlyList<XElement> items) =>
+        items.Count == 0 ? new AsmxRefusal(1014, Text1014.NoItems) : null;
+
+    // ---- Queries the services share ---------------------------------------------------------
+
+    /// <summary>
+    /// The receiver conditions annex: WSFEv1's table (annex 3.1 lists the same
+    /// rows) with the one voucher class, A or B, each is valid for.
+    /// </summary>
+    private IEnumerable<(int Id, string Description, string Class)> Annex =>
+        parameters.ReceiverVatConditions.SelectMany(c => c.Classes.Where(letter => letter is "A" or "B").Take(1).Select(letter => (c.Id, c.Desc, letter)));
+
+    /// <summary>The annex, all of it or the class asked; another class is <paramref name="badClass"/>.</summary>
+    protected ContractAnswer Conditions(ServiceCall call, AsmxRefusal badClass)
+    {
+        var ns = Ns(call);
+        var wanted = call.Request.Field("ClaseCmp");
+        if (!string.IsNullOrEmpty(wanted) && wanted is not ("A" or "B")) return Refuse(call, badClass);
+        return Table(call, Annex.Where(c => string.IsNullOrEmpty(wanted) || c.Class == wanted)
+            .Select(c => new XElement(ns + $"Cls{Prefix}Response_CondicionIvaReceptor",
+                new XElement(ns + "Id", c.Id), new XElement(ns + "Desc", c.Description), new XElement(ns + "Cmp_Clase", c.Class))));
+    }
+
+    /// <summary>The rate of a currency for a day (today when none is asked): the latest on or before it, pesos at 1.</summary>
+    protected async Task<ContractAnswer?> QuoteAsync(ServiceCall call, QuoteRefusals refusals, CancellationToken ct)
+    {
+        var currency = call.Request.Field("MonId");
+        if (string.IsNullOrEmpty(currency)) return Refuse(call, refusals.MissingCurrency);
+        if (!parameters.HasCurrency(currency)) return Refuse(call, refusals.UnknownCurrency);
+        var asked = call.Request.Field("FchCotiz");
+        DateOnly day;
+        if (string.IsNullOrEmpty(asked)) day = clock.Today();
+        else if (asked.Length == 8 && Figures.ParseDay(asked) is { } parsed) day = parsed;
+        else return Refuse(call, refusals.BadDate);
+
+        if (await rates.QuoteAsync(currency, day, ct) is not { } found) return Refuse(call, refusals.NoRate);
+        var ns = Ns(call);
+        return Answer(call, new XElement(ns + $"{Prefix}ResultGet",
+            new XElement(ns + "MonId", currency), new XElement(ns + "MonCotiz", Figures.Number(found.Rate)), new XElement(ns + "FchCotiz", Figures.Day(found.Day))));
+    }
 }

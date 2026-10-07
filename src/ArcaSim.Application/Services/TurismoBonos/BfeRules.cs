@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
@@ -87,7 +86,7 @@ public sealed class WsbfeRules(
 public abstract class BfeRules(
     ParameterTables parameters, IDocumentStore documents, IExchangeRates rates, IAuthorizationCodes codes,
     SequenceLocks locks, IClock clock, SimulationSettings settings, EventManager events)
-    : AsmxVoucherRules(documents, codes, locks, clock, settings, events)
+    : AsmxVoucherRules(parameters, documents, rates, codes, locks, clock, settings, events)
 {
     protected override string Prefix => "BFE";
 
@@ -96,17 +95,21 @@ public abstract class BfeRules(
     /// <summary>Whether the service takes Factura de Crédito Electrónica MiPyMEs (wsbfev1) or not (wsbfe).</summary>
     protected abstract bool CreditInvoices { get; }
 
-    /// <summary>BFEGetPARAM_Tipo_Cbte [CAS 2021]: id, description, validity start and class.</summary>
-    private static readonly (int Id, string Description, string From, string Class)[] AllTypes =
+    /// <summary>
+    /// BFEGetPARAM_Tipo_Cbte [CAS 2021]: id, description and validity start. The
+    /// class and the kind of each are WSFEv1's (ParameterTables), whose rows for
+    /// these twelve ids say the same.
+    /// </summary>
+    private static readonly (int Id, string Description, string From)[] AllTypes =
     [
-        (1, "Factura A", "20090620", "A"), (2, "Nota de Débito A", "20090620", "A"), (3, "Nota de Crédito A", "20090620", "A"),
-        (6, "Factura B", "20090620", "B"), (7, "Nota de Débito B", "20090620", "B"), (8, "Nota de Crédito B", "20090620", "B"),
-        (201, "Factura de Crédito electrónica MiPyMEs (FCE) A", "20190112", "A"),
-        (202, "Nota de Débito electrónica MiPyMEs (FCE) A", "20190112", "A"),
-        (203, "Nota de Crédito electrónica MiPyMEs (FCE) A", "20190112", "A"),
-        (206, "Factura de Crédito electrónica MiPyMEs (FCE) B", "20190112", "B"),
-        (207, "Nota de Débito electrónica MiPyMEs (FCE) B", "20190112", "B"),
-        (208, "Nota de Crédito electrónica MiPyMEs (FCE) B", "20190112", "B"),
+        (1, "Factura A", "20090620"), (2, "Nota de Débito A", "20090620"), (3, "Nota de Crédito A", "20090620"),
+        (6, "Factura B", "20090620"), (7, "Nota de Débito B", "20090620"), (8, "Nota de Crédito B", "20090620"),
+        (201, "Factura de Crédito electrónica MiPyMEs (FCE) A", "20190112"),
+        (202, "Nota de Débito electrónica MiPyMEs (FCE) A", "20190112"),
+        (203, "Nota de Crédito electrónica MiPyMEs (FCE) A", "20190112"),
+        (206, "Factura de Crédito electrónica MiPyMEs (FCE) B", "20190112"),
+        (207, "Nota de Débito electrónica MiPyMEs (FCE) B", "20190112"),
+        (208, "Nota de Crédito electrónica MiPyMEs (FCE) B", "20190112"),
     ];
 
     /// <summary>BFEGetPARAM_Tipo_IVA [CAS 2021]; 2 is the exempt rate of the Imp_op_ex rule.</summary>
@@ -135,14 +138,35 @@ public abstract class BfeRules(
 
     private static readonly string[] FceOptionals = ["2101", "2102", "22", "27"];
 
-    private IEnumerable<(int Id, string Description, string From, string Class)> Types =>
+    private IEnumerable<(int Id, string Description, string From)> Types =>
         CreditInvoices ? AllTypes : AllTypes.Where(t => t.Id < 200);
 
-    private static bool IsFce(int type) => type > 200;
+    private static readonly AsmxRefusal BadClass = new(4967,
+        "El valor ingresado para la clase de comprobante no es valido. La clase de Comprobante es opcional, de ingresar un valor solo puede ser A o B");
 
-    private static bool IsFceInvoice(int type) => type is 201 or 206;
+    private static readonly AsmxRefusal NoCurrency = new(4965,
+        "El identificador de moneda (MonId) ingresado es invalido. Este campo es obligatorio y no puede quedar vacío. Verificar los códigos mediante el metodo BFEGetPARAM_MON.");
 
-    private static bool IsInvoice(int type) => type is 1 or 6 or 201 or 206;
+    private static readonly QuoteRefusals Quote = new(
+        MissingCurrency: NoCurrency,
+        UnknownCurrency: NoCurrency,
+        BadDate: new AsmxRefusal(4966,
+            "Campo FchCotiz no corresponde a una fecha valida con formato YYYYMMDD. Este campo es opcional, de informarlo la fecha debe tener el formato YYYYMMDD donde YYYY corresponde al año, MM al mes y DD al día solicitado. De no informarlo se tomara la fecha del día actual como valor por default."),
+        NoRate: new AsmxRefusal(4964, "Sin Resultados. A la fecha consultada no se registran valores de cotización para la moneda indicada"));
+
+    private static readonly CurrencyRefusals Currency = new(
+        Unknown: new AsmxRefusal(1014, Text1014.InvalidValue("Imp_moneda_Id", "la moneda no existe. Consultar método BFEGetPARAM_MON.")),
+        BadFlag: new AsmxRefusal(4959, "Si informa el campo CanMisMonExt, los valores posibles son S o N y no debe quedar vacío."),
+        PesFlag: new AsmxRefusal(4958, "Si informa Imp_moneda_Id = PES, el campo CanMisMonExt NO debe informarse (o informarse con el valor N)"),
+        RateRequired: new AsmxRefusal(4957, "El campo Imp_moneda_ctz es obligatorio si no informa el campo CanMisMonExt con valor S o si la moneda del comprobante no tiene cotización en Banco Nación o el comprobante no es del tipo factura. El mismo debe ser mayor a 0."),
+        RateAbove: new AsmxRefusal(4960, "Si informa el campo Imp_moneda_ctz, el mismo no podra superar en 1 a la cotización oficial. Ver Método BFEGetCotizacion."));
+
+    private static readonly ReceiverRefusals Receiver = new(
+        Missing: new AsmxRefusal(4963, "Campo Condición Frente al IVA del receptor es obligatorio conforme a lo reglamentado por la Resolución General N° 5616. Para mas información consular método BFEGetPARAM_CondicionIvaReceptor"),
+        Unknown: new AsmxRefusal(4961, "El campo Condición IVA receptor no es un valor permitido. Consular método BFEGetPARAM_CondicionIvaReceptor."),
+        WrongClass: new AsmxRefusal(4962, "El campo Condición IVA receptor no es valido para la clase de comprobante informado. Consular método BFEGetPARAM_CondicionIvaReceptor."));
+
+    private static bool IsFceInvoice(VoucherTypeInfo type) => type is { Fce: true, Kind: VoucherKind.Invoice };
 
     protected override Task<ContractAnswer?> OtherAsync(ServiceCall call, CancellationToken ct)
     {
@@ -155,72 +179,31 @@ public abstract class BfeRules(
             "BFEGetPARAM_Zonas" => Done(Table(call, [Row(ns, "ClsBFEResponse_Zon", "Zon", 1, "Nacional", "20090215")])),
             "BFEGetPARAM_UMed" => Done(Table(call, Units.Select(u => Row(ns, "ClsBFEResponse_UMed", "Umed", u.Id, u.Description,
                 u.Id switch { 0 => "20091211", 98 => "20201022", _ => "20080704" })))),
-            "BFEGetPARAM_MON" => Done(Table(call, parameters.Currencies.Select(c => Row(ns, "ClsBFEResponse_Mon", "Mon", c.Id, c.Desc, c.From, c.To)))),
+            "BFEGetPARAM_MON" => Done(Table(call, Parameters.Currencies.Select(c => Row(ns, "ClsBFEResponse_Mon", "Mon", c.Id, c.Desc, c.From, c.To)))),
             "BFEGetPARAM_NCM" => Done(Table(call, Products.Select(p => new XElement(ns + "ClsBFEResponse_NCM",
                 new XElement(ns + "NCM_Codigo", p.Code), new XElement(ns + "NCM_Ds", p.Description), new XElement(ns + "NCM_Nota", "Bonos Fisc."),
                 new XElement(ns + "NCM_vig_desde", "20090215"), new XElement(ns + "NCM_vig_hasta", "NULL"))))),
-            "BFEGetPARAM_Tipo_Opc" => Done(Table(call, parameters.Optionals.Where(o => OptionalIds.Contains(o.Id))
+            "BFEGetPARAM_Tipo_Opc" => Done(Table(call, Parameters.Optionals.Where(o => OptionalIds.Contains(o.Id))
                 .Select(o => Row(ns, "ClsBFEResponse_Opc", "Opc", o.Id, o.Desc, o.From, o.To)))),
-            "BFEGetPARAM_CondicionIvaReceptor" => Done(Conditions(call)),
-            "BFEGetCotizacion" => QuoteAsync(call, ct),
-            _ => Task.FromResult<ContractAnswer?>(null),
+            "BFEGetPARAM_CondicionIvaReceptor" => Done(Conditions(call, BadClass)),
+            "BFEGetCotizacion" => QuoteAsync(call, Quote, ct),
+            _ => Done(),
         };
-    }
-
-    private static Task<ContractAnswer?> Done(ContractAnswer answer) => Task.FromResult<ContractAnswer?>(answer);
-
-    /// <summary>The annex, all of it or the class asked; another class is 4967 (manual V3.2).</summary>
-    private ContractAnswer Conditions(ServiceCall call)
-    {
-        var ns = Ns(call);
-        var wanted = call.Request.Field("ClaseCmp");
-        if (!string.IsNullOrEmpty(wanted) && wanted is not ("A" or "B"))
-            return Refuse(call, new AsmxRefusal(4967,
-                "El valor ingresado para la clase de comprobante no es valido. La clase de Comprobante es opcional, de ingresar un valor solo puede ser A o B"));
-        return Table(call, ReceiverConditions.Annex.Where(c => string.IsNullOrEmpty(wanted) || c.Class == wanted)
-            .Select(c => new XElement(ns + "ClsBFEResponse_CondicionIvaReceptor",
-                new XElement(ns + "Id", c.Id), new XElement(ns + "Desc", c.Description), new XElement(ns + "Cmp_Clase", c.Class))));
-    }
-
-    private async Task<ContractAnswer?> QuoteAsync(ServiceCall call, CancellationToken ct)
-    {
-        var currency = call.Request.Field("MonId");
-        if (string.IsNullOrEmpty(currency) || parameters.Currencies.All(c => c.Id != currency))
-            return Refuse(call, new AsmxRefusal(4965,
-                "El identificador de moneda (MonId) ingresado es invalido. Este campo es obligatorio y no puede quedar vacío. Verificar los códigos mediante el metodo BFEGetPARAM_MON."));
-        var asked = call.Request.Field("FchCotiz");
-        DateOnly day;
-        if (string.IsNullOrEmpty(asked)) day = Clock.Today();
-        else if (Figures.ParseDay(asked) is { } parsed && asked.Length == 8) day = parsed;
-        else
-            return Refuse(call, new AsmxRefusal(4966,
-                "Campo FchCotiz no corresponde a una fecha valida con formato YYYYMMDD. Este campo es opcional, de informarlo la fecha debe tener el formato YYYYMMDD donde YYYY corresponde al año, MM al mes y DD al día solicitado. De no informarlo se tomara la fecha del día actual como valor por default."));
-
-        var quote = currency == "PES" ? (1m, day) : await rates.RateAsync(currency, day, ct);
-        if (quote is not { } found)
-            return Refuse(call, new AsmxRefusal(4964, "Sin Resultados. A la fecha consultada no se registran valores de cotización para la moneda indicada"));
-        var ns = Ns(call);
-        return Answer(call, new XElement(ns + "BFEResultGet",
-            new XElement(ns + "MonId", currency), new XElement(ns + "MonCotiz", Figures.Number(found.Rate)), new XElement(ns + "FchCotiz", Figures.Day(found.Day))));
     }
 
     // ---- BFEAuthorize ----------------------------------------------------------------------
 
     protected override async Task<AsmxRefusal?> CheckAsync(ServiceCall call, AsmxCmp cmp, DateOnly today, CancellationToken ct)
     {
-        var type = Types.FirstOrDefault(t => t.Id == cmp.VoucherType);
-        if (cmp.Id <= 0) return new AsmxRefusal(1014, Text1014.Id);
-        if (type.Id == 0) return new AsmxRefusal(1014, Text1014.VoucherType);
-        if (cmp.PointOfSale is < 1 or > VoucherLimits.MaxPointOfSale) return new AsmxRefusal(1014, Text1014.PointOfSale);
-        if (cmp.Number is < 1 or > VoucherLimits.MaxNumber) return new AsmxRefusal(1014, Text1014.Number);
-        if (type.Class == "A" && cmp.DocType != 80) return new AsmxRefusal(1014, Text1014.DocType);
+        var (header, type) = CheckHeader(cmp, Types.Select(t => t.Id));
+        if (header is not null || type is null) return header;
 
-        if ((IsFce(cmp.VoucherType) ? CheckFceDate(cmp.DateText, today) : CheckDate(cmp.DateText, today)) is { } date) return date;
-        if (await CheckCurrencyAsync(cmp, today, ct) is { } currency) return currency;
-        if (CheckReceiver(cmp, type.Class) is { } receiver) return receiver;
+        if ((type.Fce ? CheckFceDate(cmp.DateText, today) : CheckDate(cmp.DateText, today)) is { } date) return date;
+        if (await CheckCurrencyAsync(cmp, today, rateMayBeOmitted: type.Kind == VoucherKind.Invoice, Currency, ct) is { } currency) return currency;
+        if (CheckReceiver(cmp, type.Class, Receiver) is { } receiver) return receiver;
         if (CheckItems(cmp) is { } items) return items;
-        if (await CheckAssociatedAsync(call, cmp, ct) is { } associated) return associated;
-        return CreditInvoices ? CheckCredit(cmp) : null;
+        if (await CheckAssociatedAsync(call, cmp, type, ct) is { } associated) return associated;
+        return CreditInvoices ? CheckCredit(cmp, type) : null;
     }
 
     private static AsmxRefusal? CheckFceDate(string? text, DateOnly today)
@@ -234,40 +217,10 @@ public abstract class BfeRules(
         return null;
     }
 
-    private async Task<AsmxRefusal?> CheckCurrencyAsync(AsmxCmp cmp, DateOnly today, CancellationToken ct)
-    {
-        if (string.IsNullOrEmpty(cmp.Currency) || parameters.Currencies.All(c => c.Id != cmp.Currency))
-            return new AsmxRefusal(1014, Text1014.InvalidValue("Imp_moneda_Id", "la moneda no existe. Consultar método BFEGetPARAM_MON."));
-        if (cmp.SameCurrency is { } same && same is not ("S" or "N"))
-            return new AsmxRefusal(4959, "Si informa el campo CanMisMonExt, los valores posibles son S o N y no debe quedar vacío.");
-        if (cmp.Currency == "PES" && cmp.SameCurrency == "S")
-            return new AsmxRefusal(4958, "Si informa Imp_moneda_Id = PES, el campo CanMisMonExt NO debe informarse (o informarse con el valor N)");
-
-        var official = cmp.Currency == "PES" ? (1m, today) : await rates.RateAsync(cmp.Currency, Figures.ParseDay(cmp.DateText) ?? today, ct);
-        var mayOmit = cmp.SameCurrency == "S" && IsInvoice(cmp.VoucherType) && official is not null;
-        if (cmp.Rate is null && !mayOmit || cmp.Rate <= 0)
-            return new AsmxRefusal(4957, "El campo Imp_moneda_ctz es obligatorio si no informa el campo CanMisMonExt con valor S o si la moneda del comprobante no tiene cotización en Banco Nación o el comprobante no es del tipo factura. El mismo debe ser mayor a 0.");
-        if (cmp.Rate is { } rate && official is { } known && cmp.Currency != "PES" && rate > known.Rate + 1)
-            return new AsmxRefusal(4960, "Si informa el campo Imp_moneda_ctz, el mismo no podra superar en 1 a la cotización oficial. Ver Método BFEGetCotizacion.");
-        return null;
-    }
-
-    private static AsmxRefusal? CheckReceiver(AsmxCmp cmp, string voucherClass)
-    {
-        if (string.IsNullOrEmpty(cmp.ReceiverConditionText))
-            return new AsmxRefusal(4963, "Campo Condición Frente al IVA del receptor es obligatorio conforme a lo reglamentado por la Resolución General N° 5616. Para mas información consular método BFEGetPARAM_CondicionIvaReceptor");
-        if (!int.TryParse(cmp.ReceiverConditionText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var condition)
-            || ReceiverConditions.ClassOf(condition) is not { } conditionClass)
-            return new AsmxRefusal(4961, "El campo Condición IVA receptor no es un valor permitido. Consular método BFEGetPARAM_CondicionIvaReceptor.");
-        if (conditionClass != voucherClass)
-            return new AsmxRefusal(4962, "El campo Condición IVA receptor no es valido para la clase de comprobante informado. Consular método BFEGetPARAM_CondicionIvaReceptor.");
-        return null;
-    }
-
     private static AsmxRefusal? CheckItems(AsmxCmp cmp)
     {
         var items = Items(cmp);
-        if (items.Count == 0) return new AsmxRefusal(1014, Text1014.InvalidValue("Items", "el comprobante debe informar al menos un ítem."));
+        if (CheckItemsSent(items) is { } none) return none;
         foreach (var item in items)
         {
             var vat = item.Whole("Iva_id") ?? 0;
@@ -293,11 +246,11 @@ public abstract class BfeRules(
         _ => null,
     };
 
-    private async Task<AsmxRefusal?> CheckAssociatedAsync(ServiceCall call, AsmxCmp cmp, CancellationToken ct)
+    private async Task<AsmxRefusal?> CheckAssociatedAsync(ServiceCall call, AsmxCmp cmp, VoucherTypeInfo voucherType, CancellationToken ct)
     {
         var block = cmp.Raw.Child("CbtesAsoc");
         if (block is null)
-            return CreditInvoices && IsFce(cmp.VoucherType) && !IsFceInvoice(cmp.VoucherType)
+            return CreditInvoices && voucherType.Fce && !IsFceInvoice(voucherType)
                 ? new AsmxRefusal(4886, "Si el tipo de comprobante que está autorizando es MiPyMEs (FCE) y corresponde a un comprobante de débito o crédito, es obligatorio informar comprobantes asociados. (<BFEAuthorize><Cmp><Tipo_cbte>/ <BFEAuthorize><Cmp> /<CbtesAsoc>)")
                 : null;
         var associated = block.Children("CbteAsoc").ToList();
@@ -335,10 +288,9 @@ public abstract class BfeRules(
     };
 
     /// <summary>Fecha_vto_pago and Opcionales, which only wsbfev1 has (4900-4955, 1015-1019).</summary>
-    private static AsmxRefusal? CheckCredit(AsmxCmp cmp)
+    private static AsmxRefusal? CheckCredit(AsmxCmp cmp, VoucherTypeInfo type)
     {
-        var type = cmp.VoucherType;
-        var fce = IsFce(type);
+        var fce = type.Fce;
         var due = cmp.Raw.Field("Fecha_vto_pago");
         var optionals = cmp.Raw.Child("Opcionales")?.Children("Opcional").ToList();
         var ids = optionals?.Select(o => o.Field("Id") ?? "").ToList() ?? [];
