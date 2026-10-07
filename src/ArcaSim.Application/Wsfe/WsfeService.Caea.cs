@@ -24,9 +24,8 @@ public sealed partial class WsfeService
         else if (!settings.OpenAccess)
         {
             var today = clock.Today();
-            bool Active(PointOfSale p, PointOfSaleKind kind) => p.Kind == kind && !p.Blocked && !(p.DeactivatedOn <= today);
-            if (!issuer.PointsOfSale.Any(p => Active(p, PointOfSaleKind.WebServiceCaea))) errors.Add(catalog.For(method, 15003).ToErr());
-            if (!issuer.PointsOfSale.Any(p => Active(p, PointOfSaleKind.WebServiceCae))) errors.Add(catalog.For(method, 15016).ToErr());
+            if (!issuer.PointsOfSale.Any(p => p.IsUsableFor(PointOfSaleKind.WebServiceCaea, today))) errors.Add(catalog.For(method, 15003).ToErr());
+            if (!issuer.PointsOfSale.Any(p => p.IsUsableFor(PointOfSaleKind.WebServiceCae, today))) errors.Add(catalog.For(method, 15016).ToErr());
         }
         if (!TryFortnight(request.Periodo, request.Orden, out var from, out var to, out var periodError))
             errors.Add(catalog.For(method, periodError).ToErr());
@@ -39,11 +38,16 @@ public sealed partial class WsfeService
             var window = $"Fecha de envío podrá ser desde 5 días corridos anteriores al inicio hasta el último dia de cada quincena. Del {UsDate(opens)} hasta {UsDate(to)}";
             return new FECAEAGetResponse { Errors = [catalog.WithMessage(method, 15006, window).ToErr()] };
         }
-        if (await caeas.FindAsync(auth.Cuit, request.Periodo, request.Orden, ct) is not null)
-            return new FECAEAGetResponse { Errors = [catalog.For(method, 15008).ToErr()] };
+        IssuedCaea caea;
+        // One CAEA per CUIT and fortnight: two requests at once cannot both get one.
+        using (await locks.AcquireAsync(CaeaRequests, auth.Cuit, request.Periodo, request.Orden, ct))
+        {
+            if (await caeas.FindAsync(auth.Cuit, request.Periodo, request.Orden, ct) is not null)
+                return new FECAEAGetResponse { Errors = [catalog.For(method, 15008).ToErr()] };
 
-        var caea = new IssuedCaea(auth.Cuit, request.Periodo, request.Orden, codes.NextCaea(), from, to, to.AddMonths(1), clock.Now);
-        await caeas.AddAsync(caea, ct);
+            caea = new IssuedCaea(auth.Cuit, request.Periodo, request.Orden, codes.NextCaea(), from, to, to.AddMonths(1), clock.Now);
+            await caeas.AddAsync(caea, ct);
+        }
         events.Publish(new CaeaGranted(time.GetUtcNow(), auth.Cuit, caea.Period, caea.Fortnight, caea.Code));
         var result = ToGet(caea);
         result.Observaciones = [catalog.For(method, 15018).ToObs()];
@@ -111,6 +115,7 @@ public sealed partial class WsfeService
             return response;
         }
 
+        using (await locks.AcquireAsync(CaeaReports, auth.Cuit, header.PtoVta, 0, ct))
         using (await locks.AcquireAsync(Name, auth.Cuit, header.PtoVta, header.CbteTipo, ct))
         {
             var last = await vouchers.LastAsync(auth.Cuit, header.PtoVta, header.CbteTipo, ct);
@@ -210,16 +215,19 @@ public sealed partial class WsfeService
         else if (caea.Cuit != auth.Cuit) errors.Add(catalog.For(method, 1201).ToErr());
         else
         {
+            // The checks and the report go together, and with the vouchers reported under a CAEA (FECAEARegInformativo):
+            // neither two reports at once nor a report and a voucher can both pass 1202 and 1209.
+            using var _ = await locks.AcquireAsync(CaeaReports, auth.Cuit, request.PtoVta, 0, ct);
             var issuer = await IssuerAsync(auth.Cuit, request.PtoVta, PointOfSaleKind.WebServiceCaea, null, ct);
             if (issuer?.FindPointOfSale(request.PtoVta) is not { Kind: PointOfSaleKind.WebServiceCaea }) errors.Add(catalog.For(method, 1204).ToErr());
             if (clock.Today() <= caea.ValidFrom) errors.Add(catalog.For(method, 1203).ToErr());
             if (await vouchers.AnyWithCaeaAsync(auth.Cuit, caea.Code, request.PtoVta, ct)) errors.Add(catalog.For(method, 1202).ToErr());
             if ((await caeas.WithoutMovementAsync(auth.Cuit, caea.Code, ct)).Any(r => r.PointOfSale == request.PtoVta))
                 errors.Add(catalog.For(method, 1209).ToErr());
+            if (errors.Count == 0)
+                await caeas.AddWithoutMovementAsync(new CaeaWithoutMovement(auth.Cuit, caea.Code, request.PtoVta, clock.Today()), ct);
         }
 
-        if (errors.Count == 0)
-            await caeas.AddWithoutMovementAsync(new CaeaWithoutMovement(auth.Cuit, caea!.Code, request.PtoVta, clock.Today()), ct);
         response.Resultado = errors.Count == 0 ? "A" : "R";
         response.Errors = errors.Count > 0 ? [.. errors] : null;
         return response;

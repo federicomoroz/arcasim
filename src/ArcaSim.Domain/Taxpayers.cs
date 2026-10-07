@@ -29,7 +29,11 @@ public enum PointOfSaleKind
     Other,
 }
 
-public sealed record PointOfSale(int Number, PointOfSaleKind Kind, bool Blocked = false, DateOnly? DeactivatedOn = null);
+public sealed record PointOfSale(int Number, PointOfSaleKind Kind, bool Blocked = false, DateOnly? DeactivatedOn = null)
+{
+    /// <summary>Whether it issues that kind of voucher, is not blocked and is not yet deactivated on that day.</summary>
+    public bool IsUsableFor(PointOfSaleKind kind, DateOnly today) => Kind == kind && !Blocked && !(DeactivatedOn <= today);
+}
 
 public static class VatConditions
 {
@@ -83,8 +87,7 @@ public sealed class Taxpayer
     public PointOfSale? FindPointOfSale(int number) => _pointsOfSale.FirstOrDefault(p => p.Number == number);
 
     /// <summary>Whether the point of sale exists for that kind of voucher, is not blocked and is not yet deactivated on that day.</summary>
-    public bool CanIssueFrom(int number, PointOfSaleKind kind, DateOnly today) =>
-        FindPointOfSale(number) is { } point && point.Kind == kind && !point.Blocked && !(point.DeactivatedOn <= today);
+    public bool CanIssueFrom(int number, PointOfSaleKind kind, DateOnly today) => FindPointOfSale(number)?.IsUsableFor(kind, today) == true;
 
     public void AddPointOfSale(PointOfSale pointOfSale)
     {

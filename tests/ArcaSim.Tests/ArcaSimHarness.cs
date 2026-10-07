@@ -7,6 +7,7 @@ using ArcaSim.Domain;
 using ArcaSim.Infrastructure.Security;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArcaSim.Tests;
@@ -53,13 +54,15 @@ public sealed class ArcaSimHarness : IAsyncDisposable
 
     /// <param name="postgres">A connection string to run on PostgreSQL instead of memory.</param>
     /// <param name="open">Open access, as ArcaSim starts by default. The suite runs strict unless a test asks.</param>
-    public static ArcaSimHarness Start(string? postgres = null, bool open = false)
+    /// <param name="services">Registrations that replace ArcaSim's own, for a test that needs a slower store or a fake.</param>
+    public static ArcaSimHarness Start(string? postgres = null, bool open = false, Action<IServiceCollection>? services = null)
     {
         var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(host =>
         {
             host.UseSetting("ArcaSim:DataDirectory", KeysDirectory);
             host.UseSetting("ArcaSim:Access", open ? "Open" : "Strict");
             host.UseSetting("ArcaSim:ReplayWindowEnabled", "false");
+            if (services is not null) host.ConfigureTestServices(services);
             if (postgres is null) return;
             host.UseSetting("ArcaSim:Storage", "Postgres");
             host.UseSetting("ConnectionStrings:ArcaSim", postgres);

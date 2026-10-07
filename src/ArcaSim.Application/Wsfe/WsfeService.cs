@@ -26,6 +26,12 @@ public sealed partial class WsfeService(
 {
     public const string Name = "wsfe";
 
+    /// <summary>The locks of a CUIT's CAEA request for a fortnight, apart from its numbering.</summary>
+    private const string CaeaRequests = "wsfe.caea";
+
+    /// <summary>The locks of what a point of sale reports under a CAEA: its vouchers or that it had none.</summary>
+    private const string CaeaReports = "wsfe.caea-reports";
+
     /// <summary>"No existen datos en nuestros registros para los parametros ingresados." as ARCA sends it.</summary>
     private Err NoData => new() { Code = 602, Msg = catalog.Message(602) };
 

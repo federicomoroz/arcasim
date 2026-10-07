@@ -30,6 +30,8 @@ public sealed partial class WsaaService(
     public static readonly TimeSpan TicketLifetime = TimeSpan.FromHours(12);
     private static readonly TimeSpan Tolerance = TimeSpan.FromHours(24);
 
+    private readonly KeyedLocks<(string ClientDn, string Service)> _issuing = new();
+
     public async Task<LoginResult> LoginAsync(string? in0, CancellationToken ct = default)
     {
         var result = await CheckAndIssueAsync(in0, ct);
@@ -118,18 +120,23 @@ public sealed partial class WsaaService(
             authorizations = [new ServiceAuthorization(clientCuit!.Value, alias, clientCuit.Value, service.Id)];
         if (authorizations.Count == 0) return LoginResult.Fail(WsaaFault.NotAuthorized);
 
-        if (settings.ReplayWindowEnabled)
+        DateTimeOffset generation, expiration;
+        // The window is checked and the ticket recorded under one lock: two logins at once cannot both pass it.
+        using (await _issuing.AcquireAsync((clientDn, service.Id), ct))
         {
-            var latest = await tickets.LatestAsync(clientDn, service.Id, ct);
-            if (latest is not null && latest.ExpirationTime > now && latest.GenerationTime > now - settings.Profile.ReplayWindow)
-                return LoginResult.Fail(WsaaFault.AlreadyAuthenticated);
+            if (settings.ReplayWindowEnabled)
+            {
+                var latest = await tickets.LatestAsync(clientDn, service.Id, ct);
+                if (latest is not null && latest.ExpirationTime > now && latest.GenerationTime > now - settings.Profile.ReplayWindow)
+                    return LoginResult.Fail(WsaaFault.AlreadyAuthenticated);
+            }
+
+            if (settings.ChaosFor(service.Id).Down) return LoginResult.Fail(WsaaFault.ServiceUnavailable);
+
+            generation = TruncateToMilliseconds(now);
+            expiration = generation + TicketLifetime;
+            await tickets.AddAsync(new IssuedTicket(clientDn, service.Id, generation, expiration), ct);
         }
-
-        if (settings.ChaosFor(service.Id).Down) return LoginResult.Fail(WsaaFault.ServiceUnavailable);
-
-        var generation = TruncateToMilliseconds(now);
-        var expiration = generation + TicketLifetime;
-        await tickets.AddAsync(new IssuedTicket(clientDn, service.Id, generation, expiration), ct);
 
         var token = BuildToken(service, clientDn, authorizations, generation, expiration);
         events.Publish(new TicketIssued(time.GetUtcNow(), clientDn, service.Id));
