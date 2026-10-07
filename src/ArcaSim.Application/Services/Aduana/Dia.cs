@@ -19,7 +19,12 @@ internal static class Dia
 
     public const string NoData = "No hay datos para los criterios ingresados";
 
-    public static string MissingText(string field) => $"Falta dato obligatorio {field}";
+    /// <summary>
+    /// 42034's text. Each manual words it its own way: "Falta dato obligatorio X" (WDiaUtiDES.md, WGesINV.md) and,
+    /// with the article, "Falta el dato obligatorio X" (wgestiendaslibres.md, wgesprecintosdepfis.md).
+    /// </summary>
+    public static string MissingText(string field, bool article = false) =>
+        article ? $"Falta el dato obligatorio {field}" : $"Falta dato obligatorio {field}";
 
     /// <summary>The outcome in the answer's own receipt: the code, and the text in the field the service names it (DesError, DescErr...), or none.</summary>
     public static XElement Receipt(this XElement answer, long code, string? text, string textField = "DesError")
@@ -72,6 +77,9 @@ internal static class Dia
     /// <summary>The first of the fields that came empty, to answer 42034 with its name.</summary>
     public static string? FirstMissing(XElement? scope, params string[] fields) =>
         fields.FirstOrDefault(f => string.IsNullOrWhiteSpace(scope.Child(f)?.Value));
+
+    /// <summary>A query's filter on a field: the query left it empty, which asks for everything, or names this value.</summary>
+    public static bool Matches(this XElement? query, string field, string value) => query.Field(field) is var wanted && (wanted == "" || wanted == value);
 
     /// <summary>A field of the business argument itself, not one with the same name deeper down or in the authentication.</summary>
     public static string Field(this XElement? scope, string name) => scope.ChildText(name) ?? "";

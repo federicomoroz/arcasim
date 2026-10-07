@@ -48,7 +48,7 @@ public sealed class WgesPrecintosRules(IDocumentStore store, IClock clock) : ISe
     private async Task<ContractAnswer> NoveltyAsync(ServiceCall call, CancellationToken ct)
     {
         var arg = call.Arg("argPrecinto");
-        if (Dia.FirstMissing(arg, "IdPrecinto") is { } missing) return call.Fail(42034, $"Falta el dato obligatorio {missing}");
+        if (Dia.FirstMissing(arg, "IdPrecinto") is { } missing) return call.Fail(42034, Dia.MissingText(missing, article: true));
         var id = arg.Field("IdPrecinto");
         var aduana = arg.Field("Aduana");
         var place = arg.Field("LugarOperativo");
@@ -63,7 +63,7 @@ public sealed class WgesPrecintosRules(IDocumentStore store, IClock clock) : ISe
             await store.PutAsync(Collection, id, cema with { EstadoPrecinto = "BAJA", FechaEstado = now }, ct);
             return Done(call);
         }
-        if (Dia.FirstMissing(arg, "Aduana", "LugarOperativo") is { } field) return call.Fail(42034, $"Falta el dato obligatorio {field}");
+        if (Dia.FirstMissing(arg, "Aduana", "LugarOperativo") is { } field) return call.Fail(42034, Dia.MissingText(field, article: true));
         if (aduana.Length != 3 || !aduana.All(char.IsDigit)) return call.Fail(70222, "Aduana INEXISTENTE o fuera de Vigencia");
         if (place.Length != 5) return call.Fail(10782, "Lugar Operativo INEXISTENTE o Fuera de Vigencia");
 
@@ -81,10 +81,9 @@ public sealed class WgesPrecintosRules(IDocumentStore store, IClock clock) : ISe
     private async Task<ContractAnswer> PadronAsync(ServiceCall call, CancellationToken ct)
     {
         var arg = call.Arg("argConsulta");
-        bool Matches(string field, string value) => arg.Field(field) is var wanted && (wanted == "" || wanted == value);
         var found = (await MineAsync(call, ct))
-            .Where(c => Matches("IdPrecinto", c.Id) && Matches("Aduana", c.Aduana) && Matches("LugarOperativo", c.LugarOperativo)
-                        && Matches("EstadoPrecinto", c.EstadoPrecinto) && Matches("EstadoAcepDepo", c.EstadoAcepDepo))
+            .Where(c => arg.Matches("IdPrecinto", c.Id) && arg.Matches("Aduana", c.Aduana) && arg.Matches("LugarOperativo", c.LugarOperativo)
+                        && arg.Matches("EstadoPrecinto", c.EstadoPrecinto) && arg.Matches("EstadoAcepDepo", c.EstadoAcepDepo))
             .ToList();
         if (found.Count == 0) return call.Fail(10121, Dia.NoData);
 
@@ -137,7 +136,7 @@ public sealed class WgesPrecintosRules(IDocumentStore store, IClock clock) : ISe
             var (cema, refusal) = await UsableAsync(call, id, "ACTI", ct);
             if (refusal is not null) return refusal;
             var alarms = item.Field("CodAlarma");
-            if (alarms == "") return call.Fail(42034, "Falta el dato obligatorio CodAlarma", id);
+            if (alarms == "") return call.Fail(42034, Dia.MissingText("CodAlarma", article: true), id);
             if (alarms.Split('+').FirstOrDefault(a => !AduanaTables.Has("ESTMON_DESC", a)) is { } unknown)
                 return call.Fail(30841, $"Codigo de alarma {unknown} inexistente", id);
             batch.Add(cema! with { CodAlarma = alarms, FUltEvento = Dia.Moment(item.Field("FechaEvento")) ?? clock.Now.ToArgentina() });

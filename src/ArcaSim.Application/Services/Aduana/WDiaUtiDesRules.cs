@@ -197,12 +197,11 @@ public sealed class WDiaUtiDesRules(IDocumentStore store, ITaxpayerRepository ta
     private async Task<ContractAnswer> ContainersAsync(ServiceCall call, CancellationToken ct)
     {
         var arg = call.Arg("argContenedor");
-        bool Matches(string field, string value) => arg.Field(field) is var wanted && (wanted == "" || wanted == value);
         var found = (await store.ListAsync<PemaUse>(Uses, "", ct))
             .Where(u => u.Cuit == call.Cuit && u.Estado != ""
-                        && Matches("IdentificadorDestinacion", u.Destinacion) && Matches("IdentificadorDispositivo", u.Id)
-                        && Matches("IdentificadorContenedor", u.Contenedor) && Matches("EstadoOperacion", u.Operacion)
-                        && Matches("AduanaOrigen", u.Aduana))
+                        && arg.Matches("IdentificadorDestinacion", u.Destinacion) && arg.Matches("IdentificadorDispositivo", u.Id)
+                        && arg.Matches("IdentificadorContenedor", u.Contenedor) && arg.Matches("EstadoOperacion", u.Operacion)
+                        && arg.Matches("AduanaOrigen", u.Aduana))
             .ToList();
         if (found.Count == 0) return call.Fail(10121, Dia.NoData);
 

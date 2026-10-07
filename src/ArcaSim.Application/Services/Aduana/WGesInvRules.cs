@@ -28,6 +28,8 @@ public sealed class WGesInvRules(IDocumentStore store, IClock clock) : IServiceB
     private const string Despachos = "WGesINV.despachos";
     private const string Forms = "WGesINV.vucea";
     private const string Ok = "Procedimiento terminado OK.";
+
+    /// <summary>10121's text with the final period WGesINV.md prints, unlike the other customs services (Dia.NoData).</summary>
     private const string NoData = "No hay datos para los criterios ingresados.";
 
     /// <summary>The first query of a CUIT finds its despachos; requests that arrive together make them once.</summary>

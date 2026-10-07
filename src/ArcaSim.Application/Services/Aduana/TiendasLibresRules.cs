@@ -46,7 +46,6 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
     private const string Movements = "wgestiendaslibres.movimientos";
     private const string Difes = "wgestiendaslibres.dife";
     private const string Replays = "wgestiendaslibres.transacciones";
-    private const string NoData = "No hay datos para los criterios ingresados";
     private readonly InFlight _running = new();
 
     /// <summary>
@@ -77,9 +76,9 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
     private async Task<ContractAnswer> OnceAsync(ServiceCall call, Func<ServiceCall, XElement, CancellationToken, Task<XElement>> process, CancellationToken ct)
     {
         var arg = call.Request.Elements().FirstOrDefault(e => e.Name.LocalName.EndsWith("Params", StringComparison.Ordinal));
-        if (arg is null) return call.Ok(Refused(call, 42034, $"Falta el dato obligatorio arg{call.Name}Params"));
+        if (arg is null) return call.Ok(Missing(call, $"arg{call.Name}Params"));
         var transaction = arg.Field("transaccion");
-        if (transaction == "") return call.Ok(Refused(call, 42034, "Falta el dato obligatorio transaccion"));
+        if (transaction == "") return call.Ok(Missing(call, "transaccion"));
         var key = $"{call.Cuit}/{call.Name}/{transaction}";
         if (await store.GetAsync<TlReplay>(Replays, key, ct) is { } done) return call.Ok(XElement.Parse(done.Xml));
 
@@ -94,10 +93,10 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
 
     private async Task<XElement> EnterAsync(ServiceCall call, XElement arg, CancellationToken ct)
     {
-        if (Dia.FirstMissing(arg, "aduana", "lugarOperativo", "idComprobante", "origen") is { } missing) return Refused(call, 42034, $"Falta el dato obligatorio {missing}");
+        if (Dia.FirstMissing(arg, "aduana", "lugarOperativo", "idComprobante", "origen") is { } missing) return Missing(call, missing);
         var receipt = arg.Field("idComprobante");
         var items = Items(arg, "ListaMercaderiaIngresada", arg.Field("origen"));
-        if (items.Count == 0) return Refused(call, 42034, "Falta el dato obligatorio ListaMercaderiaIngresada");
+        if (items.Count == 0) return Missing(call, "ListaMercaderiaIngresada");
         var foreign = receipt.Length == 16 && receipt[5..7] == "PI";
         var movement = await MoveAsync(call, "ING", arg.Field("aduana"), arg.Field("lugarOperativo"), receipt, foreign ? "PEND" : "AUTO", items, ct);
         if (!foreign) await AddAsync(call, movement.Aduana, movement.Lugar, items, ct);
@@ -107,11 +106,11 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
     /// <summary>The salida de oficio of a particular's declaration: its entry's goods become stock.</summary>
     private async Task<XElement> ReleaseAsync(ServiceCall call, XElement arg, CancellationToken ct)
     {
-        if (Dia.FirstMissing(arg, "aduana", "lugarOperativo", "idDeclaracion") is { } missing) return Refused(call, 42034, $"Falta el dato obligatorio {missing}");
+        if (Dia.FirstMissing(arg, "aduana", "lugarOperativo", "idDeclaracion") is { } missing) return Missing(call, missing);
         var entry = (await store.ListAsync<TlMovement>(Movements, $"{call.Cuit}/", ct))
             .FirstOrDefault(m => m.Codigo == "ING" && m.Estado == "PEND" && m.Comprobante == arg.Field("idDeclaracion")
                                  && m.Aduana == arg.Field("aduana") && m.Lugar == arg.Field("lugarOperativo"));
-        if (entry is null) return Refused(call, 30286, NoData);
+        if (entry is null) return Refused(call, 30286, Dia.NoData);
         await store.PutAsync(Movements, $"{call.Cuit}/{entry.Id}", entry with { Estado = "AUTO" }, ct);
         await AddAsync(call, entry.Aduana, entry.Lugar, entry.Items, ct);
         var salida = await MoveAsync(call, "SAL", entry.Aduana, entry.Lugar, entry.Comprobante, "AUTO", entry.Items, ct);
@@ -120,13 +119,13 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
 
     private async Task<XElement> SellAsync(ServiceCall call, XElement arg, CancellationToken ct)
     {
-        if (Dia.FirstMissing(arg, "aduana", "lugarOperativo", "tipoComprobante", "nroComprobante") is { } missing) return Refused(call, 42034, $"Falta el dato obligatorio {missing}");
+        if (Dia.FirstMissing(arg, "aduana", "lugarOperativo", "tipoComprobante", "nroComprobante") is { } missing) return Missing(call, missing);
         var (type, number) = (arg.Field("tipoComprobante"), arg.Field("nroComprobante"));
         var (aduana, place) = (arg.Field("aduana"), arg.Field("lugarOperativo"));
         if ((await store.ListAsync<TlMovement>(Movements, $"{call.Cuit}/", ct)).Any(m => m.Codigo == "VTA" && m.Comprobante == $"{type} {number}"))
             return Refused(call, 21526, $"Venta ya registrada {type} {number}");
         var items = Items(arg, "listaMercaderiaVendida", null);
-        if (items.Count == 0) return Refused(call, 42034, "Falta el dato obligatorio listaMercaderiaVendida");
+        if (items.Count == 0) return Missing(call, "listaMercaderiaVendida");
 
         var movement = await MoveAsync(call, "VTA", aduana, place, $"{type} {number}", "AUTO", items, ct);
         var negative = false;
@@ -148,10 +147,10 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
     /// <summary>Destruction and returns: every product has to have the stock it takes, or nothing moves.</summary>
     private async Task<XElement> TakeAsync(ServiceCall call, XElement arg, string list, string code, CancellationToken ct)
     {
-        if (Dia.FirstMissing(arg, "aduana", "lugarOperativo", "idComprobante") is { } missing) return Refused(call, 42034, $"Falta el dato obligatorio {missing}");
+        if (Dia.FirstMissing(arg, "aduana", "lugarOperativo", "idComprobante") is { } missing) return Missing(call, missing);
         var (aduana, place) = (arg.Field("aduana"), arg.Field("lugarOperativo"));
         var items = Items(arg, list, arg.Field("origen") is var origin && origin != "" ? origin : null);
-        if (items.Count == 0) return Refused(call, 42034, $"Falta el dato obligatorio {list}");
+        if (items.Count == 0) return Missing(call, list);
         foreach (var item in items)
         {
             if (await StockOfAsync(call, aduana, place, item, ct) is not { } stock)
@@ -169,12 +168,12 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
 
     private async Task<XElement> JustifyAsync(ServiceCall call, XElement arg, CancellationToken ct)
     {
-        if (Dia.FirstMissing(arg, "idDIFE") is { } missing) return Refused(call, 42034, $"Falta el dato obligatorio {missing}");
+        if (Dia.FirstMissing(arg, "idDIFE") is { } missing) return Missing(call, missing);
         var key = $"{call.Cuit}/{arg.Field("idDIFE").PadLeft(10, '0')}";
-        if (await store.GetAsync<TlDife>(Difes, key, ct) is not { Estado: "REG" or "REC" } dife) return Refused(call, 30286, NoData);
+        if (await store.GetAsync<TlDife>(Difes, key, ct) is not { Estado: "REG" or "REC" } dife) return Refused(call, 30286, Dia.NoData);
         var reasons = arg.Child("listaJustificacion")?.Elements().ToList() ?? [];
-        if (reasons.Count == 0) return Refused(call, 42034, "Falta el dato obligatorio listaJustificacion");
-        if (reasons.FirstOrDefault(r => r.Field("codJustificacion") == "") is not null) return Refused(call, 42034, "Falta el dato obligatorio codJustificacion");
+        if (reasons.Count == 0) return Missing(call, "listaJustificacion");
+        if (reasons.FirstOrDefault(r => r.Field("codJustificacion") == "") is not null) return Missing(call, "codJustificacion");
         var total = reasons.Sum(r => r.Decimal("cantidadJustificacion"));
         if (total != dife.Item.Cantidad)
             return Refused(call, 21550, $"Total de cant justificadas {Number(total)} difiere de cant registrada en la DIFE {Number(dife.Item.Cantidad)}");
@@ -194,11 +193,10 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
     private async Task<ContractAnswer> StockAsync(ServiceCall call, CancellationToken ct)
     {
         var arg = call.Arg("argConsultarStockParams");
-        if (Dia.FirstMissing(arg, "Aduana", "LugarOperativo") is { } missing) return call.Ok(Refused(call, 42034, $"Falta el dato obligatorio {missing}"));
-        bool Matches(string field, string value) => arg.Field(field) is var wanted && (wanted == "" || wanted == value);
+        if (Dia.FirstMissing(arg, "Aduana", "LugarOperativo") is { } missing) return call.Ok(Missing(call, missing));
         var found = (await store.ListAsync<TlStock>(Stock, $"{call.Cuit}/{arg.Field("Aduana")}/{arg.Field("LugarOperativo")}/", ct))
-            .Where(s => Matches("NCM", s.Item.Ncm) && Matches("CodProducto", s.Item.Codigo) && Matches("Origen", s.Item.Origen)).ToList();
-        if (found.Count == 0) return call.Ok(Refused(call, 30286, NoData));
+            .Where(s => arg.Matches("NCM", s.Item.Ncm) && arg.Matches("CodProducto", s.Item.Codigo) && arg.Matches("Origen", s.Item.Origen)).ToList();
+        if (found.Count == 0) return call.Ok(Refused(call, 30286, Dia.NoData));
         return call.Ok(Answer(call, r => r.Repeat("StockMercaderia", found, (row, s) => row
             .Set("NCM", s.Item.Ncm).Set("CodProducto", s.Item.Codigo).Set("Origen", s.Item.Origen).Set("Cantidad", s.Item.Cantidad).Set("EsPack", "N"))));
     }
@@ -206,13 +204,13 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
     private async Task<ContractAnswer> MovementsAsync(ServiceCall call, CancellationToken ct)
     {
         var arg = call.Arg("argConsultarMovimientosParams");
-        if (Dia.FirstMissing(arg, "Aduana", "LugarOperativo") is { } missing) return call.Ok(Refused(call, 42034, $"Falta el dato obligatorio {missing}"));
+        if (Dia.FirstMissing(arg, "Aduana", "LugarOperativo") is { } missing) return call.Ok(Missing(call, missing));
         var (from, to) = (arg!.Date("FechaDesde") ?? DateOnly.MinValue, arg!.Date("FechaHasta") ?? DateOnly.MaxValue);
         var found = (await store.ListAsync<TlMovement>(Movements, $"{call.Cuit}/", ct))
             .Where(m => m.Aduana == arg.Field("Aduana") && m.Lugar == arg.Field("LugarOperativo")
                         && DateOnly.FromDateTime(m.Fecha.DateTime) is var day && day >= from && day <= to)
             .ToList();
-        if (found.Count == 0) return call.Ok(Refused(call, 30286, NoData));
+        if (found.Count == 0) return call.Ok(Refused(call, 30286, Dia.NoData));
         return call.Ok(Answer(call, r => r.Repeat("MovimientoMercaderia", found, (row, m) => row
             .Set("CodMovimiento", m.Codigo).Set("fechaMovimiento", m.Fecha).Set("idMovimiento", m.Id))));
     }
@@ -220,10 +218,10 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
     private async Task<ContractAnswer> MovementAsync(ServiceCall call, CancellationToken ct)
     {
         var arg = call.Arg("argConsultarMovimientosParams");
-        if (Dia.FirstMissing(arg, "Aduana", "LugarOperativo", "IdMovimiento") is { } missing) return call.Ok(Refused(call, 42034, $"Falta el dato obligatorio {missing}"));
+        if (Dia.FirstMissing(arg, "Aduana", "LugarOperativo", "IdMovimiento") is { } missing) return call.Ok(Missing(call, missing));
         if (await store.GetAsync<TlMovement>(Movements, $"{call.Cuit}/{arg.Field("IdMovimiento").PadLeft(10, '0')}", ct) is not { } movement
             || movement.Aduana != arg.Field("Aduana") || movement.Lugar != arg.Field("LugarOperativo"))
-            return call.Ok(Refused(call, 30286, NoData));
+            return call.Ok(Refused(call, 30286, Dia.NoData));
         return call.Ok(Answer(call, r =>
         {
             r.Find("DetalleMovimiento")!
@@ -246,13 +244,12 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
         var (from, to) = (arg.Date("fechaDesde") ?? DateOnly.MinValue, arg.Date("fechaHasta") ?? DateOnly.MaxValue);
         if (to < from) return call.Ok(Refused(call, 20337, "La fecha HASTA debe ser mayor o igual a la fecha DESDE"));
         if (to > clock.Today()) return call.Ok(Refused(call, 20341, "La fecha HASTA debe ser menor o igual a la del dia"));
-        bool Matches(string field, string value) => arg.Field(field) is var wanted && (wanted == "" || wanted == value);
         var found = (await store.ListAsync<TlDife>(Difes, $"{call.Cuit}/", ct))
-            .Where(d => Matches("idDIFE", d.Id) && Matches("idMovimiento", d.IdMovimiento) && Matches("tipoComprobante", d.TipoComprobante)
-                        && Matches("nroComprobante", d.NroComprobante) && Matches("codEstado", d.Estado)
+            .Where(d => arg.Matches("idDIFE", d.Id) && arg.Matches("idMovimiento", d.IdMovimiento) && arg.Matches("tipoComprobante", d.TipoComprobante)
+                        && arg.Matches("nroComprobante", d.NroComprobante) && arg.Matches("codEstado", d.Estado)
                         && DateOnly.FromDateTime(d.Fecha.DateTime) is var day && day >= from && day <= to)
             .ToList();
-        if (found.Count == 0) return call.Ok(Refused(call, 30286, NoData));
+        if (found.Count == 0) return call.Ok(Refused(call, 30286, Dia.NoData));
         return call.Ok(Answer(call, r => r.Repeat("DetalleDIFE", found, (row, d) =>
         {
             row.Set("idDIFE", d.Id).Set("aduana", d.Aduana).Set("lugarOperativo", d.Lugar).Set("NCM", d.Item.Ncm).Set("codProducto", d.Item.Codigo)
@@ -289,6 +286,9 @@ public sealed class TiendasLibresRules(IDocumentStore store, IClock clock) : ISe
         result.AddFirst(Errors(call, code, text, null));
         return answer;
     }
+
+    /// <summary>42034 for a field that came empty, worded as wgestiendaslibres.md words it.</summary>
+    private static XElement Missing(ServiceCall call, string field) => Refused(call, 42034, Dia.MissingText(field, article: true));
 
     private static XElement Errors(ServiceCall call, long code, string? text, string? additional) =>
         new(call.Name("ListaErrores"), new XElement(call.Name("DetalleError"),

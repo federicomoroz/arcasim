@@ -26,7 +26,6 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
 {
     private const string Collection = "WutiGOPDeclaraciones.declaraciones";
     private const string Ok = "OK Procesado";
-    private const string NoData = "No hay datos para los criterios ingresados";
     private const int PerLote = 2;
 
     /// <summary>The first query at an aduana and lugar operativo finds its declarations; requests that arrive together make them once.</summary>
@@ -46,14 +45,14 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
         {
             var detailed = call.Name == "PndListaGOPDetallada";
             var pending = (await store.ListAsync<GopDeclaration>(Collection, place, ct)).Where(d => detailed ? !d.CaratulaLeida : !d.EstadoLeido).ToList();
-            if (pending.Count == 0) return call.Fail(30286, NoData);
+            if (pending.Count == 0) return call.Fail(30286, Dia.NoData);
             var answer = call.Sample().Receipt(0, Ok, "DesError");
             answer.Repeat("Pendiente", pending, (row, d) => row.Set("IdDecla", d.IdDecla));
             return call.Done(answer);
         }
 
         var key = place + arg.Field("IdDecla");
-        if (await store.GetAsync<GopDeclaration>(Collection, key, ct) is not { } declaration) return call.Fail(30286, NoData);
+        if (await store.GetAsync<GopDeclaration>(Collection, key, ct) is not { } declaration) return call.Fail(30286, Dia.NoData);
         switch (call.Name)
         {
             case "ListaGOPCaratDeta":
@@ -69,7 +68,7 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
             case "ListaGOPCancelaA":
             case "ListaGOPItemsCancelados":
             case "ListaGOPBloqueos":
-                return call.Fail(30286, NoData);
+                return call.Fail(30286, Dia.NoData);
             default:
                 return null;
         }
@@ -109,7 +108,7 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
     private static ContractAnswer ItemsOf(ServiceCall call, GopDeclaration d, decimal requested)
     {
         var lote = Math.Max(decimal.Truncate(requested), 1);
-        if (lote > (d.Items + PerLote - 1) / PerLote) return call.Fail(30286, NoData);
+        if (lote > (d.Items + PerLote - 1) / PerLote) return call.Fail(30286, Dia.NoData);
         var first = ((int)lote - 1) * PerLote + 1;
         var numbers = Enumerable.Range(first, Math.Min(PerLote, d.Items - first + 1)).ToList();
         var answer = call.Sample().Receipt(0, Ok);
