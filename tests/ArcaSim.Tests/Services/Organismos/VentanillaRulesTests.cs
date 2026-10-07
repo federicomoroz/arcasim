@@ -129,4 +129,19 @@ public class VentanillaRulesTests
         var inbox = await store.ListAsync<Communication>(VentanillaInbox.Communications);
         Assert.Equal([1L, 2L, 3L], inbox.Where(c => c.Cuit == Caller).Select(c => c.Id).Order());
     }
+
+    [Fact]
+    public async Task A_communication_preloaded_in_a_state_the_manual_does_not_list_is_still_listed_and_read()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var ve = await ServiceProbe.StartAsync(sim, "veconsumerws");
+        var odd = await Inbox.PublishAsync(ve.Store, new Communication(0, Caller, sim.Clock.Now, null, 1, "Rara", "Rara", 2, 7, null, null, false, []));
+
+        var listed = (await ListAsync(ve, "<fechaDesde>2026-09-20</fechaDesde>")).Valid();
+        var read = (await ReadAsync(ve, odd.Id)).Valid();
+
+        Assert.Equal("1", listed.Value("totalItems"));
+        Assert.Equal(("7", ""), (listed.Value("estado"), listed.Value("estadoDesc")));
+        Assert.Equal(("7", ""), (read.Value("estado"), read.Value("estadoDesc")));
+    }
 }

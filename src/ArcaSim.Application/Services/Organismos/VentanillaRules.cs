@@ -238,7 +238,8 @@ public sealed class VentanillaRules(IDocumentStore store, IClock clock) : IServi
         .Set("sistemaPublicador", c.PublisherId)
         .Set("sistemaPublicadorDesc", publishers.GetValueOrDefault(c.PublisherId, ""))
         .Set("estado", c.State)
-        .Set("estadoDesc", States.First(s => s.Id == c.State).Description)
+        // A communication preloaded in a state the manual does not list has no description to give.
+        .Set("estadoDesc", States.FirstOrDefault(s => s.Id == c.State).Description ?? "")
         .Set("asunto", c.Subject ?? c.Message[..Math.Min(50, c.Message.Length)])
         .Set("prioridad", c.Priority)
         .Set("tieneAdjunto", c.Attachments.Count > 0)
