@@ -163,8 +163,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
         if (format.Count > 0) return Refused(call, null, FormatErrors(Texts, format));
 
         var state = request.Value("estadoCuenta");
-        var all = (await _ledger.AgentAccountsAsync(ct))
-            .Where(a => a.Agent == call.Cuit)
+        var all = (await _ledger.AgentAccountsOfAsync(call.Cuit, ct))
             .Where(a => state is null || a.State == state)
             .Where(a => holder is null || a.Holder == holder)
             .Where(a => (range.Kind == "Baja" ? a.ClosedOn : a.OpenedOn) is { } day && day >= range.From && day <= range.To)

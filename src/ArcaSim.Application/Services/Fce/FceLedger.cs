@@ -114,8 +114,13 @@ public sealed class FceLedger(IDocumentStore store, IVoucherStore wsfe, ITaxpaye
     public Task<FceAgentAccount?> AgentAccountAsync(long agent, string accountId, CancellationToken ct) =>
         store.GetAsync<FceAgentAccount>(AgentAccountsCollection, $"{agent}/{accountId}", ct);
 
+    /// <summary>Every agent's accounts, for a seller looking for the ones opened in its name.</summary>
     public Task<IReadOnlyList<FceAgentAccount>> AgentAccountsAsync(CancellationToken ct) =>
         store.ListAsync<FceAgentAccount>(AgentAccountsCollection, "", ct);
+
+    /// <summary>One agent's accounts, read by their key prefix (the agent's CUIT) instead of looking through everyone's.</summary>
+    public Task<IReadOnlyList<FceAgentAccount>> AgentAccountsOfAsync(long agent, CancellationToken ct) =>
+        store.ListAsync<FceAgentAccount>(AgentAccountsCollection, $"{agent}/", ct);
 
     public Task SaveAsync(FceAgentAccount account, CancellationToken ct) =>
         store.PutAsync(AgentAccountsCollection, account.Key, account, ct);
@@ -164,12 +169,13 @@ public sealed class FceLedger(IDocumentStore store, IVoucherStore wsfe, ITaxpaye
     /// <summary>
     /// FCE vouchers authorized since the last look: an invoice opens an
     /// account; a note joins the account of the voucher it references, and
-    /// waits outside until that voucher is known.
+    /// waits outside until that voucher is known. Every voucher WSFEv1 has
+    /// authorized is looked at: a cap would leave the oldest ones without an account.
     /// </summary>
     private async Task RegisterNewAsync(FceBook book, HashSet<long> changed, CancellationToken ct)
     {
         var arrivals = new List<Arrival>();
-        foreach (var stored in await wsfe.ListAsync(null, 100_000, ct))
+        foreach (var stored in await wsfe.ListAsync(null, int.MaxValue, ct))
             if (FceTypes.IsFce(stored.VoucherType)
                 && !book.Vouchers.ContainsKey(new FceId(stored.Cuit, stored.VoucherType, stored.PointOfSale, stored.From).Key))
                 arrivals.Add(new Arrival(FromWsfe(stored), stored.ProcessedAt));

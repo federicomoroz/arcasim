@@ -1,4 +1,6 @@
 using System.Xml.Linq;
+using ArcaSim.Application.Wsfe;
+using Microsoft.Extensions.DependencyInjection;
 using static ArcaSim.Tests.Services.Fce.FceWorld;
 
 namespace ArcaSim.Tests.Services.Fce;
@@ -46,6 +48,23 @@ public class WsfecredRulesTests
         var vouchers = await world.FecredAsync(Seller, "consultarHistorialEstadosComprobante", Voucher("idComprobante", 201, invoice));
         Assert.Equal(["PendienteRecepcion", "Recepcionado", "Aceptado"],
             vouchers.Element("arrayHistorialEstados")!.Elements().Select(e => e.Element("estado")!.Value));
+    }
+
+    [Fact]
+    public async Task An_invoice_older_than_a_hundred_thousand_other_vouchers_still_opens_its_account()
+    {
+        await using var world = await StartAsync();
+        var invoice = await world.InvoiceAsync();
+        var vouchers = world.Sim.Services.GetRequiredService<IVoucherStore>();
+        var detail = new FECAEDetRequest();
+        var later = new DateTimeOffset(2026, 10, 2, 12, 0, 0, TimeSpan.FromHours(-3));
+        for (var number = 1; number <= 100_001; number++)
+            await vouchers.AddAsync(new StoredVoucher(
+                Seller, 9, 6, number, number, new DateOnly(2026, 10, 2), EmissionType.Cae, "70000000000000", new DateOnly(2026, 10, 12), later, detail, []));
+
+        var issued = await world.FecredAsync(Seller, "consultarComprobantes", "<rolCUITRepresentada>Emisor</rolCUITRepresentada>");
+
+        Assert.Equal([invoice.ToString()], issued.Element("arrayComprobantes")!.Elements("comprobante").Select(v => v.Element("nroCmp")!.Value));
     }
 
     [Fact]
