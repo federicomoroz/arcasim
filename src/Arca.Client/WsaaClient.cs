@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
 using System.Text;
 using System.Text.Json;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace Arca.Client;
@@ -99,17 +100,18 @@ public sealed class WsaaClient(HttpClient http, ArcaOptions options, TimeProvide
         message.Headers.Add("SOAPAction", "\"\"");
 
         var (status, body) = await SoapTransport.SendAsync(http, message, "WSAA", ct);
-        var document = SoapTransport.Parse(body, "WSAA");
-        var fault = document.Descendants().FirstOrDefault(e => e.Name.LocalName == "Fault");
+        // An error page that is not XML still says what the status was: only a good answer has to parse.
+        var document = status >= 400 ? SoapTransport.TryParse(body) : SoapTransport.Parse(body, "WSAA");
+        var fault = document?.Descendants().FirstOrDefault(e => e.Name.LocalName == "Fault");
         if (fault is not null)
         {
             var code = (fault.Descendants().FirstOrDefault(e => e.Name.LocalName is "faultcode" or "Value")?.Value ?? "").Split(':').Last();
             var text = fault.Descendants().FirstOrDefault(e => e.Name.LocalName is "faultstring" or "Text")?.Value ?? "";
             throw new WsaaFaultException(code, text);
         }
-        if (status >= 400) throw new ArcaUnavailableException($"WSAA answered HTTP {status}.");
+        if (status >= 400) throw SoapTransport.Failed("WSAA", status, faultText: null);
 
-        var ticketXml = document.Descendants().FirstOrDefault(e => e.Name.LocalName == "loginCmsReturn")?.Value
+        var ticketXml = document!.Descendants().FirstOrDefault(e => e.Name.LocalName == "loginCmsReturn")?.Value
                         ?? throw new ArcaUnavailableException("WSAA's answer has no loginCmsReturn.");
         return ReadTicket(ticketXml);
     }
@@ -142,17 +144,31 @@ public sealed class WsaaClient(HttpClient http, ArcaOptions options, TimeProvide
         return signed.Encode();
     }
 
+    /// <summary>Reads the TA out of loginCmsReturn. One that does not parse is an answer ARCA should not have sent, not a crash.</summary>
     private static AccessTicket ReadTicket(string ticketXml)
     {
-        var ticket = XDocument.Parse(ticketXml).Root!;
-        var header = ticket.Element("header")!;
-        var credentials = ticket.Element("credentials")!;
-        return new AccessTicket(
-            credentials.Element("token")!.Value,
-            credentials.Element("sign")!.Value,
-            DateTimeOffset.Parse(header.Element("generationTime")!.Value, CultureInfo.InvariantCulture),
-            DateTimeOffset.Parse(header.Element("expirationTime")!.Value, CultureInfo.InvariantCulture));
+        try
+        {
+            var ticket = XDocument.Parse(ticketXml).Root ?? throw new FormatException("it has no root element");
+            var header = Required(ticket, "header");
+            var credentials = Required(ticket, "credentials");
+            var token = Required(credentials, "token").Value;
+            var sign = Required(credentials, "sign").Value;
+            if (token.Length == 0 || sign.Length == 0) throw new FormatException("its token or its sign is empty");
+            return new AccessTicket(
+                token,
+                sign,
+                DateTimeOffset.Parse(Required(header, "generationTime").Value, CultureInfo.InvariantCulture),
+                DateTimeOffset.Parse(Required(header, "expirationTime").Value, CultureInfo.InvariantCulture));
+        }
+        catch (Exception ex) when (ex is XmlException or FormatException)
+        {
+            throw new ArcaBadResponseException($"WSAA's ticket could not be read: {ex.Message}", ex);
+        }
     }
+
+    private static XElement Required(XElement parent, string name) =>
+        parent.Element(name) ?? throw new FormatException($"it has no <{name}>");
 
     private bool IsFresh(AccessTicket ticket) => ticket.ExpiresAt - options.TicketRenewalMargin > _time.GetUtcNow();
 
@@ -291,6 +307,17 @@ public sealed class WsaaClient(HttpClient http, ArcaOptions options, TimeProvide
 /// <summary>HTTP for both services: transport failures become ArcaUnavailableException, everything else is left to the caller.</summary>
 internal static class SoapTransport
 {
+    /// <summary>
+    /// What a server's fault says when it could not make sense of the request itself (ASMX, Axis2):
+    /// the request is wrong, and sending it again will not change that.
+    /// </summary>
+    private static readonly string[] UnreadableRequest =
+    [
+        "Server was unable to read request",
+        "Server did not recognize the value of HTTP Header SOAPAction",
+        "Unable to handle request without a valid action parameter",
+    ];
+
     public static async Task<(int Status, string Body)> SendAsync(HttpClient http, HttpRequestMessage message, string service, CancellationToken ct)
     {
         try
@@ -310,9 +337,45 @@ internal static class SoapTransport
         {
             return XDocument.Parse(body);
         }
-        catch (System.Xml.XmlException ex)
+        catch (XmlException ex)
         {
             throw new ArcaUnavailableException($"{service} answered something that is not XML.", ex);
         }
+    }
+
+    /// <summary>The body as XML, or null when it is not (an error page from a proxy, an empty answer).</summary>
+    public static XDocument? TryParse(string body)
+    {
+        try
+        {
+            return XDocument.Parse(body);
+        }
+        catch (XmlException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>The text of the first SOAP fault in a body (1.1 faultstring, 1.2 Reason/Text), or null when the body is not XML or has none.</summary>
+    public static string? FaultText(string body) =>
+        body.TrimStart().StartsWith('<') && TryParse(body) is { } document ? FaultText(document) : null;
+
+    public static string? FaultText(XDocument document) =>
+        document.Descendants().FirstOrDefault(e => e.Name.LocalName is "faultstring" or "Text")?.Value;
+
+    public static bool IsUnreadableRequest(string? faultText) =>
+        faultText is not null && UnreadableRequest.Any(marker => faultText.Contains(marker, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// What an answer that is not a success is. A request the server refused (an HTTP 4xx, or a fault
+    /// that says it could not read the request) fails the same way when repeated; everything else,
+    /// from a 5xx to a proxy's page, may pass. 408 and 429 are 4xx that ask to try again later.
+    /// </summary>
+    public static ArcaException Failed(string service, int status, string? faultText)
+    {
+        var reason = faultText is { Length: > 0 } ? $": {faultText}" : "";
+        if (IsUnreadableRequest(faultText) || (status is >= 400 and < 500 and not (408 or 429)))
+            return new ArcaBadRequestException($"{service} refused the request with HTTP {status}{reason}.", status);
+        return new ArcaUnavailableException($"{service} answered HTTP {status}{reason}.");
     }
 }

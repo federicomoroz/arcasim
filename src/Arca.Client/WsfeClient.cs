@@ -32,7 +32,7 @@ public sealed class WsfeClient(HttpClient http, WsaaClient wsaa, ArcaOptions opt
             w.WriteElementString("CbteTipo", Ns, Invariant(voucherType));
         }, authenticated: true, ct);
         ThrowOnErrors(result);
-        return long.Parse(Text(result, "CbteNro"), CultureInfo.InvariantCulture);
+        return Long(result, "CbteNro");
     }
 
     /// <summary>A voucher already authorized, or null when ARCA has no such number.</summary>
@@ -55,16 +55,16 @@ public sealed class WsfeClient(HttpClient http, WsaaClient wsaa, ArcaOptions opt
             throw Errors(errors);
         }
         return new AuthorizedVoucher(
-            int.Parse(Text(found, "PtoVta"), CultureInfo.InvariantCulture),
-            int.Parse(Text(found, "CbteTipo"), CultureInfo.InvariantCulture),
-            long.Parse(Text(found, "CbteDesde"), CultureInfo.InvariantCulture),
-            ParseDate(Text(found, "CbteFch")),
-            int.Parse(Text(found, "DocTipo"), CultureInfo.InvariantCulture),
-            long.Parse(Text(found, "DocNro"), CultureInfo.InvariantCulture),
-            decimal.Parse(Text(found, "ImpTotal"), CultureInfo.InvariantCulture),
+            Int(found, "PtoVta"),
+            Int(found, "CbteTipo"),
+            Long(found, "CbteDesde"),
+            Date(found, "CbteFch"),
+            Int(found, "DocTipo"),
+            Long(found, "DocNro"),
+            Decimal(found, "ImpTotal"),
             Text(found, "CodAutorizacion"),
             Text(found, "EmisionTipo"),
-            ParseDate(Text(found, "FchVto")),
+            Date(found, "FchVto"),
             Messages(found.Element(X + "Observaciones")));
     }
 
@@ -89,18 +89,19 @@ public sealed class WsfeClient(HttpClient http, WsaaClient wsaa, ArcaOptions opt
         return new AuthorizationResult(
             approved,
             voucher.Number,
-            ParseDate(Text(detail, "CbteFch")),
+            Date(detail, "CbteFch"),
             approved ? cae : null,
-            approved && due.Length == 8 ? ParseDate(due) : null,
+            approved && due.Length == 8 ? Date(detail, "CAEFchVto") : null,
             Messages(detail.Element(X + "Observaciones")),
             errors);
     }
 
     /// <summary>
     /// Takes the next number and authorizes the voucher with it. If the answer
-    /// gets lost (a timeout, a dropped connection), it asks FECompConsultar
-    /// whether that number was authorized before giving up, which is ARCA's own
-    /// recovery procedure (wsfev1.md §5.4): a blind retry would fail with 10016.
+    /// gets lost (a timeout, a dropped connection) or cannot be read, it asks
+    /// FECompConsultar whether that number was authorized before giving up, which
+    /// is ARCA's own recovery procedure (wsfev1.md §5.4): a blind retry would
+    /// fail with 10016.
     /// </summary>
     public async Task<AuthorizationResult> AuthorizeNextAsync(int pointOfSale, int voucherType, Voucher voucher, CancellationToken ct = default)
     {
@@ -110,7 +111,7 @@ public sealed class WsfeClient(HttpClient http, WsaaClient wsaa, ArcaOptions opt
         {
             return await AuthorizeAsync(pointOfSale, voucherType, numbered, ct);
         }
-        catch (ArcaUnavailableException)
+        catch (Exception ex) when (ex is ArcaUnavailableException or ArcaBadResponseException)
         {
             var existing = await QueryAsync(pointOfSale, voucherType, number, ct);
             if (existing is null || existing.Total != voucher.Total || existing.DocumentNumber != voucher.DocumentNumber) throw;
@@ -246,17 +247,17 @@ public sealed class WsfeClient(HttpClient http, WsaaClient wsaa, ArcaOptions opt
         message.Headers.Add("SOAPAction", $"\"{Ns}{operation}\"");
 
         var (status, body) = await SoapTransport.SendAsync(http, message, "WSFEv1", ct);
-        if (status != 200)
-        {
-            var reason = body.Length > 0 && body.TrimStart().StartsWith('<')
-                ? SoapTransport.Parse(body, "WSFEv1").Descendants().FirstOrDefault(e => e.Name.LocalName is "faultstring" or "Text")?.Value
-                : null;
-            throw new ArcaUnavailableException($"WSFEv1 answered HTTP {status}{(reason is null ? "" : $": {reason}")}.");
-        }
+        if (status != 200) throw SoapTransport.Failed("WSFEv1", status, SoapTransport.FaultText(body));
 
         var document = SoapTransport.Parse(body, "WSFEv1");
-        var result = document.Descendants(X + $"{operation}Result").FirstOrDefault()
-                     ?? throw new ArcaUnavailableException($"WSFEv1's answer has no {operation}Result.");
+        var result = document.Descendants(X + $"{operation}Result").FirstOrDefault();
+        if (result is null)
+        {
+            // A fault that travels with HTTP 200 is read like the one that comes with 500.
+            var fault = SoapTransport.FaultText(document);
+            if (SoapTransport.IsUnreadableRequest(fault)) throw SoapTransport.Failed("WSFEv1", status, fault);
+            throw new ArcaUnavailableException($"WSFEv1's answer has no {operation}Result.");
+        }
         var errors = Messages(result.Element(X + "Errors"));
         if (errors.Count > 0 && errors.All(e => e.Code is 500 or 501 or 502) && !errors.Any(e => e.Message.StartsWith("Campo Auth", StringComparison.Ordinal)))
             throw new ArcaUnavailableException("WSFEv1: " + string.Join("; ", errors.Select(e => $"{e.Code} {e.Message}")));
@@ -276,14 +277,29 @@ public sealed class WsfeClient(HttpClient http, WsaaClient wsaa, ArcaOptions opt
 
     private static IReadOnlyList<ArcaMessage> Messages(XElement? list) =>
         list?.Elements()
-            .Select(e => new ArcaMessage(int.Parse(Text(e, "Code"), CultureInfo.InvariantCulture), Text(e, "Msg")))
+            .Select(e => new ArcaMessage(Int(e, "Code"), Text(e, "Msg")))
             .ToList() ?? [];
 
     private static string Text(XElement parent, string name) => parent.Element(X + name)?.Value ?? "";
 
+    // A field that should be a number or a date and is not: ARCA's answer cannot be read.
+
+    private static int Int(XElement parent, string name) =>
+        int.TryParse(Text(parent, name), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : throw Unreadable(parent, name);
+
+    private static long Long(XElement parent, string name) =>
+        long.TryParse(Text(parent, name), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : throw Unreadable(parent, name);
+
+    private static decimal Decimal(XElement parent, string name) =>
+        decimal.TryParse(Text(parent, name), NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : throw Unreadable(parent, name);
+
+    private static DateOnly Date(XElement parent, string name) =>
+        DateOnly.TryParseExact(Text(parent, name), "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var value) ? value : throw Unreadable(parent, name);
+
+    private static ArcaBadResponseException Unreadable(XElement parent, string name) =>
+        new($"WSFEv1 sent \"{Text(parent, name)}\" in <{name}> of <{parent.Name.LocalName}>, which cannot be read.");
+
     private static string Invariant(IFormattable value) => value.ToString(null, CultureInfo.InvariantCulture);
 
     private static string FormatDate(DateOnly date) => date.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
-
-    private static DateOnly ParseDate(string value) => DateOnly.ParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture);
 }
