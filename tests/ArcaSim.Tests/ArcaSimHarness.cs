@@ -9,6 +9,7 @@ using ArcaSim.Tests.Support;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace ArcaSim.Tests;
 
@@ -30,14 +31,29 @@ public sealed class ArcaSimHarness : IAsyncDisposable
     }
 
     private readonly WebApplicationFactory<Program> _factory;
+    private readonly CapturedLogs _logs;
 
-    private ArcaSimHarness(WebApplicationFactory<Program> factory)
+    private ArcaSimHarness(WebApplicationFactory<Program> factory, CapturedLogs logs)
     {
         _factory = factory;
+        _logs = logs;
         Http = factory.CreateClient();
     }
 
     public HttpClient Http { get; }
+
+    /// <summary>What ArcaSim has logged at Error or above so far: an unforeseen failure of a service's rules shows up here.</summary>
+    public IReadOnlyList<LoggedError> LoggedErrors => _logs.Errors;
+
+    /// <summary>
+    /// Fails when ArcaSim logged an error. The engine answers a request its rules did not foresee with the
+    /// service's fault, which looks like any refusal; the log is what tells a crash from a refusal.
+    /// </summary>
+    public void AssertNoLoggedErrors()
+    {
+        var errors = LoggedErrors;
+        Assert.True(errors.Count == 0, string.Join(Environment.NewLine, errors.Select(e => $"{e.Category}: {e.Message}{e.Exception}")));
+    }
 
     public IServiceProvider Services => _factory.Services;
 
@@ -56,16 +72,18 @@ public sealed class ArcaSimHarness : IAsyncDisposable
     /// <param name="open">Open access, as ArcaSim starts by default. The suite runs strict unless a test asks.</param>
     public static ArcaSimHarness Start(string? postgres = null, bool open = false)
     {
+        var logs = new CapturedLogs();
         var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(host =>
         {
             host.UseSetting("ArcaSim:DataDirectory", KeysDirectory);
             host.UseSetting("ArcaSim:Access", open ? "Open" : "Strict");
             host.UseSetting("ArcaSim:ReplayWindowEnabled", "false");
+            host.ConfigureLogging(logging => logging.AddProvider(logs));
             if (postgres is null) return;
             host.UseSetting("ArcaSim:Storage", "Postgres");
             host.UseSetting("ConnectionStrings:ArcaSim", postgres);
         });
-        return new ArcaSimHarness(factory);
+        return new ArcaSimHarness(factory, logs);
     }
 
     /// <summary>The usual starting point: ArcaSim with the issuer registered, frozen on a weekday before 01/12/2026.</summary>

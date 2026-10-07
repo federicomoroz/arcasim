@@ -44,12 +44,18 @@ public class CatalogServiceTests
         var hasRules = host.HasRules(definition);
 
         var problems = new List<string>();
+        var refused = new List<string>();
+        var answered = 0;
         foreach (var operation in contract.Operations)
         {
             var request = operation.Input is null ? null : sampler.Sample(operation.Input, new SampleContext(Caller, DateTimeOffset.Now));
             if (request is not null) Support.Soap.Sign(request, ticket.Token, ticket.Sign, Caller);
             var (status, body) = await sim.PostSoapAsync(url, Support.Soap.Envelope(request), operation.Action ?? "");
-            if (status != 200 && hasRules && body.Contains("Fault>", StringComparison.Ordinal) && !body.Contains("oken", StringComparison.Ordinal)) continue;
+            if (status != 200 && hasRules && body.Contains("Fault>", StringComparison.Ordinal) && !body.Contains("oken", StringComparison.Ordinal))
+            {
+                refused.Add(operation.Name);
+                continue;
+            }
             if (status != 200)
             {
                 problems.Add($"{operation.Name}: HTTP {status} {body[Math.Max(0, body.IndexOf("<faultstring", StringComparison.Ordinal))..]}");
@@ -57,9 +63,16 @@ public class CatalogServiceTests
             }
             var answer = Support.Soap.Body(body);
             if (answer.Name != operation.Output) problems.Add($"{operation.Name}: answered {answer.Name}");
-            problems.AddRange(Xsd.Problems(answer, contract).Select(problem => $"{operation.Name}: {problem}"));
+            var invalid = Xsd.Problems(answer, contract);
+            problems.AddRange(invalid.Select(problem => $"{operation.Name}: {problem}"));
+            if (answer.Name == operation.Output && invalid.Count == 0) answered++;
         }
 
+        // The refusals above are told from a crash only by the log: the engine answers a request its rules did not
+        // foresee with the service's fault, which is what a refusal looks like.
+        problems.AddRange(sim.LoggedErrors.Select(error => $"the engine logged an unforeseen error: {error.Message} {error.Exception?.Message}"));
+        // Without one operation answered, the refusals would let the test pass without reading a single answer.
+        if (answered == 0) problems.Add($"no operation was answered with HTTP 200 (refused: {string.Join(", ", refused)}): no answer was checked against the WSDL");
         Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems));
     }
 
@@ -92,6 +105,7 @@ public class CatalogServiceTests
             Assert.Equal(row.Status ?? errors.Status, status);
             Assert.True(body.Contains("Fault"), body);
         }
+        sim.AssertNoLoggedErrors();
     }
 
     // The group kits under Services/ still call these three on this class; they move to Support.Soap

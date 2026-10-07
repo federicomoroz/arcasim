@@ -42,5 +42,10 @@ public class UnexpectedErrorTests
         Assert.Equal(faultCode, fault.Descendants().First(e => e.Name.LocalName is "faultcode" or "Value").Value);
         Assert.False(string.IsNullOrWhiteSpace(fault.Descendants().First(e => e.Name.LocalName is "faultstring" or "Text").Value));
         Assert.Equal(200, afterStatus);
+        // The fault looks like any refusal; the log is what says that a rule crashed, and which one.
+        var logged = Assert.Single(sim.LoggedErrors);
+        Assert.Equal(typeof(ContractHost).FullName, logged.Category);
+        Assert.Equal($"{id}.{operationName} failed", logged.Message);
+        Assert.NotNull(logged.Exception);
     }
 }
