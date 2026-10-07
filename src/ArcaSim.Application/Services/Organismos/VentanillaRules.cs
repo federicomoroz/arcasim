@@ -135,7 +135,7 @@ public sealed class VentanillaRules(IDocumentStore store, IClock clock) : IServi
 
         var fromText = filter.Text("fechaDesde") ?? "";
         if (ParseDate(fromText) is not { } from) return Failure(call, 102, $"Formato de fecha no soportado para [{fromText}]. Se esperaba [yyyy-MM-dd]");
-        var toText = filter.Optional("fechaHasta");
+        var toText = filter.OptionalText("fechaHasta");
         DateOnly? to = null;
         if (toText is not null)
         {
@@ -163,8 +163,8 @@ public sealed class VentanillaRules(IDocumentStore store, IClock clock) : IServi
         if (size == 0) size = MaxPageSize;
 
         var attachment = filter.Flag("tieneAdjunto");
-        var reference1 = filter.Optional("referencia1");
-        var reference2 = filter.Optional("referencia2");
+        var reference1 = filter.OptionalText("referencia1");
+        var reference2 = filter.OptionalText("referencia2");
         var found = (await store.ListAsync<Communication>(VentanillaInbox.Communications, "", ct))
             .Where(c => c.Cuit == call.Cuit && !c.Internal)
             .Where(c => c.PublishedAt.ArgentinaDate() is var day && day >= from && (to is null || day <= to))

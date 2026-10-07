@@ -46,8 +46,8 @@ public sealed class WssvRules(IDocumentStore store) : IServiceBehavior
             case "TrasladoBegin":
                 if (id.Length == 0 || device.Length == 0) return Result(call, 5, "Faltan IdTras o IdDES.");
                 if (transfer is not null && !test) return Result(call, 1, $"El traslado {id} ya fue iniciado.");
-                await store.PutAsync(Transfers, key, new VehicleTransfer(call.Cuit, id, device, call.Request.Optional("IdRuta"),
-                    call.Request.Optional("IdCont"), call.Request.Optional("IdSalida"), true, []), ct);
+                await store.PutAsync(Transfers, key, new VehicleTransfer(call.Cuit, id, device, call.Request.OptionalText("IdRuta"),
+                    call.Request.OptionalText("IdCont"), call.Request.OptionalText("IdSalida"), true, []), ct);
                 return Result(call, 0, null);
             case "Reporte":
                 if (id.Length == 0 || device.Length == 0) return Result(call, 5, "Faltan IdTras o IdDES.");

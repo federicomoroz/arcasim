@@ -85,7 +85,7 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
                 _ => [],
             };
             var name = operation switch { 1 => "alta", 2 => "baja", _ => "modificación" };
-            refused.AddRange(required.Where(f => line.Optional(f) is null)
+            refused.AddRange(required.Where(f => line.OptionalText(f) is null)
                 .Select(f => (8001, $"Para una operación de {name} el campo {f} no puede ser nulo")));
         }
         if (refused.Count > 0)

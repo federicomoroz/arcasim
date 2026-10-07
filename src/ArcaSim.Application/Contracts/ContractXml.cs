@@ -44,6 +44,21 @@ public static class ContractXml
         return DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var moment) ? DateOnly.FromDateTime(moment.DateTime) : null;
     }
 
+    /// <summary>The text anywhere below, or null when it is missing or empty: an optional field of a request.</summary>
+    public static string? OptionalText(this XElement element, string name) => element.Text(name) is { Length: > 0 } text ? text : null;
+
+    /// <summary>The number anywhere below, or null when it is missing or does not read.</summary>
+    public static long? OptionalLong(this XElement element, string name) =>
+        long.TryParse(element.Text(name), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : null;
+
+    /// <summary>A boolean the way the Java services bind one: true or 1, false or 0; null for anything else.</summary>
+    public static bool? Flag(this XElement element, string name) => element.Text(name)?.ToLowerInvariant() switch
+    {
+        "true" or "1" => true,
+        "false" or "0" => false,
+        _ => null,
+    };
+
     /// <summary>The first direct child with that local name, whatever its namespace; null without one.</summary>
     public static XElement? Child(this XElement? element, string name) =>
         element?.Elements().FirstOrDefault(e => e.Name.LocalName == name);
@@ -67,6 +82,15 @@ public static class ContractXml
     public static XElement Set(this XElement element, string name, object? value)
     {
         if (element.Find(name) is { } target) target.Value = Format(value);
+        return element;
+    }
+
+    /// <summary>Sets the element when there is a value and removes it when there is none: an optional field of an answer.</summary>
+    public static XElement SetOrDrop(this XElement element, string name, object? value)
+    {
+        if (element.Find(name) is not { } target) return element;
+        if (value is null || value is string { Length: 0 }) target.Remove();
+        else target.Value = Format(value);
         return element;
     }
 
