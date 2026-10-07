@@ -31,6 +31,9 @@ public sealed partial class DdjjRules(IDocumentStore store, IClock clock) : ISer
     public const int InlineLimit = 1024 * 1024;
     private const long FirstTransaction = 60_000_000;
 
+    /// <summary>The same file uploaded twice at once is one presentation: the second request waits for the first one's transaction.</summary>
+    private readonly KeyedLocks<string> _uploads = new();
+
     [GeneratedRegex(@"^\d*F(?<form>\d{3,4})(\.(?<md5>[0-9a-fA-F]{32}))?\.[A-Za-z0-9]{1,4}$")]
     private static partial Regex FileNameFormat();
 
@@ -65,6 +68,7 @@ public sealed partial class DdjjRules(IDocumentStore store, IClock clock) : ISer
 
         var form = int.Parse(match.Groups["form"].Value, CultureInfo.InvariantCulture);
         var key = Key(call.Cuit, form, fileName, md5);
+        using var uploading = await _uploads.AcquireAsync(key, ct);
         var existing = await store.GetAsync<Presentation>(Presentations, key, ct);
         if (existing is null)
         {
