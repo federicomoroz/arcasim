@@ -1,8 +1,7 @@
 using System.Net.Http.Json;
 using System.Xml.Linq;
-using System.Xml.Schema;
-using ArcaSim.Application.Contracts;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Padron;
 
@@ -104,27 +103,13 @@ public class PadronRulesTests
     }
 
     /// <summary>The answer is valid for the WSDL ARCA publishes: what a generated client deserializes.</summary>
-    private static void Validate(string wsdl, string body)
-    {
-        var contract = ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", wsdl));
-        var answer = XDocument.Parse(body).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
-        var problems = new List<string>();
-        new XDocument(answer).Validate(contract.Schemas, (_, e) =>
-        {
-            if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
-        });
-        Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems));
-    }
+    private static void Validate(string wsdl, string body) => Xsd.AssertValid(Soap.Body(body), Contracts.Of(wsdl));
 
-    private static async Task<string> AuthAsync(ArcaSimHarness sim, string service)
-    {
-        var certificate = await sim.IssueCertificateAsync(Caller, "padron", service);
-        var ticket = await sim.Wsaa(Caller, certificate).LoginAsync(service);
-        return $"<token>{ticket.Token}</token><sign>{ticket.Sign}</sign><cuitRepresentada>{Caller}</cuitRepresentada>";
-    }
+    private static async Task<string> AuthAsync(ArcaSimHarness sim, string service) =>
+        Login.Credentials(await sim.TicketAsync(Caller, service), Caller);
 
     /// <summary>A100 runs in another application (sr-parametros), with its own namespace.</summary>
     private static string Envelope(string prefix, string operation, string inner) =>
-        $"<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:{prefix}=\"http://{prefix}.soap.ws.server.{(prefix == "a100" ? "pucParam" : "puc")}.sr/\">" +
-        $"<soapenv:Header/><soapenv:Body><{prefix}:{operation}>{inner}</{prefix}:{operation}></soapenv:Body></soapenv:Envelope>";
+        Soap.Envelope($"<{prefix}:{operation}>{inner}</{prefix}:{operation}>",
+            (prefix, $"http://{prefix}.soap.ws.server.{(prefix == "a100" ? "pucParam" : "puc")}.sr/"));
 }

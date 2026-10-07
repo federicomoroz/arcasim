@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -6,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Arca.Client;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Wsaa;
 
@@ -65,9 +65,7 @@ public class LoginTests
     public async Task A_certificate_ArcaSim_did_not_issue_is_untrusted()
     {
         await using var sim = ArcaSimHarness.Start();
-        using var key = RSA.Create(2048);
-        var request = new CertificateRequest($"SERIALNUMBER=CUIT {Cuit}, CN=casera", key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-        using var selfSigned = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddYears(1));
+        using var selfSigned = Certificates.SelfSigned($"SERIALNUMBER=CUIT {Cuit}, CN=casera");
 
         var (_, body) = await PostLoginAsync(sim, SignedTra(selfSigned, "wsfe", sim.Clock.Now));
 
@@ -157,8 +155,7 @@ public class LoginTests
         sim.PostSoapAsync(ArcaSimHarness.WsaaUrl, Envelope(in0), "\"\"");
 
     private static string Envelope(string in0) =>
-        "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:wsaa=\"http://wsaa.view.sua.dvadac.desein.afip.gov\">" +
-        $"<soapenv:Header/><soapenv:Body><wsaa:loginCms><wsaa:in0>{in0}</wsaa:in0></wsaa:loginCms></soapenv:Body></soapenv:Envelope>";
+        Soap.Envelope($"<wsaa:loginCms><wsaa:in0>{in0}</wsaa:in0></wsaa:loginCms>", ("wsaa", "http://wsaa.view.sua.dvadac.desein.afip.gov"));
 
     private static string SignedTra(X509Certificate2 certificate, string service, DateTimeOffset now, bool detached = false)
     {

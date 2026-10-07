@@ -1,5 +1,6 @@
 using Arca.Client;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Wsfe;
 
@@ -9,17 +10,7 @@ public class AuthorizeTests
     private static readonly DateOnly Today = new(2026, 10, 1);
 
     /// <summary>A class B invoice to an unidentified final consumer: $1210 with 21 % VAT.</summary>
-    private static Voucher ConsumerInvoice(decimal net = 1000m) => new()
-    {
-        Concept = 1,
-        DocumentType = 99,
-        DocumentNumber = 0,
-        Total = net * 1.21m,
-        Net = net,
-        Vat = net * 0.21m,
-        ReceiverVatCondition = 5,
-        VatLines = [new VatLine(5, net, net * 0.21m)],
-    };
+    private static Voucher ConsumerInvoice(decimal net = 1000m) => Vouchers.ConsumerInvoice(net);
 
     [Fact]
     public async Task A_valid_invoice_gets_a_14_digit_CAE_due_ten_days_after_its_date()

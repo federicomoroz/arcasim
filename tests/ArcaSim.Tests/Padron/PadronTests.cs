@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Xml.Linq;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Padron;
 
@@ -147,18 +148,12 @@ public class PadronTests
         response.EnsureSuccessStatusCode();
     }
 
-    private static async Task<string> AuthAsync(ArcaSimHarness sim, string service)
-    {
-        var certificate = await sim.IssueCertificateAsync(Caller, "consultas", "wsfe", "ws_sr_constancia_inscripcion", "ws_sr_padron_a13");
-        var ticket = await sim.Wsaa(Caller, certificate).LoginAsync(service);
-        return $"<token>{ticket.Token}</token><sign>{ticket.Sign}</sign><cuitRepresentada>{Caller}</cuitRepresentada>";
-    }
+    private static async Task<string> AuthAsync(ArcaSimHarness sim, string service) =>
+        Login.Credentials(await sim.TicketAsync(Caller, service), Caller);
 
     private static Task<(int Status, string Body)> PostAsync(ArcaSimHarness sim, Uri url, string prefix, string operation, string inner)
     {
         var ns = prefix == "a5" ? "http://a5.soap.ws.server.puc.sr/" : "http://a13.soap.ws.server.puc.sr/";
-        return sim.PostSoapAsync(url,
-            $"<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:{prefix}=\"{ns}\">" +
-            $"<soapenv:Header/><soapenv:Body><{prefix}:{operation}>{inner}</{prefix}:{operation}></soapenv:Body></soapenv:Envelope>", "\"\"");
+        return sim.PostSoapAsync(url, Soap.Envelope($"<{prefix}:{operation}>{inner}</{prefix}:{operation}>", (prefix, ns)), "\"\"");
     }
 }

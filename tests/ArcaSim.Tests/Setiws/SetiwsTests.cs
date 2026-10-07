@@ -1,8 +1,8 @@
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using Arca.Client;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Setiws;
 
@@ -58,8 +58,7 @@ public class SetiwsTests
     public async Task Gateway_reports_every_problem_of_a_ticket_at_once()
     {
         await using var sim = await StartAsync();
-        var certificate = await sim.IssueCertificateAsync(Owner, "facturacion", "wsfe");
-        var ticket = await sim.Wsaa(Owner, certificate).LoginAsync("wsfe");
+        var ticket = await sim.TicketAsync(Owner, "wsfe");
         sim.Clock.Freeze(new DateTimeOffset(2026, 10, 2, 15, 13, 24, TimeSpan.FromHours(-3)));
 
         var (status, body) = await SendAsync(sim, HttpMethod.Get, Veps, headers: new()
@@ -139,15 +138,14 @@ public class SetiwsTests
     private static async Task<ArcaSimHarness> StartAsync()
     {
         var sim = ArcaSimHarness.Start();
-        sim.Clock.Freeze(new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3)));
+        sim.Clock.Freeze(TestTime.Reference);
         await sim.PutTaxpayerAsync(Owner, "Organismo de Prueba", VatCondition.Exento);
         return sim;
     }
 
     private static async Task<Dictionary<string, string>> AuthAsync(ArcaSimHarness sim)
     {
-        var certificate = await sim.IssueCertificateAsync(Owner, "vep", "seti-setipago-api");
-        AccessTicket ticket = await sim.Wsaa(Owner, certificate).LoginAsync("seti-setipago-api");
+        var ticket = await sim.TicketAsync(Owner, "seti-setipago-api");
         return new()
         {
             ["WSAA-AUTH-PROXY-TOKEN"] = ticket.Token,

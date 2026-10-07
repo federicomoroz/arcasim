@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using Arca.Client;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests;
 
@@ -69,12 +70,8 @@ public class ActivityTests
         var (sim, wsfe) = await ArcaSimHarness.StartWithIssuerAsync();
         await using var _ = sim;
 
-        var approved = await wsfe.AuthorizeNextAsync(1, 6, new Voucher
-        {
-            Concept = 1, DocumentType = 99, DocumentNumber = 0, Total = 121, Net = 100, Vat = 21,
-            ReceiverVatCondition = 5, VatLines = [new VatLine(5, 100, 21)],
-        });
-        await wsfe.AuthorizeNextAsync(1, 6, new Voucher { Concept = 1, DocumentType = 99, DocumentNumber = 0, Total = 999, Net = 100, Vat = 21, ReceiverVatCondition = 5, VatLines = [new VatLine(5, 100, 21)] });
+        var approved = await wsfe.AuthorizeNextAsync(1, 6, Vouchers.ConsumerInvoice());
+        await wsfe.AuthorizeNextAsync(1, 6, Vouchers.ConsumerInvoice() with { Total = 999 });
         var log = await sim.Http.GetFromJsonAsync<JsonElement[]>("/arcasim/api/activity");
         var texts = log!.Select(e => e.GetProperty("text").GetString()!).ToList();
 

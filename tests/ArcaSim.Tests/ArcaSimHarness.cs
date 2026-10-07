@@ -5,6 +5,7 @@ using Arca.Client;
 using ArcaSim.Application;
 using ArcaSim.Domain;
 using ArcaSim.Infrastructure.Security;
+using ArcaSim.Tests.Support;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -72,7 +73,7 @@ public sealed class ArcaSimHarness : IAsyncDisposable
         VatCondition condition = VatCondition.ResponsableInscripto, DateTimeOffset? now = null, string? postgres = null)
     {
         var sim = Start(postgres);
-        sim.Clock.Freeze(now ?? new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3)));
+        sim.Clock.Freeze(now ?? TestTime.Reference);
         await sim.PutTaxpayerAsync(Issuer, "Empresa de Prueba SA", condition,
             new PointOfSale(1, PointOfSaleKind.WebServiceCae), new PointOfSale(900, PointOfSaleKind.WebServiceCaea));
         var certificate = await sim.IssueCertificateAsync(Issuer, "facturacion");
@@ -135,8 +136,7 @@ public sealed class ArcaSimHarness : IAsyncDisposable
     /// <summary>A WSFEv1 envelope around an operation's element, written the way the manual's examples are.</summary>
     public Task<(int Status, string Body)> PostWsfeAsync(string operation, string inner, bool withAction = true) =>
         PostSoapAsync(WsfeUrl,
-            "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ar=\"http://ar.gov.afip.dif.FEV1/\">" +
-            $"<soapenv:Header/><soapenv:Body><ar:{operation}>{inner}</ar:{operation}></soapenv:Body></soapenv:Envelope>",
+            Soap.Envelope($"<ar:{operation}>{inner}</ar:{operation}>", ("ar", "http://ar.gov.afip.dif.FEV1/")),
             withAction ? $"\"http://ar.gov.afip.dif.FEV1/{operation}\"" : null);
 
     public static string AuthXml(AccessTicket ticket, long cuit) =>
