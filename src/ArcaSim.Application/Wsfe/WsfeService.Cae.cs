@@ -97,8 +97,7 @@ public sealed partial class WsfeService
             }
         }
 
-        var approved = response.FeDetResp.Count(d => d.Resultado == "A");
-        response.FeCabResp.Resultado = approved == details.Length ? "A" : approved == 0 ? "R" : "P";
+        response.FeCabResp.Resultado = BatchResult(response.FeDetResp.Select(d => d.Resultado), details.Length);
         response.Errors = errors.Count > 0 ? [.. errors] : null;
         return response;
     }
@@ -163,6 +162,10 @@ public sealed partial class WsfeService
     }
 
     private static bool IsHeaderCode(int code) => code is >= 10000 and <= 10007 or < 1000;
+
+    /// <summary>A batch's result: A when every voucher was authorized, R when none was, P in between.</summary>
+    private static string BatchResult(IEnumerable<string?> results, int sent) =>
+        results.Count(r => r == "A") is var approved && approved == sent ? "A" : approved == 0 ? "R" : "P";
 
     /// <summary>The rejection a test asked for through the admin API, with the code's own text when it has one.</summary>
     private Finding Forced(int code)

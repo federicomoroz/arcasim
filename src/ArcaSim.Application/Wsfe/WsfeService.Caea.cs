@@ -127,7 +127,7 @@ public sealed partial class WsfeService
                 var detail = details[i];
                 var answer = response.FeDetResp[i];
 
-                if (detail.CAEA is not { Length: 14 } code || !code.All(char.IsAsciiDigit))
+                if (detail.CAEA is not { } code || !IsCaeaCode(code))
                 {
                     errors.Add(catalog.For(method, 782).ToErr());
                     break;
@@ -182,8 +182,7 @@ public sealed partial class WsfeService
             }
         }
 
-        var approved = response.FeDetResp.Count(d => d.Resultado == "A");
-        response.FeCabResp.Resultado = approved == details.Length ? "A" : approved == 0 ? "R" : "P";
+        response.FeCabResp.Resultado = BatchResult(response.FeDetResp.Select(d => d.Resultado), details.Length);
         response.Errors = errors.Count > 0 ? [.. errors] : null;
         return response;
     }
@@ -207,7 +206,7 @@ public sealed partial class WsfeService
 
         var errors = new List<Err>();
         if (request.PtoVta is < 1 or > VoucherLimits.MaxPointOfSale) errors.Add(catalog.For(method, 1206).ToErr());
-        var caea = request.CAEA is { Length: 14 } code && code.All(char.IsAsciiDigit)
+        var caea = request.CAEA is { } code && IsCaeaCode(code)
             ? await caeas.FindByCodeAsync(code, ct)
             : null;
         if (request.CAEA is not { Length: 14 }) errors.Add(catalog.For(method, 1207).ToErr());
@@ -239,7 +238,7 @@ public sealed partial class WsfeService
         var auth = tokens.Validate(request.Auth);
         if (auth.Failed) return new FECAEASinMovConsResponse { Errors = [auth.Error!] };
 
-        if (request.CAEA is not { Length: 14 } code || !code.All(char.IsAsciiDigit))
+        if (request.CAEA is not { } code || !IsCaeaCode(code))
             return new FECAEASinMovConsResponse { Errors = [catalog.For(method, 10100).ToErr()] };
         if (request.PtoVta is < 0 or > VoucherLimits.MaxPointOfSale)
             return new FECAEASinMovConsResponse { Errors = [catalog.For(method, 10101).ToErr()] };
@@ -252,6 +251,9 @@ public sealed partial class WsfeService
             ? new FECAEASinMovConsResponse { Errors = [catalog.For(method, 10102).ToErr()] }
             : new FECAEASinMovConsResponse { ResultGet = reports };
     }
+
+    /// <summary>A CAEA as ARCA writes one: fourteen digits.</summary>
+    private static bool IsCaeaCode(string? code) => code is { Length: 14 } && code.All(char.IsAsciiDigit);
 
     /// <summary>The days a fortnight covers: "orden" 1 is the 1st to the 15th, 2 the 16th to the end of the month.</summary>
     private static bool TryFortnight(int period, short fortnight, out DateOnly from, out DateOnly to, out int error)
