@@ -62,6 +62,8 @@ public sealed partial class DdjjRules(IDocumentStore store, IClock clock) : ISer
         catch (FormatException) { return Business("Archivo adjunto inválido"); }
         if (content.Length == 0) return Business("Archivo adjunto inválido");
 
+        // MD5 because the contract says so: the file name carries the file's MD5 and consulta asks for it
+        // (uploadPresentacionService.md). It identifies the file; it protects nothing.
         var md5 = Convert.ToHexString(MD5.HashData(content)).ToLowerInvariant();
         if (match.Groups["md5"].Success && !match.Groups["md5"].Value.Equals(md5, StringComparison.OrdinalIgnoreCase))
             return Business("Archivo adjunto inválido");

@@ -217,6 +217,7 @@ public sealed class VentanillaRules(IDocumentStore store, IClock clock) : IServi
             .Set("filename", a.FileName)
             .SetOrDrop("content", withContent ? Convert.ToBase64String(a.Content) : null)
             .Set("compressed", false).Set("signed", false).Set("encrypted", false).Set("processed", false).Set("public", false)
+            // MD5 because the contract has an md5 element for the attachment (veconsumerws.md). It identifies the content; it protects nothing.
             .Set("md5", Convert.ToHexString(MD5.HashData(a.Content)).ToLowerInvariant())
             .Set("contentSize", a.Content.LongLength));
         return call.Ok(answer);
