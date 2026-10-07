@@ -80,25 +80,24 @@ public static class RemitoFamily
 
     /// <summary>
     /// autorizarRemito of carne and harina: the holder or the depositary says A
-    /// to authorize and anything else to deny. <paramref name="find"/> gives the
-    /// remito by its code when the caller is a party to it.
+    /// to authorize and anything else to deny.
     /// </summary>
-    public static async Task<ContractAnswer> AuthorizeAsync(
-        ServiceCall call, RemitoLedger ledger, RemitoCodes codes, string wrapper, Func<long, Task<Remito?>> find, CancellationToken ct)
+    public static async Task<ContractAnswer> AuthorizeAsync(ServiceCall call, RemitoLedger ledger, RemitoCodes codes, string wrapper, CancellationToken ct)
     {
         var code = call.Request.Long("codRemito");
-        if (await find(code) is not { } remito) return OperationAnswer(call, wrapper, code, codes.NotFound);
+        using var hold = await ledger.HoldAsync(code, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return OperationAnswer(call, wrapper, code, codes.NotFound);
         var problem = Authorize(remito, call.Cuit, call.Request.Text("estado") == "A", ledger.Now, codes);
         if (problem is null) await ledger.SaveAsync(remito, ct);
         return OperationAnswer(call, wrapper, code, problem);
     }
 
     /// <summary>anularRemito of carne and harina: the issuer cancels a remito that was never issued.</summary>
-    public static async Task<ContractAnswer> CancelAsync(
-        ServiceCall call, RemitoLedger ledger, RemitoCodes codes, string wrapper, Func<long, Task<Remito?>> find, CancellationToken ct)
+    public static async Task<ContractAnswer> CancelAsync(ServiceCall call, RemitoLedger ledger, RemitoCodes codes, string wrapper, CancellationToken ct)
     {
         var code = call.Request.Long("codRemito");
-        if (await find(code) is not { } remito) return OperationAnswer(call, wrapper, code, codes.NotFound);
+        using var hold = await ledger.HoldAsync(code, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return OperationAnswer(call, wrapper, code, codes.NotFound);
         var problem = Cancel(remito, call.Cuit, ledger.Now, codes);
         if (problem is null) await ledger.SaveAsync(remito, ct);
         return OperationAnswer(call, wrapper, code, problem);

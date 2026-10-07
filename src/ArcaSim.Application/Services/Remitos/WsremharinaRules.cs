@@ -53,8 +53,8 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
     public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct) => call.Name switch
     {
         "generarRemito" => await GenerateAsync(call, ct),
-        "autorizarRemito" => await RemitoFamily.AuthorizeAsync(call, _ledger, Codes, "operacionReturn", code => _ledger.FindForAsync(code, call.Cuit, ct), ct),
-        "anularRemito" => await RemitoFamily.CancelAsync(call, _ledger, Codes, "operacionReturn", code => _ledger.FindForAsync(code, call.Cuit, ct), ct),
+        "autorizarRemito" => await RemitoFamily.AuthorizeAsync(call, _ledger, Codes, "operacionReturn", ct),
+        "anularRemito" => await RemitoFamily.CancelAsync(call, _ledger, Codes, "operacionReturn", ct),
         "emitirRemito" => await IssueAsync(call, ct),
         "registrarRecepcion" => await ReceiveAsync(call, export: false, ct),
         "registrarExportacion" => await ReceiveAsync(call, export: true, ct),
@@ -125,7 +125,8 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
     private async Task<ContractAnswer> IssueAsync(ServiceCall call, CancellationToken ct)
     {
         var request = RemitoXml.Plain(call.Request);
-        if (await FindAsync(request.ChildLong("codRemito") ?? 0, call.Cuit, ct) is not { } remito)
+        using var hold = await _ledger.HoldAsync(request.ChildLong("codRemito") ?? 0, call.Cuit, ct);
+        if (hold.Remito is not { } remito)
             return RemitoAnswer(call, "emitirRemitoReturn", null, [NotFound]);
         if (remito.Issuer != call.Cuit || remito.State != RemitoStates.PendingIssue)
             return RemitoAnswer(call, "emitirRemitoReturn", null, [NotAllowed]);
@@ -147,7 +148,8 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
     {
         var request = RemitoXml.Plain(call.Request);
         var code = request.ChildLong("codRemito") ?? 0;
-        if (await FindAsync(code, call.Cuit, ct) is not { } remito) return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotFound);
+        using var hold = await _ledger.HoldAsync(code, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotFound);
         var allowed = remito.State == RemitoStates.Issued && (export ? remito.Foreign && remito.Issuer == call.Cuit : remito.Receiver == call.Cuit);
         if (!allowed) return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotAllowed);
 
@@ -185,7 +187,8 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
     {
         var request = RemitoXml.Plain(call.Request);
         var code = request.ChildLong("codRemito") ?? 0;
-        if (await FindAsync(code, call.Cuit, ct) is not { } remito) return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotFound);
+        using var hold = await _ledger.HoldAsync(code, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotFound);
         if (remito.Issuer != call.Cuit || remito.State != RemitoStates.Issued
             || _ledger.Now > remito.IssuedAt!.Value.AddHours(RemitoTerms.ChangeHours(remito.DistanceKm)))
             return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotAllowed);
@@ -199,7 +202,8 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
     {
         var request = RemitoXml.Plain(call.Request);
         var code = request.ChildLong("codRemito") ?? 0;
-        if (await FindAsync(code, call.Cuit, ct) is not { } remito) return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotFound);
+        using var hold = await _ledger.HoldAsync(code, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotFound);
         var contingency = request.Element("contingencia") ?? new XElement("contingencia");
         var kind = (int)(contingency.ChildLong("codTipoContingencia") ?? 0);
         if (remito.State != RemitoStates.Issued || !RemitoTables.FlourContingencies.Any(c => (int)c.Code == kind))
@@ -281,7 +285,8 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
     private async Task<ContractAnswer> ReenterAsync(ServiceCall call, CancellationToken ct)
     {
         var code = call.Request.Long("codRemito");
-        if (await FindAsync(code, call.Cuit, ct) is not { } remito) return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotFound);
+        using var hold = await _ledger.HoldAsync(code, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotFound);
         var delivery = remito.Movement == "REP" && remito.State == RemitoStates.Issued;
         if (remito.Issuer != call.Cuit || !(delivery || remito.State is RemitoStates.PartlyAccepted or RemitoStates.NotAccepted))
             return RemitoFamily.OperationAnswer(call, "operacionReturn", code, NotAllowed);

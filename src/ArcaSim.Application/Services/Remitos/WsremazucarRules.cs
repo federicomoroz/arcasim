@@ -124,7 +124,8 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     private async Task<ContractAnswer> AuthorizeAsync(ServiceCall call, CancellationToken ct)
     {
         var request = Wrapped(call, "autorizarRemitoTitular");
-        if (await FindAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct) is not { } remito) return Simple(call, "autorizarRemitoReturn", NotFound);
+        using var hold = await _ledger.HoldAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return Simple(call, "autorizarRemitoReturn", NotFound);
         var problem = RemitoFamily.Authorize(remito, call.Cuit, request.ChildText("autorizar") == "S", _ledger.Now, Codes);
         if (problem is null) await _ledger.SaveAsync(remito, ct);
         return Simple(call, "autorizarRemitoReturn", problem);
@@ -133,7 +134,8 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     private async Task<ContractAnswer> IssueAsync(ServiceCall call, CancellationToken ct)
     {
         var request = Wrapped(call, "emitirRemito");
-        if (await FindAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct) is not { } remito)
+        using var hold = await _ledger.HoldAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct);
+        if (hold.Remito is not { } remito)
             return RemitoAnswer(call, "emitirRemitoReturn", null, [NotFound]);
         if (remito.Issuer != call.Cuit || remito.State != RemitoStates.PendingIssue) return RemitoAnswer(call, "emitirRemitoReturn", null, [NotAllowed]);
         if (request.ChildDate("fechaInicioViaje") is { } start)
@@ -154,7 +156,8 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     private async Task<ContractAnswer> ReceiveAsync(ServiceCall call, bool export, CancellationToken ct)
     {
         var request = RemitoXml.Plain(call.Request);
-        if (await FindAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct) is not { } remito)
+        using var hold = await _ledger.HoldAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct);
+        if (hold.Remito is not { } remito)
             return Simple(call, "confirmarRecepcionMercaderiaReturn", NotFound);
         var allowed = remito.State == RemitoStates.Issued && (export ? remito.Foreign && remito.Issuer == call.Cuit : remito.Receiver == call.Cuit);
         if (!allowed) return Simple(call, "confirmarRecepcionMercaderiaReturn", NotAllowed);
@@ -190,7 +193,8 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     private async Task<ContractAnswer> ValidateAsync(ServiceCall call, CancellationToken ct)
     {
         var request = Wrapped(call, "convalidaRechazoReceptor");
-        if (await FindAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct) is not { } remito) return Simple(call, "convalidarEmisorReturn", NotFound);
+        using var hold = await _ledger.HoldAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return Simple(call, "convalidarEmisorReturn", NotFound);
         if (remito.Issuer != call.Cuit || remito.State is not (RemitoStates.PartlyAccepted or RemitoStates.NotAccepted))
             return Simple(call, "convalidarEmisorReturn", NotAllowed);
         remito.MoveTo(request.ChildText("convalida") == "S" ? RemitoStates.Validated : RemitoStates.NotValidated, _ledger.Now, call.Cuit);
@@ -200,7 +204,8 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
 
     private async Task<ContractAnswer> CorrectAsync(ServiceCall call, CancellationToken ct)
     {
-        if (await FindAsync(call.Request.Long("codRemito"), call.Cuit, ct) is not { } remito) return Simple(call, "convalidarEmisorReturn", NotFound);
+        using var hold = await _ledger.HoldAsync(call.Request.Long("codRemito"), call.Cuit, ct);
+        if (hold.Remito is not { } remito) return Simple(call, "convalidarEmisorReturn", NotFound);
         if (remito.Issuer != call.Cuit || remito.State != RemitoStates.NotValidated) return Simple(call, "convalidarEmisorReturn", NotAllowed);
         remito.MoveTo(RemitoStates.Validated, _ledger.Now, call.Cuit);
         await _ledger.SaveAsync(remito, ct);
@@ -211,7 +216,8 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     private async Task<ContractAnswer> ChangeDriverAsync(ServiceCall call, CancellationToken ct)
     {
         var request = Wrapped(call, "modificarConductor");
-        if (await FindAsync(request.ChildLong("codRemito") ?? 0, call.Cuit, ct) is not { } remito) return Simple(call, "modificarConductorReturn", NotFound);
+        using var hold = await _ledger.HoldAsync(request.ChildLong("codRemito") ?? 0, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return Simple(call, "modificarConductorReturn", NotFound);
         if (remito.Issuer != call.Cuit || remito.State != RemitoStates.Issued || _ledger.Now > remito.IssuedAt!.Value.AddHours(RemitoTerms.FlatChangeHours))
             return Simple(call, "modificarConductorReturn", NotAllowed);
         RemitoXml.Edit(remito, document => ChangeTruck(document, request.Element("conductor"), request.ChildText("dominioVehiculo"), request.ChildText("dominioAcoplado")));
@@ -223,7 +229,8 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     private async Task<ContractAnswer> ContingencyAsync(ServiceCall call, CancellationToken ct)
     {
         var request = Wrapped(call, "informarContingencia");
-        if (await FindAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct) is not { } remito) return Simple(call, "informarContingenciaReturn", NotFound);
+        using var hold = await _ledger.HoldAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return Simple(call, "informarContingenciaReturn", NotFound);
         if (remito.Issuer != call.Cuit || remito.State != RemitoStates.Issued) return Simple(call, "informarContingenciaReturn", NotAllowed);
         var sent = Goods(remito);
         var lost = new Dictionary<int, long>();

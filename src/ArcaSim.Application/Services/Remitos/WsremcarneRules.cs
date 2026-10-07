@@ -57,8 +57,8 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
     public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct) => call.Name switch
     {
         "generarRemito" or "generarRemitoImporte" or "generarRemitoRecNoCateg" or "generarRemitoRecNoCategImporte" => await GenerateAsync(call, ct),
-        "autorizarRemito" => await RemitoFamily.AuthorizeAsync(call, _ledger, Codes, "autorizarRemitoReturn", code => FindAsync(code, call.Cuit, ct), ct),
-        "anularRemito" => await RemitoFamily.CancelAsync(call, _ledger, Codes, "anularRemitoReturn", code => FindAsync(code, call.Cuit, ct), ct),
+        "autorizarRemito" => await RemitoFamily.AuthorizeAsync(call, _ledger, Codes, "autorizarRemitoReturn", ct),
+        "anularRemito" => await RemitoFamily.CancelAsync(call, _ledger, Codes, "anularRemitoReturn", ct),
         "emitirRemito" => await IssueAsync(call, ct),
         "registrarRecepcion" => await ReceiveAsync(call, ct),
         "modificarViaje" => await ChangeTripAsync(call, ct),
@@ -152,7 +152,8 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
     private async Task<ContractAnswer> IssueAsync(ServiceCall call, CancellationToken ct)
     {
         var request = RemitoXml.Plain(call.Request);
-        if (await FindAsync(request.ChildLong("codRemito") ?? 0, call.Cuit, ct) is not { } remito)
+        using var hold = await _ledger.HoldAsync(request.ChildLong("codRemito") ?? 0, call.Cuit, ct);
+        if (hold.Remito is not { } remito)
             return RemitoAnswer(call, "emitirRemitoReturn", null, [NotFound]);
         if (remito.Issuer != call.Cuit || remito.State != RemitoStates.PendingIssue) return RemitoAnswer(call, "emitirRemitoReturn", null, [NotAllowed]);
         if (request.Element("viaje") is { } trip)
@@ -175,7 +176,8 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
     {
         var request = RemitoXml.Plain(call.Request);
         var code = request.ChildLong("codRemito") ?? 0;
-        if (await FindAsync(code, call.Cuit, ct) is not { } remito) return RemitoFamily.OperationAnswer(call, "registrarRecepcionReturn", code, NotFound);
+        using var hold = await _ledger.HoldAsync(code, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return RemitoFamily.OperationAnswer(call, "registrarRecepcionReturn", code, NotFound);
         var state = request.ChildText("estado");
         if (remito.Receiver != call.Cuit || remito.State != RemitoStates.Issued
             || state is not (RemitoStates.Accepted or RemitoStates.PartlyAccepted or RemitoStates.NotAccepted))
@@ -205,7 +207,8 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
     {
         var request = RemitoXml.Plain(call.Request);
         var code = request.ChildLong("codRemito") ?? 0;
-        if (await FindAsync(code, call.Cuit, ct) is not { } remito) return RemitoFamily.OperationAnswer(call, "modificarViajeReturn", code, NotFound);
+        using var hold = await _ledger.HoldAsync(code, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return RemitoFamily.OperationAnswer(call, "modificarViajeReturn", code, NotFound);
         if (remito.Issuer != call.Cuit || remito.State != RemitoStates.Issued || _ledger.Now > remito.IssuedAt!.Value.AddHours(RemitoTerms.FlatChangeHours))
             return RemitoFamily.OperationAnswer(call, "modificarViajeReturn", code, NotAllowed);
         RemitoXml.Edit(remito, document =>
@@ -225,7 +228,8 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
     {
         var request = RemitoXml.Plain(call.Request);
         var code = request.ChildLong("codRemito") ?? 0;
-        if (await FindAsync(code, call.Cuit, ct) is not { } remito) return RemitoFamily.OperationAnswer(call, "informarContingenciaReturn", code, NotFound);
+        using var hold = await _ledger.HoldAsync(code, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return RemitoFamily.OperationAnswer(call, "informarContingenciaReturn", code, NotFound);
         if (remito.Issuer != call.Cuit || remito.State != RemitoStates.Issued)
             return RemitoFamily.OperationAnswer(call, "informarContingenciaReturn", code, NotAllowed);
         remito.Contingencies.Add((request.Element("contingencia") ?? new XElement("contingencia")).ToString(SaveOptions.DisableFormatting));
@@ -239,7 +243,7 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
     private async Task<ContractAnswer> ConsultAsync(ServiceCall call, string wrapper, string[] order, CancellationToken ct)
     {
         var request = RemitoXml.Plain(call.Request);
-        var remito = await Refresh(await RemitoQueries.FindAsync(_ledger, request, call.Cuit, "idReq", ct), ct);
+        var remito = await _ledger.WithDeadlinesAsync(await RemitoQueries.FindAsync(_ledger, request, call.Cuit, "idReq", ct), ct);
         return call.Ok(new XElement(call.Operation.Output, remito is null
             ? new XElement(wrapper, RemitoXml.Errors([NotFound]))
             : Consulted(wrapper, remito, order)));
@@ -247,7 +251,7 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
 
     private async Task<ContractAnswer> HistoryAsync(ServiceCall call, CancellationToken ct)
     {
-        var remito = await Refresh(await RemitoQueries.FindAsync(_ledger, RemitoXml.Plain(call.Request), call.Cuit, "idReq", ct), ct);
+        var remito = await _ledger.WithDeadlinesAsync(await RemitoQueries.FindAsync(_ledger, RemitoXml.Plain(call.Request), call.Cuit, "idReq", ct), ct);
         return call.Ok(new XElement(call.Operation.Output, new XElement("estadosRemitosReturn",
             remito is null
                 ? RemitoXml.Errors([NotFound])
@@ -256,7 +260,7 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
 
     private async Task<ContractAnswer> LastAsync(ServiceCall call, CancellationToken ct)
     {
-        var last = await Refresh(await _ledger.LastIssuedAsync(call.Cuit, call.Request.Int("tipoComprobante"), call.Request.Int("puntoEmision"), ct), ct);
+        var last = await _ledger.WithDeadlinesAsync(await _ledger.LastIssuedAsync(call.Cuit, call.Request.Int("tipoComprobante"), call.Request.Int("puntoEmision"), ct), ct);
         return call.Ok(new XElement(call.Operation.Output,
             last is null ? new XElement("consultarUltimoRemitoReturn") : Consulted("consultarUltimoRemitoReturn", last, RemitoOrder)));
     }
@@ -265,25 +269,15 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
     private async Task<List<Remito>> AllRefreshedAsync(CancellationToken ct)
     {
         var all = new List<Remito>();
-        foreach (var remito in await _ledger.AllAsync(ct)) all.Add((await Refresh(remito, ct))!);
+        foreach (var remito in await _ledger.AllAsync(ct)) all.Add((await _ledger.WithDeadlinesAsync(remito, ct))!);
         return all;
     }
 
     // ---- Shapes ------------------------------------------------------------------------
 
+    /// <summary>The remito a redirection starts from, as a consult sees it: only a party to the remito finds it.</summary>
     private async Task<Remito?> FindAsync(long code, long cuit, CancellationToken ct) =>
-        await Refresh(await _ledger.FindAsync(code, ct), ct) is { } remito && remito.Involves(cuit) ? remito : null;
-
-    /// <summary>A remito to a receiver without CUIT is accepted on its own once its validity ends (manual 2.5.26).</summary>
-    private async Task<Remito?> Refresh(Remito? remito, CancellationToken ct)
-    {
-        if (remito is { Uncategorized: true, State: RemitoStates.Issued } && _ledger.Today > remito.ExpiresOn)
-        {
-            remito.MoveTo(RemitoStates.Accepted, _ledger.Now, remito.Issuer);
-            await _ledger.SaveAsync(remito, ct);
-        }
-        return remito;
-    }
+        await _ledger.WithDeadlinesAsync(await _ledger.FindAsync(code, ct), ct) is { } remito && remito.Involves(cuit) ? remito : null;
 
     /// <summary>RemitoReturnType: what ARCA assigned and the state, resultado, and the errors.</summary>
     private static ContractAnswer RemitoAnswer(ServiceCall call, string wrapper, Remito? remito, IReadOnlyCollection<RemitoProblem> problems) =>
