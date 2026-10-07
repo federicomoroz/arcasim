@@ -41,6 +41,24 @@ public class RgivaRulesTests
         Assert.Equal(first.Value("codigoSeguridad"), second.Value("codigoSeguridad"));
     }
 
+    [Theory]
+    [InlineData(VatCondition.Monotributo, "20")]
+    [InlineData(VatCondition.MonotributistaSocial, "20")]
+    [InlineData(VatCondition.MonotributoTrabajadorIndependientePromovido, "20")]
+    [InlineData(VatCondition.Exento, "2")]
+    [InlineData(VatCondition.ResponsableInscripto, "18")]
+    [InlineData(VatCondition.NoCategorizado, "23")]
+    public async Task A_taxpayer_the_padron_knows_gets_the_legend_of_its_VAT_condition(VatCondition condition, string legend)
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var rgiva = await ServiceProbe.StartAsync(sim, "wsrgiva");
+        await sim.PutTaxpayerAsync(20222222223, "Ana Gomez", condition);
+
+        var answer = (await QueryAsync(rgiva, (20222222223, 1))).Valid();
+
+        Assert.Equal(legend, answer.Value("codigoLeyenda"));
+    }
+
     private static Task<SoapAnswer> QueryAsync(ServiceProbe rgiva, params (long Cuit, int Goods)[] items) =>
         rgiva.CallAsync("consultarConstanciaPorLote_v2",
             $"<authRequest><token>{rgiva.Token}</token><sign>{rgiva.Sign}</sign><cuitRepresentada>{ServiceProbe.Caller}</cuitRepresentada></authRequest>" +

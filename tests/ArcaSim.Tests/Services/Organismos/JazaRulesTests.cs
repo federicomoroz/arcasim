@@ -71,6 +71,65 @@ public class JazaRulesTests
     }
 
     [Fact]
+    public async Task A_sequence_time_without_an_offset_is_Argentinas_time_wherever_the_host_is()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var jaza = await ServiceProbe.StartAsync(sim, "wsjaza");
+        await DeclareAsync(jaza, "ME-01");
+
+        // It ends half an hour after it starts only if the end, which has no offset, is read as 10:30 at -03:00.
+        var sequence = await DayAsync(jaza, "ME-01", "2026-09-29", 1, 1, (0, 0), (10, 10), start: "2026-09-29T10:00:00-03:00", end: "2026-09-29T10:30:00");
+        var backwards = await DayAsync(jaza, "ME-01", "2026-09-29", 1, 2, (10, 10), (20, 20), start: "2026-09-29T11:00:00", end: "2026-09-29T10:00:00-03:00");
+
+        Assert.Equal("A", sequence.Valid().Value("resultado"));
+        Assert.Equal("1105", backwards.Valid().Value("codigo"));
+    }
+
+    [Fact]
+    public async Task A_summary_that_breaks_several_rules_names_them_all_in_the_manuals_order()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var jaza = await ServiceProbe.StartAsync(sim, "wsjaza");
+        await DeclareAsync(jaza, "ME-01");
+
+        Assert.Equal([1020, 1003], await CodesAsync(jaza, "2026-10-02", 1, 1, (0, 0), (10, 10))); // in the future, and 09-29 to 10-01 are missing
+        Assert.Equal([1002], await CodesAsync(jaza, "2026-09-28", 1, 1, (0, 0), (10, 10))); // before the machine started
+        Assert.Equal([1101, 1102], await CodesAsync(jaza, "2026-09-29", 1, 1, (10, 10), (5, 5))); // games and coin-in went backwards
+        Assert.Equal([1105], await CodesAsync(jaza, "2026-09-29", 1, 1, (0, 0), (10, 10), "2026-09-29T11:00:00-03:00", "2026-09-29T10:00:00-03:00"));
+        Assert.Equal([1005], await CodesAsync(jaza, "2026-09-29", 2, 1, (0, 0), (10, 10))); // the first send of a date is presentation 1...
+        Assert.Equal([1006], await CodesAsync(jaza, "2026-09-29", 1, 2, (0, 0), (10, 10))); // ...and sequence 1
+        Assert.Equal([1005, 1006], await CodesAsync(jaza, "2026-09-29", 2, 2, (0, 0), (10, 10)));
+    }
+
+    [Fact]
+    public async Task Further_sequences_and_rectifications_follow_the_manuals_continuity_rules()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var jaza = await ServiceProbe.StartAsync(sim, "wsjaza");
+        await DeclareAsync(jaza, "ME-01");
+        Assert.Equal([], await CodesAsync(jaza, "2026-09-29", 1, 1, (0, 0), (10, 10)));
+
+        Assert.Equal([1007], await CodesAsync(jaza, "2026-09-29", 1, 3, (10, 10), (20, 20))); // the next sequence is 2
+        Assert.Equal([1010], await CodesAsync(jaza, "2026-09-29", 1, 2, (10, 10), (20, 20), "2026-09-29T09:30:00-03:00", "2026-09-29T11:00:00-03:00"));
+        Assert.Equal([1008], await CodesAsync(jaza, "2026-09-29", 2, 2, (0, 0), (10, 10))); // a rectification starts again at sequence 1
+        Assert.Equal([1009], await CodesAsync(jaza, "2026-09-29", 3, 1, (0, 0), (10, 10)));
+        Assert.Equal([1012], await CodesAsync(jaza, "2026-09-30", 1, 1, (10, 9), (20, 20))); // coin-in does not continue from the day before
+    }
+
+    [Fact]
+    public async Task A_rectification_older_than_30_days_is_refused()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var jaza = await ServiceProbe.StartAsync(sim, "wsjaza");
+        var day = new DateOnly(2026, 8, 20);
+        await jaza.Store.PutAsync(JazaRules.Machines, $"{Caller}/00007/ME-01", new GamingMachine(Caller, 7, "ME-01", day, true));
+        await jaza.Store.PutAsync(JazaRules.Days, $"{Caller}/00007/ME-01/{day:yyyyMMdd}",
+            new MachineDay(Caller, 7, "ME-01", day, 1, [new MachineSequence(1, "2026-08-20T09:00:00-03:00", "2026-08-20T10:00:00-03:00", "0.01", new MachineCounters(0, 0, 0, 0), new MachineCounters(10, 10, 0, 0))]));
+
+        Assert.Equal([1004], await CodesAsync(jaza, "2026-08-20", 2, 1, (0, 0), (12, 12)));
+    }
+
+    [Fact]
     public async Task A_lot_that_modifies_an_unknown_machine_ends_with_line_errors()
     {
         await using var sim = ArcaSimHarness.Start();
@@ -108,18 +167,28 @@ public class JazaRulesTests
     private static async Task<System.Xml.Linq.XElement> Pending(ServiceProbe jaza) =>
         (await jaza.CallAsync("consultarIdsMEPendientes", Auth(jaza) + "<nroPuntoExplotacion>7</nroPuntoExplotacion>")).Valid();
 
-    private static Task<SoapAnswer> DayAsync(ServiceProbe jaza, string machine, string date, int presentation, int sequence, (long Games, long CoinIn) from, (long Games, long CoinIn) to) =>
+    private static Task<SoapAnswer> DayAsync(
+        ServiceProbe jaza, string machine, string date, int presentation, int sequence, (long Games, long CoinIn) from, (long Games, long CoinIn) to,
+        string? start = null, string? end = null) =>
         jaza.CallAsync("informarResumenDiaME", Auth(jaza) +
             $"<nroPuntoExplotacion>7</nroPuntoExplotacion><fechaPresentacion>{date}</fechaPresentacion><nroPresentacion>{presentation}</nroPresentacion>" +
-            Detail(machine, date, sequence, from, to));
+            Detail(machine, date, sequence, from, to, start, end));
+
+    /// <summary>The codes a summary is refused with, in the order the answer lists them; none when it is accepted.</summary>
+    private static async Task<int[]> CodesAsync(
+        ServiceProbe jaza, string date, int presentation, int sequence, (long Games, long CoinIn) from, (long Games, long CoinIn) to,
+        string? start = null, string? end = null) =>
+        (await DayAsync(jaza, "ME-01", date, presentation, sequence, from, to, start, end)).Valid().All("codigo").Select(c => int.Parse(c.Value)).ToArray();
 
     private static Task<SoapAnswer> RespondAsync(ServiceProbe jaza, long id) =>
         jaza.CallAsync("responderSolicitudME", Auth(jaza) + $"<idSolicitud>{id}</idSolicitud><estado>OK</estado>" +
                                                Detail("ME-01", "2026-09-30", 1, (0, 0), (5, 5)));
 
-    private static string Detail(string machine, string date, int sequence, (long Games, long CoinIn) from, (long Games, long CoinIn) to) =>
+    private static string Detail(
+        string machine, string date, int sequence, (long Games, long CoinIn) from, (long Games, long CoinIn) to, string? start = null, string? end = null) =>
         $"<detalleMaquinaElectronica><idMaquina>{machine}</idMaquina><secuencia>{sequence}</secuencia>" +
-        $"<fechaHoraSecuenciaInicio>{date}T{8 + sequence:D2}:00:00-03:00</fechaHoraSecuenciaInicio><fechaHoraSecuenciaFin>{date}T{9 + sequence:D2}:00:00-03:00</fechaHoraSecuenciaFin>" +
+        $"<fechaHoraSecuenciaInicio>{start ?? $"{date}T{8 + sequence:D2}:00:00-03:00"}</fechaHoraSecuenciaInicio>" +
+        $"<fechaHoraSecuenciaFin>{end ?? $"{date}T{9 + sequence:D2}:00:00-03:00"}</fechaHoraSecuenciaFin>" +
         "<denomContabilidad>0.01</denomContabilidad>" +
         $"<contadoresInicial><juegosJugados>{from.Games}</juegosJugados><coinIn>{from.CoinIn}</coinIn><coinOut>0</coinOut><jackpot>0</jackpot></contadoresInicial>" +
         $"<contadoresFinal><juegosJugados>{to.Games}</juegosJugados><coinIn>{to.CoinIn}</coinIn><coinOut>0</coinOut><jackpot>0</jackpot></contadoresFinal>" +

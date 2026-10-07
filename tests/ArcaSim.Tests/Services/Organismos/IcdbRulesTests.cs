@@ -19,7 +19,9 @@ public class IcdbRulesTests
         var registered = (await icdb.CallAsync("consultarInscriptosRegistro", Auth(icdb))).Valid();
         Assert.Equal([Active], registered.All("cbu").Select(c => c.Value));
 
-        await IcdbRegistry.ChangeStateAsync(icdb.Store, ServiceProbe.Caller, 20555555556, Active, "1", "UI", new DateOnly(2026, 9, 30));
+        var key = IcdbRegistry.Key(ServiceProbe.Caller, 20555555556, Active);
+        var account = (await icdb.Store.GetAsync<BankAccount>(IcdbRegistry.Accounts, key))!;
+        await icdb.Store.PutAsync(IcdbRegistry.Accounts, key, account with { History = [.. account.History, new AccountState("UI", new DateOnly(2026, 9, 30))] });
 
         var news = (await icdb.CallAsync("consultarNovedadesPorFecha", Auth(icdb) + "<solicitud><fecha>2026-09-30</fecha></solicitud>")).Valid();
         Assert.Equal("UI", news.Value("codigoEstado"));

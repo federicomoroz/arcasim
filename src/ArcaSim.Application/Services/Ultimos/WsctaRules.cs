@@ -213,8 +213,8 @@ public sealed class WsctaRules(IDocumentStore store, IClock clock, SequenceLocks
         .Set("cuitSolicitante", certificate.Applicant)
         .Set("nroTramite", certificate.Procedure)
         .Set("estado", StateOf(certificate))
-        .SetOrDrop("fechaAprobacion", Moment(certificate.ApprovedAt))
-        .SetOrDrop("fechaRechazo", Moment(certificate.RejectedAt))
+        .SetOrDrop("fechaAprobacion", Stamp(certificate.ApprovedAt))
+        .SetOrDrop("fechaRechazo", Stamp(certificate.RejectedAt))
         .SetOrDrop("registroSeccionalDNRPA", certificate.Registry)
         .Set("documentoPDF", PdfOf(certificate));
 
@@ -236,7 +236,8 @@ public sealed class WsctaRules(IDocumentStore store, IClock clock, SequenceLocks
 
     private static string PdfOf(TransferCertificate certificate) => certificate.Pdf is { Length: > 0 } pdf ? pdf : CertificatePdf.Render(certificate);
 
-    private static string? Moment(DateTimeOffset? at) => at?.ToArgentina().ToString("dd-MM-yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+    /// <summary>A moment as the service prints one: dd-MM-yyyy HH:mm:ss in Argentina's time.</summary>
+    private static string? Stamp(DateTimeOffset? at) => at?.ToArgentina().ToString("dd-MM-yyyy HH:mm:ss", CultureInfo.InvariantCulture);
 
     private static int Days(DateTimeOffset from, DateTimeOffset to) =>
         to.ArgentinaDate().DayNumber - from.ArgentinaDate().DayNumber;

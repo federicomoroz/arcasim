@@ -10,13 +10,18 @@ public sealed record ReferenceRow(string Codigo, string Descripcion, string Desd
 public sealed record ReferenceTable(string Id, string Description, string Method, string[] Services, IReadOnlyList<ReferenceRow> Rows);
 
 /// <summary>
-/// The reference tables the other customs services ArcaSim simulates take
-/// their codes from, so a code wgesTabRef lists is a code they accept. Only
-/// tables whose codes the manuals document are here, with those codes. The
-/// texts of DFCOD_DESC come from the wDigDepFiel and wConsDepFiel manuals; the
-/// other descriptions are ArcaSim's wording of what the manuals say each state
-/// is, not the table's own texts. Which table holds the PEMA device states
-/// (ETAPEMA_DESC) is ArcaSim's reading of the name.
+/// The reference tables of the customs services ArcaSim simulates, as wgesTabRef
+/// serves them. A client's codes are checked against them where the manuals say
+/// they come from a table: the carpeta codes (DFCOD_DESC), the PEMA states
+/// (ETAPEMA_DESC) and the alarms (ESTMON_DESC). DFEST_DESC and ESTCEL_DESC list
+/// the states the services write themselves (a legajo's, a precinto's); no rule
+/// checks a request against them (ConsultarPrecintos filters by Estado and
+/// answers 10121 for one that matches nothing). Only tables whose codes the
+/// manuals document are here, with those codes. The texts of DFCOD_DESC come
+/// from the wDigDepFiel and wConsDepFiel manuals; the other descriptions are
+/// ArcaSim's wording of what the manuals say each state is, not the table's own
+/// texts. Which table holds the PEMA device states (ETAPEMA_DESC) is ArcaSim's
+/// reading of the name.
 /// </summary>
 public static class AduanaTables
 {
@@ -140,7 +145,7 @@ public sealed class WgesTabRefRules : IServiceBehavior
             // Direct children only: Descripcion, Opcion and LugarOperativo are also the names of their rows.
             foreach (var (field, text) in new[] { ("Codigo", value.Codigo), ("Descripcion", value.Descripcion), ("VigenciaDesde", value.Desde),
                          ("VigenciaHasta", value.Hasta), ("CodigoIso", value.Codigo) })
-                if (row.Elements().FirstOrDefault(e => e.Name.LocalName == field) is { } child) child.Value = text;
+                if (row.Child(field) is { } child) child.Value = text;
         });
         return call.Done(answer);
     }

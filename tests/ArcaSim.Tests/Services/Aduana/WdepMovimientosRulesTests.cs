@@ -1,3 +1,7 @@
+using ArcaSim.Application;
+using ArcaSim.Application.Services.Aduana;
+using ArcaSim.Infrastructure.InMemory;
+
 namespace ArcaSim.Tests.Services.Aduana;
 
 /// <summary>wdepMovimientos: cargo enters a depósito, leaves it with a salida, and a repeated transaction answers the same.</summary>
@@ -76,5 +80,37 @@ public class WdepMovimientosRulesTests
         Assert.Equal("10142", closed.Code());
         Assert.Equal("0", replay.Code());
         Assert.Equal("10142", refusedReplay.Code());
+    }
+
+    [Fact]
+    public async Task Exits_that_run_together_never_take_out_more_than_entered()
+    {
+        var clock = new SimulatedClock(TimeProvider.System);
+        clock.Freeze(AduanaKit.Today);
+        var dep = new RulesProbe(new WdepMovimientosRules(new YieldingDocumentStore(new InMemoryStore()), clock), AduanaKit.Today);
+        await dep.CallAsync("WdepIngresos", Entry(4001), AduanaKit.Caller);
+
+        // Line 1 holds 20 units: two exits of 10 fit, the other three do not.
+        var answers = await Task.WhenAll(Enumerable.Range(0, 5).Select(i => dep.CallAsync("WdepSalidas", Exit(4100 + i, 10, container: ""), AduanaKit.Caller)));
+
+        Assert.Equal(2, answers.Count(a => a.Code() == "0"));
+        Assert.Equal(3, answers.Count(a => a.Code() == "10034"));
+    }
+
+    [Fact]
+    public async Task The_same_transaction_sent_together_is_processed_once_and_the_others_wait_or_replay()
+    {
+        var clock = new SimulatedClock(TimeProvider.System);
+        clock.Freeze(AduanaKit.Today);
+        var dep = new RulesProbe(new WdepMovimientosRules(new YieldingDocumentStore(new InMemoryStore()), clock), AduanaKit.Today);
+        await dep.CallAsync("WdepIngresos", Entry(5001), AduanaKit.Caller);
+
+        var answers = await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => dep.CallAsync("WdepSalidas", Exit(5100, 10, container: ""), AduanaKit.Caller)));
+        var second = await dep.CallAsync("WdepSalidas", Exit(5101, 10, container: ""), AduanaKit.Caller);
+        var third = await dep.CallAsync("WdepSalidas", Exit(5102, 10, container: ""), AduanaKit.Caller);
+
+        Assert.All(answers, a => Assert.Contains(a.Code(), new[] { "0", "31209" })); // the answer it had, or "in course" (p.8)
+        Assert.Contains(answers, a => a.Code() == "0");
+        Assert.Equal(("0", "10034"), (second.Code(), third.Code())); // 10 of the 20 left with the first transaction, once
     }
 }

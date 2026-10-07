@@ -26,8 +26,6 @@ public sealed record Legajo(
 internal static class Legajos
 {
     public const string Collection = "wDigDepFiel.legajos";
-    public const long Declarante = 20222222223;
-    public const long Ie = 30000000007;
 
     public static string Key(string legajo, string code, string ticket = "") => ticket == "" ? $"{legajo}/{code}" : $"{legajo}/{code}/{ticket}";
 
@@ -37,10 +35,9 @@ internal static class Legajos
         for (var i = 0; i < 2; i++)
         {
             var number = await store.NextAsync("wDigDepFiel.legajos", ct);
-            // A detailed declaration's number: AA BBB CCCC DDDDDD E (year, aduana, type, number, check letter).
-            var id = $"{now:yy}001IC04{number:D6}{(char)('A' + number % 26)}";
-            await store.PutAsync(Collection, Key(id, "000"), new Legajo(id, "000", "", psad, Declarante, "DESPACHANTE DEL SIMULADOR",
-                Ie, "IMPORTADORA DEL SIMULADOR SA", 125000m + number, now.AddDays(-2), now, "ENDO"), ct);
+            var id = Dia.DeclarationOf(now.ArgentinaDate(), "001", "IC04", number);
+            await store.PutAsync(Collection, Key(id, "000"), new Legajo(id, "000", "", psad, Dia.SeededBroker, "DESPACHANTE DEL SIMULADOR",
+                Dia.SeededCompany, "IMPORTADORA DEL SIMULADOR SA", 125000m + number, now.AddDays(-2), now, "ENDO"), ct);
         }
     }
 
@@ -55,10 +52,8 @@ internal static class Legajos
         return date;
     }
 
-    public static readonly DateTimeOffset None = new(1, 1, 1, 0, 0, 0, TimeSpan.Zero);
-
     /// <summary>The carpeta codes, from the reference table wgesTabRef serves.</summary>
-    public static readonly string[] Codes = AduanaTables.Find("DFCOD_DESC")!.Rows.Select(r => r.Codigo).ToArray();
+    public static readonly IReadOnlyList<string> Codes = AduanaTables.Find("DFCOD_DESC")!.Rows.Select(r => r.Codigo).ToList();
 
     public static string Required(string field) => $"Error Atributo/Parametro: \"{field}\" Obligatorio";
 
@@ -77,6 +72,9 @@ internal static class Legajos
 public sealed class WConsDepFielRules(IDocumentStore store, IClock clock) : IServiceBehavior
 {
     private const string Ok = "OK Procesado";
+
+    /// <summary>The first PndListaEndo of a PSAD endorses its legajos; requests that arrive together endorse them once.</summary>
+    private readonly KeyedLocks<long> _endorsing = new();
 
     public string Service => "wConsDepFiel";
 
@@ -100,7 +98,7 @@ public sealed class WConsDepFielRules(IDocumentStore store, IClock clock) : ISer
         if (code != "" && !Legajos.Codes.Contains(code)) return call.Fail(4, Legajos.BadCode);
         var declarant = arg.Field("CuitDeclarante");
 
-        await Legajos.SeedAsync(store, call.Cuit, clock.Now.ToArgentina(), ct);
+        using (await _endorsing.AcquireAsync(call.Cuit, ct)) await Legajos.SeedAsync(store, call.Cuit, clock.Now.ToArgentina(), ct);
         var found = (await store.ListAsync<Legajo>(Legajos.Collection, "", ct))
             .Where(l => l.Psad == call.Cuit && l.Estado == "ENDO"
                         && DateOnly.FromDateTime(l.FechaEndo.DateTime) is var endo && endo >= from && endo <= to
@@ -145,7 +143,7 @@ public sealed class WConsDepFielRules(IDocumentStore store, IClock clock) : ISer
             .Set("Codigo", legajo.Codigo)
             .Set("Estado", legajo.Estado)
             .Set("FechaVtoPSAD", Legajos.BusinessDaysAfter(legajo.FechaEndo, 5))
-            .Set("FechaVtoDIGI", legajo.Recepcion is { } received ? Legajos.BusinessDaysAfter(received, 5) : Legajos.None)
+            .Set("FechaVtoDIGI", legajo.Recepcion is { } received ? Legajos.BusinessDaysAfter(received, 5) : Dia.NoDate)
             .Set("CuitIE", legajo.Ie)
             .Set("DescIE", legajo.DescIe)
             .Set("CuitDesp", legajo.Declarante)
@@ -208,7 +206,7 @@ public sealed class WDigDepFielRules(IDocumentStore store) : IServiceBehavior
         if (Mismatch(call, legajo, r) is { } refused) return refused;
         if (legajo.Estado != "ENDO") return call.Fail(111, "Legajo Duplicado");
 
-        await store.PutAsync(Legajos.Collection, key, legajo with { Estado = "PSAD", Recepcion = Moment(r.Date("fechaHoraAcept")) }, ct);
+        await store.PutAsync(Legajos.Collection, key, legajo with { Estado = "PSAD", Recepcion = r.Date("fechaHoraAcept") is { } accepted ? ArgentinaTime.StartOf(accepted) : null }, ct);
         return Ok(call, "OK Procesado");
     }
 
@@ -262,9 +260,6 @@ public sealed class WDigDepFielRules(IDocumentStore store) : IServiceBehavior
         if (r.Field("cuitIE") != legajo.Ie.ToString()) return call.Fail(108, "El Legajo no se corresponde con el importador/exportador informado");
         return null;
     }
-
-    private static DateTimeOffset? Moment(DateOnly? date) =>
-        date is { } day ? ArgentinaTime.StartOf(day) : null;
 
     private static ContractAnswer Ok(ServiceCall call, string text) => call.Done(call.Sample().Receipt(0, text, "descError"));
 }

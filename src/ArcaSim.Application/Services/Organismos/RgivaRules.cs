@@ -104,7 +104,7 @@ public sealed class RgivaRules(IDocumentStore store, PadronDirectory padron, ICl
         {
             VatCondition.ResponsableInscripto => 18,
             VatCondition.Exento => 2,
-            VatCondition.Monotributo or VatCondition.MonotributistaSocial or VatCondition.MonotributoTrabajadorIndependientePromovido => 20,
+            var condition when condition.IsMonotributo() => 20,
             _ => 23,
         };
         return new PerceptionSubject(cuit, taxpayer.Name.ToUpperInvariant(), legend);

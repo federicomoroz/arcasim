@@ -102,31 +102,31 @@ public sealed class CecRules(IDocumentStore store, PadronDirectory padron, ICloc
         if (from is { } start && to is { } end)
         {
             if (end < start)
-                return Errors(call, 2003, $"Rango de fechas inválido. 'fechaHasta' tiene que ser más antigua que 'fechaDesde': {Iso(end)} es una fecha previa a {Iso(start)}.");
+                return Errors(call, 2003, $"Rango de fechas inválido. 'fechaHasta' tiene que ser más antigua que 'fechaDesde': {end.Iso()} es una fecha previa a {start.Iso()}.");
             if (end.DayNumber - start.DayNumber > 31)
-                return Errors(call, 2003, $"Rango de fechas inválido. La diferencia entre {Iso(end)} y {Iso(start)} son {end.DayNumber - start.DayNumber} días: el intervalo máximo de dias es 31.");
+                return Errors(call, 2003, $"Rango de fechas inválido. La diferencia entre {end.Iso()} y {start.Iso()} son {end.DayNumber - start.DayNumber} días: el intervalo máximo de dias es 31.");
         }
         if (page < 1) return Errors(call, 2005, "Número de página inválido. El número de página no puede ser menor a 1.");
 
         var queries = (await store.ListAsync<ExportQuery>(Queries, "", ct))
             .Where(q => q.Organism == call.Cuit && (cuit is null || q.Cuit == cuit) && (from is null || (q.Date >= from && q.Date <= to)))
             .ToList();
-        var shown = queries.Skip((page - 1) * PageSize).Take(PageSize).ToList();
+        var (shown, more) = PageOf(queries, page);
         var answer = new XElement(call.Operation.Output, new XElement("obtenerConsultasReturn",
             shown.Count == 0 ? null : new XElement("consultas", shown.Select(q => Data("consulta", q))),
             new XElement("pagina", page),
-            new XElement("hayMas", queries.Count > page * PageSize ? "S" : "N")));
+            new XElement("hayMas", more ? "S" : "N")));
         return call.Ok(answer);
     }
 
     private static ContractAnswer Result(ServiceCall call, ExportQuery query, int page)
     {
-        var shown = query.Vouchers.Skip((page - 1) * PageSize).Take(PageSize).ToList();
+        var (shown, more) = PageOf(query.Vouchers, page);
         var result = new XElement("consultarComprobantesExpoReturn",
             Data("datosConsulta", query),
             shown.Count == 0 ? null : new XElement("comprobantesExportacion", shown.Select(Voucher)),
             new XElement("pagina", page),
-            new XElement("hayMas", query.Vouchers.Count > page * PageSize ? "S" : "N"),
+            new XElement("hayMas", more ? "S" : "N"),
             query.Vouchers.Count == 0
                 ? ErrorBlock(4010, $"No se encontraron datos. No se encontraron comprobantes para la consulta de código {query.Code}.")
                 : null);
@@ -135,7 +135,7 @@ public sealed class CecRules(IDocumentStore store, PadronDirectory padron, ICloc
 
     private static XElement Data(string name, ExportQuery query) => new(name,
         new XElement("codigoConsulta", query.Code),
-        new XElement("fechaConsulta", Iso(query.Date)),
+        new XElement("fechaConsulta", query.Date.Iso()),
         new XElement("cuit", query.Cuit),
         new XElement("estado", query.State),
         new XElement("periodoDesde", query.From),
@@ -172,9 +172,18 @@ public sealed class CecRules(IDocumentStore store, PadronDirectory padron, ICloc
 
     private static string ReturnOf(ServiceCall call) => call.Name == "obtenerConsultas" ? "obtenerConsultasReturn" : "consultarComprobantesExpoReturn";
 
-    private static int Period(DateOnly date) => date.Year * 100 + date.Month;
+    /// <summary>
+    /// The items of the 1-based page (never below 1 here), and whether more follow it. The sums are in long: a page
+    /// number near the int limit is a page past the last, not a wrapped number that shows the first.
+    /// </summary>
+    private static (List<T> Shown, bool More) PageOf<T>(IReadOnlyList<T> items, int page)
+    {
+        var skipped = (long)(page - 1) * PageSize;
+        var shown = skipped >= items.Count ? [] : items.Skip((int)skipped).Take(PageSize).ToList();
+        return (shown, items.Count > skipped + PageSize);
+    }
 
-    private static string Iso(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    private static int Period(DateOnly date) => date.Year * 100 + date.Month;
 
     private static string Key(long code) => code.ToString("D10", CultureInfo.InvariantCulture);
 }

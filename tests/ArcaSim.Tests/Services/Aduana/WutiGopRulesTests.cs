@@ -1,3 +1,7 @@
+using ArcaSim.Application;
+using ArcaSim.Application.Services.Aduana;
+using ArcaSim.Infrastructure.InMemory;
+
 namespace ArcaSim.Tests.Services.Aduana;
 
 /// <summary>WutiGOPDeclaraciones: a depositario takes its declarations from the queues and reads each one.</summary>
@@ -66,5 +70,51 @@ public class WutiGopRulesTests
         Assert.Equal("No hay datos para los criterios ingresados", unknown.V("DesError"));
         Assert.Equal("30286", blocks.Code());
         Assert.Equal("4200", liquidacion.V("MontoPagar"));
+    }
+
+    [Fact]
+    public async Task A_depositario_that_asks_twice_at_once_finds_two_declarations_not_more()
+    {
+        var clock = new SimulatedClock(TimeProvider.System);
+        clock.Freeze(AduanaKit.Today);
+        var gop = new RulesProbe(new WutiGopRules(new YieldingDocumentStore(new InMemoryStore()), clock), AduanaKit.Today);
+        var ask = $"<argPndListaGOPDetallada>{Place}</argPndListaGOPDetallada>";
+
+        await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => gop.CallAsync("PndListaGOPDetallada", ask, AduanaKit.Caller)));
+
+        Assert.Equal(2, (await gop.CallAsync("PndListaGOPDetallada", ask, AduanaKit.Caller)).All("IdDecla").Count());
+    }
+
+    [Theory]
+    [InlineData("3")] // the first lote past the last
+    [InlineData("2000000000")] // fits an int, but (lote - 1) * 2 does not
+    [InlineData("99999999999999999999")] // does not fit an int at all
+    public async Task A_lote_past_the_last_has_no_data_however_large_the_number(string lote)
+    {
+        await using var kit = await AduanaKit.StartAsync();
+        var gop = await GopAsync(kit);
+        var id = (await gop.CallAsync("PndListaGOPEstados", $"<argPndListaGOPEstados>{Place}</argPndListaGOPEstados>")).All("IdDecla").First().Value;
+
+        var items = await gop.CallAsync("ListaGOPItemsDeta", $"<argListaGOPItemsDeta>{Place}<NroLote>{lote}</NroLote><IdDecla>{id}</IdDecla></argListaGOPItemsDeta>");
+
+        Assert.Equal("30286", items.Code());
+        Assert.Equal("No hay datos para los criterios ingresados", items.V("DesError"));
+    }
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("-5")]
+    [InlineData("1.9")]
+    public async Task A_lote_below_the_first_or_with_a_fraction_reads_as_the_first(string lote)
+    {
+        await using var kit = await AduanaKit.StartAsync();
+        var gop = await GopAsync(kit);
+        var id = (await gop.CallAsync("PndListaGOPEstados", $"<argPndListaGOPEstados>{Place}</argPndListaGOPEstados>")).All("IdDecla").First().Value;
+
+        var items = await gop.CallAsync("ListaGOPItemsDeta", $"<argListaGOPItemsDeta>{Place}<NroLote>{lote}</NroLote><IdDecla>{id}</IdDecla></argListaGOPItemsDeta>");
+
+        Assert.Equal("0", items.Code());
+        Assert.Equal("1", items.V("NroLote"));
+        Assert.Equal(["1", "2"], items.All("NroItem").Select(i => i.Value));
     }
 }

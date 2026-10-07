@@ -46,6 +46,9 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
     public const string Lots = "wsjaza.lotes";
     public const string Requests = "wsjaza.solicitudes";
 
+    /// <summary>The counters of a sequence, in the order the manual numbers their codes (1101 and 1011 on).</summary>
+    private static readonly string[] CounterNames = ["juegos jugados", "coin-in", "coin-out", "jackpot"];
+
     public string Service => "wsjaza";
 
     private DateOnly Today => clock.Today();
@@ -173,55 +176,15 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
         if (date > Today) refused.Add((1020, "La fecha de presentación no puede ser futura."));
         var machine = await store.GetAsync<GamingMachine>(Machines, MachineKey(call.Cuit, point, machineId), ct);
         if (machine is not { Active: true })
-            return Result(call, [.. refused, (1001, $"La máquina {machineId} no está declarada en JAzA para la CUIT, el punto de explotación {point} y la fecha {Show(date)}.")]);
+            return Result(call, [.. refused, (1001, $"La máquina {machineId} no está declarada en JAzA para la CUIT, el punto de explotación {point} y la fecha {date.DayMonthYear()}.")]);
         if (machine.StartedOn is { } started && date < started)
-            refused.Add((1002, $"La fecha {Show(date)} es anterior al inicio de operaciones de la máquina, el {Show(started)}."));
-
-        string[] names = ["juegos jugados", "coin-in", "coin-out", "jackpot"];
-        var initial = Values(sequence.Initial);
-        var final = Values(sequence.Final);
-        for (var i = 0; i < 4; i++)
-            if (final[i] < initial[i]) refused.Add((1101 + i, $"El contador final de {names[i]} debe ser mayor o igual al inicial."));
-        if (Moment(sequence.End) < Moment(sequence.Start))
-            refused.Add((1105, "La fecha y hora de fin de la secuencia debe ser posterior o igual a la de inicio."));
+            refused.Add((1002, $"La fecha {date.DayMonthYear()} es anterior al inicio de operaciones de la máquina, el {started.DayMonthYear()}."));
+        refused.AddRange(SequenceProblems(sequence));
 
         var days = await store.ListAsync<MachineDay>(Days, $"{call.Cuit}/{point:D5}/{machineId}/", ct);
         var existing = days.FirstOrDefault(d => d.Date == date);
-        var rectifies = false;
-        if (existing is null)
-        {
-            var pending = days.Count > 0 ? days.Max(d => d.Date).AddDays(1) : machine.StartedOn;
-            if (pending is { } first && first < date)
-                refused.Add((1003, $"Antes de informar los datos para la fecha {Show(date)} debe informar los datos para la fecha {Show(first)}"));
-            if (presentation != 1) refused.Add((1005, "En el primer envío de una fecha el número de presentación debe ser 1."));
-            if (sequence.Number != 1) refused.Add((1006, "En el primer envío de una fecha la secuencia debe ser 1."));
-        }
-        else if (presentation == existing.Presentation)
-        {
-            var last = existing.Sequences[^1];
-            if (sequence.Number != last.Number + 1)
-                refused.Add((1007, $"Para informar una secuencia adicional se debe enviar la presentación {presentation} y la secuencia {last.Number + 1}."));
-            else if (Moment(sequence.Start) < Moment(last.End))
-                refused.Add((1010, "El inicio de la nueva secuencia debe ser posterior o igual al fin de la secuencia anterior."));
-        }
-        else if (presentation == existing.Presentation + 1)
-        {
-            rectifies = true;
-            if (date < Today.AddDays(-30)) refused.Add((1004, "Solo se puede rectificar una presentación dentro de los 30 días."));
-            if (sequence.Number != 1) refused.Add((1008, "Una presentación rectificativa debe informar la secuencia 1."));
-        }
-        else
-        {
-            refused.Add((1009, $"El número de presentación debe ser {existing.Presentation} para una nueva secuencia o {existing.Presentation + 1} para rectificar."));
-        }
-
-        if (sequence.Number == 1 && days.FirstOrDefault(d => d.Date == date.AddDays(-1)) is { } previous)
-        {
-            var before = Values(previous.Sequences[^1].Final);
-            for (var i = 0; i < 4; i++)
-                if (initial[i] != before[i])
-                    refused.Add((1011 + i, $"El contador inicial de {names[i]} de la secuencia 1 debe coincidir con el final del día anterior ({before[i]})."));
-        }
+        var (problems, rectifies) = ContinuityProblems(days, existing, machine.StartedOn, date, presentation, sequence);
+        refused.AddRange(problems);
         if (refused.Count > 0) return Result(call, refused);
 
         var day = existing is null || rectifies
@@ -234,6 +197,68 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
         return Result(call, []);
     }
 
+    /// <summary>What a sequence says by itself: no counter ends below where it started (1101 to 1104), and it does not end before it starts (1105).</summary>
+    private static List<(int, string)> SequenceProblems(MachineSequence sequence)
+    {
+        var problems = new List<(int, string)>();
+        var initial = Values(sequence.Initial);
+        var final = Values(sequence.Final);
+        for (var i = 0; i < CounterNames.Length; i++)
+            if (final[i] < initial[i]) problems.Add((1101 + i, $"El contador final de {CounterNames[i]} debe ser mayor o igual al inicial."));
+        if (Moment(sequence.End) < Moment(sequence.Start))
+            problems.Add((1105, "La fecha y hora de fin de la secuencia debe ser posterior o igual a la de inicio."));
+        return problems;
+    }
+
+    /// <summary>
+    /// What the machine's days say about this summary. The first send of a date comes in order, as presentation 1 and
+    /// sequence 1 (1003, 1005, 1006); a further sequence follows the last one (1007, 1010); a rectification comes within
+    /// 30 days and starts again at sequence 1 (1004, 1008); any other presentation is 1009. A sequence 1 also continues the
+    /// counters of the day before (1011 to 1014). Rectifies says the summary replaces the day instead of adding to it.
+    /// </summary>
+    private (List<(int, string)> Problems, bool Rectifies) ContinuityProblems(
+        IReadOnlyList<MachineDay> days, MachineDay? existing, DateOnly? startedOn, DateOnly date, int presentation, MachineSequence sequence)
+    {
+        var problems = new List<(int, string)>();
+        var rectifies = false;
+        if (existing is null)
+        {
+            var pending = days.Count > 0 ? days.Max(d => d.Date).AddDays(1) : startedOn;
+            if (pending is { } first && first < date)
+                problems.Add((1003, $"Antes de informar los datos para la fecha {date.DayMonthYear()} debe informar los datos para la fecha {first.DayMonthYear()}"));
+            if (presentation != 1) problems.Add((1005, "En el primer envío de una fecha el número de presentación debe ser 1."));
+            if (sequence.Number != 1) problems.Add((1006, "En el primer envío de una fecha la secuencia debe ser 1."));
+        }
+        else if (presentation == existing.Presentation)
+        {
+            var last = existing.Sequences[^1];
+            if (sequence.Number != last.Number + 1)
+                problems.Add((1007, $"Para informar una secuencia adicional se debe enviar la presentación {presentation} y la secuencia {last.Number + 1}."));
+            else if (Moment(sequence.Start) < Moment(last.End))
+                problems.Add((1010, "El inicio de la nueva secuencia debe ser posterior o igual al fin de la secuencia anterior."));
+        }
+        else if (presentation == existing.Presentation + 1)
+        {
+            rectifies = true;
+            if (date < Today.AddDays(-30)) problems.Add((1004, "Solo se puede rectificar una presentación dentro de los 30 días."));
+            if (sequence.Number != 1) problems.Add((1008, "Una presentación rectificativa debe informar la secuencia 1."));
+        }
+        else
+        {
+            problems.Add((1009, $"El número de presentación debe ser {existing.Presentation} para una nueva secuencia o {existing.Presentation + 1} para rectificar."));
+        }
+
+        if (sequence.Number == 1 && days.FirstOrDefault(d => d.Date == date.AddDays(-1)) is { } previous)
+        {
+            var initial = Values(sequence.Initial);
+            var before = Values(previous.Sequences[^1].Final);
+            for (var i = 0; i < CounterNames.Length; i++)
+                if (initial[i] != before[i])
+                    problems.Add((1011 + i, $"El contador inicial de {CounterNames[i]} de la secuencia 1 debe coincidir con el final del día anterior ({before[i]})."));
+        }
+        return (problems, rectifies);
+    }
+
     private async Task<ContractAnswer> ReadDayAsync(ServiceCall call, CancellationToken ct)
     {
         var point = call.Request.Int("nroPuntoExplotacion");
@@ -241,7 +266,7 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
         var machineId = call.Request.Text("idMaquina") ?? "";
         if (date > Today) return Return(call, ErrorList([(3001, "La fecha de presentación no puede ser futura.")]));
         var day = await store.GetAsync<MachineDay>(Days, DayKey(call.Cuit, point, machineId, date), ct);
-        if (day is null) return Return(call, ErrorList([(3003, $"No existe una presentación para la máquina {machineId} en la fecha {Show(date)}.")]));
+        if (day is null) return Return(call, ErrorList([(3003, $"No existe una presentación para la máquina {machineId} en la fecha {date.DayMonthYear()}.")]));
         return Return(call, new XElement("arrayDetalleMaquinasElectronicas", day.Sequences.Select(s => new XElement("detalleMaquinaElectronica",
             new XElement("idMaquina", day.Machine),
             new XElement("secuencia", s.Number),
@@ -260,7 +285,7 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
         var machines = (await store.ListAsync<MachineDay>(Days, $"{call.Cuit}/{point:D5}/", ct)).Where(d => d.Date == date).Select(d => d.Machine);
         return Return(call,
             new XElement("nroPuntoExplotacion", point),
-            new XElement("fechaPresentacion", Iso(date)),
+            new XElement("fechaPresentacion", date.Iso()),
             new XElement("arrayIdsMaquinasElectronicas", machines.Select(m => new XElement("idMaquina", m))));
     }
 
@@ -278,7 +303,7 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
         return Return(call,
             new XElement("nroPuntoExplotacion", point),
             new XElement("arrayIdsFechasMaquinasElectronicas", pending.Select(p => new XElement("idFechaMaquina",
-                new XElement("idMaquina", p.Machine), new XElement("fecha", Iso(p.Since))))));
+                new XElement("idMaquina", p.Machine), new XElement("fecha", p.Since.Iso())))));
     }
 
     private async Task<ContractAnswer> RemoveDayAsync(ServiceCall call, CancellationToken ct)
@@ -322,8 +347,14 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
         ? new MachineCounters(0, 0, 0, 0)
         : new MachineCounters(counters.Long("juegosJugados"), counters.Long("coinIn"), counters.Long("coinOut"), counters.Long("jackpot"));
 
+    /// <summary>
+    /// An xsd:dateTime, MinValue when it does not read. One without an offset is Argentina's time, as the customs
+    /// services read it (Dia.Moment): the host's zone would make the same request pass on one machine and fail on another.
+    /// </summary>
     private static DateTimeOffset Moment(string text) =>
-        DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var moment) ? moment : DateTimeOffset.MinValue;
+        DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var moment)
+            ? moment.Kind == DateTimeKind.Unspecified ? new DateTimeOffset(moment, ArgentinaTime.Offset) : new DateTimeOffset(moment)
+            : DateTimeOffset.MinValue;
 
     private static long[] Values(MachineCounters c) => [c.Games, c.CoinIn, c.CoinOut, c.Jackpot];
 
@@ -346,8 +377,4 @@ public sealed class JazaRules(IDocumentStore store, IClock clock) : IServiceBeha
         $"{cuit}/{point:D5}/{machine}/{date.ToString("yyyyMMdd", CultureInfo.InvariantCulture)}";
 
     private static string LotKey(long cuit, long number) => $"{cuit}/{number:D10}";
-
-    private static string Show(DateOnly date) => date.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
-
-    private static string Iso(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 }

@@ -7,7 +7,7 @@ namespace ArcaSim.Application.Services.Aduana;
 /// <summary>A wine export despacho blocked until the INV approves it: PEND, then APRO (with its secuencia) or DENE.</summary>
 public sealed record InvDespacho(
     long Cuit, string Aduana, string Id, long Transaccion, DateTimeOffset Oficializacion, long CuitExportador, string Exportador,
-    string Estado = "PEND", long NroSecuencia = 0, string Motivo = "");
+    string Estado = "PEND", long NroSecuencia = 0);
 
 /// <summary>A VUCEA form waiting for the INV to approve (A) or reject (R) it.</summary>
 public sealed record VuceaForm(long Cuit, long NroTramite, long Transaccion, string IdDestinacion, long CuitRegistro, DateTimeOffset Registro, string Estado = "");
@@ -28,7 +28,12 @@ public sealed class WGesInvRules(IDocumentStore store, IClock clock) : IServiceB
     private const string Despachos = "WGesINV.despachos";
     private const string Forms = "WGesINV.vucea";
     private const string Ok = "Procedimiento terminado OK.";
+
+    /// <summary>10121's text with the final period WGesINV.md prints, unlike the other customs services (Dia.NoData).</summary>
     private const string NoData = "No hay datos para los criterios ingresados.";
+
+    /// <summary>The first query of a CUIT finds its despachos; requests that arrive together make them once.</summary>
+    private readonly KeyedLocks<long> _seeding = new();
 
     public string Service => "WGesINV";
 
@@ -101,7 +106,7 @@ public sealed class WGesInvRules(IDocumentStore store, IClock clock) : IServiceB
 
         if (despacho.Estado == "APRO") return call.Fail(30687, $"Desbloqueo ya registrado {id}");
         if (despacho.Estado == "DENE") return call.Fail(30688, $"Denegacion de desbloqueo ya registrado {id}");
-        await store.PutAsync(Despachos, $"{call.Cuit}/{id}", despacho with { Estado = "DENE", Motivo = arg.Field("MotivoDenegacion") }, ct);
+        await store.PutAsync(Despachos, $"{call.Cuit}/{id}", despacho with { Estado = "DENE" }, ct);
         return call.Done(call.Sample().Receipt(20304, Ok));
     }
 
@@ -155,17 +160,18 @@ public sealed class WGesInvRules(IDocumentStore store, IClock clock) : IServiceB
     /// <summary>Three oficializaciones from aduana 001, each with its transaction, the first with a VUCEA form.</summary>
     private async Task SeedAsync(long cuit, CancellationToken ct)
     {
+        using var turn = await _seeding.AcquireAsync(cuit, ct);
         if ((await store.ListAsync<InvDespacho>(Despachos, $"{cuit}/", ct)).Count > 0) return;
         var now = clock.Now.ToArgentina();
         for (var i = 0; i < 3; i++)
         {
             var transaction = await store.NextAsync("WGesINV.transacciones", ct);
             var number = await store.NextAsync("WGesINV.destinaciones", ct);
-            var id = $"{now:yy}001EC01{number:D6}{(char)('A' + number % 26)}";
+            var id = Dia.DeclarationOf(now.ArgentinaDate(), "001", "EC01", number);
             await store.PutAsync(Despachos, $"{cuit}/{id}",
-                new InvDespacho(cuit, "001", id, transaction, now.AddHours(-i - 1), 30000000007, "BODEGA DEL SIMULADOR SA"), ct);
+                new InvDespacho(cuit, "001", id, transaction, now.AddHours(-i - 1), Dia.SeededCompany, "BODEGA DEL SIMULADOR SA"), ct);
             if (i > 0) continue;
-            var form = new VuceaForm(cuit, await store.NextAsync("WGesINV.tramites", ct), transaction, id, 30000000007, now.AddHours(-1));
+            var form = new VuceaForm(cuit, await store.NextAsync("WGesINV.tramites", ct), transaction, id, Dia.SeededCompany, now.AddHours(-1));
             await store.PutAsync(Forms, $"{cuit}/{form.NroTramite:D10}", form, ct);
         }
     }

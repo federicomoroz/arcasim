@@ -61,7 +61,7 @@ public sealed class WEnysaRules(IDocumentStore store, IClock clock) : IServiceBe
         var kind = data.Field("tipoTransaccion");
         if (!Events.Contains(kind)) return Error(call, 6, "Operación inválida", "tipoTransaccion");
         if (FormProblem(data) is { } invalid) return Error(call, 3, "Datos inválidos", invalid);
-        if (Day(data.Field("fechaVencimiento")) is { } expiry && expiry < clock.Today())
+        if (DayOf(data.Field("fechaVencimiento")) is { } expiry && expiry < clock.Today())
             return Error(call, 3, "Datos inválidos", "fechaVencimiento");
 
         var key = Key(call, data);
@@ -106,17 +106,12 @@ public sealed class WEnysaRules(IDocumentStore store, IClock clock) : IServiceBe
         $"{call.Cuit}/{data.Field("aduanaFormulario")}/{data.Field("anioFormulario")}/{data.Field("numeroFormulario")}";
 
     /// <summary>The manual's "yyyy/mm/dd hh:mi:ss tz" dates, by their day.</summary>
-    private static DateOnly? Day(string text) =>
+    private static DateOnly? DayOf(string text) =>
         text.Length >= 10 && DateOnly.TryParseExact(text[..10], "yyyy/MM/dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day) ? day : null;
 
     private static ContractAnswer Correct(ServiceCall call) => call.Done(call.Sample().Receipt(0, "Operación correcta", "descripcion"));
 
-    private static ContractAnswer Error(ServiceCall call, long code, string text, string? field)
-    {
-        var answer = call.Fail(code, text);
-        if (field is null || answer.Body?.Descendants().FirstOrDefault(e => e.Name.LocalName == "descripcion") is not { } description) return answer;
-        if (description.ElementsAfterSelf().FirstOrDefault(e => e.Name.LocalName == "descripcionAdicional") is { } existing) existing.Value = field;
-        else description.AddAfterSelf(new XElement(description.Name.Namespace + "descripcionAdicional", field));
-        return answer;
-    }
+    /// <summary>A MsgError with the manual's code and text, and the field that was refused in descripcionAdicional.</summary>
+    private static ContractAnswer Error(ServiceCall call, long code, string text, string? field) =>
+        call.Fail(code, text, field, "descripcionAdicional");
 }
