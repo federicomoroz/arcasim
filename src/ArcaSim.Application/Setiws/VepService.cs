@@ -64,6 +64,11 @@ public sealed class VepService(IDocumentStore store, IClock clock)
     private const string Owners = "setiws-owners";
     public static readonly int[] PaymentEntities = [0, 1001, 1002, 1003];
 
+    // A create finds out whether its owner's transaction already has a VEP before it makes one, and a payment
+    // reads the VEP it writes back: requests that arrive together (a retry after a timeout) take turns.
+    private readonly KeyedLocks<string> _creations = new();
+    private readonly KeyedLocks<long> _payments = new();
+
     public async Task<(StoredVep? Vep, VepError? Error)> CreateAsync(EdpVep request, long represented, CancellationToken ct)
     {
         if (request.Vep is not { } vep) return (null, Validation("VEP no informado"));
@@ -85,6 +90,7 @@ public sealed class VepService(IDocumentStore store, IClock clock)
             return (null, new VepError(400, "InvalidContribuyenteException", $"CUIT del contribuyente invalida: {payer}"));
 
         var ownerKey = $"{vep.OwnerCuit}/{vep.OwnerTransactionId}";
+        using var creating = await _creations.AcquireAsync(ownerKey, ct);
         if (await store.GetAsync<StoredVep>(Owners, ownerKey, ct) is { } existing) return (existing, null);
 
         var now = clock.Now;
@@ -123,6 +129,7 @@ public sealed class VepService(IDocumentStore store, IClock clock)
     /// <summary>What the payment entity reports when the VEP is paid: the CP. Paying twice keeps the first payment.</summary>
     public async Task<StoredVep?> PayAsync(long number, int branchType, int paymentForm, int bank, CancellationToken ct)
     {
+        using var paying = await _payments.AcquireAsync(number, ct);
         if (await store.GetAsync<StoredVep>(Veps, Key(number), ct) is not { } stored) return null;
         if (stored.Cp is not null) return stored;
         var now = clock.Now;
