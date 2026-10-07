@@ -89,10 +89,12 @@ public static class VentanillaInbox
 /// marks it read: estado 1 to 2, or answers 104, 105, 110), the three states
 /// and the publishing systems. Business errors are faults "Error NNN: text".
 /// ArcaSim's choices where the manual is silent: dates in filters are
-/// yyyy-MM-dd (102 otherwise); without resultadosPorPagina a page holds the
-/// maximum, 500; a page past the last is 100 only when there are items;
-/// tiempoDeVida is the days between publication and expiry (0 without one);
-/// attachments travel inline as base64 (MTOM is the engine's).
+/// yyyy-MM-dd, or a "yyyy-MM-dd HH:mm:ss" timestamp read as its day (102
+/// otherwise; the manual leaves the expected format as a parameter of the
+/// text); without resultadosPorPagina a page holds the maximum, 500; a page
+/// past the last is 100 only when there are items; tiempoDeVida is the days
+/// between publication and expiry (0 without one); attachments travel inline
+/// as base64 (MTOM is the engine's).
 /// </summary>
 public sealed class VentanillaRules(IDocumentStore store, IClock clock) : IServiceBehavior
 {
