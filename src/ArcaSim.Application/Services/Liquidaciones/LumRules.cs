@@ -146,6 +146,9 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
         }
 
         using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, type, ct);
+        // A buyer makes one liquidation per period, producer and RENSPA on whatever sequence, so the check and
+        // the voucher that follows it share one hold, taken inside the sequence's.
+        using var unique = adjustment is null ? await _ledger.LockUniqueAsync(Service, "periods", call.Cuit, ct) : null;
         var last = await _ledger.LastAsync(Service, call.Cuit, pointOfSale, type, ct);
         if (number != (last?.Number ?? 0) + 1)
             return Fail(call, 2074, "N° de comprobante incorrecto para el tipo de comprobante y punto de venta ingresados.");

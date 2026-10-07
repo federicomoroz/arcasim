@@ -115,11 +115,14 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
             if (!classA && type != 151) return Fail(call, 1015, "Tipo de comprobante no válido para la cuit de receptor. La misma corresponde a tipo B.");
         }
         var bales = request.Children("romaneo").SelectMany(r => r.Children("fardo")).Select(f => f.Value("codTrazabilidad") ?? "").ToList();
+
+        // A bale goes in one liquidation of the service, whoever issues it and on whatever sequence, so the
+        // check and the record that follows it share one hold, taken inside the sequence's.
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, type, ct);
+        using var unique = await _ledger.LockUniqueAsync(Service, "bales", ct);
         foreach (var bale in bales)
             if (bales.Count(b => b == bale) > 1 || await store.GetAsync<SettlementByCae>(Service, $"fardo/{bale}", ct) is not null)
                 return Fail(call, 1039, "Un código de trazabilidad de un fardo que intenta agregar, ya fue utilizado en otra liquidación.");
-
-        using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, type, ct);
         if (await SequenceProblemAsync(call, pointOfSale, type, number, date, ct) is { } wrong) return wrong;
 
         var prices = request.Children("precioClase").GroupBy(p => p.Value("claseTabaco")).ToDictionary(g => g.Key ?? "", g => g.First().Amount("precio"));
@@ -218,13 +221,17 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var number = request.Number("nroComprobante");
         var date = request.Day("fechaLiquidacion") ?? _ledger.Today;
 
-        if (await FindAsync(call, request.Child("comprobanteAAjustar"), ct) is not { } original) return Missing(call);
+        var target = request.Child("comprobanteAAjustar");
+
+        // The original is adjusted once, whoever asks and from whatever point of sale: the checks on it and
+        // the mark that it was adjusted share one hold, taken inside the sequence's, and read it again inside.
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, type, ct);
+        using var document = await _ledger.LockDocumentAsync(KeyOf(call, target), ct);
+        if (await FindAsync(call, target, ct) is not { } original) return Missing(call);
         if (original.IsAdjustment) return NoData(call);
         if (original.State == Settlement.Adjusted) return Fail(call, 1135, "El comprobante ingresado ya fue ajustado previamente.");
         if (original.VoucherType != type) return Fail(call, 1136, "El tipo de comprobante del ajuste debe ser el mismo que el del comprobante a ajustar.");
         if (await CommonProblemAsync(call, pointOfSale, date, ct) is { } problem) return problem;
-
-        using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, type, ct);
         if (await SequenceProblemAsync(call, pointOfSale, type, number, date, ct) is { } wrong) return wrong;
 
         var cae = _ledger.NewCae();
@@ -251,6 +258,9 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
     }
 
     // ---- Checks ----------------------------------------------------------------------
+
+    private static string KeyOf(ServiceCall call, XElement voucher) =>
+        SettlementLedger.Key(call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"), voucher.Number("nroComprobante"));
 
     private Task<Settlement?> FindAsync(ServiceCall call, XElement voucher, CancellationToken ct) =>
         _ledger.FindAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"), voucher.Number("nroComprobante"), ct);

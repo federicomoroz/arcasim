@@ -30,7 +30,7 @@ namespace ArcaSim.Application.Services.Liquidaciones;
 /// product and CATHE state tables keep the contract's answer (the manual does
 /// not document the second, and the first's schema demands an event).
 /// </summary>
-public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpayers, IClock clock) : IServiceBehavior
+public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpayers, IClock clock, SequenceLocks locks) : IServiceBehavior
 {
     private const string Pending = "P";
     private static readonly string[] Waiting = ["PC", "PV"];
@@ -63,7 +63,11 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
 
         if (await taxpayers.FindAsync(call.Cuit, ct) is { Active: false })
             return Reject(call, (101, "La CUIT representada debe encontrarse activa y sin limitaciones."));
-        await SimulateSefiAsync(ct);
+
+        // One operation at a time on the whole book: every one reads CATHE, CATA and requests, decides from
+        // their state and writes them, and a request that locks a CATHE does it by reading it free first.
+        using var gate = await locks.AcquireAsync($"{Service}.book", 0, 0, 0, ct);
+        await SimulateSefiAsync(call.Cuit, ct);
 
         return call.Name switch
         {
@@ -409,10 +413,14 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
             processed ? new XElement("fechaResultado", Iso(d.ResolvedOn ?? d.Date)) : null))));
     }
 
-    /// <summary>SEFI checks the tobacco outside the web service; ArcaSim approves every request (A) once its date arrives.</summary>
-    private async Task SimulateSefiAsync(CancellationToken ct)
+    /// <summary>
+    /// SEFI checks the tobacco outside the web service; ArcaSim approves a request (A) once its date arrives.
+    /// It does it for the CUIT that calls, when it calls, which is when that CUIT can first see the difference:
+    /// nobody reads another's requests or CATHE.
+    /// </summary>
+    private async Task SimulateSefiAsync(long owner, CancellationToken ct)
     {
-        foreach (var request in (await _book.DenaturationsAsync(ct)).Where(d => d.Result == Pending && d.Date <= Today))
+        foreach (var request in (await _book.DenaturationsAsync(ct)).Where(d => d.Owner == owner && d.Result == Pending && d.Date <= Today))
         {
             foreach (var code in request.Cathes.Keys)
                 if (await _book.CatheAsync(request.Owner, long.Parse(code, CultureInfo.InvariantCulture), ct) is { } cathe)

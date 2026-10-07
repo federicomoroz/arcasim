@@ -68,6 +68,8 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
 {
     public const int CaeDays = 10;
 
+    private readonly KeyedLocks<string> _documents = new();
+
     public IClock Clock => clock;
 
     public DateOnly Today => clock.Today();
@@ -77,6 +79,25 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
 
     public Task<IDisposable> LockAsync(string service, long cuit, int pointOfSale, int voucherType, CancellationToken ct) =>
         locks.AcquireAsync(service, cuit, pointOfSale, voucherType, ct);
+
+    /// <summary>
+    /// One operation at a time on one voucher of the service, by its key: what
+    /// annuls or adjusts an original reads it again inside this lock, checks its
+    /// state and writes it, so no two do it to the same one. Take it inside the sequence's.
+    /// </summary>
+    public Task<IDisposable> LockDocumentAsync(string key, CancellationToken ct) => _documents.AcquireAsync(key, ct);
+
+    /// <summary>
+    /// One at a time for what must be unique in the whole service (a bale, a
+    /// delivery note): the check that nothing uses it yet and the record that
+    /// something does share one hold, since two vouchers on different
+    /// sequences would each find it free. Take it inside the sequence's.
+    /// </summary>
+    public Task<IDisposable> LockUniqueAsync(string service, string what, CancellationToken ct) => LockUniqueAsync(service, what, 0, ct);
+
+    /// <summary>The same for what is unique among one CUIT's vouchers (a buyer's period).</summary>
+    public Task<IDisposable> LockUniqueAsync(string service, string what, long cuit, CancellationToken ct) =>
+        locks.AcquireAsync($"{service}.{what}", cuit, 0, 0, ct);
 
     public Task<LastSettlement?> LastAsync(string service, long cuit, int pointOfSale, int voucherType, CancellationToken ct) =>
         store.GetAsync<LastSettlement>(service, $"ultimo/{cuit}/{pointOfSale:D5}/{voucherType:D3}", ct);

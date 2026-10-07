@@ -90,14 +90,17 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var notes = request.Children("remito").ToList();
         if (notes.Select(n => n.Value("nroRemito")).Distinct().Count() != notes.Count)
             return Fail(call, 1302, "No puede informar remitos repetidos en una misma liquidación.");
+        var items = request.Children("detalle").ToList();
+
+        // A delivery note is liquidated once in the service, whoever issues it and on whatever sequence, so the
+        // check and the record that follows it share one hold, taken inside the sequence's.
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
+        using var unique = await _ledger.LockUniqueAsync(Service, "remitos", ct);
         foreach (var note in notes)
             if (await store.GetAsync<SettlementByCae>(Service, $"remito/{note.Value("nroRemito")}", ct) is not null)
                 return Fail(call, 1303, $"Remito #{note.Value("nroRemito")}: El remito que desea agregar ya se encuentra liquidado.");
-        var items = request.Children("detalle").ToList();
         if (notes.Sum(n => n.Number("kilos")) != items.Sum(i => i.Number("cantidad")))
             return Fail(call, 1304, "La cantidad de kilos informada en los remitos debe ser igual a la cantidad de kilos en el detalle de la liquidación.");
-
-        using var _ = await _ledger.LockAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
         if (await SequenceProblemAsync(call, voucher, date, ct) is { } wrong) return wrong;
 
         var lines = items.Select((item, i) => Item(i + 1, item, item.Amount("precioUnitario"), type, null)).ToList();
@@ -179,11 +182,13 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var date = request.Day("fechaComprobante") ?? _ledger.Today;
         var returned = request.Value("devolucionMercaderia") is "true" or "1";
 
+        // The original is annulled once, whoever asks and from whatever point of sale: the checks on it and
+        // the mark that it was annulled share one hold, taken inside the sequence's, and read it again inside.
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
+        using var document = await _ledger.LockDocumentAsync(KeyOf(call, target), ct);
         var original = await FindAsync(call, target, ct);
         if (AdjustableProblem(call, target, original, type) is { } problem) return problem;
         if (await IssuerProblemAsync(call, (int)voucher.Number("puntoVenta"), date, ct) is { } issuerProblem) return issuerProblem;
-
-        using var _ = await _ledger.LockAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
         if (await SequenceProblemAsync(call, voucher, date, ct) is { } wrong) return wrong;
 
         var cae = _ledger.NewCae();
@@ -213,6 +218,9 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
     }
 
     // ---- Checks ----------------------------------------------------------------------
+
+    private static string KeyOf(ServiceCall call, XElement voucher) =>
+        SettlementLedger.Key(call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"), voucher.Number("nroComprobante"));
 
     private Task<Settlement?> FindAsync(ServiceCall call, XElement voucher, CancellationToken ct) =>
         _ledger.FindAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"), voucher.Number("nroComprobante"), ct);

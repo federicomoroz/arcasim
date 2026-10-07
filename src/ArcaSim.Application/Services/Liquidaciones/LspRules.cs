@@ -188,9 +188,16 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var physical = items.Any(i => i.Optional("ajusteFisico") is not null);
         var monetary = items.Any(i => i.Optional("ajusteMonetario") is not null);
 
-        var original = await _ledger.FindAsync(Service, call.Cuit, (int)target.Number("puntoVenta"), (int)target.Number("tipoComprobante"),
+        var named = await _ledger.FindAsync(Service, call.Cuit, (int)target.Number("puntoVenta"), (int)target.Number("tipoComprobante"),
             target.Number("nroComprobante"), ct);
-        if (original is null) return Fail(call, 3000, "La liquidación que intenta ajustar es inexistente.");
+        if (named is null) return Fail(call, 3000, "La liquidación que intenta ajustar es inexistente.");
+
+        // The original is annulled once, whoever asks and from whatever point of sale: the checks on it and
+        // the mark that it was annulled share one hold, taken inside the sequence's (which the original's type
+        // names), and read it again inside.
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, named.VoucherType, ct);
+        using var document = await _ledger.LockDocumentAsync(named.KeyOf(), ct);
+        var original = await _ledger.FindAsync(Service, named.KeyOf(), ct) ?? named;
         var originalItems = original.DetailXml().Children("itemDetalleLiquidacion").ToDictionary(i => (int)i.Number("nroItem"));
         var annulment = credit && physical && !monetary && originalItems.Count > 0 && items.Count == originalItems.Count
                         && items.All(i => originalItems.TryGetValue((int)i.Number("nroItemAjustar"), out var item)
@@ -210,7 +217,6 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         if (await PointProblemAsync(call, pointOfSale, ct) is { } pointProblem) return pointProblem;
         if (OutOfWindow(date, avian) is { } window) return Fail(call, 2200, window);
 
-        using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, original.VoucherType, ct);
         if (await WrongNumberAsync(call, pointOfSale, original.VoucherType, number, ct) is { } wrong) return wrong;
 
         var lines = items.Select((item, i) =>
