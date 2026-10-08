@@ -274,7 +274,6 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
             Receiver = receiver,
             DistanceKm = original.DistanceKm,
             CreatedOn = _ledger.Today,
-            Redirects = original.Code,
             Xml = document.ToString(SaveOptions.DisableFormatting),
         };
         await _ledger.AddAsync(remito, ct);

@@ -30,8 +30,6 @@ internal sealed record CpeFamily(string Name, string Authorize, string Consult, 
         new(EmisionDestinoDg, "autorizarCPEEmisionDestinoDG", "consultarCPEEmisionDestinoDG", [286], false, "05", "PO"),
     ];
 
-    public static CpeFamily Named(string name) => All.First(f => f.Name == name);
-
     /// <summary>The types the manual lists (tabla TipoCPE); 287 has no operation that creates it.</summary>
     public static readonly int[] KnownTypes = [74, 75, 274, 284, 285, 286, 287];
 }

@@ -569,13 +569,13 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
     private static ContractAnswer Reply(ServiceCall call, params object?[] content) => call.Ok(new XElement(call.Operation.Output, content));
 
     /// <summary>§1.3: resultado R and the errors in errores/codigoDescripcion; an answer without resultado keeps only its required fields.</summary>
-    private static ContractAnswer Reject(ServiceCall call, params (int Code, string Text)[] errors)
+    private static ContractAnswer Reject(ServiceCall call, (int Code, string Text) error)
     {
-        var answer = call.Error(errors[0].Code, errors[0].Text);
+        var answer = call.Error(error.Code, error.Text);
         if (answer.Body is not { } body) return answer;
         body.Element("resultado")?.SetValue("R");
         body.Element("idSolicitud")?.SetValue(call.Request.Number("idSolicitud"));
-        body.Element("errores")?.ReplaceWith(Codes("errores", errors));
+        body.Element("errores")?.ReplaceWith(Codes("errores", error));
         return answer;
     }
 }

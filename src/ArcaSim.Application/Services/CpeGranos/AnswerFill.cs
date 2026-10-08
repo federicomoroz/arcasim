@@ -115,8 +115,6 @@ internal static class GrainsFormat
     /// <summary>xsd:date without zone (AAAA-MM-DD).</summary>
     public static string Date(DateTimeOffset moment) => moment.ToArgentina().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-    public static string Date(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-
     /// <summary>Round half even, as §4.2 of the wslpg manual asks; two decimals unless told otherwise.</summary>
     public static decimal Round(decimal value, int decimals = 2) => Math.Round(value, decimals, MidpointRounding.ToEven);
 

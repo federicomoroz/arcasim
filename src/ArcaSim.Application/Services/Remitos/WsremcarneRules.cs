@@ -140,7 +140,6 @@ public sealed class WsremcarneRules(IDocumentStore store, SequenceLocks locks, I
             Uncategorized = uncategorized,
             DistanceKm = trip.ChildDecimal("distanciaKm") ?? 0,
             CreatedOn = _ledger.Today,
-            Redirects = redirected?.Code,
             Xml = sent.ToString(SaveOptions.DisableFormatting),
         };
         if (redirected is null) RemitoFamily.Open(remito, _ledger.Now);

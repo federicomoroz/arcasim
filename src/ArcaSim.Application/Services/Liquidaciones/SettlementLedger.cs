@@ -79,8 +79,6 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
 
     private readonly KeyedLocks<string> _documents = new();
 
-    public IClock Clock => clock;
-
     public DateOnly Today => clock.Today();
 
     public Task<IDisposable> LockAsync(string service, long cuit, int pointOfSale, int voucherType, CancellationToken ct) =>

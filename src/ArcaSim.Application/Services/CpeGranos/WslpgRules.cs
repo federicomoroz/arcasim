@@ -71,8 +71,8 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
         "ajusteXCoeConsultar" => await AdjustmentByCoeAsync(call, ct),
         "ajusteXNroOrdenConsultar" => await AdjustmentByNumberAsync(call, ct),
         "lsgAutorizar" => await AuthorizeSecondaryAsync(call, ct),
-        "lsgConsultarXCoe" => await SecondaryAsync(call, await ByCoeAsync(call.Request.Long("coe"), ct), ct),
-        "lsgConsultarXNroOrden" => await SecondaryAsync(call, await ByNumberAsync(Secondary, call, ct), ct),
+        "lsgConsultarXCoe" => SecondaryAnswer(call, await ByCoeAsync(call.Request.Long("coe"), ct)),
+        "lsgConsultarXNroOrden" => SecondaryAnswer(call, await ByNumberAsync(Secondary, call, ct)),
         "lsgAnular" => await VoidAsync(call, Secondary, Codes.OtherCuit, ct),
         "cgAutorizar" => await AuthorizeCertificateAsync(call, ct),
         "cgConsultarXCoe" => CertificateAnswer(call, await ByCoeAsync(call.Request.Long("coe"), ct)),
@@ -407,10 +407,10 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
         ["numeroContrato"] = "nroContrato",
     };
 
-    private Task<ContractAnswer> SecondaryAsync(ServiceCall call, StoredSettlement? document, CancellationToken ct)
+    private ContractAnswer SecondaryAnswer(ServiceCall call, StoredSettlement? document)
     {
-        if (document is null || document.Kind != Secondary) return Task.FromResult(call.Error(600, Codes.NoData));
-        if (document.Cuit != call.Cuit) return Task.FromResult(call.Error(1510, Codes.OtherCuit));
+        if (document is null || document.Kind != Secondary) return call.Error(600, Codes.NoData);
+        if (document.Cuit != call.Cuit) return call.Error(1510, Codes.OtherCuit);
 
         var fill = new AnswerFill(call.Sample(), call.Contract.Schemas);
         var result = Return(fill.Root);
@@ -438,7 +438,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
             entry.Child("ajuste")?.Remove();
         }
         Pdf(fill, result, Wants(call), document);
-        return Task.FromResult(call.Ok(fill.Done()));
+        return call.Ok(fill.Done());
     }
 
     // ---- Certificates ----------------------------------------------------------------
