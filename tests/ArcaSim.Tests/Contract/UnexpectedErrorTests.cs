@@ -25,6 +25,7 @@ public class UnexpectedErrorTests
         var sampler = new SchemaSampler(contract.Schemas);
         var operation = contract.Operations.Single(o => o.Name == operationName);
         await using var sim = ArcaSimHarness.Start();
+        sim.ExpectLoggedErrors();
         sim.Clock.Freeze(new DateTimeOffset(2026, 10, 7, 12, 0, 0, TimeSpan.FromHours(-3)));
         await sim.PutTaxpayerAsync(Caller, "Empresa", VatCondition.ResponsableInscripto);
         var ticket = await sim.TicketAsync(Caller, definition.Wsaa[0]);

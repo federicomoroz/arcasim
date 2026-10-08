@@ -32,6 +32,7 @@ public sealed class ArcaSimHarness : IAsyncDisposable
 
     private readonly WebApplicationFactory<Program> _factory;
     private readonly CapturedLogs _logs;
+    private bool _expectsLoggedErrors;
 
     private ArcaSimHarness(WebApplicationFactory<Program> factory, CapturedLogs logs)
     {
@@ -48,12 +49,15 @@ public sealed class ArcaSimHarness : IAsyncDisposable
     /// <summary>
     /// Fails when ArcaSim logged an error. The engine answers a request its rules did not foresee with the
     /// service's fault, which looks like any refusal; the log is what tells a crash from a refusal.
+    /// Disposing the harness does the same, unless the test called <see cref="ExpectLoggedErrors"/>.
     /// </summary>
-    public void AssertNoLoggedErrors()
-    {
-        var errors = LoggedErrors;
+    public void AssertNoLoggedErrors() => AssertNone(LoggedErrors);
+
+    /// <summary>Declares that the test makes the engine fail on purpose, so disposing the harness does not fail on what it logs.</summary>
+    public void ExpectLoggedErrors() => _expectsLoggedErrors = true;
+
+    private static void AssertNone(IReadOnlyList<LoggedError> errors) =>
         Assert.True(errors.Count == 0, string.Join(Environment.NewLine, errors.Select(e => $"{e.Category}: {e.Message}{e.Exception}")));
-    }
 
     public IServiceProvider Services => _factory.Services;
 
@@ -160,10 +164,17 @@ public sealed class ArcaSimHarness : IAsyncDisposable
     public static string AuthXml(AccessTicket ticket, long cuit) =>
         $"<ar:Auth><ar:Token>{ticket.Token}</ar:Token><ar:Sign>{ticket.Sign}</ar:Sign><ar:Cuit>{cuit}</ar:Cuit></ar:Auth>";
 
+    /// <summary>
+    /// Shuts ArcaSim down and fails the test if it logged an error on the way, unless the test said it expects
+    /// them: a rule that crashes is answered with the service's fault, and a test that only looks at faults
+    /// would pass over it.
+    /// </summary>
     public async ValueTask DisposeAsync()
     {
+        var unforeseen = _expectsLoggedErrors ? [] : LoggedErrors;
         Http.Dispose();
         await _factory.DisposeAsync();
+        AssertNone(unforeseen);
     }
 
     /// <summary>Lets the client sign its TRA with ArcaSim's clock, so frozen or advanced time stays consistent on both ends.</summary>
