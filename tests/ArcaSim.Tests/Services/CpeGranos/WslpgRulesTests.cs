@@ -46,6 +46,28 @@ public class WslpgRulesTests
     }
 
     [Fact]
+    public async Task The_PDF_of_a_liquidacion_is_the_one_page_ArcaSim_has_always_sent()
+    {
+        await using var sim = Start();
+        var lpg = await ConnectAsync(sim);
+        var coe = (await AuthorizeAsync(lpg, 1)).Value("coe");
+        Assert.Equal("330100000001", coe);
+
+        var read = await lpg.CallAsync(Buyer, "liquidacionXCoeConsultar", "liqConsXCoeReq", $"<coe>{coe}</coe><pdf>S</pdf>");
+
+        Assert.Equal(
+            "%PDF-1.4\n" +
+            "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n" +
+            "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n" +
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n" +
+            "4 0 obj\n<< /Length 76 >>\nstream\nBT /F1 12 Tf 72 770 Td (Liquidacion de granos - COE 330100000001 - AC) Tj ET\nendstream\nendobj\n" +
+            "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n" +
+            "xref\n0 6\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000241 00000 n \n0000000367 00000 n \n" +
+            "trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n437\n%%EOF",
+            System.Text.Encoding.ASCII.GetString(Convert.FromBase64String(read.Value("pdf")!)));
+    }
+
+    [Fact]
     public async Task The_order_number_must_be_the_last_plus_one_per_point_of_issue()
     {
         await using var sim = Start();
@@ -226,6 +248,111 @@ public class WslpgRulesTests
         var grades = await lpg.CallAsync(Buyer, "codigoGradoEntregadoXTipoGranoConsultar", "gradoEntregadoReq", "<codGrano>23</codGrano>");
         Assert.Equal(["1.01", "1.00", "0.985"], grades.Descendants("valor").Select(e => e.Value));
     }
+
+    private const int Callers = 24;
+
+    [Fact]
+    public async Task Of_many_voids_of_one_liquidacion_exactly_one_takes_it()
+    {
+        await using var sim = Start();
+        var lpg = await ConnectAsync(sim);
+        var coe = (await AuthorizeAsync(lpg, 1)).Value("coe");
+
+        var answers = await AllAtOnce(_ => lpg.CallAsync(Buyer, "liquidacionAnular", "anulacionReq", $"<coe>{coe}</coe>"));
+
+        Assert.Equal(1, answers.Count(a => a.Value("resultado") == "A"));
+        Assert.All(answers.Where(a => a.Value("resultado") == "R"), a => Assert.Equal("1527", a.FirstError()!.Value.Code));
+    }
+
+    [Fact]
+    public async Task Of_many_counterdocuments_of_one_liquidacion_exactly_one_is_issued()
+    {
+        await using var sim = Start();
+        var lpg = await ConnectAsync(sim);
+        var original = (await AuthorizeAsync(lpg, 1)).Value("coe");
+
+        // Each caller numbers on a point of issue of its own, so only the original's state tells them apart.
+        var answers = await AllAtOnce(i => lpg.CallAsync(Buyer, "lpgAnularContraDocumento", "LpgAnularContraDocumentoReq",
+            $"<anulacionBase><puntoEmision>{i + 2}</puntoEmision><nroOrden>1</nroOrden><coeAnular>{original}</coeAnular></anulacionBase>"));
+
+        Assert.Equal(1, answers.Count(a => a.Value("estado") == "PA"));
+        Assert.All(answers.Where(a => a.Value("estado") != "PA"), a => Assert.Equal("1527", a.FirstError()!.Value.Code));
+    }
+
+    [Fact]
+    public async Task A_void_and_an_adjustment_of_one_liquidacion_never_both_succeed()
+    {
+        await using var sim = Start();
+        var lpg = await ConnectAsync(sim);
+
+        for (var round = 1; round <= 20; round++)
+        {
+            var original = (await AuthorizeAsync(lpg, round, pointOfIssue: 2 * round)).Value("coe")!;
+            var voiding = lpg.CallAsync(Buyer, "liquidacionAnular", "anulacionReq", $"<coe>{original}</coe>");
+            var adjusting = lpg.CallAsync(Buyer, "liquidacionAjustarUnificado", "ajustarUnificadoReq", Adjustment(2 * round, original));
+            await Task.WhenAll(voiding, adjusting);
+
+            var voided = voiding.Result.Value("resultado") == "A";
+            var adjusted = adjusting.Result.Value("coe") is not null;
+            Assert.False(voided && adjusted, $"Round {round}: the liquidacion was voided and adjusted.");
+        }
+    }
+
+    [Fact]
+    public async Task Of_many_requests_to_void_one_certificate_exactly_one_takes_it()
+    {
+        await using var sim = Start();
+        var lpg = await ConnectAsync(sim);
+        var coe = (await CertifyAsync(lpg, 1)).Value("coe");
+
+        var answers = await AllAtOnce(_ => lpg.CallAsync(Buyer, "cgSolicitarAnulacion", "cgSolicitarAnulacionReq", $"<coe>{coe}</coe>"));
+
+        Assert.Equal(1, answers.Count(a => a.Value("estadoCertificado") == "AN"));
+        Assert.All(answers.Where(a => a.Value("estadoCertificado") != "AN"), a => Assert.Equal("3501", a.FirstError()!.Value.Code));
+    }
+
+    [Fact]
+    public async Task A_certificate_a_retiro_uses_is_not_voided_at_the_same_time()
+    {
+        await using var sim = Start();
+        var lpg = await ConnectAsync(sim);
+
+        for (var round = 1; round <= 20; round++)
+        {
+            var deposit = (await CertifyAsync(lpg, 2 * round - 1)).Value("coe")!;
+            var voiding = lpg.CallAsync(Buyer, "cgSolicitarAnulacion", "cgSolicitarAnulacionReq", $"<coe>{deposit}</coe>");
+            var withdrawing = Withdraw(lpg, 2 * round, deposit);
+            await Task.WhenAll(voiding, withdrawing);
+
+            var voided = voiding.Result.Value("estadoCertificado") == "AN";
+            var state = (await lpg.CallAsync(Buyer, "cgConsultarXCoe", "cgConsultarXCoeReq", $"<coe>{deposit}</coe>")).Value("estado");
+            Assert.True(voided == (state == "AN"), $"Round {round}: the void answered {(voided ? "AN" : "a refusal")} and the certificate is {state}.");
+        }
+    }
+
+    private static async Task<List<XElement>> AllAtOnce(Func<int, Task<XElement>> call)
+    {
+        using var start = new ManualResetEventSlim();
+        var calls = Enumerable.Range(0, Callers).Select(i => Task.Run(() =>
+        {
+            start.Wait();
+            return call(i);
+        })).ToList();
+        start.Set();
+        return [.. await Task.WhenAll(calls)];
+    }
+
+    private static string Adjustment(int order, string original) =>
+        $"<ajusteBase><ptoEmision>{order}</ptoEmision><nroOrden>2</nroOrden><coeAjustado>{original}</coeAjustado><codLocalidad>3</codLocalidad><codProv>1</codProv></ajusteBase>" +
+        "<ajusteDebito><diferenciaPesoNeto>0</diferenciaPesoNeto><diferenciaPrecioOperacion>0</diferenciaPrecioOperacion>" +
+        "<conceptoImporteIva105>Diferencia de precio</conceptoImporteIva105><importeAjustarIva105>100</importeAjustarIva105></ajusteDebito>";
+
+    private static Task<XElement> Withdraw(GrainsSoap lpg, int order, string deposit) =>
+        lpg.CallAsync(Buyer, "cgAutorizar", "cgAutorizarReq",
+            $"<cabecera><tipoCertificado>R</tipoCertificado><ptoEmision>1</ptoEmision><nroOrden>{order}</nroOrden><nroIngBrutoDepositario>1</nroIngBrutoDepositario>" +
+            $"<titularGrano>T</titularGrano><cuitDepositante>{Depositor}</cuitDepositante><nroIngBrutoDepositante>2</nroIngBrutoDepositante><codGrano>23</codGrano><campania>2526</campania></cabecera>" +
+            $"<retiroTransferencia><certificadoDeposito><coeCertificadoDeposito>{deposit}</coeCertificadoDeposito><pesoNeto>1000</pesoNeto></certificadoDeposito>" +
+            "<nroActDepositario>36</nroActDepositario><nroCartaPorteAUtilizar>1</nroCartaPorteAUtilizar></retiroTransferencia>");
 
     private static ArcaSimHarness Start()
     {

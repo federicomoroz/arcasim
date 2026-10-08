@@ -25,7 +25,10 @@ namespace ArcaSim.Application.Services.Remitos;
 /// 7015 and a role or state that does not allow the operation 3070; 140's
 /// text is harina's; the texts of 7106, 7108 and 7109 are ArcaSim's wording
 /// of the rules; validity is harina's table by distance; a list with no
-/// remitos answers an empty page.
+/// remitos answers an empty page; the parties' standing in the registry is not
+/// checked (the manual's 7000, 7001, 7006 and 7013 are not simulated, so no
+/// party is refused for being unregistered or inactive); a repeated orden in a
+/// reception counts once, as the manual documents no error for it.
 /// </summary>
 public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, IClock clock, PadronDirectory directory) : IServiceBehavior
 {
@@ -42,6 +45,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     private static readonly string[] TruckOrder = ["codPaisTransportista", "transporteNacional", "transporteExtranjero", "dominioVehiculo", "dominioAcoplado"];
 
     private static readonly RemitoProblem NotFound = new(7015, "Valor informado inválido");
+    // "permitda" is the manual's own typo (wsremazucar manual 14, "Códigos generales"); harina and carne print "permitida".
     private static readonly RemitoProblem NotAllowed = new(3070, "Operación no permitda");
     private static readonly RemitoProblem TripBeforeToday = new(140, "La fecha de inicio del viaje no puede ser anterior a hoy");
     private static readonly RemitoCodes Codes = new(NotFound, NotAllowed, NotAllowed, NotAllowed);
@@ -52,7 +56,6 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
 
     public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct) => call.Name switch
     {
-        "dummy" => RemitoFamily.Dummy(call),
         "generarRemito" => await GenerateAsync(call, ct),
         "autorizarRemitoTitular" => await AuthorizeAsync(call, ct),
         "emitirRemito" => await IssueAsync(call, ct),
@@ -65,15 +68,11 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
         "consultarRemito" => await ConsultAsync(call, ct),
         "consultarEstadosRemito" => await HistoryAsync(call, ct),
         "consultarRemitosEmisor" or "consultarRemitosTitular" or "consultarRemitosReceptor" => await ListAsync(call, ct),
-        "consultarTiposComprobante" => call.Ok(new XElement(call.Operation.Output, new XElement("consultarTiposComprobanteReturn",
-            RemitoXml.Codes("arrayTiposComprobante", "codigoDescripcion", RemitoTables.SugarVoucherTypes)))),
-        "consultarTiposEstado" => call.Ok(new XElement(call.Operation.Output, new XElement("consultarTiposEstadoReturn",
-            RemitoXml.Codes("arrayTiposEstado", "codigoDescripcionString", RemitoTables.SugarStates)))),
-        "consultarTiposTitular" => call.Ok(new XElement(call.Operation.Output, new XElement("codigoDescripcionReturn",
-            RemitoXml.Codes("arrayCodigoDescripcion", "codigoDescripcion", RemitoTables.SugarHolderTypes)))),
-        "consultarPuntosEmision" => call.Ok(new XElement(call.Operation.Output, new XElement("consultarPuntosEmisionReturn",
-            RemitoXml.Codes("arrayPuntosEmision", "codigoDescripcion", await RemitoFamily.PointsAsync(directory, call.Cuit, 99999, ct))))),
-        "consultarCodigosDomicilio" => await AddressesAsync(call, ct),
+        "consultarTiposComprobante" => RemitoFamily.Table(call, "consultarTiposComprobanteReturn", "arrayTiposComprobante", "codigoDescripcion", RemitoTables.SugarVoucherTypes),
+        "consultarTiposEstado" => RemitoFamily.Table(call, "consultarTiposEstadoReturn", "arrayTiposEstado", "codigoDescripcionString", RemitoTables.SugarStates),
+        "consultarTiposTitular" => RemitoFamily.Table(call, "codigoDescripcionReturn", "arrayCodigoDescripcion", "codigoDescripcion", RemitoTables.SugarHolderTypes),
+        "consultarPuntosEmision" => await RemitoFamily.PointsAnswerAsync(call, directory, RemitoFamily.MaxPointOfEmission, ct),
+        "consultarCodigosDomicilio" => await RemitoFamily.AddressesAnswerAsync(call, directory, ct),
         _ => null,
     };
 
@@ -125,8 +124,9 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     private async Task<ContractAnswer> AuthorizeAsync(ServiceCall call, CancellationToken ct)
     {
         var request = Wrapped(call, "autorizarRemitoTitular");
-        if (await FindAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct) is not { } remito) return Simple(call, "autorizarRemitoReturn", NotFound);
-        var problem = RemitoFamily.Authorize(remito, call.Cuit, request.Child("autorizar") == "S", _ledger.Now, Codes);
+        using var hold = await _ledger.HoldAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return Simple(call, "autorizarRemitoReturn", NotFound);
+        var problem = RemitoFamily.Authorize(remito, call.Cuit, request.ChildText("autorizar") == "S", _ledger.Now, Codes);
         if (problem is null) await _ledger.SaveAsync(remito, ct);
         return Simple(call, "autorizarRemitoReturn", problem);
     }
@@ -134,16 +134,17 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     private async Task<ContractAnswer> IssueAsync(ServiceCall call, CancellationToken ct)
     {
         var request = Wrapped(call, "emitirRemito");
-        if (await FindAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct) is not { } remito)
+        using var hold = await _ledger.HoldAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct);
+        if (hold.Remito is not { } remito)
             return RemitoAnswer(call, "emitirRemitoReturn", null, [NotFound]);
         if (remito.Issuer != call.Cuit || remito.State != RemitoStates.PendingIssue) return RemitoAnswer(call, "emitirRemitoReturn", null, [NotAllowed]);
         if (request.ChildDate("fechaInicioViaje") is { } start)
         {
             if (start < _ledger.Today) return RemitoAnswer(call, "emitirRemitoReturn", null, [TripBeforeToday]);
-            Edit(remito, document => document.Element("viaje")?.Element("fechaInicioViaje")?.SetValue(start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
+            RemitoXml.Edit(remito, document => document.Element("viaje")?.Element("fechaInicioViaje")?.SetValue(start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
         }
         if (request.Element("transporte") is { } transport)
-            Edit(remito, document => ChangeTruck(document, transport.Element("conductor"), transport.Child("dominioVehiculo"), transport.Child("dominioAcoplado")));
+            RemitoXml.Edit(remito, document => ChangeTruck(document, transport.Element("conductor"), transport.ChildText("dominioVehiculo"), transport.ChildText("dominioAcoplado")));
         await _ledger.IssueAsync(remito, call.Cuit, ct);
         return RemitoAnswer(call, "emitirRemitoReturn", remito, []);
     }
@@ -155,13 +156,14 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     private async Task<ContractAnswer> ReceiveAsync(ServiceCall call, bool export, CancellationToken ct)
     {
         var request = RemitoXml.Plain(call.Request);
-        if (await FindAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct) is not { } remito)
+        using var hold = await _ledger.HoldAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct);
+        if (hold.Remito is not { } remito)
             return Simple(call, "confirmarRecepcionMercaderiaReturn", NotFound);
         var allowed = remito.State == RemitoStates.Issued && (export ? remito.Foreign && remito.Issuer == call.Cuit : remito.Receiver == call.Cuit);
         if (!allowed) return Simple(call, "confirmarRecepcionMercaderiaReturn", NotAllowed);
 
         var sent = Goods(remito);
-        var accepted = request.Child("aceptaRecepcion") == "S";
+        var accepted = request.ChildText("aceptaRecepcion") == "S";
         var reported = request.Element("arrayMercaderiaRecibida")?.Elements("mercaderia").ToList();
         var received = new Dictionary<int, long>();
         if (accepted && reported is null)
@@ -191,17 +193,19 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     private async Task<ContractAnswer> ValidateAsync(ServiceCall call, CancellationToken ct)
     {
         var request = Wrapped(call, "convalidaRechazoReceptor");
-        if (await FindAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct) is not { } remito) return Simple(call, "convalidarEmisorReturn", NotFound);
+        using var hold = await _ledger.HoldAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return Simple(call, "convalidarEmisorReturn", NotFound);
         if (remito.Issuer != call.Cuit || remito.State is not (RemitoStates.PartlyAccepted or RemitoStates.NotAccepted))
             return Simple(call, "convalidarEmisorReturn", NotAllowed);
-        remito.MoveTo(request.Child("convalida") == "S" ? RemitoStates.Validated : RemitoStates.NotValidated, _ledger.Now, call.Cuit);
+        remito.MoveTo(request.ChildText("convalida") == "S" ? RemitoStates.Validated : RemitoStates.NotValidated, _ledger.Now, call.Cuit);
         await _ledger.SaveAsync(remito, ct);
         return Simple(call, "convalidarEmisorReturn", null);
     }
 
     private async Task<ContractAnswer> CorrectAsync(ServiceCall call, CancellationToken ct)
     {
-        if (await FindAsync(call.Request.Long("codRemito"), call.Cuit, ct) is not { } remito) return Simple(call, "convalidarEmisorReturn", NotFound);
+        using var hold = await _ledger.HoldAsync(call.Request.Long("codRemito"), call.Cuit, ct);
+        if (hold.Remito is not { } remito) return Simple(call, "convalidarEmisorReturn", NotFound);
         if (remito.Issuer != call.Cuit || remito.State != RemitoStates.NotValidated) return Simple(call, "convalidarEmisorReturn", NotAllowed);
         remito.MoveTo(RemitoStates.Validated, _ledger.Now, call.Cuit);
         await _ledger.SaveAsync(remito, ct);
@@ -212,10 +216,11 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     private async Task<ContractAnswer> ChangeDriverAsync(ServiceCall call, CancellationToken ct)
     {
         var request = Wrapped(call, "modificarConductor");
-        if (await FindAsync(request.ChildLong("codRemito") ?? 0, call.Cuit, ct) is not { } remito) return Simple(call, "modificarConductorReturn", NotFound);
-        if (remito.Issuer != call.Cuit || remito.State != RemitoStates.Issued || _ledger.Now > remito.IssuedAt!.Value.AddHours(24))
+        using var hold = await _ledger.HoldAsync(request.ChildLong("codRemito") ?? 0, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return Simple(call, "modificarConductorReturn", NotFound);
+        if (remito.Issuer != call.Cuit || remito.State != RemitoStates.Issued || _ledger.Now > remito.IssuedAt!.Value.AddHours(RemitoTerms.FlatChangeHours))
             return Simple(call, "modificarConductorReturn", NotAllowed);
-        Edit(remito, document => ChangeTruck(document, request.Element("conductor"), request.Child("dominioVehiculo"), request.Child("dominioAcoplado")));
+        RemitoXml.Edit(remito, document => ChangeTruck(document, request.Element("conductor"), request.ChildText("dominioVehiculo"), request.ChildText("dominioAcoplado")));
         await _ledger.SaveAsync(remito, ct);
         return Simple(call, "modificarConductorReturn", null);
     }
@@ -224,7 +229,8 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     private async Task<ContractAnswer> ContingencyAsync(ServiceCall call, CancellationToken ct)
     {
         var request = Wrapped(call, "informarContingencia");
-        if (await FindAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct) is not { } remito) return Simple(call, "informarContingenciaReturn", NotFound);
+        using var hold = await _ledger.HoldAsync(request.ChildLong("codigoRemito") ?? 0, call.Cuit, ct);
+        if (hold.Remito is not { } remito) return Simple(call, "informarContingenciaReturn", NotFound);
         if (remito.Issuer != call.Cuit || remito.State != RemitoStates.Issued) return Simple(call, "informarContingenciaReturn", NotAllowed);
         var sent = Goods(remito);
         var lost = new Dictionary<int, long>();
@@ -238,9 +244,9 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
         }
         remito.Lost = lost;
         remito.Contingencies.Add(new XElement("contingencia",
-            new XElement("tipoContingencia", request.Child("tipoContingencia")),
+            new XElement("tipoContingencia", request.ChildText("tipoContingencia")),
             lost.Select(l => new XElement("arrayMercaderiaPerdida", new XElement("orden", l.Key), new XElement("cantidad", l.Value))),
-            new XElement("observaciones", request.Child("observaciones"))).ToString(SaveOptions.DisableFormatting));
+            new XElement("observaciones", request.ChildText("observaciones"))).ToString(SaveOptions.DisableFormatting));
         remito.MoveTo(RemitoStates.Cancelled, _ledger.Now, call.Cuit);
         await _ledger.SaveAsync(remito, ct);
         return Simple(call, "informarContingenciaReturn", null);
@@ -262,7 +268,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
         var steps = remito?.History ?? [];
         return call.Ok(new XElement(call.Operation.Output, new XElement("consultarEstadosRemitoReturn",
             new XElement("arrayEstadosRemito", steps.Select((step, i) => new XElement("historialAcciones",
-                new XElement("fecha", RemitoXml.Date(DateOnly.FromDateTime(step.At.DateTime))),
+                new XElement("fecha", RemitoXml.Date(step.At)),
                 new XElement("estado", step.State),
                 new XElement("activo", i == steps.Count - 1 ? "S" : "N")))),
             remito is null ? RemitoXml.Errors([NotFound]) : null)));
@@ -273,7 +279,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     {
         var request = RemitoXml.Plain(call.Request);
         var (from, to) = (request.ChildDate("fechaDesde"), request.ChildDate("fechaHasta"));
-        var state = request.Child("estado");
+        var state = request.ChildText("estado");
         var type = request.ChildLong("tipoComprobante");
         var (issuer, holder, receiver) = (request.ChildLong("cuitEmisor"), request.ChildLong("cuitTitular"), request.ChildLong("cuitReceptor"));
         var mine = call.Name switch
@@ -287,7 +293,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
             && (receiver is null || call.Name == "consultarRemitosReceptor" || r.Receiver == receiver)).ToList();
 
         var page = Math.Max(request.ChildLong("numeroPagina") ?? 1, 1);
-        var (items, _) = RemitoFamily.Page(found, (int)page);
+        var (items, _) = RemitoFamily.Page(found, page);
         var wrapper = call.Name + "Return";
         return call.Ok(new XElement(call.Operation.Output, new XElement(wrapper,
             new XElement("resultado", "A"),
@@ -299,38 +305,21 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
                 new XElement("cuitTitularMercaderia", r.Holder),
                 new XElement("idTipoComprobante", r.Type)))),
             new XElement("numeroPagina", page),
-            new XElement("maxPaginas", (found.Count + RemitoFamily.PageSize - 1) / RemitoFamily.PageSize),
+            new XElement("maxPaginas", RemitoFamily.PageCount(found.Count)),
             new XElement("maxRegistros", found.Count))));
-    }
-
-    private async Task<ContractAnswer> AddressesAsync(ServiceCall call, CancellationToken ct)
-    {
-        var address = await RemitoFamily.FiscalAddressAsync(directory, call.Request.Long("cuitTitularDomicilio"), ct);
-        return call.Ok(new XElement(call.Operation.Output, new XElement("consultarCodigosDomicilioReturn",
-            address is { } found
-                ? RemitoXml.Codes("arrayDomicilios", "codigoDescripcion", [found])
-                : RemitoXml.Errors([RemitoFamily.NotRegistered]))));
     }
 
     // ---- Shapes ------------------------------------------------------------------------
 
-    private async Task<Remito?> FindAsync(long code, long cuit, CancellationToken ct) =>
-        await _ledger.FindAsync(code, ct) is { } remito && remito.Involves(cuit) ? remito : null;
+    private Task<Remito?> FindAsync(long code, long cuit, CancellationToken ct) => _ledger.FindForAsync(code, cuit, ct);
 
     /// <summary>The element azúcar wraps a write operation's data in (emitirRemito, autorizarRemitoTitular...).</summary>
     private static XElement Wrapped(ServiceCall call, string name) => RemitoXml.Plain(call.Request).Element(name) ?? new XElement(name);
 
     private static Dictionary<int, long> Goods(Remito remito) =>
-        RemitoXml.Parse(remito.Xml).Element("arrayMercaderias")?.Elements("mercaderia")
+        XElement.Parse(remito.Xml).Element("arrayMercaderias")?.Elements("mercaderia")
             .GroupBy(m => (int)(m.ChildLong("orden") ?? 0))
             .ToDictionary(g => g.Key, g => g.Sum(m => m.ChildLong("cantidad") ?? 0)) ?? [];
-
-    private static void Edit(Remito remito, Action<XElement> change)
-    {
-        var document = RemitoXml.Parse(remito.Xml);
-        change(document);
-        remito.Xml = document.ToString(SaveOptions.DisableFormatting);
-    }
 
     /// <summary>A new driver, vehicle or trailer on the remito's truck legs.</summary>
     private static void ChangeTruck(XElement document, XElement? driver, string? vehicle, string? trailer)
@@ -341,7 +330,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
                 truck.Element("transporteNacional")?.Element("cuitConductor")?.SetValue(cuit);
             if (driver?.Element("conductorExtranjero") is { } foreign && truck.Element("transporteExtranjero") is { } abroad)
                 foreach (var field in new[] { "cedulaConductor", "nombreConductor", "apellidoConductor" })
-                    abroad.Element(field)?.SetValue(foreign.Child(field) ?? "");
+                    abroad.Element(field)?.SetValue(foreign.ChildText(field) ?? "");
             if (!string.IsNullOrEmpty(vehicle)) RemitoXml.Put(truck, "dominioVehiculo", vehicle, TruckOrder);
             if (!string.IsNullOrEmpty(trailer)) RemitoXml.Put(truck, "dominioAcoplado", trailer, TruckOrder);
         }
@@ -362,7 +351,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
                 remito.Number is { } number ? new XElement("nroComprobante", number) : null,
                 new XElement("idTipoComprobante", remito.Type),
                 remito.AuthorizationCode is { } cre ? new XElement("codigoAutorizacion", cre) : null,
-                remito.IssuedAt is { } issued ? new XElement("fechaEmision", RemitoXml.Date(DateOnly.FromDateTime(issued.DateTime))) : null,
+                remito.IssuedAt is { } issued ? new XElement("fechaEmision", RemitoXml.Date(issued)) : null,
                 new XElement("fechaVencimiento", RemitoXml.Date(remito.ExpiresOn ?? _ledger.Today.AddDays(RemitoTerms.ValidityDays(remito.DistanceKm)))),
                 new XElement("estado", remito.State)),
             RemitoXml.Errors(problems))));
@@ -370,19 +359,19 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
     /// <summary>RemitoOutputType: the remito as generated, with each item's quantities sent, received and lost, and what ARCA assigned.</summary>
     private static XElement Output(Remito remito)
     {
-        var document = RemitoXml.Parse(remito.Xml);
+        var document = XElement.Parse(remito.Xml);
         var goods = (document.Element("arrayMercaderias")?.Elements("mercaderia") ?? []).Select(m =>
         {
             var order = (int)(m.ChildLong("orden") ?? 0);
             return new XElement("mercaderia",
                 new XElement("orden", order),
-                new XElement("anioZafra", m.Child("anioZafra")),
-                new XElement("cantidadEnviada", m.Child("cantidad")),
+                new XElement("anioZafra", m.ChildText("anioZafra")),
+                new XElement("cantidadEnviada", m.ChildText("cantidad")),
                 remito.Received.GetValueOrDefault(order) is > 0 and var received ? new XElement("cantidadRecibida", received) : null,
                 remito.Lost.GetValueOrDefault(order) is > 0 and var lost ? new XElement("cantidadPerdida", lost) : null,
-                new XElement("tipoProducto", m.Child("tipoProducto")),
-                new XElement("unidadMedida", m.Child("unidadMedida")),
-                new XElement("tipoEmbalaje", m.Child("tipoEmbalaje")));
+                new XElement("tipoProducto", m.ChildText("tipoProducto")),
+                new XElement("unidadMedida", m.ChildText("unidadMedida")),
+                new XElement("tipoEmbalaje", m.ChildText("tipoEmbalaje")));
         });
         return RemitoXml.Shape("remito", document, OutputOrder, new Dictionary<string, object?>
         {
@@ -392,13 +381,13 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
             ["cuitEmisor"] = remito.Issuer,
             ["cuitProductorContrato"] = null,
             ["arrayMercaderias"] = new XElement("arrayMercaderias", goods),
-            ["arrayContingencias"] = remito.Contingencies.Count == 0 ? null : new XElement("arrayContingencias", remito.Contingencies.Select(RemitoXml.Parse)),
+            ["arrayContingencias"] = remito.Contingencies.Count == 0 ? null : new XElement("arrayContingencias", remito.Contingencies.Select(xml => XElement.Parse(xml))),
             ["datosAutorizacion"] = remito.Issued
                 ? new XElement("datosAutorizacion",
                     new XElement("nroComprobante", remito.Number),
                     new XElement("idTipoComprobante", remito.Type),
                     new XElement("codigoAutorizacion", remito.AuthorizationCode),
-                    new XElement("fechaEmision", RemitoXml.Date(DateOnly.FromDateTime(remito.IssuedAt!.Value.DateTime))),
+                    new XElement("fechaEmision", RemitoXml.Date(remito.IssuedAt!.Value)),
                     new XElement("fechaVencimiento", RemitoXml.Date(remito.ExpiresOn!.Value)))
                 : null,
         });

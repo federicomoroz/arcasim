@@ -51,31 +51,27 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<ContractAnswer> LastAsync(ServiceCall call, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
+        var request = call.Request.ChildOrEmpty("solicitud");
         var last = await _ledger.LastAsync(Service, call.Cuit, (int)request.Number("puntoVenta"), (int)request.Number("tipoComprobante"), ct);
         return Ok(call, new XElement("nroComprobante", last?.Number ?? 0), Metadata());
     }
 
     private async Task<ContractAnswer> ConsultAsync(ServiceCall call, CancellationToken ct) =>
-        await FindAsync(call, call.Request.Child("solicitud").Child("comprobante"), ct) is { } found
+        await FindAsync(call, call.Request.ChildOrEmpty("solicitud").ChildOrEmpty("comprobante"), ct) is { } found
             ? Answer(call, found)
             : Fail(call, 800, "No se encontraron resultados según los parámetros de búsqueda informados.");
 
-    private async Task<ContractAnswer> PointsAsync(ServiceCall call, CancellationToken ct)
-    {
-        var address = SettlementLedger.AddressOf(await _ledger.TaxpayerAsync(call.Cuit, ct));
-        var points = await _ledger.PointsOfSaleAsync(call.Cuit, ct);
-        return Ok(call, points.Select(p => new XElement("puntoVenta", new XElement("codigo", p.Number), new XElement("descripcion", address))), Metadata());
-    }
+    private async Task<ContractAnswer> PointsAsync(ServiceCall call, CancellationToken ct) =>
+        Ok(call, await _ledger.PointsAnswerAsync(call.Cuit, ct), Metadata());
 
     // ---- Liquidations ----------------------------------------------------------------
 
     private async Task<ContractAnswer> GenerateAsync(ServiceCall call, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
-        var voucher = request.Child("emisor").Child("comprobante");
-        var receiver = request.Child("receptor");
-        var general = request.Child("datosGenerales");
+        var request = call.Request.ChildOrEmpty("solicitud");
+        var voucher = request.ChildOrEmpty("emisor").ChildOrEmpty("comprobante");
+        var receiver = request.ChildOrEmpty("receptor");
+        var general = request.ChildOrEmpty("datosGenerales");
         var type = (int)voucher.Number("tipoComprobante");
         var date = general.Day("fechaComprobante") ?? _ledger.Today;
 
@@ -90,14 +86,17 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var notes = request.Children("remito").ToList();
         if (notes.Select(n => n.Value("nroRemito")).Distinct().Count() != notes.Count)
             return Fail(call, 1302, "No puede informar remitos repetidos en una misma liquidación.");
+        var items = request.Children("detalle").ToList();
+
+        // A delivery note is liquidated once in the service, whoever issues it and on whatever sequence, so the
+        // check and the record that follows it share one hold, taken inside the sequence's.
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
+        using var unique = await _ledger.LockUniqueAsync(Service, "remitos", ct);
         foreach (var note in notes)
             if (await store.GetAsync<SettlementByCae>(Service, $"remito/{note.Value("nroRemito")}", ct) is not null)
                 return Fail(call, 1303, $"Remito #{note.Value("nroRemito")}: El remito que desea agregar ya se encuentra liquidado.");
-        var items = request.Children("detalle").ToList();
         if (notes.Sum(n => n.Number("kilos")) != items.Sum(i => i.Number("cantidad")))
             return Fail(call, 1304, "La cantidad de kilos informada en los remitos debe ser igual a la cantidad de kilos en el detalle de la liquidación.");
-
-        using var _ = await _ledger.LockAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
         if (await SequenceProblemAsync(call, voucher, date, ct) is { } wrong) return wrong;
 
         var lines = items.Select((item, i) => Item(i + 1, item, item.Amount("precioUnitario"), type, null)).ToList();
@@ -106,9 +105,9 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var cae = _ledger.NewCae();
         var detail = new XElement("respuesta",
             Authorization(cae),
-            await IssuerAsync(call.Cuit, voucher, request.Child("emisor"), ct),
+            await IssuerAsync(call.Cuit, voucher, request.ChildOrEmpty("emisor"), ct),
             await ReceiverAsync(receiver, ct),
-            General(general),
+            General(general, date),
             notes.Select(n => new XElement("remito", new XElement("nroRemito", n.Value("nroRemito")), new XElement("kilos", n.Number("kilos")))),
             lines.Select(l => l.Element), concepts.Select(c => c.Element), taxes.Select(t => t.Element),
             Summary(lines, concepts, taxes, out var total));
@@ -122,10 +121,10 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<ContractAnswer> PriceAsync(ServiceCall call, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
-        var issuer = request.Child("emisor");
-        var voucher = issuer.Child("comprobante");
-        var general = request.Child("datosGenerales");
+        var request = call.Request.ChildOrEmpty("solicitud");
+        var issuer = request.ChildOrEmpty("emisor");
+        var voucher = issuer.ChildOrEmpty("comprobante");
+        var general = request.ChildOrEmpty("datosGenerales");
         var type = (int)voucher.Number("tipoComprobante");
         var kind = issuer.Number("tipoAjuste");
         var date = general.Day("fechaComprobante") ?? _ledger.Today;
@@ -135,7 +134,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
         Settlement? first = null;
         foreach (var (item, i) in request.Children("detalle").Select((d, i) => (d, i)))
         {
-            var target = item.Child("comprobanteAjustado");
+            var target = item.ChildOrEmpty("comprobanteAjustado");
             var original = await FindAsync(call, target, ct);
             if (AdjustableProblem(call, target, original, type) is { } problem) return problem;
             var order = item.Number("nroOrdenItemAjustado");
@@ -146,7 +145,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
             lines.Add(Item(i + 1, source, item.Amount("diferenciaPrecio"), type, new XElement("detalleAjuste", Copy(target, "comprobanteAjustado"),
                 new XElement("nroOrdenAjustado", order))));
         }
-        if (first is null) return Fail(call, 1601, "La liquidación que intenta ajustar es inexistente: 0.");
+        if (first is null) return MissingOriginal(call, 0);
         if (await IssuerProblemAsync(call, (int)voucher.Number("puntoVenta"), date, ct) is { } issuerProblem) return issuerProblem;
 
         using var _ = await _ledger.LockAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
@@ -159,9 +158,9 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var detail = new XElement("respuesta",
             Authorization(cae),
             new XElement("ajuste", new XElement("tipoAjuste", kind)),
-            await IssuerAsync(call.Cuit, voucher, issued.Child("emisor"), ct),
-            Copy(issued.Optional("receptor")),
-            General(general),
+            await IssuerAsync(call.Cuit, voucher, issued.ChildOrEmpty("emisor"), ct),
+            Copy(issued.Child("receptor")),
+            General(general, date),
             lines.Select(l => l.Element), concepts.Select(c => c.Element), taxes.Select(t => t.Element),
             Summary(lines, concepts, taxes, out var total));
 
@@ -171,30 +170,32 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<ContractAnswer> PhysicalAsync(ServiceCall call, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
-        var issuer = request.Child("emisor");
-        var voucher = issuer.Child("comprobante");
-        var target = issuer.Child("comprobanteAjustado");
+        var request = call.Request.ChildOrEmpty("solicitud");
+        var issuer = request.ChildOrEmpty("emisor");
+        var voucher = issuer.ChildOrEmpty("comprobante");
+        var target = issuer.ChildOrEmpty("comprobanteAjustado");
         var type = (int)voucher.Number("tipoComprobante");
         var date = request.Day("fechaComprobante") ?? _ledger.Today;
         var returned = request.Value("devolucionMercaderia") is "true" or "1";
 
+        // The original is annulled once, whoever asks and from whatever point of sale: the checks on it and
+        // the mark that it was annulled share one hold, taken inside the sequence's, and read it again inside.
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
+        using var document = await _ledger.LockDocumentAsync(KeyOf(call, target), ct);
         var original = await FindAsync(call, target, ct);
         if (AdjustableProblem(call, target, original, type) is { } problem) return problem;
         if (await IssuerProblemAsync(call, (int)voucher.Number("puntoVenta"), date, ct) is { } issuerProblem) return issuerProblem;
-
-        using var _ = await _ledger.LockAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
         if (await SequenceProblemAsync(call, voucher, date, ct) is { } wrong) return wrong;
 
         var cae = _ledger.NewCae();
         var issued = original!.DetailXml();
-        var general = Copy(issued.Child("datosGenerales"))!;
-        general.Child("fechaComprobante").Value = Stamp(date);
+        var general = Copy(issued.ChildOrEmpty("datosGenerales"))!;
+        general.SetChild("fechaComprobante", Stamp(date));
         var detail = new XElement("respuesta",
             Authorization(cae),
             new XElement("ajuste", new XElement("tipoAjuste", 1), new XElement("esDevolucionMercaderia", returned ? "true" : "false")),
-            await IssuerAsync(call.Cuit, voucher, issued.Child("emisor"), ct),
-            Copy(issued.Optional("receptor")),
+            await IssuerAsync(call.Cuit, voucher, issued.ChildOrEmpty("emisor"), ct),
+            Copy(issued.Child("receptor")),
             general,
             issued.Children("remito").Select(r => Copy(r)),
             issued.Children("detalle").Select(d =>
@@ -205,7 +206,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
                 return item;
             }),
             issued.Children("otroConcepto").Select(c => Copy(c)), issued.Children("tributo").Select(t => Copy(t)),
-            Copy(issued.Optional("resumenTotales")));
+            Copy(issued.Child("resumenTotales")));
 
         var settlement = await IssueAsync(call, voucher, cae, date, original.ReceiverCuit, original.Total, true, [original.KeyOf()], detail, ct);
         await _ledger.UpdateAsync(original with { State = Settlement.Annulled }, ct);
@@ -214,13 +215,22 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     // ---- Checks ----------------------------------------------------------------------
 
+    private static readonly SettlementProblem NoPoints = new(910, "No posee puntos de venta habilitados para Comprobantes en Línea.");
+    private static readonly SettlementProblem InvalidPoint = new(1001, "El punto de venta informado es inválido.");
+
+    private static string KeyOf(ServiceCall call, XElement voucher) =>
+        AuthorizedVouchers.Key(call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"), voucher.Number("nroComprobante"));
+
     private Task<Settlement?> FindAsync(ServiceCall call, XElement voucher, CancellationToken ct) =>
         _ledger.FindAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"), voucher.Number("nroComprobante"), ct);
+
+    private ContractAnswer MissingOriginal(ServiceCall call, long number) =>
+        Fail(call, 1601, $"La liquidación que intenta ajustar es inexistente: {number}.");
 
     private ContractAnswer? AdjustableProblem(ServiceCall call, XElement target, Settlement? original, int type)
     {
         var number = target.Number("nroComprobante");
-        if (original is null) return Fail(call, 1601, $"La liquidación que intenta ajustar es inexistente: {number}.");
+        if (original is null) return MissingOriginal(call, number);
         if (original.VoucherType != type)
             return Fail(call, 1600, "El tipo de comprobante informado para el ajuste debe ser igual al tipo de la liquidación que intenta ajustar.");
         return original.State == Settlement.Annulled ? Fail(call, 1604, $"La liquidación que intenta ajustar se encuentra anulada: {number}.") : null;
@@ -228,11 +238,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<ContractAnswer?> IssuerProblemAsync(ServiceCall call, int pointOfSale, DateOnly date, CancellationToken ct)
     {
-        switch (await _ledger.CheckPointOfSaleAsync(call.Cuit, pointOfSale, ct))
-        {
-            case PointCheck.NoPoints: return Fail(call, 910, "No posee puntos de venta habilitados para Comprobantes en Línea.");
-            case PointCheck.Invalid: return Fail(call, 1001, "El punto de venta informado es inválido.");
-        }
+        if (await _ledger.PointProblemAsync(call.Cuit, pointOfSale, NoPoints, InvalidPoint, ct) is { } point) return Fail(call, point);
         if (await _ledger.TaxpayerAsync(call.Cuit, ct) is { VatCondition: not VatCondition.ResponsableInscripto })
             return Fail(call, 1002, "El emisor no corresponde a un contribuyente inscripto en el Impuesto al Valor Agregado.");
         var today = _ledger.Today;
@@ -243,15 +249,14 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
             : null;
     }
 
-    private async Task<ContractAnswer?> SequenceProblemAsync(ServiceCall call, XElement voucher, DateOnly date, CancellationToken ct)
-    {
-        var last = await _ledger.LastAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"), ct);
-        if (voucher.Number("nroComprobante") != (last?.Number ?? 0) + 1)
-            return Fail(call, 1500, "N° de comprobante incorrecto para el tipo de comprobante y punto de venta ingresados.");
-        return last is not null && date < last.Date
-            ? Fail(call, 1201, "La fecha de liquidación debe ser mayor o igual a la fecha de la última liquidación autorizada para el mismo tipo de comprobante.")
-            : null;
-    }
+    private async Task<ContractAnswer?> SequenceProblemAsync(ServiceCall call, XElement voucher, DateOnly date, CancellationToken ct) =>
+        await _ledger.CheckNumberAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"),
+            voucher.Number("nroComprobante"), date, ct) switch
+        {
+            NumberCheck.WrongNumber => Fail(call, 1500, SettlementLedger.WrongNumberText),
+            NumberCheck.EarlierDate => Fail(call, 1201, "La fecha de liquidación debe ser mayor o igual a la fecha de la última liquidación autorizada para el mismo tipo de comprobante."),
+            _ => null,
+        };
 
     private static bool Repeated(IEnumerable<XElement> entries)
     {
@@ -275,9 +280,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
     private ContractAnswer Answer(ServiceCall call, Settlement settlement)
     {
         var answer = settlement.DetailXml();
-        answer.Add(new XElement("pdf", Pdf($"ARCA - Liquidacion de compra de cana de azucar {settlement.VoucherType:D3}-{settlement.PointOfSale:D5}-{settlement.Number:D8}",
-            [$"CUIT emisor: {settlement.Cuit}", $"CUIT receptor: {settlement.ReceiverCuit}", $"Fecha: {Iso(settlement.Date)}",
-                $"Total: {Money(settlement.Total)}", $"CAE: {settlement.Cae}", $"Vencimiento CAE: {Iso(settlement.CaeExpiry)}"])));
+        answer.Add(PdfOf(settlement, "Liquidacion de compra de cana de azucar", "emisor", "receptor", "Total"));
         answer.Add(new XElement("errores"));
         answer.Add(Metadata());
         return call.Ok(new XElement(call.Operation.Output, answer));
@@ -315,8 +318,9 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
             new XElement("localidad", receiver.Number("localidad")), new XElement("provincia", receiver.Number("provincia")));
     }
 
-    private static XElement General(XElement general) => new("datosGenerales",
-        new XElement("fechaComprobante", Stamp(general.Day("fechaComprobante") ?? DateOnly.MinValue)),
+    /// <summary>The datosGenerales block: the voucher's date is the one the checks used, which is today's when the request leaves it out.</summary>
+    private static XElement General(XElement general, DateOnly date) => new("datosGenerales",
+        new XElement("fechaComprobante", Stamp(date)),
         general.Children("condicionVenta").Select(c => new XElement("condicionVenta", new XElement("codigo", c.Number("codigo")), Maybe("detalle", c.Value("detalle")))),
         general.Children("medioPago").Select(m => new XElement("medioPago", new XElement("codigo", m.Number("codigo")), Maybe("detalle", m.Value("detalle")))));
 
@@ -344,23 +348,23 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private static Line Concept(XElement concept, int type)
     {
-        var amount = concept.OptionalAmount("importe") ?? Round(concept.Amount("baseImponible") * concept.Amount("alicuota") / 100);
+        var amount = concept.ChildDecimal("importe") ?? Round(concept.Amount("baseImponible") * concept.Amount("alicuota") / 100);
         var rate = concept.Amount("alicuotaIVA");
         var vat = type == 171 ? Round(amount * rate / 100) : 0;
         return new Line(new XElement("otroConcepto",
             new XElement("codConcepto", concept.Number("codConcepto")), Maybe("detalle", concept.Value("detalle")),
-            concept.OptionalAmount("baseImponible") is { } basis ? new XElement("baseImponible", Money(basis)) : null,
-            concept.OptionalAmount("alicuota") is { } share ? new XElement("alicuota", Money(share)) : null,
+            concept.ChildDecimal("baseImponible") is { } basis ? new XElement("baseImponible", Money(basis)) : null,
+            concept.ChildDecimal("alicuota") is { } share ? new XElement("alicuota", Money(share)) : null,
             new XElement("alicuotaIVA", Money(rate)), new XElement("importe", Money(amount)), new XElement("importeIVA", Money(vat))), amount, vat);
     }
 
     private static Line Tax(XElement tax)
     {
-        var amount = tax.OptionalAmount("importe") ?? Round(tax.Amount("baseImponible") * tax.Amount("alicuota") / 100);
+        var amount = tax.ChildDecimal("importe") ?? Round(tax.Amount("baseImponible") * tax.Amount("alicuota") / 100);
         return new Line(new XElement("tributo",
             new XElement("codTributo", tax.Number("codTributo")), Maybe("detalle", tax.Value("detalle")),
-            tax.OptionalAmount("baseImponible") is { } basis ? new XElement("baseImponible", Money(basis)) : null,
-            tax.OptionalAmount("alicuota") is { } share ? new XElement("alicuota", Money(share)) : null,
+            tax.ChildDecimal("baseImponible") is { } basis ? new XElement("baseImponible", Money(basis)) : null,
+            tax.ChildDecimal("alicuota") is { } share ? new XElement("alicuota", Money(share)) : null,
             new XElement("importe", Money(amount))), amount, 0);
     }
 
@@ -382,9 +386,9 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
             new XElement("importeTotal", Money(total)));
     }
 
-    private ContractAnswer Fail(ServiceCall call, long code, string text) => SettlementXml.Fail(call, Metadata(), (code, text));
+    private ContractAnswer Fail(ServiceCall call, long code, string text) => Fail(call, new SettlementProblem(code, text));
 
-    private ContractAnswer Ok(ServiceCall call, params object?[] content) => SettlementXml.Ok(call, content);
+    private ContractAnswer Fail(ServiceCall call, SettlementProblem problem) => SettlementXml.Fail(call, Metadata(), problem);
 
     /// <summary>§2.5: the server and its time, with milliseconds and offset as in the manual's examples.</summary>
     private XElement Metadata() => new("metadata",

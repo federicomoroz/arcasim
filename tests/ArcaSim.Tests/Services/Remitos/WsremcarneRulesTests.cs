@@ -152,6 +152,44 @@ public class WsremcarneRulesTests
     }
 
     [Fact]
+    public async Task An_orden_sent_twice_in_a_reception_counts_the_last_one()
+    {
+        await using var sim = await StartAsync();
+        var issuer = await ServiceClient.LoginAsync(sim, Service, Issuer);
+        var receiver = await ServiceClient.LoginAsync(sim, Service, Receiver);
+        var code = (await issuer.CallAsync("generarRemito", Generate(issuer, 1))).Value("codRemito");
+
+        var reception = await receiver.CallAsync("registrarRecepcion", receiver.Auth +
+            $"<codRemito>{code}</codRemito><estado>ACP</estado><arrayRecepcionMercaderia>" +
+            "<recepcionMercaderia><orden>1</orden><kilos>100</kilos><unidades>1</unidades></recepcionMercaderia>" +
+            "<recepcionMercaderia><orden>1</orden><kilos>800</kilos><unidades>3</unidades></recepcionMercaderia>" +
+            "</arrayRecepcionMercaderia><categoriaReceptor>1</categoriaReceptor>");
+
+        Assert.Equal("A", reception.Value("resultado"));
+        var consulted = await issuer.CallAsync("consultarRemito", issuer.Auth + $"<codRemito>{code}</codRemito>");
+        Assert.Equal("800", consulted.Value("kilosRec"));
+        Assert.Equal("3", consulted.Value("unidadesRec"));
+    }
+
+    [Fact]
+    public async Task The_trip_can_be_changed_for_24_hours_whatever_the_distance()
+    {
+        await using var sim = await StartAsync();
+        var issuer = await ServiceClient.LoginAsync(sim, Service, Issuer);
+        var code = (await issuer.CallAsync("generarRemito", Generate(issuer, 1, distance: 600))).Value("codRemito");
+
+        sim.Clock.Freeze(Now.AddHours(23));
+        issuer = await ServiceClient.LoginAsync(sim, Service, Issuer);
+        var inTime = await issuer.CallAsync("modificarViaje", issuer.Auth + $"<codRemito>{code}</codRemito><cuitTransportista>{Receiver}</cuitTransportista>");
+        sim.Clock.Freeze(Now.AddHours(25));
+        issuer = await ServiceClient.LoginAsync(sim, Service, Issuer);
+        var late = await issuer.CallAsync("modificarViaje", issuer.Auth + $"<codRemito>{code}</codRemito><cuitTransportista>{Receiver}</cuitTransportista>");
+
+        Assert.Equal("A", inTime.Value("resultado"));
+        Assert.Equal(("3070", "Operación no permitida"), late.Error());
+    }
+
+    [Fact]
     public async Task A_remito_of_type_0_is_answered_instead_of_waiting_on_its_own_lock()
     {
         await using var sim = await StartAsync();
@@ -166,16 +204,16 @@ public class WsremcarneRulesTests
         Assert.Equal("A", next.Value("resultado"));
     }
 
-    private static string Generate(ServiceClient client, long requestId, long holder = Issuer, long? depositary = null, string? importe = null) =>
+    private static string Generate(ServiceClient client, long requestId, long holder = Issuer, long? depositary = null, string? importe = null, int distance = 50) =>
         client.Auth + $"<idReq>{requestId}</idReq><remito><tipoComprobante>995</tipoComprobante><tipoMovimiento>ENV</tipoMovimiento>" +
         $"<categoriaEmisor>1</categoriaEmisor><puntoEmision>9000</puntoEmision><cuitTitularMercaderia>{holder}</cuitTitularMercaderia>" +
         (depositary is null ? "" : $"<cuitDepositario>{depositary}</cuitDepositario>") +
         $"<tipoReceptor>MI</tipoReceptor><categoriaReceptor>1</categoriaReceptor><cuitReceptor>{Receiver}</cuitReceptor>" +
-        (depositary is null ? "" : "<codDomOrigen>0</codDomOrigen>") + "<codDomDestino>0</codDomDestino>" + Trip() + Goods() +
+        (depositary is null ? "" : "<codDomOrigen>0</codDomOrigen>") + "<codDomDestino>0</codDomDestino>" + Trip(distance) + Goods() +
         (importe is null ? "" : $"<importeCot>{importe}</importeCot>") + "</remito>";
 
-    private static string Trip() =>
-        $"<viaje><cuitTransportista>{Holder}</cuitTransportista><fechaInicioViaje>2026-10-01</fechaInicioViaje><distanciaKm>50</distanciaKm>" +
+    private static string Trip(int distance = 50) =>
+        $"<viaje><cuitTransportista>{Holder}</cuitTransportista><fechaInicioViaje>2026-10-01</fechaInicioViaje><distanciaKm>{distance}</distanciaKm>" +
         "<vehiculo><dominioVehiculo>AB123CD</dominioVehiculo></vehiculo></viaje>";
 
     private static string Goods() =>

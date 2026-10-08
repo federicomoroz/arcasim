@@ -10,7 +10,14 @@ namespace ArcaSim.Application.Services.Remitos;
 /// Where one remito service keeps its remitos, in its own collection of the
 /// document store: by codRemito, with indexes by request id and by number,
 /// and the last number issued per issuer, voucher type and point of emission.
-/// Issuing takes "último + 1" under the sequence's lock.
+/// Issuing takes "último + 1" under the sequence's lock. Every change to a
+/// remito goes through <see cref="HoldAsync"/>, which takes the remito's own
+/// lock and reads it again inside it: of several operations that try the same
+/// transition, one takes it and the rest find the state it left.
+/// The three kinds of lock never share a key: the sequences' (the service's
+/// name), the requests' and the remitos' (the service's name and a suffix), so
+/// they can be taken one inside the other in this order: requests, remito,
+/// sequence.
 /// </summary>
 public sealed class RemitoLedger(string service, IDocumentStore store, SequenceLocks locks, IClock clock)
 {
@@ -20,9 +27,13 @@ public sealed class RemitoLedger(string service, IDocumentStore store, SequenceL
 
     public DateTimeOffset Now => clock.Now.ToArgentina();
 
-    public DateOnly Today => DateOnly.FromDateTime(Now.DateTime);
+    public DateOnly Today => clock.Today();
 
     public Task<Remito?> FindAsync(long code, CancellationToken ct) => store.GetAsync<Remito>(service, RemitoKey(code), ct);
+
+    /// <summary>The remito by its code, when the caller is a party to it: nobody else sees a remito.</summary>
+    public async Task<Remito?> FindForAsync(long code, long cuit, CancellationToken ct) =>
+        await FindAsync(code, ct) is { } remito && remito.Involves(cuit) ? remito : null;
 
     public async Task<Remito?> FindByRequestAsync(long issuer, int point, long requestId, CancellationToken ct) =>
         await store.GetAsync<Reference>(service, $"idreq/{issuer}/{point:D5}/{requestId:D15}", ct) is { } reference
@@ -36,6 +47,58 @@ public sealed class RemitoLedger(string service, IDocumentStore store, SequenceL
 
     public async Task<Remito?> LastIssuedAsync(long issuer, int type, int point, CancellationToken ct) =>
         await store.GetAsync<Last>(service, LastKey(issuer, type, point), ct) is { } last ? await FindAsync(last.Code, ct) : null;
+
+    /// <summary>
+    /// A remito to a receiver without CUIT (carne) is accepted on its own once
+    /// its validity ends (manual 2.5.26). The remito is kept in that state the
+    /// first time anyone looks at it after the deadline.
+    /// </summary>
+    private bool DeadlinePassed(Remito? remito) =>
+        remito is { Uncategorized: true, State: RemitoStates.Issued } && Today > remito.ExpiresOn;
+
+    private async Task AcceptAsync(Remito remito, CancellationToken ct)
+    {
+        remito.MoveTo(RemitoStates.Accepted, Now, remito.Issuer);
+        await SaveAsync(remito, ct);
+    }
+
+    /// <summary>
+    /// The remito as a consult sees it, with the deadline applied. It takes
+    /// the remito's lock only when the deadline has passed, and reads it again
+    /// inside, since another consult may have kept the acceptance already.
+    /// </summary>
+    public async Task<Remito?> WithDeadlinesAsync(Remito? remito, CancellationToken ct)
+    {
+        if (!DeadlinePassed(remito)) return remito;
+        using var gate = await LockAsync(remito!.Code, ct);
+        remito = await FindAsync(remito.Code, ct);
+        if (DeadlinePassed(remito)) await AcceptAsync(remito!, ct);
+        return remito;
+    }
+
+    /// <summary>One operation at a time on one remito. The lock lives apart from the numbering's and the requests'.</summary>
+    public Task<IDisposable> LockAsync(long code, CancellationToken ct) => locks.AcquireAsync($"{service}.remito", code, 0, 0, ct);
+
+    /// <summary>
+    /// Takes the remito's lock and reads the remito inside it, with its
+    /// deadline applied: null when there is none or the caller is no party to
+    /// it. What the caller decides from it holds until it lets the hold go.
+    /// </summary>
+    public async Task<RemitoHold> HoldAsync(long code, long cuit, CancellationToken ct)
+    {
+        var gate = await LockAsync(code, ct);
+        try
+        {
+            var remito = await FindAsync(code, ct);
+            if (DeadlinePassed(remito)) await AcceptAsync(remito!, ct);
+            return new RemitoHold(gate, remito is not null && remito.Involves(cuit) ? remito : null);
+        }
+        catch
+        {
+            gate.Dispose();
+            throw;
+        }
+    }
 
     public Task<IReadOnlyList<Remito>> AllAsync(CancellationToken ct) => store.ListAsync<Remito>(service, "remito/", ct);
 
@@ -67,10 +130,11 @@ public sealed class RemitoLedger(string service, IDocumentStore store, SequenceL
         {
             var last = await store.GetAsync<Last>(service, LastKey(remito.Issuer, remito.Type, remito.Point), ct);
             var now = Now;
+            var today = now.ArgentinaDate();
             remito.Number = (last?.Number ?? 0) + 1;
-            remito.AuthorizationCode = await CreAsync(Today, ct);
+            remito.AuthorizationCode = await CreAsync(today, ct);
             remito.IssuedAt = now;
-            remito.ExpiresOn = Today.AddDays(RemitoTerms.ValidityDays(remito.DistanceKm));
+            remito.ExpiresOn = today.AddDays(RemitoTerms.ValidityDays(remito.DistanceKm));
             remito.MoveTo(RemitoStates.Issued, now, cuit);
             await SaveAsync(remito, ct);
             await store.PutAsync(service, NumberKey(remito.Issuer, remito.Type, remito.Point, remito.Number.Value), new Reference(remito.Code), ct);
@@ -98,13 +162,27 @@ public sealed class RemitoLedger(string service, IDocumentStore store, SequenceL
     private static string LastKey(long issuer, int type, int point) => $"ultimo/{issuer}/{type:D3}/{point:D5}";
 }
 
+/// <summary>A remito held for change: read fresh inside its lock, which the hold keeps until it is disposed.</summary>
+public sealed class RemitoHold(IDisposable gate, Remito? remito) : IDisposable
+{
+    /// <summary>The remito as it stands now, or null when there is none or the caller is no party to it.</summary>
+    public Remito? Remito { get; } = remito;
+
+    public void Dispose() => gate.Dispose();
+}
+
 /// <summary>
-/// Validity and the window to change the trip, by distance: wsremharina's
-/// table (manual Anexo, p.140). Carne and azúcar document no table of their
-/// own (NO VERIFICADO); ArcaSim applies harina's to the three.
+/// The terms a remito runs by. Its validity depends on the distance by
+/// wsremharina's table (manual Anexo, p.140); carne documents no table and
+/// azúcar's only example does not match it (NO VERIFICADO), so ArcaSim applies
+/// harina's to the three. The window to change the trip is harina's table
+/// too, but carne (manual 2.5.8) and azúcar (manual 16.5) say 24 hours flat.
 /// </summary>
 public static class RemitoTerms
 {
+    /// <summary>The window carne's modificarViaje and azúcar's modificarConductor give, from the issue, whatever the distance.</summary>
+    public const int FlatChangeHours = 24;
+
     public static int ValidityDays(decimal km) => km switch
     {
         <= 100 => 2,
@@ -113,6 +191,7 @@ public static class RemitoTerms
         _ => 10,
     };
 
+    /// <summary>Harina's window to change the trip, by distance (manual Anexo, p.140).</summary>
     public static int ChangeHours(decimal km) => km switch
     {
         <= 100 => 24,

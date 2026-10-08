@@ -175,6 +175,45 @@ public class WsremharinaRulesTests
     }
 
     [Fact]
+    public async Task An_orden_sent_twice_in_a_reception_counts_the_last_one()
+    {
+        await using var sim = await StartAsync();
+        var issuer = await ServiceClient.LoginAsync(sim, Service, Issuer);
+        var receiver = await ServiceClient.LoginAsync(sim, Service, Receiver);
+        var code = (await issuer.CallAsync("generarRemito", Generate(issuer, 1, Issuer))).Value("codRemito");
+
+        var reception = await receiver.CallAsync("registrarRecepcion", receiver.Auth +
+            $"<codRemito>{code}</codRemito><fecha>2026-10-02</fecha><aceptado>S</aceptado><arrayRecepcionMercaderia>" +
+            "<recepcionMercaderia><orden>1</orden><pesoNetoKG>100</pesoNetoKG></recepcionMercaderia>" +
+            "<recepcionMercaderia><orden>1</orden><pesoNetoKG>500</pesoNetoKG></recepcionMercaderia>" +
+            "<recepcionMercaderia><orden>2</orden><pesoNetoKG>300</pesoNetoKG></recepcionMercaderia></arrayRecepcionMercaderia>");
+
+        Assert.Equal("A", reception.Value("resultado"));
+        var remito = await receiver.CallAsync("consultarRemito", receiver.Auth + $"<codRemito>{code}</codRemito>");
+        Assert.Equal("ACE", remito.Value("estadoRemito"));
+        Assert.Equal(["500", "300"], remito.Descendants("pesoNetoRecKg").Select(e => e.Value));
+    }
+
+    [Fact]
+    public async Task The_trip_can_be_changed_for_as_long_as_the_distance_table_says()
+    {
+        await using var sim = await StartAsync();
+        var issuer = await ServiceClient.LoginAsync(sim, Service, Issuer);
+        var code = (await issuer.CallAsync("generarRemito", Generate(issuer, 1, Issuer))).Value("codRemito");
+        const string Trip = "<viaje><fechaInicioViaje>2026-10-01</fechaInicioViaje><distanciaKm>200</distanciaKm></viaje>";
+
+        sim.Clock.Freeze(Now.AddHours(30));
+        issuer = await ServiceClient.LoginAsync(sim, Service, Issuer);
+        var inTime = await issuer.CallAsync("modificarViaje", issuer.Auth + $"<codRemito>{code}</codRemito>{Trip}");
+        sim.Clock.Freeze(Now.AddHours(50));
+        issuer = await ServiceClient.LoginAsync(sim, Service, Issuer);
+        var late = await issuer.CallAsync("modificarViaje", issuer.Auth + $"<codRemito>{code}</codRemito>{Trip}");
+
+        Assert.Equal("A", inTime.Value("resultado"));
+        Assert.Equal(("3070", "Operación no permitida"), late.Error());
+    }
+
+    [Fact]
     public async Task The_tables_serve_the_documented_codes()
     {
         await using var sim = await StartAsync();

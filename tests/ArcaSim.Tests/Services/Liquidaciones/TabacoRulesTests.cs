@@ -20,7 +20,7 @@ public class TabacoRulesTests
         return answer.Element("arrayCathes")!.Elements("cathe").Select(c => long.Parse(c.Value)).ToList();
     }
 
-    private static string Link(long cathe, long holder, decimal kilos, string used = "", string recovery = "S") =>
+    internal static string Link(long cathe, long holder, decimal kilos, string used = "", string recovery = "S") =>
         $"<recupero>{recovery}</recupero><tipoMercaderia>3</tipoMercaderia><arrayCathesElaborados><datosTabacoElaborado><cathe>{cathe}</cathe>" +
         $"<cuitTitular>{holder}</cuitTitular><kilosBrutos>{kilos + 5}</kilosBrutos><kilosNetos>{kilos}</kilosNetos></datosTabacoElaborado></arrayCathesElaborados>{used}";
 
@@ -147,6 +147,33 @@ public class TabacoRulesTests
         await tabaco.CallAsync("confirmarCambioTitularSinMovFisico", Confirm(refused, "N"), buyer);
         Assert.Equal("RC", (await tabaco.CallAsync("consultarSolicCambioTitularRechazadas")).Descendants("estado").Single().Value);
         Assert.Equal(["1900"], Errors(await tabaco.CallAsync("confirmarCambioTitularSinMovFisico", Confirm("999", "S"))));
+    }
+
+    private const string Dispatch = "<nroDespachoImp>99999ZZZZ999999E</nroDespachoImp><cuitDespachante>20111111112</cuitDespachante>";
+
+    [Theory]
+    // cantidad over the schema's maximum, on the first request for a deposit (inicial = S), which has no parameters to hold it.
+    [InlineData("solicitarCathesTabacoElaborado", "<inicial>S</inicial><deposito>10</deposito><cantidad>1000000</cantidad>")]
+    [InlineData("solicitarCathesTabacoElaborado", "<inicial>S</inicial><deposito>10</deposito><cantidad>9223372036854775807</cantidad>")]
+    // cantBultos over it, whatever the rows ask for.
+    [InlineData("solicitarCathesTabacoImportado", Dispatch + "<cantBultos>1000000</cantBultos><arrayCantSolicitadas><cantPorDeposito><deposito>10</deposito><cantidad>1</cantidad></cantPorDeposito></arrayCantSolicitadas>")]
+    // a row over it, with a cantBultos that holds it.
+    [InlineData("solicitarCathesTabacoImportado", Dispatch + "<cantBultos>9223372036854775807</cantBultos><arrayCantSolicitadas><cantPorDeposito><deposito>10</deposito><cantidad>9223372036854775807</cantidad></cantPorDeposito></arrayCantSolicitadas>")]
+    // rows that ask for more in all, though a negative one brings the sum rule 1302 compares under cantBultos.
+    [InlineData("solicitarCathesTabacoImportado", Dispatch + "<cantBultos>999999</cantBultos><arrayCantSolicitadas>" +
+        "<cantPorDeposito><deposito>10</deposito><cantidad>999999</cantidad></cantPorDeposito>" +
+        "<cantPorDeposito><deposito>11</deposito><cantidad>999999</cantidad></cantPorDeposito>" +
+        "<cantPorDeposito><deposito>12</deposito><cantidad>-999999</cantidad></cantPorDeposito></arrayCantSolicitadas>")]
+    public async Task A_request_for_more_than_999999_CATHE_is_refused_as_a_fault_instead_of_issuing_them_without_end(string operation, string inner)
+    {
+        await using var tabaco = await StartAsync();
+        using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+
+        var (status, body) = await tabaco.PostAsync(operation, inner, limit.Token);
+
+        Assert.Equal(500, status);
+        Assert.Contains("cvc-maxInclusive-valid", body);
+        Assert.Empty((await tabaco.CallAsync("consultarCathesSolicitados")).Descendants("datosCathe"));
     }
 
     [Fact]

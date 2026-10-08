@@ -51,9 +51,6 @@ public sealed class Remito
     public DateOnly? AuthorizedOn { get; set; }
     public DateOnly? ReceivedOn { get; set; }
 
-    /// <summary>The remito this one redirects (redestino).</summary>
-    public long? Redirects { get; set; }
-
     /// <summary>Each contingency as it was informed, without namespaces.</summary>
     public List<string> Contingencies { get; set; } = [];
 

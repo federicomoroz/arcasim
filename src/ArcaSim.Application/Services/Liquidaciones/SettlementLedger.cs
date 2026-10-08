@@ -35,7 +35,7 @@ public sealed record Settlement(
     public const string Annulled = "anulada";
     public const string Adjusted = "ajustada";
 
-    public string KeyOf() => SettlementLedger.Key(Cuit, PointOfSale, VoucherType, Number);
+    public string KeyOf() => AuthorizedVouchers.Key(Cuit, PointOfSale, VoucherType, Number);
 
     public XElement DetailXml() => XElement.Parse(Detail);
 }
@@ -46,12 +46,15 @@ public sealed record LastSettlement(long Number, DateOnly Date);
 /// <summary>Where a CAE points: the settlement's key.</summary>
 public sealed record SettlementByCae(string Key);
 
-/// <summary>What a service's point-of-sale check found for the issuer.</summary>
-public enum PointCheck
+/// <summary>A business rejection: the code a manual gives and its text.</summary>
+public readonly record struct SettlementProblem(long Code, string Text);
+
+/// <summary>What the check of the number a client picked found.</summary>
+public enum NumberCheck
 {
     Ok,
-    NoPoints,
-    Invalid,
+    WrongNumber,
+    EarlierDate,
 }
 
 /// <summary>
@@ -68,21 +71,58 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
 {
     public const int CaeDays = 10;
 
-    public IClock Clock => clock;
+    /// <summary>The document type of a CUIT in the invoicing tables (80): the receiver of these vouchers is the other party's CUIT.</summary>
+    private const int CuitDocumentType = 80;
+
+    /// <summary>
+    /// The text wslum (2074), wslca (1500) and wslsp (1009) give for a number out of sequence:
+    /// the one sentence of their manuals under each service's own code.
+    /// </summary>
+    public const string WrongNumberText = "N° de comprobante incorrecto para el tipo de comprobante y punto de venta ingresados.";
+
+    private readonly KeyedLocks<string> _documents = new();
 
     public DateOnly Today => clock.Today();
-
-    public static string Key(long cuit, int pointOfSale, int voucherType, long number) =>
-        $"{cuit}/{pointOfSale:D5}/{voucherType:D3}/{number:D8}";
 
     public Task<IDisposable> LockAsync(string service, long cuit, int pointOfSale, int voucherType, CancellationToken ct) =>
         locks.AcquireAsync(service, cuit, pointOfSale, voucherType, ct);
 
+    /// <summary>
+    /// One operation at a time on one voucher of the service, by its key: what
+    /// annuls or adjusts an original reads it again inside this lock, checks its
+    /// state and writes it, so no two do it to the same one. Take it inside the sequence's.
+    /// </summary>
+    public Task<IDisposable> LockDocumentAsync(string key, CancellationToken ct) => _documents.AcquireAsync(key, ct);
+
+    /// <summary>
+    /// One at a time for what must be unique in the whole service (a bale, a
+    /// delivery note): the check that nothing uses it yet and the record that
+    /// something does share one hold, since two vouchers on different
+    /// sequences would each find it free. Take it inside the sequence's.
+    /// </summary>
+    public Task<IDisposable> LockUniqueAsync(string service, string what, CancellationToken ct) => LockUniqueAsync(service, what, 0, ct);
+
+    /// <summary>The same for what is unique among one CUIT's vouchers (a buyer's period).</summary>
+    public Task<IDisposable> LockUniqueAsync(string service, string what, long cuit, CancellationToken ct) =>
+        locks.AcquireAsync($"{service}.{what}", cuit, 0, 0, ct);
+
     public Task<LastSettlement?> LastAsync(string service, long cuit, int pointOfSale, int voucherType, CancellationToken ct) =>
         store.GetAsync<LastSettlement>(service, $"ultimo/{cuit}/{pointOfSale:D5}/{voucherType:D3}", ct);
 
+    /// <summary>
+    /// The client picks the number of a voucher: it must be the last + 1 of its sequence (1 when the
+    /// sequence is empty) and, in the services that ask for it (<paramref name="date"/> given), must not
+    /// carry a date earlier than the last one's. Take the sequence's lock before, and keep it until the voucher is issued.
+    /// </summary>
+    public async Task<NumberCheck> CheckNumberAsync(string service, long cuit, int pointOfSale, int voucherType, long number, DateOnly? date, CancellationToken ct)
+    {
+        var last = await LastAsync(service, cuit, pointOfSale, voucherType, ct);
+        if (number != (last?.Number ?? 0) + 1) return NumberCheck.WrongNumber;
+        return date is { } day && last is not null && day < last.Date ? NumberCheck.EarlierDate : NumberCheck.Ok;
+    }
+
     public Task<Settlement?> FindAsync(string service, long cuit, int pointOfSale, int voucherType, long number, CancellationToken ct) =>
-        FindAsync(service, Key(cuit, pointOfSale, voucherType, number), ct);
+        FindAsync(service, AuthorizedVouchers.Key(cuit, pointOfSale, voucherType, number), ct);
 
     public Task<Settlement?> FindAsync(string service, string key, CancellationToken ct) =>
         store.GetAsync<Settlement>(service, $"liq/{key}", ct);
@@ -104,7 +144,7 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
         await store.PutAsync(settlement.Service, $"ultimo/{settlement.Cuit}/{settlement.PointOfSale:D5}/{settlement.VoucherType:D3}",
             new LastSettlement(settlement.Number, settlement.Date), ct);
         await store.PutAsync(new AuthorizedVoucher(settlement.Service, settlement.Cuit, settlement.PointOfSale, settlement.VoucherType,
-            settlement.Number, settlement.Date, settlement.Total, 80, settlement.ReceiverCuit, "CAE",
+            settlement.Number, settlement.Date, settlement.Total, CuitDocumentType, settlement.ReceiverCuit, "CAE",
             settlement.Cae.ToString(CultureInfo.InvariantCulture), settlement.CaeExpiry), ct);
     }
 
@@ -113,15 +153,27 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
 
     public Task<Taxpayer?> TaxpayerAsync(long cuit, CancellationToken ct) => taxpayers.FindAsync(cuit, ct);
 
-    /// <summary>The issuer's web service points of sale (RECE): none at all, not this one, or fine.</summary>
-    public async Task<PointCheck> CheckPointOfSaleAsync(long cuit, int pointOfSale, CancellationToken ct)
+    /// <summary>
+    /// The issuer's web service points of sale (RECE): <paramref name="noPoints"/> when it has none at all,
+    /// <paramref name="invalid"/> when it has not this one, nothing when it is fine. Each service
+    /// gives its own code and text for the two.
+    /// </summary>
+    public async Task<SettlementProblem?> PointProblemAsync(long cuit, int pointOfSale, SettlementProblem noPoints, SettlementProblem invalid, CancellationToken ct)
     {
         var points = await PointsOfSaleAsync(cuit, ct);
-        if (points.Count == 0) return PointCheck.NoPoints;
-        return points.Any(p => p.Number == pointOfSale) ? PointCheck.Ok : PointCheck.Invalid;
+        if (points.Count == 0) return noPoints;
+        return points.Any(p => p.Number == pointOfSale) ? null : invalid;
     }
 
-    public async Task<IReadOnlyList<PointOfSale>> PointsOfSaleAsync(long cuit, CancellationToken ct) =>
+    /// <summary>The answer to a query of points of sale, the same in the four services: a puntoVenta per point, each with the issuer's address.</summary>
+    public async Task<List<XElement>> PointsAnswerAsync(long cuit, CancellationToken ct)
+    {
+        var address = AddressOf(await taxpayers.FindAsync(cuit, ct));
+        return (await PointsOfSaleAsync(cuit, ct))
+            .Select(p => new XElement("puntoVenta", new XElement("codigo", p.Number), new XElement("descripcion", address))).ToList();
+    }
+
+    private async Task<IReadOnlyList<PointOfSale>> PointsOfSaleAsync(long cuit, CancellationToken ct) =>
         (await taxpayers.FindAsync(cuit, ct))?.PointsOfSale
             .Where(p => p.Kind == PointOfSaleKind.WebServiceCae && !p.Blocked && (p.DeactivatedOn is null || p.DeactivatedOn > Today))
             .OrderBy(p => p.Number).ToList() ?? [];
@@ -131,7 +183,7 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
     {
         VatCondition.ResponsableInscripto => "IVA Responsable Inscripto",
         VatCondition.Exento => "IVA Sujeto Exento",
-        VatCondition.Monotributo or VatCondition.MonotributistaSocial or VatCondition.MonotributoTrabajadorIndependientePromovido => "Responsable Monotributo",
+        _ when condition.IsMonotributo() => "Responsable Monotributo",
         _ => "IVA No Alcanzado",
     };
 
@@ -146,27 +198,27 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
 /// <summary>Reading the requests and writing the answers of the sector liquidation services.</summary>
 public static class SettlementXml
 {
-    /// <summary>A child by local name, or an empty element when it is missing, so a chain of lookups never fails.</summary>
-    public static XElement Child(this XElement element, string name) =>
-        element.Elements().FirstOrDefault(e => e.Name.LocalName == name) ?? new XElement(name);
+    /// <summary>
+    /// The child by local name, or an empty element when there is none, so a chain of lookups never fails.
+    /// The empty one belongs to nothing: writing into it is lost, which <see cref="SetChild"/> is for.
+    /// </summary>
+    public static XElement ChildOrEmpty(this XElement element, string name) => element.Child(name) ?? new XElement(name);
 
-    public static XElement? Optional(this XElement element, string name) =>
-        element.Elements().FirstOrDefault(e => e.Name.LocalName == name);
+    /// <summary>The child's text, trimmed, or null when the child is missing or blank.</summary>
+    public static string? Value(this XElement element, string name) => element.ChildText(name) is { Length: > 0 } text ? text : null;
 
-    public static IEnumerable<XElement> Children(this XElement element, string name) =>
-        element.Elements().Where(e => e.Name.LocalName == name);
+    /// <summary>The child's whole number, or 0 when it is missing or does not read.</summary>
+    public static long Number(this XElement element, string name) => element.ChildLong(name) ?? 0;
 
-    public static string? Value(this XElement element, string name) =>
-        element.Optional(name)?.Value.Trim() is { Length: > 0 } text ? text : null;
+    /// <summary>The child's amount, or 0 when it is missing or does not read.</summary>
+    public static decimal Amount(this XElement element, string name) => element.ChildDecimal(name) ?? 0;
 
-    public static long Number(this XElement element, string name) =>
-        long.TryParse(element.Value(name), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : 0;
-
-    public static decimal Amount(this XElement element, string name) =>
-        decimal.TryParse(element.Value(name), NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : 0;
-
-    public static decimal? OptionalAmount(this XElement element, string name) =>
-        decimal.TryParse(element.Value(name), NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : null;
+    /// <summary>
+    /// Writes the text into the child a block already has. A block of an answer built from a stored voucher
+    /// always has it; one that does not is a corrupt voucher, and the answer fails instead of going out without the value.
+    /// </summary>
+    public static void SetChild(this XElement block, string name, string value) =>
+        (block.Child(name) ?? throw new InvalidOperationException($"The stored voucher has no <{name}> to set.")).Value = value;
 
     /// <summary>An xsd:date, with or without the zone some stacks add (2019-05-06-03:00).</summary>
     public static DateOnly? Day(this XElement element, string name)
@@ -203,17 +255,17 @@ public static class SettlementXml
 
     /// <summary>
     /// A business rejection: the service's own error block (respuesta/errores/error)
-    /// with every error, and the metadata the service sends with every answer when it has one.
+    /// with the error, and the metadata the service sends with every answer when it has one.
     /// </summary>
-    public static ContractAnswer Fail(ServiceCall call, XElement? metadata, params (long Code, string Text)[] errors)
+    public static ContractAnswer Fail(ServiceCall call, XElement? metadata, SettlementProblem problem)
     {
-        var answer = call.Error(errors[0].Code, errors[0].Text);
+        var answer = call.Error(problem.Code, problem.Text);
         if (answer.Body?.Descendants().FirstOrDefault(e => e.Name.LocalName == "errores") is not { } block) return answer;
         block.RemoveNodes();
-        block.Add(errors.Select(e => new XElement("error",
-            new XElement("codigo", e.Code.ToString(CultureInfo.InvariantCulture)),
-            new XElement("descripcion", e.Text))));
-        if (metadata is not null && block.Parent is { } holder && holder.Optional("metadata") is null) block.AddAfterSelf(metadata);
+        block.Add(new XElement("error",
+            new XElement("codigo", problem.Code.ToString(CultureInfo.InvariantCulture)),
+            new XElement("descripcion", problem.Text)));
+        if (metadata is not null && block.Parent is { } holder && holder.Child("metadata") is null) block.AddAfterSelf(metadata);
         return answer;
     }
 
@@ -221,36 +273,13 @@ public static class SettlementXml
         call.Ok(new XElement(call.Operation.Output, new XElement("respuesta", content)));
 
     /// <summary>
-    /// The base64 PDF the services attach (§2.5/§2.6 of the manuals: "el mismo
-    /// archivo que se imprime por la aplicación web"). ArcaSim's is a one-page
-    /// PDF that lists what was authorized.
+    /// The pdf element of a settlement's answer (§2.5/§2.6 of the manuals: "el mismo archivo que se imprime
+    /// por la aplicación web"): the voucher, both parties, the date, the total and the CAE, in the words each service uses for them.
     /// </summary>
-    public static string Pdf(string title, IEnumerable<string> lines)
-    {
-        static string Escape(string text) => new string(text.Select(c => c > 126 ? '?' : c).ToArray())
-            .Replace("\\", "\\\\").Replace("(", "\\(").Replace(")", "\\)");
-        var content = new StringBuilder("BT /F1 11 Tf 50 800 Td 14 TL\n");
-        foreach (var line in new[] { title, "" }.Concat(lines)) content.Append('(').Append(Escape(line)).Append(") '\n");
-        content.Append("ET");
-        string[] objects =
+    public static XElement PdfOf(Settlement settlement, string title, string issuer, string receiver, string total) =>
+        new("pdf", SimplePdf.Lines($"ARCA - {title} {settlement.VoucherType:D3}-{settlement.PointOfSale:D5}-{settlement.Number:D8}",
         [
-            "<< /Type /Catalog /Pages 2 0 R >>",
-            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
-            $"<< /Length {content.Length} >>\nstream\n{content}\nendstream",
-            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-        ];
-        var pdf = new StringBuilder("%PDF-1.4\n");
-        var offsets = new List<int>();
-        for (var i = 0; i < objects.Length; i++)
-        {
-            offsets.Add(pdf.Length);
-            pdf.Append(i + 1).Append(" 0 obj\n").Append(objects[i]).Append("\nendobj\n");
-        }
-        var xref = pdf.Length;
-        pdf.Append("xref\n0 ").Append(objects.Length + 1).Append("\n0000000000 65535 f \n");
-        foreach (var offset in offsets) pdf.Append(offset.ToString("D10", CultureInfo.InvariantCulture)).Append(" 00000 n \n");
-        pdf.Append("trailer\n<< /Size ").Append(objects.Length + 1).Append(" /Root 1 0 R >>\nstartxref\n").Append(xref).Append("\n%%EOF\n");
-        return Convert.ToBase64String(Encoding.ASCII.GetBytes(pdf.ToString()));
-    }
+            $"CUIT {issuer}: {settlement.Cuit}", $"CUIT {receiver}: {settlement.ReceiverCuit}", $"Fecha: {Iso(settlement.Date)}",
+            $"{total}: {Money(settlement.Total)}", $"CAE: {settlement.Cae}", $"Vencimiento CAE: {Iso(settlement.CaeExpiry)}",
+        ]));
 }

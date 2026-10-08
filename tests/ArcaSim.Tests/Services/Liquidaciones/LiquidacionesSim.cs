@@ -1,7 +1,9 @@
 using System.Xml.Linq;
 using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
+using ArcaSim.Application.Services.Liquidaciones;
 using ArcaSim.Domain;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ArcaSim.Tests.Services.Liquidaciones;
 
@@ -65,6 +67,17 @@ internal sealed class LiquidacionesSim : IAsyncDisposable
         return answer.Element("respuesta") ?? answer;
     }
 
+    /// <summary>The raw answer, whatever its status: for what the service refuses with a fault.</summary>
+    public Task<(int Status, string Body)> PostAsync(string operation, string inner, CancellationToken ct = default)
+    {
+        var contract = _contract.Operations.Single(o => o.Name == operation);
+        var element = contract.Input!;
+        var envelope = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" " +
+                       $"xmlns:x=\"{element.NamespaceName}\"><soapenv:Header/><soapenv:Body><x:{element.LocalName}>{_auth}{inner}</x:{element.LocalName}>" +
+                       "</soapenv:Body></soapenv:Envelope>";
+        return Sim.PostSoapAsync(new Uri("http://localhost" + _contract.AddressPath), envelope, $"\"{contract.Action}\"", ct);
+    }
+
     /// <summary>The Body's element, valid for the WSDL.</summary>
     public async Task<XElement> RawAsync(string operation, string inner)
     {
@@ -90,6 +103,17 @@ internal sealed class LiquidacionesSim : IAsyncDisposable
             if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
         });
         Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems) + Environment.NewLine + answer);
+    }
+
+    /// <summary>Edits the detail of a voucher the service stored, as if the store held one built without a field.</summary>
+    public async Task EditStoredAsync(string service, long cuit, int pointOfSale, int voucherType, long number, Action<XElement> edit)
+    {
+        var store = Sim.Services.GetRequiredService<IDocumentStore>();
+        var key = $"liq/{AuthorizedVouchers.Key(cuit, pointOfSale, voucherType, number)}";
+        var stored = (await store.GetAsync<Settlement>(service, key))!;
+        var detail = stored.DetailXml();
+        edit(detail);
+        await store.PutAsync(service, key, stored with { Detail = detail.ToString(SaveOptions.DisableFormatting) });
     }
 
     public static string Day(int offset = 0) => Now.AddDays(offset).ToString("yyyy-MM-dd");

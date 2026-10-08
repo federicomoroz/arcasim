@@ -1,3 +1,4 @@
+using System.Globalization;
 using ArcaSim.Application.Contracts;
 
 namespace ArcaSim.Application.Services.Liquidaciones;
@@ -102,10 +103,14 @@ public sealed class TabacoBook(IDocumentStore store)
         store.ListAsync<ProductionParameters>(Collection, $"param/{owner}/", ct);
 
     public Task<ElaborationReport?> ReportAsync(long owner, long deposit, DateOnly date, CancellationToken ct) =>
-        store.GetAsync<ElaborationReport>(Collection, $"elab/{owner}/{deposit}/{date:yyyyMMdd}", ct);
+        store.GetAsync<ElaborationReport>(Collection, ReportKey(owner, deposit, date), ct);
 
     public Task PutAsync(long owner, ElaborationReport report, CancellationToken ct) =>
-        store.PutAsync(Collection, $"elab/{owner}/{report.Deposit}/{report.Date:yyyyMMdd}", report, ct);
+        store.PutAsync(Collection, ReportKey(owner, report.Deposit, report.Date), report, ct);
+
+    /// <summary>The key of a report is stored: its date is written the same way whatever the server's culture or calendar.</summary>
+    private static string ReportKey(long owner, long deposit, DateOnly date) =>
+        string.Create(CultureInfo.InvariantCulture, $"elab/{owner}/{deposit}/{date:yyyyMMdd}");
 
     /// <summary>Denaturations and changes of holder share one numbering: whether ARCA's do is not documented.</summary>
     public Task<long> NewRequestIdAsync(CancellationToken ct) => store.NextAsync("wstabaco-solicitud", ct);

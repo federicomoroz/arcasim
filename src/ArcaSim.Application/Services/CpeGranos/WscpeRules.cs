@@ -64,8 +64,8 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
         {
             "consultarCPEPorDestino" => await ByDestinationAsync(call, ct),
             "consultarCPEPPendientesDeResolucion" => await PendingAsync(call, ct),
-            "consultarCPEDGPendienteActivacion" => await AwaitingActivationAsync(call, "PE", ct),
-            "consultarCPEEmitidasDestinoDGPendientesActivacion" => await AwaitingActivationAsync(call, "PO", ct),
+            "consultarCPEDGPendienteActivacion" => await AwaitingActivationAsync(call, CpeStates.AwaitingIssue, ct),
+            "consultarCPEEmitidasDestinoDGPendientesActivacion" => await AwaitingActivationAsync(call, CpeStates.AwaitingOrigin, ct),
             _ => null,
         };
     }
@@ -242,53 +242,64 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
         var target = move.To;
         if (move.Effect == CpeEffect.CloseContingency)
         {
-            target = request.Text("concepto")?.ToUpperInvariant() switch { "A" => "AC", "B" => "CO", "C" => "DE", _ => "" };
+            target = request.Text("concepto")?.ToUpperInvariant() switch { "A" => CpeStates.Active, "B" => CpeStates.Contingency, "C" => CpeStates.Deactivated, _ => "" };
             if (target == "") return call.Error(950, Fill(Codes.Required, "concepto"));
         }
         if (!move.From.Contains(cpe.State)) return call.Error(2034, Fill(Codes.InvalidTransition, cpe.State, target));
 
         var now = clock.Now;
         var stored = XElement.Parse(cpe.Request);
-        switch (move.Effect)
+        var (refusal, changed) = ApplyEffect(call, move.Effect, request, stored, cpe, now);
+        if (refusal is not null) return refusal;
+        cpe = changed;
+
+        cpe = cpe with { State = target, StateSince = now, Request = stored.ToString(SaveOptions.DisableFormatting) };
+        await SaveAsync(cpe, ct);
+        return call.Ok(Summary(call, cpe));
+    }
+
+    /// <summary>
+    /// What a transition does besides changing the state: its own checks (2220, 2121, 2225, 2130, 2232) and
+    /// the changes it makes to the stored request and to the counters of the CPE, or the refusal.
+    /// </summary>
+    private static (ContractAnswer? Refusal, StoredCpe Cpe) ApplyEffect(
+        ServiceCall call, CpeEffect effect, XElement request, XElement stored, StoredCpe cpe, DateTimeOffset now)
+    {
+        switch (effect)
         {
             case CpeEffect.Void:
                 var reason = request.Child("anulacionMotivo") is null ? (int?)null : request.Int("anulacionMotivo");
-                if (reason is not null and not (1 or 2 or 3)) return call.Error(2220, Codes.InvalidVoidReason);
-                if (now > cpe.StateSince + StateValidity) return call.Error(2121, Codes.VoidTooLate);
-                cpe = cpe with { VoidReason = reason, VoidNotes = request.Text("anulacionObservaciones") };
-                break;
+                if (reason is not null and not (1 or 2 or 3)) return (call.Error(2220, Codes.InvalidVoidReason), cpe);
+                if (now > cpe.StateSince + StateValidity) return (call.Error(2121, Codes.VoidTooLate), cpe);
+                return (null, cpe with { VoidReason = reason, VoidNotes = request.Text("anulacionObservaciones") });
             case CpeEffect.Reject:
-                if (request.Child("rechazoMotivo") is not null && request.Int("rechazoMotivo") is not (1 or 2 or 3))
-                    return call.Error(2225, Codes.InvalidRejectReason);
-                break;
+                return request.Child("rechazoMotivo") is not null && request.Int("rechazoMotivo") is not (1 or 2 or 3)
+                    ? (call.Error(2225, Codes.InvalidRejectReason), cpe)
+                    : (null, cpe);
             case CpeEffect.FinalConfirmation:
                 var load = stored.Child("datosCarga") ?? Add(stored, new XElement("datosCarga"));
                 foreach (var weight in new[] { "pesoBrutoDescarga", "pesoTaraDescarga" })
                     if (request.Child(weight) is { } value) Replace(load, new XElement(weight, value.Value.Trim()));
                 Replace(stored, request.Child("intervinientes"));
                 Replace(stored, request.Child("destinatario"));
-                break;
+                return (null, cpe);
             case CpeEffect.Detour:
-                if (cpe.Detours >= MaxDetours) return call.Error(2130, Codes.TooManyDetours);
+                if (cpe.Detours >= MaxDetours) return (call.Error(2130, Codes.TooManyDetours), cpe);
                 Replace(stored, request.Child("destino"));
                 Replace(stored, request.Child("transporte"));
-                cpe = cpe with { Detours = cpe.Detours + 1 };
-                break;
+                return (null, cpe with { Detours = cpe.Detours + 1 });
             case CpeEffect.NewDestination:
-                if (cpe.NewDestinations >= MaxNewDestinations) return call.Error(2232, Codes.TooManyNewDestinations);
+                if (cpe.NewDestinations >= MaxNewDestinations) return (call.Error(2232, Codes.TooManyNewDestinations), cpe);
                 Replace(stored, request.Child("destino"));
                 Replace(stored, request.Child("destinatario"));
                 Replace(stored, request.Child("transporte"));
-                cpe = cpe with { NewDestinations = cpe.NewDestinations + 1 };
-                break;
+                return (null, cpe with { NewDestinations = cpe.NewDestinations + 1 });
             case CpeEffect.ReturnToOrigin:
                 ReturnToOrigin(stored, request, cpe.Issuer);
-                break;
+                return (null, cpe);
+            default:
+                return (null, cpe);
         }
-
-        cpe = cpe with { State = target, StateSince = now, Request = stored.ToString(SaveOptions.DisableFormatting) };
-        await SaveAsync(cpe, ct);
-        return call.Ok(Summary(call, cpe));
     }
 
     /// <summary>
@@ -394,8 +405,8 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
             new XElement("fechaInicioEstado", GrainsFormat.DateTime(cpe.StateSince)),
             final ? null : new XElement("fechaVencimiento", GrainsFormat.DateTime(cpe.StateSince + StateValidity)),
             stored.Text("observaciones") is { Length: > 0 } notes ? new XElement("observaciones", notes) : null,
-            cpe.VoidReason is { } reason && cpe.State == "AN" ? new XElement("anulacionMotivo", reason) : null,
-            cpe.VoidNotes is { Length: > 0 } voidNotes && cpe.State == "AN" ? new XElement("anulacionObservaciones", voidNotes) : null);
+            cpe.VoidReason is { } reason && cpe.State == CpeStates.Voided ? new XElement("anulacionMotivo", reason) : null,
+            cpe.VoidNotes is { Length: > 0 } voidNotes && cpe.State == CpeStates.Voided ? new XElement("anulacionObservaciones", voidNotes) : null);
         if (answer.Child("cabecera") is { } template) template.ReplaceWith(header);
         else answer.AddFirst(header);
         fill.Keep(header);
@@ -470,7 +481,7 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
     private static void Replace(XElement stored, XElement? block)
     {
         if (block is null) return;
-        var copy = new XElement(block.Name.LocalName, block.Nodes().Select(n => n is XElement e ? Unqualified(e) : n));
+        var copy = new XElement(block.Name.LocalName, block.Nodes().Select(n => n is XElement e ? GrainsFormat.Unqualified(e) : n));
         if (stored.Child(block.Name.LocalName) is { } existing) existing.ReplaceWith(copy);
         else stored.Add(copy);
     }
@@ -481,19 +492,9 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
         return child;
     }
 
-    private static XElement Unqualified(XElement e) =>
-        new(e.Name.LocalName, e.Attributes().Where(a => !a.IsNamespaceDeclaration), e.Nodes().Select(n => n is XElement c ? Unqualified(c) : n));
-
     private static string Fill(string text, params object[] values)
     {
         for (var i = 0; i < values.Length; i++) text = text.Replace("{" + i + "}", ContractXml.Format(values[i]), StringComparison.Ordinal);
         return text;
     }
-}
-
-internal static class XmlChildren
-{
-    /// <summary>The direct child with that local name: the requests of the Java services leave their children unqualified.</summary>
-    public static XElement? Child(this XElement element, string name) =>
-        element.Elements().FirstOrDefault(e => e.Name.LocalName == name);
 }
