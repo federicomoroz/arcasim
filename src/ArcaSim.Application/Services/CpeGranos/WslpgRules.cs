@@ -375,10 +375,10 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
         {
             var fill = new AnswerFill(call.Sample(), call.Contract.Schemas);
             var authorization = Return(fill.Root).Child("autorizacion")!;
-            var subtotal = Round(basis.Decimal("cantidadTn") * basis.Decimal("precioOperacion"));
-            var vat = Round(subtotal * basis.Decimal("alicIvaOperacion") / 100);
-            var deductions = basis.Elements("deduccion").Sum(d => Round(d.Decimal("baseCalculo") * (1 + d.Decimal("alicuotaIVA") / 100)));
-            var perceptions = basis.Elements("percepcion").Sum(p => Round(p.Decimal("baseCalculo") * p.Decimal("alicuota") / 100));
+            var subtotal = GrainsFormat.Round(basis.Decimal("cantidadTn") * basis.Decimal("precioOperacion"));
+            var vat = GrainsFormat.Round(subtotal * basis.Decimal("alicIvaOperacion") / 100);
+            var deductions = basis.Elements("deduccion").Sum(d => GrainsFormat.Round(d.Decimal("baseCalculo") * (1 + d.Decimal("alicuotaIVA") / 100)));
+            var perceptions = basis.Elements("percepcion").Sum(p => GrainsFormat.Round(p.Decimal("baseCalculo") * p.Decimal("alicuota") / 100));
             Put(fill, authorization, "ptoEmision", pointOfIssue);
             Put(fill, authorization, "nroOrden", order);
             Put(fill, authorization, "fechaLiquidacion", GrainsFormat.Date(now));
@@ -600,10 +600,5 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
     }
 
     private static XElement Strip(XElement request) =>
-        new(request.Name.LocalName, request.Elements().Where(e => e.Name.LocalName != "auth").Select(Unqualified));
-
-    private static XElement Unqualified(XElement e) =>
-        new(e.Name.LocalName, e.Nodes().Select(n => n is XElement c ? Unqualified(c) : n));
-
-    private static decimal Round(decimal value) => Math.Round(value, 2, MidpointRounding.ToEven);
+        new(request.Name.LocalName, request.Elements().Where(e => e.Name.LocalName != "auth").Select(GrainsFormat.Unqualified));
 }

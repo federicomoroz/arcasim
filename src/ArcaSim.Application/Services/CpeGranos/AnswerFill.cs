@@ -106,7 +106,7 @@ internal sealed class AnswerFill
         string.Join('/', element.AncestorsAndSelf().Reverse().Select(e => e.Name.LocalName));
 }
 
-/// <summary>What wscpe and wslpg answers share: dates as ARCA writes them and the PDF they attach.</summary>
+/// <summary>What wscpe and wslpg share: dates and amounts as ARCA writes them, the PDF they attach and a request's elements without namespaces.</summary>
 internal static class GrainsFormat
 {
     /// <summary>xsd:dateTime the way the manuals print it, in Argentina's time and without offset: 2016-11-17T11:32:23.</summary>
@@ -118,8 +118,18 @@ internal static class GrainsFormat
 
     public static string Date(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
+    /// <summary>Round half even, as §4.2 of the wslpg manual asks; two decimals unless told otherwise.</summary>
+    public static decimal Round(decimal value, int decimals = 2) => Math.Round(value, decimals, MidpointRounding.ToEven);
+
     public static string Amount(decimal value, int decimals = 2) =>
-        Math.Round(value, decimals, MidpointRounding.ToEven).ToString("0." + new string('0', decimals), CultureInfo.InvariantCulture);
+        Round(value, decimals).ToString("0." + new string('0', decimals), CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// A copy of the element and what is in it without namespaces or attributes: the Java services bind
+    /// unqualified fields, and what is stored of a request should read the way they bind it.
+    /// </summary>
+    public static XElement Unqualified(XElement e) =>
+        new(e.Name.LocalName, e.Nodes().Select(n => n is XElement c ? Unqualified(c) : n));
 
     /// <summary>
     /// The document's PDF: ARCA sends the same file its web application

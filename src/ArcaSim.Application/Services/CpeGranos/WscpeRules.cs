@@ -470,7 +470,7 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
     private static void Replace(XElement stored, XElement? block)
     {
         if (block is null) return;
-        var copy = new XElement(block.Name.LocalName, block.Nodes().Select(n => n is XElement e ? Unqualified(e) : n));
+        var copy = new XElement(block.Name.LocalName, block.Nodes().Select(n => n is XElement e ? GrainsFormat.Unqualified(e) : n));
         if (stored.Child(block.Name.LocalName) is { } existing) existing.ReplaceWith(copy);
         else stored.Add(copy);
     }
@@ -480,9 +480,6 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
         parent.Add(child);
         return child;
     }
-
-    private static XElement Unqualified(XElement e) =>
-        new(e.Name.LocalName, e.Attributes().Where(a => !a.IsNamespaceDeclaration), e.Nodes().Select(n => n is XElement c ? Unqualified(c) : n));
 
     private static string Fill(string text, params object[] values)
     {
