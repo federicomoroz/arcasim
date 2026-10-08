@@ -128,6 +128,25 @@ public abstract class StoreContractTests
     }
 
     [DockerFact]
+    public async Task Vouchers_of_some_types_are_listed_newest_first_without_any_other_type()
+    {
+        var store = await CreateAsync();
+        await store.AddAsync(Stored(6, 1, 1, TestTime.Reference));
+        await store.AddAsync(Stored(201, 1, 1, TestTime.Reference.AddMinutes(1)));
+        await store.AddAsync(Stored(203, 1, 1, TestTime.Reference.AddMinutes(3)));
+        await store.AddAsync(Stored(201, 2, 2, TestTime.Reference.AddMinutes(2)));
+        await store.AddAsync(Stored(6, 2, 2, TestTime.Reference.AddMinutes(4)));
+
+        var listed = await store.ListOfTypesAsync([201, 203]);
+
+        Assert.Equal([(203, 1L), (201, 2L), (201, 1L)], listed.Select(v => (v.VoucherType, v.From)));
+    }
+
+    private static StoredVoucher Stored(int type, long from, long to, DateTimeOffset processed) => new(
+        20111111112, 1, type, from, to, new DateOnly(2026, 10, 1), EmissionType.Cae, "12345678901234", new DateOnly(2026, 10, 11),
+        processed, new FECAEDetRequest { CbteDesde = from, CbteHasta = to }, []);
+
+    [DockerFact]
     public async Task Exchange_rates_answer_with_the_last_day_on_or_before_the_one_asked()
     {
         var store = await CreateAsync();

@@ -104,6 +104,12 @@ public sealed partial class InMemoryStore :
             .Take(limit)
             .ToList());
 
+    public Task<IReadOnlyList<StoredVoucher>> ListOfTypesAsync(IReadOnlyCollection<int> voucherTypes, CancellationToken ct = default) =>
+        Read<IReadOnlyList<StoredVoucher>>(() => _vouchers
+            .Where(v => voucherTypes.Contains(v.VoucherType))
+            .OrderByDescending(v => v.ProcessedAt)
+            .ToList());
+
     public Task<bool> AnyWithCaeaAsync(long cuit, string caea, int pointOfSale, CancellationToken ct = default) =>
         Read(() => _vouchers.Any(v =>
             v.Cuit == cuit && v.PointOfSale == pointOfSale && v.EmissionType == EmissionType.Caea && v.AuthorizationCode == caea));

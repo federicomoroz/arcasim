@@ -182,6 +182,9 @@ public static class FceTypes
 
     public static bool IsFce(int type) => IsInvoice(type) || IsDebit(type) || IsCredit(type);
 
+    /// <summary>Every FCE type: the invoices, debit notes and credit notes of classes A, B and C.</summary>
+    public static readonly IReadOnlyList<int> All = [201, 202, 203, 206, 207, 208, 211, 212, 213];
+
     /// <summary>Remitos a FCE invoice may reference in CbtesAsoc (wsfev1.md §4.4): what obtenerRemitos returns.</summary>
     public static bool IsDeliveryNote(int type) => type is 91 or 990 or 991 or 993 or 994 or 995;
 }

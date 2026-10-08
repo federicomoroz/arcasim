@@ -173,9 +173,8 @@ public sealed class FceLedger(IDocumentStore store, IVoucherStore wsfe, ITaxpaye
     private async Task RegisterNewAsync(FceBook book, HashSet<long> changed, CancellationToken ct)
     {
         var arrivals = new List<Arrival>();
-        foreach (var stored in await wsfe.ListAsync(null, int.MaxValue, ct))
-            if (FceTypes.IsFce(stored.VoucherType)
-                && !book.Vouchers.ContainsKey(new FceId(stored.Cuit, stored.VoucherType, stored.PointOfSale, stored.From).Key))
+        foreach (var stored in await wsfe.ListOfTypesAsync(FceTypes.All, ct))
+            if (!book.Vouchers.ContainsKey(new FceId(stored.Cuit, stored.VoucherType, stored.PointOfSale, stored.From).Key))
                 arrivals.Add(new Arrival(FromWsfe(stored), stored.ProcessedAt));
 
         // Other services record no CbtesAsoc, so only their invoices can open an account.

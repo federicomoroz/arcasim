@@ -192,6 +192,14 @@ public sealed partial class PostgresStore(NpgsqlDataSource db) :
             $"SELECT {VoucherColumns} FROM vouchers WHERE $1::bigint IS NULL OR cuit = $1 ORDER BY processed_at DESC LIMIT $2",
             [cuit is null ? DBNull.Value : cuit.Value, limit], ReadVoucher, ct);
 
+    /// <summary>
+    /// Filtered here and not by the caller: the FCE ledger asks on every request, and reading every voucher to keep
+    /// the few of its types meant reading and deserializing the whole table each time.
+    /// </summary>
+    public Task<IReadOnlyList<StoredVoucher>> ListOfTypesAsync(IReadOnlyCollection<int> voucherTypes, CancellationToken ct = default) =>
+        ListAsync($"SELECT {VoucherColumns} FROM vouchers WHERE voucher_type = ANY($1) ORDER BY processed_at DESC",
+            [voucherTypes.ToArray()], ReadVoucher, ct);
+
     public async Task<bool> AnyWithCaeaAsync(long cuit, string caea, int pointOfSale, CancellationToken ct = default) =>
         (await ListAsync(
             "SELECT 1 FROM vouchers WHERE cuit = $1 AND point_of_sale = $2 AND emission_type = 'Caea' AND authorization_code = $3 LIMIT 1",
