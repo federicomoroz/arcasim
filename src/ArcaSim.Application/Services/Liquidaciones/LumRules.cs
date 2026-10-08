@@ -21,7 +21,10 @@ namespace ArcaSim.Application.Services.Liquidaciones;
 /// authorized number is 2074; code 41 is a commercial bonus, 50 a commercial
 /// debit and every other code a quality bonus, since the sign of each concept
 /// comes from a table the manual does not print; fat and protein percentages
-/// are over the net liters; VAT conditions print in ArcaSim's wording.
+/// are over the net liters; VAT conditions print in ArcaSim's wording; 2103
+/// ("no se encuentra activa o es inexistente") is sent for a tambero the registry
+/// holds as inactive, and one it does not hold at all is accepted, as the parties
+/// of the other liquidation services are.
 /// The parameter tables other than points of sale keep the contract's answer.
 /// </summary>
 public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers, IAuthorizationCodes codes, SequenceLocks locks, IClock clock)
