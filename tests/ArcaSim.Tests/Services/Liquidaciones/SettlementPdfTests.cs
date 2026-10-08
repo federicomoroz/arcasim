@@ -23,5 +23,14 @@ public class SettlementPdfTests
             pdf);
     }
 
+    [Fact]
+    public void A_single_line_page_escapes_what_a_PDF_string_needs_escaped_and_ends_without_a_line_break()
+    {
+        var pdf = Decode(SimplePdf.Line("COE (3301) \\ ñ"));
+
+        Assert.Contains("BT /F1 12 Tf 72 770 Td (COE \\(3301\\) \\\\ ?) Tj ET", pdf);
+        Assert.EndsWith("%%EOF", pdf);
+    }
+
     private static string Decode(string base64) => Encoding.ASCII.GetString(Convert.FromBase64String(base64));
 }

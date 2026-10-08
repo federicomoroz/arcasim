@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
@@ -136,29 +135,5 @@ internal static class GrainsFormat
     /// prints; ArcaSim sends a one-page PDF naming the document, enough for a
     /// client that stores or shows it.
     /// </summary>
-    public static string Pdf(string title)
-    {
-        var text = title.Replace("(", "", StringComparison.Ordinal).Replace(")", "", StringComparison.Ordinal);
-        var stream = $"BT /F1 12 Tf 72 770 Td ({text}) Tj ET";
-        var objects = new[]
-        {
-            "<< /Type /Catalog /Pages 2 0 R >>",
-            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
-            $"<< /Length {stream.Length} >>\nstream\n{stream}\nendstream",
-            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-        };
-        var pdf = new StringBuilder("%PDF-1.4\n");
-        var offsets = new List<int>();
-        for (var i = 0; i < objects.Length; i++)
-        {
-            offsets.Add(pdf.Length);
-            pdf.Append(CultureInfo.InvariantCulture, $"{i + 1} 0 obj\n{objects[i]}\nendobj\n");
-        }
-        var xref = pdf.Length;
-        pdf.Append(CultureInfo.InvariantCulture, $"xref\n0 {objects.Length + 1}\n0000000000 65535 f \n");
-        foreach (var offset in offsets) pdf.Append(CultureInfo.InvariantCulture, $"{offset:D10} 00000 n \n");
-        pdf.Append(CultureInfo.InvariantCulture, $"trailer\n<< /Size {objects.Length + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF");
-        return Convert.ToBase64String(Encoding.ASCII.GetBytes(pdf.ToString()));
-    }
+    public static string Pdf(string title) => Liquidaciones.SimplePdf.Line(title);
 }
