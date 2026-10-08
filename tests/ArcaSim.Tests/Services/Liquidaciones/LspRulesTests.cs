@@ -144,6 +144,7 @@ public class LspRulesTests
     public async Task An_adjustment_of_a_stored_voucher_without_a_field_it_overwrites_fails_instead_of_answering_without_it(string block, string field)
     {
         await using var lsp = await StartAsync();
+        lsp.Sim.ExpectLoggedErrors();
         await lsp.CallAsync("generarLiquidacion", Purchase(1));
         await lsp.EditStoredAsync("wslsp", Issuer, 1, 183, 1, detail => detail.Element(block)!.Element(field)!.Remove());
         const string price = "<itemDetalleAjusteLiquidacion><nroItemAjustar>1</nroItemAjustar><ajusteMonetario><precioUnitario>100</precioUnitario></ajusteMonetario></itemDetalleAjusteLiquidacion>";
@@ -151,6 +152,8 @@ public class LspRulesTests
         var (status, body) = await lsp.PostAsync("generarAjuste", Adjustment("D", 2, 1, price));
 
         Assert.True(status == 500, body);
+        var failure = Assert.IsType<InvalidOperationException>(Assert.Single(lsp.Sim.LoggedErrors).Exception);
+        Assert.Equal($"The stored voucher has no <{field}> to set.", failure.Message);
     }
 
     [Fact]

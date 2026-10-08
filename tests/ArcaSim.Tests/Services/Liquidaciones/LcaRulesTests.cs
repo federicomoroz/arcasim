@@ -94,12 +94,15 @@ public class LcaRulesTests
     public async Task A_physical_adjustment_of_a_stored_voucher_without_its_date_fails_instead_of_answering_without_it()
     {
         await using var lca = await StartAsync();
+        lca.Sim.ExpectLoggedErrors();
         await lca.CallAsync("generarLiquidacion", Liquidation(1));
         await lca.EditStoredAsync("wslca", Issuer, 3000, 171, 1, detail => detail.Element("datosGenerales")!.Element("fechaComprobante")!.Remove());
 
         var (status, body) = await lca.PostAsync("generarAjusteFisico", Physical(2, 1));
 
         Assert.True(status == 500, body);
+        var failure = Assert.IsType<InvalidOperationException>(Assert.Single(lca.Sim.LoggedErrors).Exception);
+        Assert.Equal("The stored voucher has no <fechaComprobante> to set.", failure.Message);
     }
 
     [Fact]
