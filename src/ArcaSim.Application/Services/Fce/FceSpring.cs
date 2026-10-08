@@ -9,13 +9,29 @@ namespace ArcaSim.Application.Services.Fce;
 /// (wsfecredagente.md "Validaciones y errores"): every answer is a single
 /// resultado; format errors go alone in erroresFormato (codigoDescripcionString,
 /// code as text) and stop the business checks; business errors go in errores.
-/// Page size, batch size and the absence of a maximum date range are ArcaSim's
-/// choices: the manuals say only that ARCA tunes them internally.
+/// Batch size and the absence of a maximum date range are ArcaSim's choices:
+/// the manuals say only that ARCA tunes them internally.
 /// </summary>
 public static class FceSpring
 {
-    public const int PageSize = 100;
     public const int BatchSize = 100;
+
+    /// <summary>
+    /// How both services answer an operation: one they do not implement keeps the
+    /// contract's answer (null); a caller that is not registered in ArcaSim gets 4009
+    /// in errores, in the shape of that operation's refusal; and the ledger is held
+    /// while the operation runs, as the three FCE services share it.
+    /// </summary>
+    public static async Task<ContractAnswer?> RunAsync(
+        ServiceCall call, FceLedger ledger, IReadOnlyDictionary<int, string> texts,
+        Func<ServiceCall, CancellationToken, Task<XElement>>? operation,
+        Func<ServiceCall, XElement?, XElement?, XElement> refused, CancellationToken ct)
+    {
+        if (operation is null) return null;
+        if (!await ledger.IsRegisteredAsync(call.Cuit, ct)) return call.Ok(refused(call, Errors(texts, [4009]), null));
+        using var _ = await ledger.LockAsync(ct);
+        return call.Ok(await operation(call, ct));
+    }
 
     public static XElement Result(XName output, params object?[] content) => new(output, new XElement("resultado", content));
 

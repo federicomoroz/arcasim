@@ -54,6 +54,14 @@ public sealed class FceWorld : IAsyncDisposable
         return world;
     }
 
+    /// <summary>A CUIT with a ticket for the three services but no record in ArcaSim's padrón.</summary>
+    public async Task<long> AddStrangerAsync(long cuit)
+    {
+        X509Certificate2 certificate = await Sim.IssueCertificateAsync(cuit, "stranger", Services);
+        _wsaa[cuit] = Sim.Wsaa(cuit, certificate);
+        return cuit;
+    }
+
     public void Advance(TimeSpan by) => Sim.Clock.Advance(by);
 
     /// <summary>Moves to the day the buyer may first operate on today's vouchers (1106): 00:00 two days later.</summary>

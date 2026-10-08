@@ -42,7 +42,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
 
     public string Service => "wsfecredagente";
 
-    public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct)
+    public Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct)
     {
         Func<ServiceCall, CancellationToken, Task<XElement>>? operation = call.Name switch
         {
@@ -54,11 +54,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
             "confirmarFacturasInformadas" => ConfirmAsync,
             _ => null,
         };
-        if (operation is null) return null;
-
-        if (!await _ledger.IsRegisteredAsync(call.Cuit, ct)) return call.Ok(Refused(call, Errors(Texts, [4009]), null));
-        using var _ = await _ledger.LockAsync(ct);
-        return call.Ok(await operation(call, ct));
+        return RunAsync(call, _ledger, Texts, operation, Refused, ct);
     }
 
     /// <summary>The operation's answer with only errors: queries keep their empty list, batches their empty resultados.</summary>
@@ -168,11 +164,11 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
             .Where(a => holder is null || a.Holder == holder)
             .Where(a => (range.Kind == "Baja" ? a.ClosedOn : a.OpenedOn) is { } day && day >= range.From && day <= range.To)
             .ToList();
-        var items = all.Skip((page - 1) * PageSize).Take(PageSize);
+        var (items, more) = FceXml.Page(all, page);
         return Result(call.Operation.Output,
             new XElement("cuentasAgente", items.Select(a => Account("cuenta", a.Holder, a.AccountId, a.Denomination))),
             new XElement("nroPagina", page),
-            new XElement("hayMas", FceXml.YesNo(all.Count > page * PageSize)));
+            new XElement("hayMas", FceXml.YesNo(more)));
     }
 
     // ---- Reported invoices -----------------------------------------------------------
@@ -202,7 +198,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
             .Where(a => InRange(MomentOf(a.Agent!, range.Kind), range))
             .OrderBy(a => a.Agent!.AvailableAt).ThenBy(a => a.Code)
             .ToList();
-        var items = all.Skip((page - 1) * PageSize).Take(PageSize).ToList();
+        var (items, more) = FceXml.Page(all, page);
 
         foreach (var account in items.Where(a => a.Agent!.State == "D"))
         {
@@ -233,7 +229,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
         return Result(call.Operation.Output,
             new XElement("facturasInformadas", rows),
             new XElement("nroPagina", page),
-            new XElement("hayMas", FceXml.YesNo(all.Count > page * PageSize)));
+            new XElement("hayMas", FceXml.YesNo(more)));
     }
 
     private sealed record Confirmation(FceId? Id, bool Accepts, short? Reason);

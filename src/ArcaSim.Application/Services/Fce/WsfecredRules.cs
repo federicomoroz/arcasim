@@ -51,8 +51,6 @@ namespace ArcaSim.Application.Services.Fce;
 public sealed class WsfecredRules(
     FceLedger ledger, ITaxpayerRepository taxpayers, IExchangeRates rates) : IServiceBehavior
 {
-    public const int PageSize = 100;
-
     private readonly FceLedger _ledger = ledger;
 
     public string Service => "wsfecred";
@@ -284,9 +282,6 @@ public sealed class WsfecredRules(
         new XElement("opcionTransferencia", account.Option));
 
     // ---- Queries ---------------------------------------------------------------------
-
-    private static (IReadOnlyList<T> Items, bool More) Page<T>(IReadOnlyList<T> all, int page) =>
-        (all.Skip((page - 1) * PageSize).Take(PageSize).ToList(), all.Count > page * PageSize);
 
     private static XElement NoResults(string block) => Codes(block, [(32767L, FceTexts.Fecred[32767])])!;
 
