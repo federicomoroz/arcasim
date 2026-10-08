@@ -13,6 +13,12 @@ namespace ArcaSim.Application.Services.CpeGranos;
 /// </summary>
 internal sealed class AnswerFill
 {
+    /// <summary>
+    /// How many copies, besides the first, Merge makes of a list the schema leaves unbounded: an answer holds
+    /// 51 items of it at most, and the rest of the request's are left out.
+    /// </summary>
+    private const int MaxExtraCopies = 50;
+
     private readonly HashSet<XElement> _filled = [];
     private readonly Dictionary<string, XmlSchemaElement?> _declarations = new(StringComparer.Ordinal);
 
@@ -70,7 +76,7 @@ internal sealed class AnswerFill
             Merge(child, matches[0]);
             var max = Declaration(child)?.MaxOccurs ?? 1;
             var anchor = child;
-            foreach (var more in matches.Skip(1).Take((int)Math.Min(max - 1, 50)))
+            foreach (var more in matches.Skip(1).Take((int)Math.Min(max - 1, MaxExtraCopies)))
             {
                 var copy = new XElement(template);
                 anchor.AddAfterSelf(copy);

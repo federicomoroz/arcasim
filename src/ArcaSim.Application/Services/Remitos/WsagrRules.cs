@@ -183,6 +183,9 @@ public sealed partial class WsagrRules(IDocumentStore store, IClock clock, Padro
 
     // ---- Checks ------------------------------------------------------------------------
 
+    /// <summary>From this day of the month a consult may name next month's period (107): the 16th.</summary>
+    private const int NextPeriodFromDay = 16;
+
     /// <summary>113 for a period not written MM/AAAA; with the window, 107 unless it is this month, or next month from the 16th.</summary>
     private (int, string)? CheckPeriod(string? period, bool window)
     {
@@ -192,7 +195,7 @@ public sealed partial class WsagrRules(IDocumentStore store, IClock clock, Padro
         // There is no year 0000: it is read as the first year, which is no current month either (107).
         var asked = new DateOnly(Math.Max(1, int.Parse(period[3..], CultureInfo.InvariantCulture)), int.Parse(period[..2], CultureInfo.InvariantCulture), 1);
         var current = new DateOnly(today.Year, today.Month, 1);
-        return asked == current || (asked == current.AddMonths(1) && today.Day > 15)
+        return asked == current || (asked == current.AddMonths(1) && today.Day >= NextPeriodFromDay)
             ? null
             : (107, "Solo se puede consultar el mes corriente, o el mes siguiente a partir del día 16");
     }

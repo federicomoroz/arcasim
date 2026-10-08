@@ -38,6 +38,9 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
         "pesoNetoKg", "pesoNetoRecKg", "pesoNetoPerKg", "pesoNetoRedKg", "pesoNetoReiKg",
     ];
 
+    /// <summary>The weights a remito records after it is sent (pesoNetoRecKg on), which a redirected item starts without.</summary>
+    private static readonly string[] Outcomes = GoodsOrder[(Array.IndexOf(GoodsOrder, "pesoNetoKg") + 1)..];
+
     private static readonly RemitoListNames ListNames = new("rangoFecha", "ptoEmision", "infoRemito", "tipoCmp", "idReqCliente");
 
     private static readonly RemitoProblem NotFound = new(3022, "Remito no encontrado");
@@ -244,7 +247,7 @@ public sealed class WsremharinaRules(IDocumentStore store, SequenceLocks locks, 
             .Select(w =>
             {
                 var item = new XElement(w.Item!);
-                foreach (var name in GoodsOrder.Skip(9)) item.Element(name)?.Remove();
+                foreach (var name in Outcomes) item.Element(name)?.Remove();
                 RemitoXml.Put(item, "pesoNetoKg", RemitoXml.Number(w.Weight), GoodsOrder);
                 return item;
             }).ToList();

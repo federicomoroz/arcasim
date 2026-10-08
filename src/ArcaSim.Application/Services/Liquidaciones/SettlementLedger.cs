@@ -71,6 +71,9 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
 {
     public const int CaeDays = 10;
 
+    /// <summary>The document type of a CUIT in the invoicing tables (80): the receiver of these vouchers is the other party's CUIT.</summary>
+    private const int CuitDocumentType = 80;
+
     /// <summary>
     /// The text wslum (2074), wslca (1500) and wslsp (1009) give for a number out of sequence:
     /// the one sentence of their manuals under each service's own code.
@@ -141,7 +144,7 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
         await store.PutAsync(settlement.Service, $"ultimo/{settlement.Cuit}/{settlement.PointOfSale:D5}/{settlement.VoucherType:D3}",
             new LastSettlement(settlement.Number, settlement.Date), ct);
         await store.PutAsync(new AuthorizedVoucher(settlement.Service, settlement.Cuit, settlement.PointOfSale, settlement.VoucherType,
-            settlement.Number, settlement.Date, settlement.Total, 80, settlement.ReceiverCuit, "CAE",
+            settlement.Number, settlement.Date, settlement.Total, CuitDocumentType, settlement.ReceiverCuit, "CAE",
             settlement.Cae.ToString(CultureInfo.InvariantCulture), settlement.CaeExpiry), ct);
     }
 
