@@ -235,10 +235,10 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var issued = original.DetailXml();
         var operation = (int)issued.ChildOrEmpty("cabecera").Number("codOperacion");
         var adjustedIssuer = Copy(issued.ChildOrEmpty("emisor"))!;
-        adjustedIssuer.ChildOrEmpty("puntoVenta").Value = pointOfSale.ToString(CultureInfo.InvariantCulture);
-        adjustedIssuer.ChildOrEmpty("nroComprobante").Value = number.ToString(CultureInfo.InvariantCulture);
+        adjustedIssuer.SetChild("puntoVenta", pointOfSale.ToString(CultureInfo.InvariantCulture));
+        adjustedIssuer.SetChild("nroComprobante", number.ToString(CultureInfo.InvariantCulture));
         var data = Copy(issued.ChildOrEmpty("datosLiquidacion"))!;
-        data.ChildOrEmpty("fechaComprobante").Value = Iso(date);
+        data.SetChild("fechaComprobante", Iso(date));
         var detail = avian
             ? new XElement("respuesta",
                 Header(operation, cae, today), adjustedIssuer, Copy(issued.Child("receptor")), data,

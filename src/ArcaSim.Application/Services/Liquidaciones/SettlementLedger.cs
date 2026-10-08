@@ -202,7 +202,7 @@ public static class SettlementXml
 {
     /// <summary>
     /// The child by local name, or an empty element when there is none, so a chain of lookups never fails.
-    /// The empty one belongs to nothing: writing into it is lost.
+    /// The empty one belongs to nothing: writing into it is lost, which <see cref="SetChild"/> is for.
     /// </summary>
     public static XElement ChildOrEmpty(this XElement element, string name) => element.Child(name) ?? new XElement(name);
 
@@ -214,6 +214,13 @@ public static class SettlementXml
 
     /// <summary>The child's amount, or 0 when it is missing or does not read.</summary>
     public static decimal Amount(this XElement element, string name) => element.ChildDecimal(name) ?? 0;
+
+    /// <summary>
+    /// Writes the text into the child a block already has. A block of an answer built from a stored voucher
+    /// always has it; one that does not is a corrupt voucher, and the answer fails instead of going out without the value.
+    /// </summary>
+    public static void SetChild(this XElement block, string name, string value) =>
+        (block.Child(name) ?? throw new InvalidOperationException($"The stored voucher has no <{name}> to set.")).Value = value;
 
     /// <summary>An xsd:date, with or without the zone some stacks add (2019-05-06-03:00).</summary>
     public static DateOnly? Day(this XElement element, string name)

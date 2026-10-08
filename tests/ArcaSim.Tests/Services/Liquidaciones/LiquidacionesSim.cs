@@ -1,7 +1,9 @@
 using System.Xml.Linq;
 using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
+using ArcaSim.Application.Services.Liquidaciones;
 using ArcaSim.Domain;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ArcaSim.Tests.Services.Liquidaciones;
 
@@ -101,6 +103,17 @@ internal sealed class LiquidacionesSim : IAsyncDisposable
             if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
         });
         Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems) + Environment.NewLine + answer);
+    }
+
+    /// <summary>Edits the detail of a voucher the service stored, as if the store held one built without a field.</summary>
+    public async Task EditStoredAsync(string service, long cuit, int pointOfSale, int voucherType, long number, Action<XElement> edit)
+    {
+        var store = Sim.Services.GetRequiredService<IDocumentStore>();
+        var key = $"liq/{SettlementLedger.Key(cuit, pointOfSale, voucherType, number)}";
+        var stored = (await store.GetAsync<Settlement>(service, key))!;
+        var detail = stored.DetailXml();
+        edit(detail);
+        await store.PutAsync(service, key, stored with { Detail = detail.ToString(SaveOptions.DisableFormatting) });
     }
 
     public static string Day(int offset = 0) => Now.AddDays(offset).ToString("yyyy-MM-dd");

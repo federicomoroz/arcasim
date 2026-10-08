@@ -190,7 +190,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var cae = _ledger.NewCae();
         var issued = original!.DetailXml();
         var general = Copy(issued.ChildOrEmpty("datosGenerales"))!;
-        general.ChildOrEmpty("fechaComprobante").Value = Stamp(date);
+        general.SetChild("fechaComprobante", Stamp(date));
         var detail = new XElement("respuesta",
             Authorization(cae),
             new XElement("ajuste", new XElement("tipoAjuste", 1), new XElement("esDevolucionMercaderia", returned ? "true" : "false")),
