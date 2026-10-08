@@ -1,5 +1,5 @@
 using System.Text;
-using ArcaSim.Application.Services.Liquidaciones;
+using ArcaSim.Application.Contracts;
 
 namespace ArcaSim.Tests.Services.Liquidaciones;
 

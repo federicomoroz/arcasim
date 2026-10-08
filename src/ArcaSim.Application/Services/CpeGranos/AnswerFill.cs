@@ -139,5 +139,5 @@ internal static class GrainsFormat
     /// prints; ArcaSim sends a one-page PDF naming the document, enough for a
     /// client that stores or shows it.
     /// </summary>
-    public static string Pdf(string title) => Liquidaciones.SimplePdf.Line(title);
+    public static string Pdf(string title) => SimplePdf.Line(title);
 }

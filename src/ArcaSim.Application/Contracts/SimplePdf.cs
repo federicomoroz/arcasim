@@ -1,13 +1,14 @@
 using System.Globalization;
 using System.Text;
 
-namespace ArcaSim.Application.Services.Liquidaciones;
+namespace ArcaSim.Application.Contracts;
 
 /// <summary>
 /// The one-page PDF the services attach to their answers (the manuals: "el mismo archivo que se
 /// imprime por la aplicación web"). ArcaSim's is a page of text, enough for a client that stores or shows it.
 /// The two layouts keep the bytes their services have always sent, which differ in the order of the page
-/// dictionary's keys and in whether the file ends with a line break.
+/// dictionary's keys and in whether the file ends with a line break. A service with a page of its own
+/// (wscta's certificate) writes its objects and has <see cref="Build"/> make the file.
 /// </summary>
 public static class SimplePdf
 {
@@ -29,28 +30,34 @@ public static class SimplePdf
     /// <summary>A page with one line of text, in 12 points (wscpe and wslpg).</summary>
     public static string Line(string text) => Assemble(ContentsFirstPage, $"BT /F1 12 Tf 72 770 Td ({Escape(text)}) Tj ET", "%%EOF");
 
-    private static string Assemble(string page, string content, string end)
+    private static string Assemble(string page, string content, string end) => Build(
+    [
+        "<< /Type /Catalog /Pages 2 0 R >>",
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        page,
+        $"<< /Length {content.Length} >>\nstream\n{content}\nendstream",
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ], Encoding.ASCII, end);
+
+    /// <summary>
+    /// A PDF 1.4 file of these objects, numbered from 1 in order (the first is the catalog), with its
+    /// xref table and trailer, in base64 as the services send it. The encoding writes one byte per
+    /// character (ASCII or Latin-1), so lengths in characters are the byte offsets the xref needs.
+    /// </summary>
+    public static string Build(IReadOnlyList<string> objects, Encoding encoding, string end = "%%EOF\n")
     {
-        string[] objects =
-        [
-            "<< /Type /Catalog /Pages 2 0 R >>",
-            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-            page,
-            $"<< /Length {content.Length} >>\nstream\n{content}\nendstream",
-            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-        ];
         var pdf = new StringBuilder("%PDF-1.4\n");
         var offsets = new List<int>();
-        for (var i = 0; i < objects.Length; i++)
+        for (var i = 0; i < objects.Count; i++)
         {
             offsets.Add(pdf.Length);
             pdf.Append(i + 1).Append(" 0 obj\n").Append(objects[i]).Append("\nendobj\n");
         }
         var xref = pdf.Length;
-        pdf.Append("xref\n0 ").Append(objects.Length + 1).Append("\n0000000000 65535 f \n");
+        pdf.Append("xref\n0 ").Append(objects.Count + 1).Append("\n0000000000 65535 f \n");
         foreach (var offset in offsets) pdf.Append(offset.ToString("D10", CultureInfo.InvariantCulture)).Append(" 00000 n \n");
-        pdf.Append("trailer\n<< /Size ").Append(objects.Length + 1).Append(" /Root 1 0 R >>\nstartxref\n").Append(xref).Append('\n').Append(end);
-        return Convert.ToBase64String(Encoding.ASCII.GetBytes(pdf.ToString()));
+        pdf.Append("trailer\n<< /Size ").Append(objects.Count + 1).Append(" /Root 1 0 R >>\nstartxref\n").Append(xref).Append('\n').Append(end);
+        return Convert.ToBase64String(encoding.GetBytes(pdf.ToString()));
     }
 
     /// <summary>What a PDF string can hold: the characters past the ASCII are lost, and the backslash and the parentheses are escaped.</summary>
