@@ -237,7 +237,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
     private async Task<XElement> ConfirmAsync(ServiceCall call, CancellationToken ct)
     {
         var items = call.Request.Child("facturas").Children("factura")
-            .Select(f => new Confirmation(IdOf(f.Child("idFactura")), f.Value("aceptada") == "S", (short?)f.ChildLong("codRechazo")))
+            .Select(f => new Confirmation(IdOf(f.Child("idFactura")), f.Value("aceptada") == "S", f.ChildShort("codRechazo")))
             .ToList();
         var format = new List<int>();
         if (items.Count > BatchSize) format.Add(2009);

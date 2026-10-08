@@ -18,7 +18,7 @@ public sealed partial class MtxcaRules
     {
         var request = call.Request.Child("solicitudCAEA") ?? call.Request;
         var period = request.Int("periodo");
-        var order = (short)request.Int("orden");
+        var order = request.Int("orden") is >= short.MinValue and <= short.MaxValue and var asked ? (short)asked : short.MinValue;
         var today = clock.Today();
         var issuer = await IssuerAsync(call.Cuit, 0, PointOfSaleKind.WebServiceCaea, ct);
 

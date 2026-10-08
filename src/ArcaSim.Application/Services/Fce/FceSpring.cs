@@ -47,21 +47,29 @@ public static class FceSpring
         new XElement("ptoVta", id.PointOfSale),
         new XElement("nroCmp", id.Number));
 
+    /// <summary>
+    /// The voucher an idFactura names; null when a part is missing or does not read, and also when the
+    /// type or the point of sale is a number an int cannot hold (ChildInt's int.MinValue): the id is
+    /// echoed back in the answer, where that marker would not fit the schema, so it is unreadable.
+    /// </summary>
     public static FceId? IdOf(XElement? element) =>
-        element is not null && element.ChildLong("cuitEmisor") is { } cuit && element.ChildLong("tipoCmp") is { } type
-        && element.ChildLong("ptoVta") is { } point && element.ChildLong("nroCmp") is { } number
-            ? new FceId(cuit, (int)type, (int)point, number)
+        element is not null && element.ChildLong("cuitEmisor") is { } cuit && element.ChildInt("tipoCmp") is { } type
+        && element.ChildInt("ptoVta") is { } point && type != int.MinValue && point != int.MinValue && element.ChildLong("nroCmp") is { } number
+            ? new FceId(cuit, type, point, number)
             : null;
 
     /// <summary>A CUIT the request may leave out; when present it must carry its check digit (2002).</summary>
     public static bool BadCuit(long? cuit) => cuit is { } value && !Cuits.IsValid(value);
 
-    /// <summary>The page and date range checks of the queries: 2004 for a page below 1, 2003 for desde after hasta.</summary>
+    /// <summary>
+    /// The page and date range checks of the queries: 2004 for a page below 1 or one the
+    /// schema's xsd:short cannot hold (the answer repeats it), 2003 for desde after hasta.
+    /// </summary>
     public static List<int> CheckQuery(XElement request, out int page, out (string? Kind, DateOnly? From, DateOnly? To) range)
     {
         var errors = new List<int>();
-        page = (int)(request.ChildLong("nroPagina") ?? 0);
-        if (page <= 0) errors.Add(2004);
+        page = request.ChildInt("nroPagina") ?? 0;
+        if (page is < 1 or > short.MaxValue) errors.Add(2004);
         var filter = request.Child("filtroFechas");
         range = (filter?.Value("tipo"), filter?.DateOf("desde"), filter?.DateOf("hasta"));
         if (range.From is null || range.To is null || range.From > range.To) errors.Add(2003);

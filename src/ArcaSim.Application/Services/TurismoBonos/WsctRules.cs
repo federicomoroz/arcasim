@@ -205,8 +205,8 @@ public sealed class WsctRules(
     private async Task<ContractAnswer> LastAsync(ServiceCall call, CancellationToken ct)
     {
         if (FormatErrors(call.Request) is { } format) return Return(call, format);
-        var type = (int)(call.Request.ChildLong("codigoTipoComprobante") ?? 0);
-        var point = (int)(call.Request.ChildLong("numeroPuntoVenta") ?? 0);
+        var type = call.Request.ChildInt("codigoTipoComprobante") ?? 0;
+        var point = call.Request.ChildInt("numeroPuntoVenta") ?? 0;
         if (VoucherTypes.All(t => t.Code != type)) return Return(call, Errors([WsctCodes.Note(1000)]));
         if (!await PointOfSaleUsableAsync(call.Cuit, point, ct)) return Return(call, Errors([WsctCodes.Note(1001)]));
         if (await _book.LastAsync(call.Cuit, point, type, ct) is not { } last) return Return(call, Errors([WsctCodes.Note(1002)]));
@@ -216,8 +216,8 @@ public sealed class WsctRules(
     private async Task<ContractAnswer> ConsultAsync(ServiceCall call, CancellationToken ct)
     {
         if (FormatErrors(call.Request) is { } format) return Return(call, format);
-        var type = (int)(call.Request.ChildLong("codigoTipoComprobante") ?? 0);
-        var point = (int)(call.Request.ChildLong("numeroPuntoVenta") ?? 0);
+        var type = call.Request.ChildInt("codigoTipoComprobante") ?? 0;
+        var point = call.Request.ChildInt("numeroPuntoVenta") ?? 0;
         if (VoucherTypes.All(t => t.Code != type)) return Return(call, Errors([WsctCodes.Note(2000)]));
         if (!await PointOfSaleUsableAsync(call.Cuit, point, ct)) return Return(call, Errors([WsctCodes.Note(2001)]));
         var found = await _book.FindAsync(call.Cuit, point, type, call.Request.ChildLong("numeroComprobante") ?? 0, ct);
@@ -275,8 +275,8 @@ public sealed class WsctRules(
         var request = call.Request.Child("comprobanteRequest") ?? new XElement("comprobanteRequest");
         if (FormatErrors(request) is { } format) return Return(call, format, new XElement("resultado", "R"));
 
-        var type = (int)(request.ChildLong("codigoTipoComprobante") ?? 0);
-        var point = (int)(request.ChildLong("numeroPuntoVenta") ?? 0);
+        var type = request.ChildInt("codigoTipoComprobante") ?? 0;
+        var point = request.ChildInt("numeroPuntoVenta") ?? 0;
         var number = request.ChildLong("numeroComprobante") ?? 0;
         var today = clock.Today();
         var date = Figures.ParseIsoDay(request.ChildText("fechaEmision")) ?? today;
@@ -328,7 +328,7 @@ public sealed class WsctRules(
                 observations.Count > 0 ? "O" : "A", observations, detail.ToString(SaveOptions.DisableFormatting), clock.Now);
             long.TryParse(request.ChildText("numeroDocumento"), NumberStyles.None, CultureInfo.InvariantCulture, out var receiver);
             await _book.AddAsync(voucher, new AuthorizedVoucher(Service, call.Cuit, point, type, number, date, total,
-                (int)(request.ChildLong("codigoTipoDocumento") ?? 0), receiver, "CAE", cae, due), ct);
+                request.ChildInt("codigoTipoDocumento") ?? 0, receiver, "CAE", cae, due), ct);
             events.Publish(new VoucherAuthorized(DateTimeOffset.UtcNow, call.Cuit, point, type, number, number, "CAE", cae));
 
             return Return(call,
@@ -381,11 +381,11 @@ public sealed class WsctRules(
     /// <summary>307-316 and 350-356: who the receiver is and how it relates to the issuer.</summary>
     private async Task CheckReceiverAsync(XElement request, long issuer, Action<int> fail, CancellationToken ct)
     {
-        var docType = (int)(request.ChildLong("codigoTipoDocumento") ?? 0);
+        var docType = request.ChildInt("codigoTipoDocumento") ?? 0;
         var document = request.ChildText("numeroDocumento") ?? "";
         var condition = request.ChildText("idImpositivo");
         var country = request.ChildLong("codigoPais");
-        var relation = (int)(request.ChildLong("codigoRelacionEmisorReceptor") ?? 0);
+        var relation = request.ChildInt("codigoRelacionEmisorReceptor") ?? 0;
         var address = request.ChildText("domicilioReceptor");
         var foreigner = new[] { 91, 94, 96 }.Contains(docType);
 
@@ -423,10 +423,10 @@ public sealed class WsctRules(
 
     private static List<Line> Lines(XElement request) =>
         request.Child("arrayItems")?.Children("item").Select(i => new Line(
-            (int)(i.ChildLong("tipo") ?? -1),
-            (int?)i.ChildLong("codigoTurismo"),
+            i.ChildInt("tipo") ?? -1,
+            i.ChildInt("codigoTurismo"),
             i.ChildText("descripcion"),
-            (int)(i.ChildLong("codigoAlicuotaIVA") ?? 0),
+            i.ChildInt("codigoAlicuotaIVA") ?? 0,
             i.Amount("importeIVA") ?? 0,
             i.Amount("importeItem") ?? 0)).ToList() ?? [];
 
@@ -449,7 +449,7 @@ public sealed class WsctRules(
         if (type == 195 && lines.Count > 0 && lines.All(l => l.Tourism == 5)) fail(415);
 
         var subtotals = request.Child("arraySubtotalesIVA")?.Children("subtotalIVA")
-            .Select(s => (Code: (int)(s.ChildLong("codigo") ?? 0), Amount: s.Amount("importe") ?? 0)).ToList();
+            .Select(s => (Code: s.ChildInt("codigo") ?? 0, Amount: s.Amount("importe") ?? 0)).ToList();
         if (subtotals is null) fail(500);
         else
         {
@@ -466,7 +466,7 @@ public sealed class WsctRules(
         var taxes = request.Child("arrayOtrosTributos")?.Children("otroTributo").ToList() ?? [];
         foreach (var tax in taxes)
         {
-            var code = (int)(tax.ChildLong("codigo") ?? 0);
+            var code = tax.ChildInt("codigo") ?? 0;
             if (parameters.Taxes.All(t => t.Id != code.ToString(CultureInfo.InvariantCulture))) fail(600);
             var description = tax.ChildText("descripcion");
             if (code == 99 && string.IsNullOrWhiteSpace(description) || description?.Length > 50) fail(602);
@@ -543,16 +543,16 @@ public sealed class WsctRules(
     {
         var associated = request.Child("arrayComprobantesAsociados")?.Children("comprobanteAsociado").ToList() ?? [];
         if (type == 195 && associated.Count > 0 || type is 196 or 197 && associated.Count == 0) fail(800);
-        var seen = new HashSet<(long, long, long)>();
+        var seen = new HashSet<(int, int, long)>();
         decimal adjusted = 0;
         foreach (var asoc in associated)
         {
-            var asocType = asoc.ChildLong("codigoTipoComprobante") ?? 0;
-            var asocPoint = asoc.ChildLong("numeroPuntoVenta") ?? 0;
+            var asocType = asoc.ChildInt("codigoTipoComprobante") ?? 0;
+            var asocPoint = asoc.ChildInt("numeroPuntoVenta") ?? 0;
             var asocNumber = asoc.ChildLong("numeroComprobante") ?? 0;
             if (VoucherTypes.All(t => t.Code != asocType)) fail(801);
             if (!seen.Add((asocType, asocPoint, asocNumber))) fail(804);
-            if (await _book.FindAsync(cuit, (int)asocPoint, (int)asocType, asocNumber, ct) is not { } found)
+            if (await _book.FindAsync(cuit, asocPoint, asocType, asocNumber, ct) is not { } found)
             {
                 fail(803);
                 continue;

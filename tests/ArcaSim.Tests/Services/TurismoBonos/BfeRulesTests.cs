@@ -134,6 +134,32 @@ public class BfeRulesTests
     }
 
     [Fact]
+    public async Task A_number_an_int_cannot_hold_is_an_invalid_value_not_the_one_it_wraps_to()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var desk = await OpenAsync(sim);
+        // 4294967297 is 1 and 4294967301 is 5 once cut to 32 bits: the type and the point of sale of the example.
+        var wrongType = await AuthorizeAsync(desk, Cmp(RequestId, 1).Replace("<x:Tipo_cbte>1<", "<x:Tipo_cbte>4294967297<"));
+        var wrongPoint = await AuthorizeAsync(desk, Cmp(RequestId, 1).Replace("<x:Punto_vta>5<", "<x:Punto_vta>4294967301<"));
+        // 4294967387 is 91 once cut to 32 bits, the one type a Factura A may have associated.
+        var associated = "<x:CbtesAsoc><x:CbteAsoc><x:Tipo_cbte>4294967387</x:Tipo_cbte><x:Punto_vta>5</x:Punto_vta><x:Cbte_nro>1</x:Cbte_nro></x:CbteAsoc></x:CbtesAsoc>";
+        var wrongAssociated = await AuthorizeAsync(desk, Cmp(RequestId, 1, extra: associated));
+
+        Assert.Equal(["1014", "1014", "1036"], new[] { wrongType, wrongPoint, wrongAssociated }.Select(a => Value(a, "ErrCode")));
+        Assert.Equal("Tipo de comprobante inválido.", Value(wrongType, "ErrMsg"));
+        Assert.Contains("punto_vta", Value(wrongPoint, "ErrMsg"));
+
+        // The voucher with the right numbers is authorized, and the queries do not answer to the wrapped ones.
+        Assert.Equal("A", Value(await AuthorizeAsync(desk, Cmp(RequestId, 1)), "Resultado"));
+        var consulted = await desk.CallAsync("BFEGetCMP",
+            Auth(desk) + "<x:Cmp><x:Tipo_cbte>1</x:Tipo_cbte><x:Punto_vta>4294967301</x:Punto_vta><x:Cbte_nro>1</x:Cbte_nro></x:Cmp>");
+        var last = await desk.CallAsync("BFEGetLast_CMP",
+            $"<x:Auth><x:Token>{desk.Token}</x:Token><x:Sign>{desk.Sign}</x:Sign><x:Cuit>{ServiceDesk.Issuer}</x:Cuit><x:Pto_venta>4294967301</x:Pto_venta><x:Tipo_cbte>1</x:Tipo_cbte></x:Auth>");
+        Assert.Equal("1020", Value(consulted, "ErrCode"));
+        Assert.Equal("0", Value(last, "Cbte_nro"));
+    }
+
+    [Fact]
     public async Task Wsbfev1_waits_for_the_lock_of_the_book_it_shares_with_wsbfe()
     {
         await using var sim = ArcaSimHarness.Start();

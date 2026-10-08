@@ -31,6 +31,19 @@ public static class FceXml
         return (items, skip >= 0 && all.Count > skip + PageSize);
     }
 
+    /// <summary>
+    /// The direct child's number as an int: null when it is missing or does not read, and
+    /// int.MinValue, which no code, type or point of sale is, when it is a number an int
+    /// cannot hold. A rule then refuses 4294967297 as the invalid value it is, instead of
+    /// reading it as 1. The shared place for this is ContractXml.
+    /// </summary>
+    public static int? ChildInt(this XElement? element, string name) =>
+        element.ChildLong(name) is { } value ? (value is >= int.MinValue and <= int.MaxValue ? (int)value : int.MinValue) : null;
+
+    /// <summary>The same for a field the schema types as xsd:short: short.MinValue when the number does not fit one.</summary>
+    public static short? ChildShort(this XElement? element, string name) =>
+        element.ChildLong(name) is { } value ? (value is >= short.MinValue and <= short.MaxValue ? (short)value : short.MinValue) : null;
+
     /// <summary>The direct child's text, trimmed; null when it is missing or empty.</summary>
     public static string? Value(this XElement? element, string name) => element.ChildText(name) is { Length: > 0 } text ? text : null;
 

@@ -265,7 +265,7 @@ public abstract class BfeRules(
             if (point is <= 0 or >= 99998) return new AsmxRefusal(1032, "De enviarse el tag CbteAsoc debe enviarse <CbteAsoc><PtoVta> mayor a 0 y menor a 99998.");
             if (number is <= 0 or >= 99999999) return new AsmxRefusal(1033, "De enviarse el tag CbteAsoc debe enviarse <CbteAsoc><Nro> > a 0 y < a 99999999.");
             if (!seen.Add((type, point, number))) return new AsmxRefusal(1034, "De enviarse el tag CbteAsoc, los comprobantes no deben repetirse.");
-            if (!allowed.Contains((int)type)) return AssociationRefusal(cmp.VoucherType);
+            if (type > int.MaxValue || !allowed.Contains((int)type)) return AssociationRefusal(cmp.VoucherType);
             if (type != 91 && await Book.FindAsync(call.Cuit, (int)point, (int)type, number, ct) is null)
                 return new AsmxRefusal(1039, "Si el punto de venta del comprobante asociado (CbtesAsoc.Punto_vta) es electrónico y del tipo Bonos, el número de comprobante debe obrar en las bases del organismo para el punto de venta y tipo de comprobante informado.");
         }

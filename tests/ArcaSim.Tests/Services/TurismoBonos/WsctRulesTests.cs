@@ -111,6 +111,30 @@ public class WsctRulesTests
     }
 
     [Fact]
+    public async Task A_number_an_int_cannot_hold_is_an_invalid_value_not_the_one_it_wraps_to()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var desk = await OpenAsync(sim);
+        await AuthorizeAsync(desk, HotelInvoice(1));
+        // 4294967491 is 195 (a Factura T), 4294967297 is 1 (the point of sale) once cut to 32 bits.
+        const string wrappedInvoice = "<arrayComprobantesAsociados><comprobanteAsociado><codigoTipoComprobante>195</codigoTipoComprobante><numeroPuntoVenta>4294967297</numeroPuntoVenta><numeroComprobante>1</numeroComprobante></comprobanteAsociado></arrayComprobantesAsociados>";
+
+        var type = await AuthorizeAsync(desk, HotelInvoice(1).Replace("<codigoTipoComprobante>195<", "<codigoTipoComprobante>4294967491<"));
+        var tourism = await AuthorizeAsync(desk, HotelInvoice(2).Replace("<codigoTurismo>1<", "<codigoTurismo>4294967297<"));
+        var associated = await AuthorizeAsync(desk, HotelInvoice(1, wrappedInvoice, type: 197));
+        var last = await desk.CallAsync("consultarUltimoComprobanteAutorizado",
+            Auth(desk) + "<codigoTipoComprobante>195</codigoTipoComprobante><numeroPuntoVenta>4294967297</numeroPuntoVenta>");
+        var consulted = await desk.CallAsync("consultarComprobanteTipoPVentaNro",
+            Auth(desk) + "<codigoTipoComprobante>195</codigoTipoComprobante><numeroPuntoVenta>4294967297</numeroPuntoVenta><numeroComprobante>1</numeroComprobante>");
+
+        Assert.Contains("300", Codes(type));
+        Assert.Equal(["401"], Codes(tourism));
+        Assert.Contains("803", Codes(associated));
+        Assert.Equal(["1002"], Codes(last));
+        Assert.Equal(["2002"], Codes(consulted));
+    }
+
+    [Fact]
     public async Task A_voucher_sent_again_is_refused_as_out_of_sequence()
     {
         await using var sim = ArcaSimHarness.Start();

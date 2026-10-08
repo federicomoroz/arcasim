@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Events;
+using ArcaSim.Application.Services.Fce;
 using ArcaSim.Application.Wsfe;
 using ArcaSim.Domain;
 
@@ -38,10 +39,10 @@ public sealed record AsmxCmp(
         var cmp = request.Child("Cmp") ?? new XElement("Cmp");
         return new AsmxCmp(
             cmp.ChildLong("Id") ?? 0,
-            (int)(cmp.ChildLong("Tipo_doc") ?? 0),
+            cmp.ChildInt("Tipo_doc") ?? 0,
             cmp.ChildLong("Nro_doc") ?? 0,
-            (int)(cmp.ChildLong("Tipo_cbte") ?? 0),
-            (int)(cmp.ChildLong("Punto_vta") ?? 0),
+            cmp.ChildInt("Tipo_cbte") ?? 0,
+            cmp.ChildInt("Punto_vta") ?? 0,
             cmp.ChildLong("Cbte_nro") ?? 0,
             cmp.Amount("Imp_total") ?? 0,
             cmp.Amount("Imp_op_ex") ?? 0,
@@ -272,7 +273,7 @@ public abstract class AsmxVoucherRules(
     private async Task<ContractAnswer> ConsultAsync(ServiceCall call, CancellationToken ct)
     {
         var cmp = call.Request.Child("Cmp") ?? new XElement("Cmp");
-        var found = await Book.FindAsync(call.Cuit, (int)(cmp.ChildLong("Punto_vta") ?? 0), (int)(cmp.ChildLong("Tipo_cbte") ?? 0), cmp.ChildLong("Cbte_nro") ?? 0, ct);
+        var found = await Book.FindAsync(call.Cuit, cmp.ChildInt("Punto_vta") ?? 0, cmp.ChildInt("Tipo_cbte") ?? 0, cmp.ChildLong("Cbte_nro") ?? 0, ct);
         if (found is null) return Refuse(call, new AsmxRefusal(1020, "Comprobante inexistente"));
         return Answer(call, new XElement(Ns(call) + $"{Prefix}ResultGet", Detail(Ns(call), found)));
     }
@@ -280,7 +281,7 @@ public abstract class AsmxVoucherRules(
     private async Task<ContractAnswer> LastAsync(ServiceCall call, CancellationToken ct)
     {
         var auth = call.Request.Child("Auth") ?? new XElement("Auth");
-        var last = await Book.LastAsync(call.Cuit, (int)(auth.ChildLong("Pto_venta") ?? 0), (int)(auth.ChildLong("Tipo_cbte") ?? 0), ct);
+        var last = await Book.LastAsync(call.Cuit, auth.ChildInt("Pto_venta") ?? 0, auth.ChildInt("Tipo_cbte") ?? 0, ct);
         var ns = Ns(call);
         return Answer(call, new XElement(ns + $"{Prefix}Result_LastCMP",
             new XElement(ns + "Cbte_nro", last?.Number ?? 0),

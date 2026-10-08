@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
+using ArcaSim.Application.Services.Fce;
 
 namespace ArcaSim.Application.Services.Mtxca;
 
@@ -60,16 +61,16 @@ public sealed class MtxcaVoucherInput
     public static MtxcaVoucherInput Read(XElement voucher) => new()
     {
         Element = voucher,
-        Type = (int)(voucher.ChildLong("codigoTipoComprobante") ?? 0),
-        PointOfSale = (int)(voucher.ChildLong("numeroPuntoVenta") ?? 0),
+        Type = voucher.ChildInt("codigoTipoComprobante") ?? 0,
+        PointOfSale = voucher.ChildInt("numeroPuntoVenta") ?? 0,
         Number = voucher.ChildLong("numeroComprobante") ?? 0,
         Date = DateOf(voucher, "fechaEmision"),
         AuthorizationType = Text(voucher, "codigoTipoAutorizacion"),
         AuthorizationCode = voucher.ChildLong("codigoAutorizacion"),
         AuthorizationDue = DateOf(voucher, "fechaVencimiento"),
-        DocType = (int?)voucher.ChildLong("codigoTipoDocumento"),
+        DocType = voucher.ChildInt("codigoTipoDocumento"),
         DocNumber = voucher.ChildLong("numeroDocumento"),
-        ReceiverCondition = (int?)voucher.ChildLong("condicionIVAReceptor"),
+        ReceiverCondition = voucher.ChildInt("condicionIVAReceptor"),
         Net = voucher.ChildDecimal("importeGravado"),
         NotTaxed = voucher.ChildDecimal("importeNoGravado"),
         Exempt = voucher.ChildDecimal("importeExento"),
@@ -79,29 +80,29 @@ public sealed class MtxcaVoucherInput
         Currency = Text(voucher, "codigoMoneda") ?? "",
         Rate = voucher.ChildDecimal("cotizacionMoneda"),
         SameCurrency = Text(voucher, "cancelaEnMismaMonedaExtranjera"),
-        Concept = (int)(voucher.ChildLong("codigoConcepto") ?? 0),
+        Concept = voucher.ChildInt("codigoConcepto") ?? 0,
         ServiceFrom = DateOf(voucher, "fechaServicioDesde"),
         ServiceTo = DateOf(voucher, "fechaServicioHasta"),
         PaymentDue = DateOf(voucher, "fechaVencimientoPago"),
         GenerationTime = Text(voucher, "fechaHoraGen"),
         Associated = ArrayItems(voucher, "arrayComprobantesAsociados").Select(a => new MtxcaAssociated(
-            (int)(a.ChildLong("codigoTipoComprobante") ?? 0), (int)(a.ChildLong("numeroPuntoVenta") ?? 0), a.ChildLong("numeroComprobante") ?? 0,
+            a.ChildInt("codigoTipoComprobante") ?? 0, a.ChildInt("numeroPuntoVenta") ?? 0, a.ChildLong("numeroComprobante") ?? 0,
             a.ChildLong("cuit"), DateOf(a, "fechaEmision"))).ToList(),
         Period = voucher.Child("periodoComprobantesAsociados") is { } period && DateOf(period, "fechaDesde") is { } from && DateOf(period, "fechaHasta") is { } to
             ? (from, to)
             : null,
         OtherTaxes = ArrayItems(voucher, "arrayOtrosTributos").Select(t => new MtxcaOtherTax(
-            (int)(t.ChildLong("codigo") ?? 0), Text(t, "descripcion"), t.ChildDecimal("baseImponible") ?? 0, t.ChildDecimal("importe") ?? 0)).ToList(),
+            t.ChildInt("codigo") ?? 0, Text(t, "descripcion"), t.ChildDecimal("baseImponible") ?? 0, t.ChildDecimal("importe") ?? 0)).ToList(),
         Items = ArrayItems(voucher, "arrayItems").Select(i => new MtxcaItem(
-            (int?)i.ChildLong("unidadesMtx"), Text(i, "codigoMtx"), Text(i, "codigo"), i.Child("descripcion")?.Value ?? "",
-            i.ChildDecimal("cantidad"), (int)(i.ChildLong("codigoUnidadMedida") ?? -1), i.ChildDecimal("precioUnitario"),
-            i.ChildDecimal("importeBonificacion"), (int)(i.ChildLong("codigoCondicionIVA") ?? 0), i.ChildDecimal("importeIVA"),
+            i.ChildInt("unidadesMtx"), Text(i, "codigoMtx"), Text(i, "codigo"), i.Child("descripcion")?.Value ?? "",
+            i.ChildDecimal("cantidad"), i.ChildInt("codigoUnidadMedida") ?? -1, i.ChildDecimal("precioUnitario"),
+            i.ChildDecimal("importeBonificacion"), i.ChildInt("codigoCondicionIVA") ?? 0, i.ChildDecimal("importeIVA"),
             i.ChildDecimal("importeItem") ?? 0)).ToList(),
         HasSubtotals = voucher.Child("arraySubtotalesIVA") is not null,
-        Subtotals = ArrayItems(voucher, "arraySubtotalesIVA").Select(s => ((int)(s.ChildLong("codigo") ?? 0), s.ChildDecimal("importe") ?? 0)).ToList(),
-        ExtraData = ArrayItems(voucher, "arrayDatosAdicionales").Select(d => (int)(d.ChildLong("t") ?? 0)).ToList(),
+        Subtotals = ArrayItems(voucher, "arraySubtotalesIVA").Select(s => (s.ChildInt("codigo") ?? 0, s.ChildDecimal("importe") ?? 0)).ToList(),
+        ExtraData = ArrayItems(voucher, "arrayDatosAdicionales").Select(d => d.ChildInt("t") ?? 0).ToList(),
         Buyers = ArrayItems(voucher, "arrayCompradores").Select(b => new MtxcaBuyer(
-            (int)(b.ChildLong("codigoTipoDocumento") ?? 0), b.ChildLong("numeroDocumento") ?? 0, b.ChildDecimal("porcentaje") ?? 0)).ToList(),
+            b.ChildInt("codigoTipoDocumento") ?? 0, b.ChildLong("numeroDocumento") ?? 0, b.ChildDecimal("porcentaje") ?? 0)).ToList(),
         Activities = ArrayItems(voucher, "arrayActividades").Select(a => a.ChildLong("codigo") ?? 0).ToList(),
     };
 

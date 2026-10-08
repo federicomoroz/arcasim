@@ -154,6 +154,29 @@ public class MtxcaRulesTests
     }
 
     [Fact]
+    public async Task A_number_an_int_cannot_hold_is_an_invalid_value_not_the_one_it_wraps_to()
+    {
+        await using var sim = await StartAsync();
+        var client = await MtxcaClient.LoginAsync(sim);
+        // 4294967297 is 1 once cut to 32 bits: the Factura A type, the issuer's point of sale and the receiver condition of the example.
+        var type = FacturaA(1).Replace("<codigoTipoComprobante>1<", "<codigoTipoComprobante>4294967297<");
+        var point = FacturaA(1).Replace("<numeroPuntoVenta>1<", "<numeroPuntoVenta>4294967297<");
+        var condition = FacturaA(1).Replace("<condicionIVAReceptor>1<", "<condicionIVAReceptor>4294967297<");
+
+        var wrongType = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{type}</comprobanteCAERequest>");
+        var wrongPoint = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{point}</comprobanteCAERequest>");
+        var wrongCondition = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{condition}</comprobanteCAERequest>");
+
+        Assert.Equal(["100"], Codes(wrongType, "arrayErrores"));
+        Assert.Equal(["101"], Codes(wrongPoint, "arrayErrores"));
+        Assert.Equal("O", wrongCondition.Element("resultado")!.Value);
+        Assert.Equal(["190"], Codes(wrongCondition, "arrayObservaciones"));
+        var last = await client.CallAsync("consultarUltimoComprobanteAutorizado",
+            "<consultaUltimoComprobanteAutorizadoRequest><codigoTipoComprobante>1</codigoTipoComprobante><numeroPuntoVenta>1</numeroPuntoVenta></consultaUltimoComprobanteAutorizadoRequest>");
+        Assert.Equal("1", last.Element("numeroComprobante")!.Value);
+    }
+
+    [Fact]
     public async Task Class_A_needs_a_CUIT_and_a_CAE_point_of_sale()
     {
         await using var sim = await StartAsync();
@@ -253,6 +276,9 @@ public class MtxcaRulesTests
 
         var badOrder = await client.CallAsync("solicitarCAEA", "<solicitudCAEA><periodo>202610</periodo><orden>3</orden></solicitudCAEA>");
         Assert.Equal(["601"], Codes(badOrder, "arrayErrores"));
+        // 65537 is 1 once cut to 16 bits: the first fortnight, which would have been granted.
+        var wrappedOrder = await client.CallAsync("solicitarCAEA", "<solicitudCAEA><periodo>202610</periodo><orden>65537</orden></solicitudCAEA>");
+        Assert.Equal(["601"], Codes(wrappedOrder, "arrayErrores"));
         var tooLate = await client.CallAsync("solicitarCAEA", "<solicitudCAEA><periodo>202609</periodo><orden>2</orden></solicitudCAEA>");
         Assert.Equal(["602"], Codes(tooLate, "arrayErrores"));
         var unknown = await client.CallAsync("consultarCAEA", "<CAEA>12345678901234</CAEA>");

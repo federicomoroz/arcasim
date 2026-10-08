@@ -73,6 +73,39 @@ public class WsfecredagenteRulesTests
         Assert.Equal(["6000"], Codes(done.Element("arrayErrores")));
     }
 
+    [Theory]
+    [InlineData("4294967297")]
+    [InlineData("40000")]
+    public async Task A_page_number_the_schema_cannot_hold_is_a_format_error_not_a_page(string page)
+    {
+        await using var world = await StartAsync();
+        await world.AgenteAsync("altaCuentasAgente", OpenAccount());
+
+        // 4294967297 is page 1 once cut to 32 bits; 40000 does not fit the short the answer repeats it in.
+        var answer = await world.AgenteAsync("consultarCuentasAgente", $"<nroPagina>{page}</nroPagina>{Range}");
+
+        Assert.Equal(["2004"], Codes(answer.Element("erroresFormato")));
+        Assert.Empty(answer.Element("cuentasAgente")!.Elements());
+        Assert.Equal("0", answer.Element("nroPagina")!.Value);
+    }
+
+    [Fact]
+    public async Task A_rejection_code_the_schema_cannot_hold_is_refused_not_read_as_the_code_it_wraps_to()
+    {
+        await using var world = await StartAsync();
+        var invoice = await AcceptedInvoiceAsync(world);
+        await world.FecredAsync(Seller, "informarFacturaAgtDptoCltv", Account(invoice) + ToAgent());
+        await world.AgenteAsync("consultarFacturasInformadas", $"<estadoInforme>D</estadoInforme><nroPagina>1</nroPagina>{Range}");
+
+        // 65537 is 1 once cut to 16 bits: one of the agent's reasons.
+        var wrapped = await world.AgenteAsync("confirmarFacturasInformadas", Confirm(invoice, accepts: false, reason: 65537));
+        var right = await world.AgenteAsync("confirmarFacturasInformadas", Confirm(invoice, accepts: false, reason: 1));
+
+        Assert.Equal(["2006"], Codes(wrapped.Element("erroresFormato")));
+        Assert.Empty(wrapped.Element("resultados")!.Elements());
+        Assert.Equal("A", right.Element("resultados")!.Element("resultado")!.Element("resultado")!.Value);
+    }
+
     [Fact]
     public async Task Confirming_before_reading_is_4021_and_twice_is_4020()
     {
