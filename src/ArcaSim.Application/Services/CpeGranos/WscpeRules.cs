@@ -249,46 +249,57 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
 
         var now = clock.Now;
         var stored = XElement.Parse(cpe.Request);
-        switch (move.Effect)
+        var (refusal, changed) = ApplyEffect(call, move.Effect, request, stored, cpe, now);
+        if (refusal is not null) return refusal;
+        cpe = changed;
+
+        cpe = cpe with { State = target, StateSince = now, Request = stored.ToString(SaveOptions.DisableFormatting) };
+        await SaveAsync(cpe, ct);
+        return call.Ok(Summary(call, cpe));
+    }
+
+    /// <summary>
+    /// What a transition does besides changing the state: its own checks (2220, 2121, 2225, 2130, 2232) and
+    /// the changes it makes to the stored request and to the counters of the CPE, or the refusal.
+    /// </summary>
+    private static (ContractAnswer? Refusal, StoredCpe Cpe) ApplyEffect(
+        ServiceCall call, CpeEffect effect, XElement request, XElement stored, StoredCpe cpe, DateTimeOffset now)
+    {
+        switch (effect)
         {
             case CpeEffect.Void:
                 var reason = request.Child("anulacionMotivo") is null ? (int?)null : request.Int("anulacionMotivo");
-                if (reason is not null and not (1 or 2 or 3)) return call.Error(2220, Codes.InvalidVoidReason);
-                if (now > cpe.StateSince + StateValidity) return call.Error(2121, Codes.VoidTooLate);
-                cpe = cpe with { VoidReason = reason, VoidNotes = request.Text("anulacionObservaciones") };
-                break;
+                if (reason is not null and not (1 or 2 or 3)) return (call.Error(2220, Codes.InvalidVoidReason), cpe);
+                if (now > cpe.StateSince + StateValidity) return (call.Error(2121, Codes.VoidTooLate), cpe);
+                return (null, cpe with { VoidReason = reason, VoidNotes = request.Text("anulacionObservaciones") });
             case CpeEffect.Reject:
-                if (request.Child("rechazoMotivo") is not null && request.Int("rechazoMotivo") is not (1 or 2 or 3))
-                    return call.Error(2225, Codes.InvalidRejectReason);
-                break;
+                return request.Child("rechazoMotivo") is not null && request.Int("rechazoMotivo") is not (1 or 2 or 3)
+                    ? (call.Error(2225, Codes.InvalidRejectReason), cpe)
+                    : (null, cpe);
             case CpeEffect.FinalConfirmation:
                 var load = stored.Child("datosCarga") ?? Add(stored, new XElement("datosCarga"));
                 foreach (var weight in new[] { "pesoBrutoDescarga", "pesoTaraDescarga" })
                     if (request.Child(weight) is { } value) Replace(load, new XElement(weight, value.Value.Trim()));
                 Replace(stored, request.Child("intervinientes"));
                 Replace(stored, request.Child("destinatario"));
-                break;
+                return (null, cpe);
             case CpeEffect.Detour:
-                if (cpe.Detours >= MaxDetours) return call.Error(2130, Codes.TooManyDetours);
+                if (cpe.Detours >= MaxDetours) return (call.Error(2130, Codes.TooManyDetours), cpe);
                 Replace(stored, request.Child("destino"));
                 Replace(stored, request.Child("transporte"));
-                cpe = cpe with { Detours = cpe.Detours + 1 };
-                break;
+                return (null, cpe with { Detours = cpe.Detours + 1 });
             case CpeEffect.NewDestination:
-                if (cpe.NewDestinations >= MaxNewDestinations) return call.Error(2232, Codes.TooManyNewDestinations);
+                if (cpe.NewDestinations >= MaxNewDestinations) return (call.Error(2232, Codes.TooManyNewDestinations), cpe);
                 Replace(stored, request.Child("destino"));
                 Replace(stored, request.Child("destinatario"));
                 Replace(stored, request.Child("transporte"));
-                cpe = cpe with { NewDestinations = cpe.NewDestinations + 1 };
-                break;
+                return (null, cpe with { NewDestinations = cpe.NewDestinations + 1 });
             case CpeEffect.ReturnToOrigin:
                 ReturnToOrigin(stored, request, cpe.Issuer);
-                break;
+                return (null, cpe);
+            default:
+                return (null, cpe);
         }
-
-        cpe = cpe with { State = target, StateSince = now, Request = stored.ToString(SaveOptions.DisableFormatting) };
-        await SaveAsync(cpe, ct);
-        return call.Ok(Summary(call, cpe));
     }
 
     /// <summary>
