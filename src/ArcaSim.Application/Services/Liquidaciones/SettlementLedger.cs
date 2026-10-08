@@ -183,7 +183,7 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
     {
         VatCondition.ResponsableInscripto => "IVA Responsable Inscripto",
         VatCondition.Exento => "IVA Sujeto Exento",
-        VatCondition.Monotributo or VatCondition.MonotributistaSocial or VatCondition.MonotributoTrabajadorIndependientePromovido => "Responsable Monotributo",
+        _ when condition.IsMonotributo() => "Responsable Monotributo",
         _ => "IVA No Alcanzado",
     };
 
