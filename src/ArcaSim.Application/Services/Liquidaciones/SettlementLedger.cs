@@ -275,36 +275,13 @@ public static class SettlementXml
         call.Ok(new XElement(call.Operation.Output, new XElement("respuesta", content)));
 
     /// <summary>
-    /// The base64 PDF the services attach (§2.5/§2.6 of the manuals: "el mismo
-    /// archivo que se imprime por la aplicación web"). ArcaSim's is a one-page
-    /// PDF that lists what was authorized.
+    /// The pdf element of a settlement's answer (§2.5/§2.6 of the manuals: "el mismo archivo que se imprime
+    /// por la aplicación web"): the voucher, both parties, the date, the total and the CAE, in the words each service uses for them.
     /// </summary>
-    public static string Pdf(string title, IEnumerable<string> lines)
-    {
-        static string Escape(string text) => new string(text.Select(c => c > 126 ? '?' : c).ToArray())
-            .Replace("\\", "\\\\").Replace("(", "\\(").Replace(")", "\\)");
-        var content = new StringBuilder("BT /F1 11 Tf 50 800 Td 14 TL\n");
-        foreach (var line in new[] { title, "" }.Concat(lines)) content.Append('(').Append(Escape(line)).Append(") '\n");
-        content.Append("ET");
-        string[] objects =
+    public static XElement PdfOf(Settlement settlement, string title, string issuer, string receiver, string total) =>
+        new("pdf", SimplePdf.Lines($"ARCA - {title} {settlement.VoucherType:D3}-{settlement.PointOfSale:D5}-{settlement.Number:D8}",
         [
-            "<< /Type /Catalog /Pages 2 0 R >>",
-            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
-            $"<< /Length {content.Length} >>\nstream\n{content}\nendstream",
-            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-        ];
-        var pdf = new StringBuilder("%PDF-1.4\n");
-        var offsets = new List<int>();
-        for (var i = 0; i < objects.Length; i++)
-        {
-            offsets.Add(pdf.Length);
-            pdf.Append(i + 1).Append(" 0 obj\n").Append(objects[i]).Append("\nendobj\n");
-        }
-        var xref = pdf.Length;
-        pdf.Append("xref\n0 ").Append(objects.Length + 1).Append("\n0000000000 65535 f \n");
-        foreach (var offset in offsets) pdf.Append(offset.ToString("D10", CultureInfo.InvariantCulture)).Append(" 00000 n \n");
-        pdf.Append("trailer\n<< /Size ").Append(objects.Length + 1).Append(" /Root 1 0 R >>\nstartxref\n").Append(xref).Append("\n%%EOF\n");
-        return Convert.ToBase64String(Encoding.ASCII.GetBytes(pdf.ToString()));
-    }
+            $"CUIT {issuer}: {settlement.Cuit}", $"CUIT {receiver}: {settlement.ReceiverCuit}", $"Fecha: {Iso(settlement.Date)}",
+            $"{total}: {Money(settlement.Total)}", $"CAE: {settlement.Cae}", $"Vencimiento CAE: {Iso(settlement.CaeExpiry)}",
+        ]));
 }

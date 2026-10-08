@@ -298,9 +298,7 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
     private ContractAnswer Answer(ServiceCall call, Settlement settlement)
     {
         var answer = settlement.DetailXml();
-        answer.Add(new XElement("pdf", Pdf($"ARCA - Liquidacion sector pecuario {settlement.VoucherType:D3}-{settlement.PointOfSale:D5}-{settlement.Number:D8}",
-            [$"CUIT emisor: {settlement.Cuit}", $"CUIT receptor: {settlement.ReceiverCuit}", $"Fecha: {Iso(settlement.Date)}",
-                $"Importe neto: {Money(settlement.Total)}", $"CAE: {settlement.Cae}", $"Vencimiento CAE: {Iso(settlement.CaeExpiry)}"])));
+        answer.Add(PdfOf(settlement, "Liquidacion sector pecuario", "emisor", "receptor", "Importe neto"));
         answer.Add(Metadata());
         return call.Ok(new XElement(call.Operation.Output, answer));
     }

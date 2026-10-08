@@ -287,10 +287,7 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
     private static ContractAnswer Answer(ServiceCall call, Settlement settlement, bool withPdf)
     {
         var liquidation = settlement.DetailXml();
-        if (withPdf)
-            liquidation.Add(new XElement("pdf", Pdf($"ARCA - Liquidacion Unica Mensual Lecheria {settlement.VoucherType:D3}-{settlement.PointOfSale:D5}-{settlement.Number:D8}",
-                [$"CUIT comprador: {settlement.Cuit}", $"CUIT tambero: {settlement.ReceiverCuit}", $"Fecha: {Iso(settlement.Date)}",
-                    $"Total neto: {Money(settlement.Total)}", $"CAE: {settlement.Cae}", $"Vencimiento CAE: {Iso(settlement.CaeExpiry)}"])));
+        if (withPdf) liquidation.Add(PdfOf(settlement, "Liquidacion Unica Mensual Lecheria", "comprador", "tambero", "Total neto"));
         return Ok(call, liquidation);
     }
 
