@@ -98,7 +98,8 @@ public sealed partial class WsagrRules(IDocumentStore store, IClock clock, Padro
 
     private const string DefaultRating = "1";
 
-    [GeneratedRegex(@"^(0[1-9]|1[0-2])/\d{4}$")]
+    // ASCII digits only: \d would let in the digits of other scripts, which no parse below reads.
+    [GeneratedRegex(@"^(0[1-9]|1[0-2])/[0-9]{4}$")]
     private static partial Regex PeriodFormat();
 
     public string Service => "wsagr";
@@ -188,7 +189,8 @@ public sealed partial class WsagrRules(IDocumentStore store, IClock clock, Padro
         if (period is null || !PeriodFormat().IsMatch(period)) return (113, "El periodo debe tener el formato MM/AAAA");
         if (!window) return null;
         var today = DateOnly.FromDateTime(Now.DateTime);
-        var asked = new DateOnly(int.Parse(period[3..], CultureInfo.InvariantCulture), int.Parse(period[..2], CultureInfo.InvariantCulture), 1);
+        // There is no year 0000: it is read as the first year, which is no current month either (107).
+        var asked = new DateOnly(Math.Max(1, int.Parse(period[3..], CultureInfo.InvariantCulture)), int.Parse(period[..2], CultureInfo.InvariantCulture), 1);
         var current = new DateOnly(today.Year, today.Month, 1);
         return asked == current || (asked == current.AddMonths(1) && today.Day > 15)
             ? null
