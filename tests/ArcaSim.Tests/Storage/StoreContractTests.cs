@@ -35,7 +35,7 @@ public abstract class StoreContractTests
         Assert.Null(await store.FindAsync(30000000007));
     }
 
-    [Fact]
+    [DockerFact]
     public async Task A_taxpayer_changed_after_reading_it_changes_nothing_until_saved()
     {
         var store = await CreateAsync();
@@ -51,7 +51,7 @@ public abstract class StoreContractTests
         Assert.NotNull(saved!.FindPointOfSale(2));
     }
 
-    [Fact]
+    [DockerFact]
     public async Task Documents_list_in_ordinal_key_order_whatever_the_culture()
     {
         var store = await CreateAsync();
