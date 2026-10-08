@@ -115,7 +115,7 @@ dotnet run --project src/ArcaSim.Api --urls "http://localhost:5199;https://local
 # Con PostgreSQL, para un equipo o una CI (panel en http://localhost:7080/arcasim/)
 docker compose up -d
 
-# Los tests; los 9 de PostgreSQL levantan un contenedor y se saltean si Docker no está corriendo
+# Los tests; los 13 de PostgreSQL levantan un contenedor y se saltean si Docker no está corriendo
 dotnet test
 ```
 

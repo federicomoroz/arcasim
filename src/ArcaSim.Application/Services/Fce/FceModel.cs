@@ -93,7 +93,7 @@ public sealed class FceSca
     public string? Cbu { get; set; }
     public bool? CbuValidated { get; set; }
 
-    /// <summary>D disponible, P pendiente de recepción, R recibida.</summary>
+    /// <summary>D available ("disponible"), P waiting for reception ("pendiente de recepción"), R received ("recibida").</summary>
     public string State { get; set; } = "D";
 
     public DateTimeOffset? ReadAt { get; set; }
@@ -108,7 +108,7 @@ public sealed class FceAgentReport
     public string? Denomination { get; set; }
     public DateTimeOffset AvailableAt { get; set; }
 
-    /// <summary>D disponible, P pendiente, A aceptada, R rechazada.</summary>
+    /// <summary>D available ("disponible"), P pending ("pendiente"), A accepted ("aceptada"), R rejected ("rechazada").</summary>
     public string State { get; set; } = "D";
 
     public DateTimeOffset? ReadAt { get; set; }
@@ -163,7 +163,7 @@ public sealed class FceAgentAccount
     public long Holder { get; set; }
     public string? Denomination { get; set; }
 
-    /// <summary>A activa, B dada de baja.</summary>
+    /// <summary>A active ("activa"), B removed ("dada de baja").</summary>
     public string State { get; set; } = "A";
 
     public DateOnly OpenedOn { get; set; }

@@ -8,37 +8,37 @@ namespace ArcaSim.Application.Services.CpeGranos;
 /// </summary>
 internal static class CpeStates
 {
-    /// <summary>AC: activa.</summary>
+    /// <summary>AC: active ("activa").</summary>
     public const string Active = "AC";
 
-    /// <summary>CF: activa con confirmación de arribo.</summary>
+    /// <summary>CF: active, its arrival confirmed ("activa con confirmación de arribo").</summary>
     public const string Arrived = "CF";
 
-    /// <summary>CN: confirmada.</summary>
+    /// <summary>CN: confirmed ("confirmada").</summary>
     public const string Confirmed = "CN";
 
-    /// <summary>CO: activa con contingencia.</summary>
+    /// <summary>CO: active under a contingency ("activa con contingencia").</summary>
     public const string Contingency = "CO";
 
-    /// <summary>DE: desactivada.</summary>
+    /// <summary>DE: deactivated ("desactivada").</summary>
     public const string Deactivated = "DE";
 
-    /// <summary>RE: rechazada.</summary>
+    /// <summary>RE: rejected ("rechazada").</summary>
     public const string Rejected = "RE";
 
-    /// <summary>AN: anulada.</summary>
+    /// <summary>AN: voided ("anulada").</summary>
     public const string Voided = "AN";
 
-    /// <summary>DD: descargado en destino.</summary>
+    /// <summary>DD: unloaded at destination ("descargado en destino").</summary>
     public const string Unloaded = "DD";
 
-    /// <summary>PE: pendiente de emisión (a DG CPE the industry has to issue).</summary>
+    /// <summary>PE: waiting to be issued ("pendiente de emisión"): a DG CPE the industry has to issue.</summary>
     public const string AwaitingIssue = "PE";
 
-    /// <summary>IN: inactiva.</summary>
+    /// <summary>IN: inactive ("inactiva").</summary>
     public const string Inactive = "IN";
 
-    /// <summary>PO: pendiente de aceptación por el origen (a CPE issued at destination).</summary>
+    /// <summary>PO: waiting for the origin to accept it ("pendiente de aceptación por el origen"): a CPE issued at destination.</summary>
     public const string AwaitingOrigin = "PO";
 }
 
