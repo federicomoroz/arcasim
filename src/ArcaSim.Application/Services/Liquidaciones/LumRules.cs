@@ -144,11 +144,12 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
         // A buyer makes one liquidation per period, producer and RENSPA on whatever sequence, so the check and
         // the voucher that follows it share one hold, taken inside the sequence's.
         using var unique = adjustment is null ? await _ledger.LockUniqueAsync(Service, "periods", call.Cuit, ct) : null;
-        var last = await _ledger.LastAsync(Service, call.Cuit, pointOfSale, type, ct);
-        if (number != (last?.Number ?? 0) + 1)
-            return Fail(call, 2074, "N° de comprobante incorrecto para el tipo de comprobante y punto de venta ingresados.");
-        if (last is not null && date < last.Date)
-            return Fail(call, 2132, "La fecha de comprobante ingresada, es anterior a la fecha de comprobante de una liquidación(activa) generada con anterioridad para la misma cuit, punto de venta y tipo de liquidacion.");
+        switch (await _ledger.CheckNumberAsync(Service, call.Cuit, pointOfSale, type, number, date, ct))
+        {
+            case NumberCheck.WrongNumber: return Fail(call, 2074, SettlementLedger.WrongNumberText);
+            case NumberCheck.EarlierDate:
+                return Fail(call, 2132, "La fecha de comprobante ingresada, es anterior a la fecha de comprobante de una liquidación(activa) generada con anterioridad para la misma cuit, punto de venta y tipo de liquidacion.");
+        }
         if (adjustment is null && await DuplicateAsync(call.Cuit, period, producer.Number("cuit"), dairy.Value("nroRenspa"), ct))
             return Fail(call, 2078, "Error en la generación de la liquidación, la misma debe ser única por período, CUIT comprador, CUIT productor y número de RENSPA.");
 

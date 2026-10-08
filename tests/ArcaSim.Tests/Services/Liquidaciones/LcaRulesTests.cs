@@ -16,10 +16,10 @@ public class LcaRulesTests
         $"<{name}><puntoVenta>{pointOfSale}</puntoVenta><tipoComprobante>{type}</tipoComprobante><nroComprobante>{number}</nroComprobante></{name}>";
 
     /// <summary>10000 kg of cane at 15.50 with 21% VAT and a tax of 100: 155000 + 32550 + 100 = 187650.</summary>
-    private static string Liquidation(long number, string note = "00007-00979871", int type = 171, long grower = Producer, long kilos = 10000, int pointOfSale = 3000) =>
+    private static string Liquidation(long number, string note = "00007-00979871", int type = 171, long grower = Producer, long kilos = 10000, int pointOfSale = 3000, string? date = null) =>
         $"<solicitud><emisor>{Voucher(number, type: type, pointOfSale: pointOfSale)}<fechaInicioActividades>2010-01-01</fechaInicioActividades></emisor>" +
         $"<receptor><cuit>{grower}</cuit><localidad>1</localidad><provincia>23</provincia></receptor>" +
-        $"<datosGenerales><fechaComprobante>{Day()}</fechaComprobante><condicionVenta><codigo>1</codigo></condicionVenta>" +
+        $"<datosGenerales><fechaComprobante>{date ?? Day()}</fechaComprobante><condicionVenta><codigo>1</codigo></condicionVenta>" +
         "<medioPago><codigo>1</codigo></medioPago></datosGenerales>" +
         $"<remito><nroRemito>{note}</nroRemito><kilos>{kilos}</kilos></remito>" +
         "<detalle><producto>1</producto><cantidad>10000</cantidad><unidadMedida>1</unidadMedida><precioUnitario>15.50</precioUnitario>" +
@@ -70,6 +70,7 @@ public class LcaRulesTests
         Assert.Equal(["1303"], Errors(again));
         Assert.Equal("Remito #00007-00979871: El remito que desea agregar ya se encuentra liquidado.", again.Descendants("descripcion").First().Value);
         Assert.Equal(["1500"], Errors(await lca.CallAsync("generarLiquidacion", Liquidation(3, "00007-00979872"))));
+        Assert.Equal(["1201"], Errors(await lca.CallAsync("generarLiquidacion", Liquidation(2, "00007-00979872", date: Day(-1)))));
         Assert.Equal(["1206"], Errors(await lca.CallAsync("generarLiquidacion", Liquidation(2, "00007-00979872", type: 173))));
         Assert.Equal(["1207"], Errors(await lca.CallAsync("generarLiquidacion", Liquidation(1, "00007-00979872", type: 172))));
         Assert.Equal(["1304"], Errors(await lca.CallAsync("generarLiquidacion", Liquidation(2, "00007-00979872", kilos: 9000))));

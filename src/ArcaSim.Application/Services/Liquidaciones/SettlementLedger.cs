@@ -49,6 +49,14 @@ public sealed record SettlementByCae(string Key);
 /// <summary>A business rejection: the code a manual gives and its text.</summary>
 public readonly record struct SettlementProblem(long Code, string Text);
 
+/// <summary>What the check of the number a client picked found.</summary>
+public enum NumberCheck
+{
+    Ok,
+    WrongNumber,
+    EarlierDate,
+}
+
 /// <summary>
 /// The numbering and authorization the four sector liquidation services share
 /// (docs/arca/servicios/wslsp.md, wslum.md, wsltv.md and wslca.md §1.3 of each
@@ -62,6 +70,12 @@ public readonly record struct SettlementProblem(long Code, string Text);
 public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository taxpayers, IAuthorizationCodes codes, SequenceLocks locks, IClock clock)
 {
     public const int CaeDays = 10;
+
+    /// <summary>
+    /// The text wslum (2074), wslca (1500) and wslsp (1009) give for a number out of sequence:
+    /// the one sentence of their manuals under each service's own code.
+    /// </summary>
+    public const string WrongNumberText = "N° de comprobante incorrecto para el tipo de comprobante y punto de venta ingresados.";
 
     private readonly KeyedLocks<string> _documents = new();
 
@@ -96,6 +110,18 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
 
     public Task<LastSettlement?> LastAsync(string service, long cuit, int pointOfSale, int voucherType, CancellationToken ct) =>
         store.GetAsync<LastSettlement>(service, $"ultimo/{cuit}/{pointOfSale:D5}/{voucherType:D3}", ct);
+
+    /// <summary>
+    /// The client picks the number of a voucher: it must be the last + 1 of its sequence (1 when the
+    /// sequence is empty) and, in the services that ask for it (<paramref name="date"/> given), must not
+    /// carry a date earlier than the last one's. Take the sequence's lock before, and keep it until the voucher is issued.
+    /// </summary>
+    public async Task<NumberCheck> CheckNumberAsync(string service, long cuit, int pointOfSale, int voucherType, long number, DateOnly? date, CancellationToken ct)
+    {
+        var last = await LastAsync(service, cuit, pointOfSale, voucherType, ct);
+        if (number != (last?.Number ?? 0) + 1) return NumberCheck.WrongNumber;
+        return date is { } day && last is not null && day < last.Date ? NumberCheck.EarlierDate : NumberCheck.Ok;
+    }
 
     public Task<Settlement?> FindAsync(string service, long cuit, int pointOfSale, int voucherType, long number, CancellationToken ct) =>
         FindAsync(service, Key(cuit, pointOfSale, voucherType, number), ct);

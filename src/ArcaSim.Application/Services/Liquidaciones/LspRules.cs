@@ -279,13 +279,11 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
     private async Task<ContractAnswer?> PointProblemAsync(ServiceCall call, int pointOfSale, CancellationToken ct) =>
         await _ledger.PointProblemAsync(call.Cuit, pointOfSale, NoPoints, InvalidPoint, ct) is { } problem ? Fail(call, problem) : null;
 
-    private async Task<ContractAnswer?> WrongNumberAsync(ServiceCall call, int pointOfSale, int type, long number, CancellationToken ct)
-    {
-        var last = await _ledger.LastAsync(Service, call.Cuit, pointOfSale, type, ct);
-        return number == (last?.Number ?? 0) + 1
-            ? null
-            : Fail(call, 1009, "N° de comprobante incorrecto para el tipo de comprobante y punto de venta ingresados.");
-    }
+    /// <summary>The manual has no rule on the date against the last voucher's, so only the number is checked.</summary>
+    private async Task<ContractAnswer?> WrongNumberAsync(ServiceCall call, int pointOfSale, int type, long number, CancellationToken ct) =>
+        await _ledger.CheckNumberAsync(Service, call.Cuit, pointOfSale, type, number, date: null, ct) is NumberCheck.WrongNumber
+            ? Fail(call, 1009, SettlementLedger.WrongNumberText)
+            : null;
 
     private string? OutOfWindow(DateOnly date, bool avian)
     {

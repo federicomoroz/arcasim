@@ -81,6 +81,7 @@ public class LumRulesTests
 
         Assert.Equal(["2074"], Errors(await lum.CallAsync("generarLiquidacion", Liquidation(1))));
         Assert.Equal(["2078"], Errors(await lum.CallAsync("generarLiquidacion", Liquidation(2))));
+        Assert.Equal(["2132"], Errors(await lum.CallAsync("generarLiquidacion", Liquidation(2, period: "2026/09", date: "2026-09-25"))));
     }
 
     [Fact]

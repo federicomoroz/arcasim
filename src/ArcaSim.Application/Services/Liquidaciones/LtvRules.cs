@@ -272,14 +272,13 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
             : null;
     }
 
-    private async Task<ContractAnswer?> SequenceProblemAsync(ServiceCall call, int pointOfSale, int type, long number, DateOnly date, CancellationToken ct)
-    {
-        var last = await _ledger.LastAsync(Service, call.Cuit, pointOfSale, type, ct);
-        if (number != (last?.Number ?? 0) + 1) return Fail(call, 1071, "Número de Comprobante no válido.");
-        return last is not null && date < last.Date
-            ? Fail(call, 1013, "La fecha de comprobante no puede ser anterior a la fecha del último comprobante generado para el mismo punto de venta.")
-            : null;
-    }
+    private async Task<ContractAnswer?> SequenceProblemAsync(ServiceCall call, int pointOfSale, int type, long number, DateOnly date, CancellationToken ct) =>
+        await _ledger.CheckNumberAsync(Service, call.Cuit, pointOfSale, type, number, date, ct) switch
+        {
+            NumberCheck.WrongNumber => Fail(call, 1071, "Número de Comprobante no válido."),
+            NumberCheck.EarlierDate => Fail(call, 1013, "La fecha de comprobante no puede ser anterior a la fecha del último comprobante generado para el mismo punto de venta."),
+            _ => null,
+        };
 
     // ---- Answers ---------------------------------------------------------------------
 

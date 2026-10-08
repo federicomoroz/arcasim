@@ -16,10 +16,10 @@ public class LtvRulesTests
         $"<{name}><tipoComprobante>150</tipoComprobante><puntoVenta>1</puntoVenta><nroComprobante>{number}</nroComprobante></{name}>";
 
     /// <summary>Three bales, two of class 1 (95 kg at 100) and one of class 2 (40 kg at 80), A with 21% VAT, minus a retention of 100: 15267.</summary>
-    private static string Liquidation(long number, string bales = "A", int type = 150, long seller = Producer, int pointOfSale = 1) =>
+    private static string Liquidation(long number, string bales = "A", int type = 150, long seller = Producer, int pointOfSale = 1, string? date = null) =>
         "<solicitud><liquidacion>" +
         $"<tipoComprobante>{type}</tipoComprobante><nroComprobante>{number}</nroComprobante><puntoVenta>{pointOfSale}</puntoVenta>" +
-        $"<codDepositoAcopio>1</codDepositoAcopio><fechaLiquidacion>{Day()}</fechaLiquidacion><tipoCompra>CPS</tipoCompra>" +
+        $"<codDepositoAcopio>1</codDepositoAcopio><fechaLiquidacion>{date ?? Day()}</fechaLiquidacion><tipoCompra>CPS</tipoCompra>" +
         "<condicionVenta><codigo>1</codigo></condicionVenta><variedadTabaco>BR</variedadTabaco><codProvinciaOrigenTabaco>10</codProvinciaOrigenTabaco>" +
         "<fechaInicioActividad>2010-01-01</fechaInicioActividad></liquidacion>" +
         $"<receptor><cuit>{seller}</cuit></receptor>" +
@@ -77,6 +77,7 @@ public class LtvRulesTests
 
         Assert.Equal(["1039"], Errors(await ltv.CallAsync("generarLiquidacion", Liquidation(2))));
         Assert.Equal(["1071"], Errors(await ltv.CallAsync("generarLiquidacion", Liquidation(3, "B"))));
+        Assert.Equal(["1013"], Errors(await ltv.CallAsync("generarLiquidacion", Liquidation(2, "B", date: Day(-1)))));
         Assert.Equal(["1014"], Errors(await ltv.CallAsync("generarLiquidacion", Liquidation(1, "B", type: 151))));
         Assert.Equal(["1015"], Errors(await ltv.CallAsync("generarLiquidacion", Liquidation(2, "B", seller: Monotributista))));
         Assert.Empty(Errors(await ltv.CallAsync("generarLiquidacion", Liquidation(2, "B"))));

@@ -246,15 +246,14 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
             : null;
     }
 
-    private async Task<ContractAnswer?> SequenceProblemAsync(ServiceCall call, XElement voucher, DateOnly date, CancellationToken ct)
-    {
-        var last = await _ledger.LastAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"), ct);
-        if (voucher.Number("nroComprobante") != (last?.Number ?? 0) + 1)
-            return Fail(call, 1500, "N° de comprobante incorrecto para el tipo de comprobante y punto de venta ingresados.");
-        return last is not null && date < last.Date
-            ? Fail(call, 1201, "La fecha de liquidación debe ser mayor o igual a la fecha de la última liquidación autorizada para el mismo tipo de comprobante.")
-            : null;
-    }
+    private async Task<ContractAnswer?> SequenceProblemAsync(ServiceCall call, XElement voucher, DateOnly date, CancellationToken ct) =>
+        await _ledger.CheckNumberAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"),
+            voucher.Number("nroComprobante"), date, ct) switch
+        {
+            NumberCheck.WrongNumber => Fail(call, 1500, SettlementLedger.WrongNumberText),
+            NumberCheck.EarlierDate => Fail(call, 1201, "La fecha de liquidación debe ser mayor o igual a la fecha de la última liquidación autorizada para el mismo tipo de comprobante."),
+            _ => null,
+        };
 
     private static bool Repeated(IEnumerable<XElement> entries)
     {
