@@ -293,7 +293,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
             && (receiver is null || call.Name == "consultarRemitosReceptor" || r.Receiver == receiver)).ToList();
 
         var page = Math.Max(request.ChildLong("numeroPagina") ?? 1, 1);
-        var (items, _) = RemitoFamily.Page(found, (int)page);
+        var (items, _) = RemitoFamily.Page(found, page);
         var wrapper = call.Name + "Return";
         return call.Ok(new XElement(call.Operation.Output, new XElement(wrapper,
             new XElement("resultado", "A"),
@@ -305,7 +305,7 @@ public sealed class WsremazucarRules(IDocumentStore store, SequenceLocks locks, 
                 new XElement("cuitTitularMercaderia", r.Holder),
                 new XElement("idTipoComprobante", r.Type)))),
             new XElement("numeroPagina", page),
-            new XElement("maxPaginas", (found.Count + RemitoFamily.PageSize - 1) / RemitoFamily.PageSize),
+            new XElement("maxPaginas", RemitoFamily.PageCount(found.Count)),
             new XElement("maxRegistros", found.Count))));
     }
 

@@ -153,38 +153,4 @@ public class RemitoConcurrencyTests
         start.Set();
         return [.. await Task.WhenAll(calls)];
     }
-
-    private static string CarneRemito(ServiceClient client, long requestId, long holder, bool uncategorized = false) =>
-        client.Auth + $"<idReq>{requestId}</idReq><remito>" + (uncategorized ? "" : "<tipoComprobante>995</tipoComprobante>") + "<tipoMovimiento>ENV</tipoMovimiento>" +
-        $"<categoriaEmisor>1</categoriaEmisor><puntoEmision>9000</puntoEmision><cuitTitularMercaderia>{holder}</cuitTitularMercaderia>" +
-        (uncategorized
-            ? "<tipoReceptor>MI</tipoReceptor><categoriaReceptor>2</categoriaReceptor><documentoReceptor>30111222</documentoReceptor><denomReceptor>Juan Carnicero</denomReceptor>" +
-              "<domDestinoCalle>Rivadavia</domDestinoCalle><domDestinoNumero>100</domDestinoNumero><domDestinoCp>1000</domDestinoCp><domDestinoLoc>CABA</domDestinoLoc><domDestinoIdPcia>0</domDestinoIdPcia>"
-            : $"<tipoReceptor>MI</tipoReceptor><categoriaReceptor>1</categoriaReceptor><cuitReceptor>{Receiver}</cuitReceptor><codDomDestino>0</codDomDestino>") +
-        $"<viaje><cuitTransportista>{Holder}</cuitTransportista><fechaInicioViaje>2026-10-01</fechaInicioViaje><distanciaKm>50</distanciaKm>" +
-        "<vehiculo><dominioVehiculo>AB123CD</dominioVehiculo></vehiculo></viaje>" +
-        "<arrayMercaderias><mercaderia><orden>1</orden><codTipoProd>1.1</codTipoProd><tropa>123</tropa><kilos>1000</kilos><unidades>4</unidades></mercaderia></arrayMercaderias></remito>";
-
-    private static string HarinaRemito(ServiceClient client, long requestId, long holder) =>
-        client.Auth + $"<idReqCliente>{requestId}</idReqCliente>" +
-        "<remito><tipoMovimiento>ENV</tipoMovimiento><tipoEmisor>I</tipoEmisor><puntoEmision>1</puntoEmision>" +
-        $"<cuitTitular>{holder}</cuitTitular><depositario><tipoDepositario>E</tipoDepositario></depositario>" +
-        $"<receptor><cuitPaisReceptor>55000002002</cuitPaisReceptor><receptorNacional><cuitReceptor>{Receiver}</cuitReceptor>" +
-        "<tipoDomReceptor>1</tipoDomReceptor><codDomReceptor>0</codDomReceptor></receptorNacional></receptor>" +
-        "<viaje><transportista><codPaisTransportista>200</codPaisTransportista><transporteNacional>" +
-        $"<cuitTransportista>{Holder}</cuitTransportista></transporteNacional></transportista>" +
-        "<fechaInicioViaje>2026-10-01</fechaInicioViaje><distanciaKm>200</distanciaKm>" +
-        "<vehiculo><automotor><dominioVehiculo>AB123CD</dominioVehiculo></automotor></vehiculo></viaje>" +
-        "<arrayMercaderia><mercaderia><orden>1</orden><codTipo>1</codTipo><codTipoEmb>1</codTipoEmb><cantidadEmb>10</cantidadEmb>" +
-        "<codTipoUnidad>1</codTipoUnidad><cantidadUnidad>500</cantidadUnidad><pesoNetoKg>500</pesoNetoKg></mercaderia></arrayMercaderia></remito>";
-
-    private static string AzucarRemito(ServiceClient client, long requestId, long holder) =>
-        client.Auth + $"<idReqCliente>{requestId}</idReqCliente><remito><puntoEmision>1</puntoEmision>" +
-        $"<cuitTitularMercaderia>{holder}</cuitTitularMercaderia><tipoTitularMercaderia>1</tipoTitularMercaderia>" +
-        $"<receptor><cuitPaisReceptor>55000002002</cuitPaisReceptor><receptorNacional><cuitReceptor>{Receiver}</cuitReceptor></receptorNacional></receptor>" +
-        "<viaje><fechaInicioViaje>2026-10-01</fechaInicioViaje><kmDistancia>100</kmDistancia><tramo><automotor><codPaisTransportista>200</codPaisTransportista>" +
-        $"<transporteNacional><cuitTransportista>{Holder}</cuitTransportista><cuitConductor>{Depositary}</cuitConductor></transporteNacional>" +
-        "<dominioVehiculo>AB123CD</dominioVehiculo></automotor></tramo></viaje>" +
-        "<arrayMercaderias><mercaderia><orden>1</orden><anioZafra>2026</anioZafra><cantidad>1000</cantidad><tipoProducto>1</tipoProducto>" +
-        "<unidadMedida>1</unidadMedida><tipoEmbalaje>1</tipoEmbalaje></mercaderia></arrayMercaderias></remito>";
 }

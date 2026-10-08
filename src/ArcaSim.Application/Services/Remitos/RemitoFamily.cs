@@ -136,10 +136,20 @@ public static class RemitoFamily
                        && (issuer is null || r.Issuer == issuer)
                        && (status == "PEN" || Within(r.ReceivedOn ?? r.CreatedOn, from, to)));
 
-    public static (List<Remito> Items, bool More) Page(IEnumerable<Remito> remitos, int page)
+    /// <summary>How many pages <paramref name="total"/> remitos fill.</summary>
+    public static int PageCount(int total) => (total + PageSize - 1) / PageSize;
+
+    /// <summary>
+    /// One page of the remitos in code order, and whether more follow. A page the client counts past the last one
+    /// is empty and has no more: the number is a long because a page times <see cref="PageSize"/> overflows an int
+    /// from page 1,073,743, and the offset is only worked out for a page that exists.
+    /// </summary>
+    public static (List<Remito> Items, bool More) Page(IEnumerable<Remito> remitos, long page)
     {
         var ordered = remitos.OrderBy(r => r.Code).ToList();
-        var skip = (Math.Max(page, 1) - 1) * PageSize;
+        page = Math.Max(page, 1);
+        if (page > PageCount(ordered.Count)) return ([], false);
+        var skip = (int)((page - 1) * PageSize);
         return (ordered.Skip(skip).Take(PageSize).ToList(), ordered.Count > skip + PageSize);
     }
 
@@ -164,7 +174,7 @@ public static class RemitoFamily
             _ => ForReceiver(all, call.Cuit, request.ChildText("estadoRecepcion") ?? "", issuer, from, to),
         };
 
-        var page = Math.Max(call.Request.Int("nroPagina"), 1);
+        var page = Math.Max(call.Request.Long("nroPagina"), 1);
         var (items, more) = Page(found, page);
         var body = items.Count == 0
             ? new XElement("consultarRemitosReturn", RemitoXml.Errors([new RemitoProblem(3034, "Remitos no encontrados")]))
