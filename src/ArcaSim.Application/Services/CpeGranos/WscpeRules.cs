@@ -490,10 +490,3 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
         return text;
     }
 }
-
-internal static class XmlChildren
-{
-    /// <summary>The direct child with that local name: the requests of the Java services leave their children unqualified.</summary>
-    public static XElement? Child(this XElement element, string name) =>
-        element.Elements().FirstOrDefault(e => e.Name.LocalName == name);
-}
