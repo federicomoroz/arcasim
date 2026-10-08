@@ -64,8 +64,8 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
         {
             "consultarCPEPorDestino" => await ByDestinationAsync(call, ct),
             "consultarCPEPPendientesDeResolucion" => await PendingAsync(call, ct),
-            "consultarCPEDGPendienteActivacion" => await AwaitingActivationAsync(call, "PE", ct),
-            "consultarCPEEmitidasDestinoDGPendientesActivacion" => await AwaitingActivationAsync(call, "PO", ct),
+            "consultarCPEDGPendienteActivacion" => await AwaitingActivationAsync(call, CpeStates.AwaitingIssue, ct),
+            "consultarCPEEmitidasDestinoDGPendientesActivacion" => await AwaitingActivationAsync(call, CpeStates.AwaitingOrigin, ct),
             _ => null,
         };
     }
@@ -242,7 +242,7 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
         var target = move.To;
         if (move.Effect == CpeEffect.CloseContingency)
         {
-            target = request.Text("concepto")?.ToUpperInvariant() switch { "A" => "AC", "B" => "CO", "C" => "DE", _ => "" };
+            target = request.Text("concepto")?.ToUpperInvariant() switch { "A" => CpeStates.Active, "B" => CpeStates.Contingency, "C" => CpeStates.Deactivated, _ => "" };
             if (target == "") return call.Error(950, Fill(Codes.Required, "concepto"));
         }
         if (!move.From.Contains(cpe.State)) return call.Error(2034, Fill(Codes.InvalidTransition, cpe.State, target));
@@ -394,8 +394,8 @@ public sealed class WscpeRules(IDocumentStore store, IClock clock, SequenceLocks
             new XElement("fechaInicioEstado", GrainsFormat.DateTime(cpe.StateSince)),
             final ? null : new XElement("fechaVencimiento", GrainsFormat.DateTime(cpe.StateSince + StateValidity)),
             stored.Text("observaciones") is { Length: > 0 } notes ? new XElement("observaciones", notes) : null,
-            cpe.VoidReason is { } reason && cpe.State == "AN" ? new XElement("anulacionMotivo", reason) : null,
-            cpe.VoidNotes is { Length: > 0 } voidNotes && cpe.State == "AN" ? new XElement("anulacionObservaciones", voidNotes) : null);
+            cpe.VoidReason is { } reason && cpe.State == CpeStates.Voided ? new XElement("anulacionMotivo", reason) : null,
+            cpe.VoidNotes is { Length: > 0 } voidNotes && cpe.State == CpeStates.Voided ? new XElement("anulacionObservaciones", voidNotes) : null);
         if (answer.Child("cabecera") is { } template) template.ReplaceWith(header);
         else answer.AddFirst(header);
         fill.Keep(header);

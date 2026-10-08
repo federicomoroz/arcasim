@@ -55,6 +55,11 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
     private const string Secondary = "LSG";
     private const string Certificate = "CG";
 
+    // The states of a document: active, pending the other party's confirmation (a counterdocument, a certificate voided late), voided.
+    private const string Active = "AC";
+    private const string Pending = "PA";
+    private const string Voided = "AN";
+
     public string Service => "wslpg";
 
     public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct) => call.Name switch
@@ -116,7 +121,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
         var now = clock.Now;
         var coe = long.Parse(CoePrefix(kind) + (await store.NextAsync("wslpg-coe", ct) % 100_000_000).ToString("D8", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
         var (answer, authorization) = build(coe, now);
-        var document = new StoredSettlement(coe, kind, call.Cuit, pointOfIssue, order, kind == Counterdocument ? "PA" : "AC", now,
+        var document = new StoredSettlement(coe, kind, call.Cuit, pointOfIssue, order, kind == Counterdocument ? Pending : Active, now,
             Strip(request).ToString(SaveOptions.DisableFormatting), authorization.ToString(SaveOptions.DisableFormatting), adjusted);
         await SaveAsync(document, ct);
         await store.PutAsync(OrderCollection, OrderKey(kind, call.Cuit, pointOfIssue, order), new SettlementCoe(coe), ct);
@@ -148,7 +153,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
             LpgAmounts.Write(fill, authorization, totals);
             Put(fill, authorization, "coe", coe);
             if (liquidation.Long("numeroContrato") > 0) Put(fill, authorization, "numeroContrato", liquidation.Long("numeroContrato"));
-            Put(fill, authorization, "estado", "AC");
+            Put(fill, authorization, "estado", Active);
             fill.Done();
             return (fill.Root, authorization);
         }, ct);
@@ -203,12 +208,12 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
             null => (600, Codes.NoData),
             _ when document.Cuit != call.Cuit => (1510, otherCuit),
             _ when document.Kind != kind => (1519, Codes.CannotVoid),
-            _ when document.State == "AN" => (1527, Codes.AlreadyVoided),
+            _ when document.State == Voided => (1527, Codes.AlreadyVoided),
             _ when clock.Now.ToArgentina() > VoidDeadline(document.AuthorizedAt) => (1519, Codes.CannotVoid),
             _ => null,
         };
         if (refusal is null && (await store.ListAsync<StoredSettlement>(Collection, "", ct))
-            .Any(d => d.AdjustedCoe == coe && d.State is "AC" or "PA"))
+            .Any(d => d.AdjustedCoe == coe && d.State is Active or Pending))
             refusal = (1519, Codes.CannotVoid);
 
         var fill = new AnswerFill(call.Sample(), call.Contract.Schemas);
@@ -225,7 +230,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
             result.Add(new XElement(errors));
             return call.Ok(fill.Root);
         }
-        var voided = document! with { State = "AN" };
+        var voided = document! with { State = Voided };
         await SaveAsync(voided, ct);
         Pdf(fill, result, call.Request.Text("pdf") != "N", voided);
         return call.Ok(fill.Done());
@@ -252,7 +257,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
         if (original is null) return call.Error(600, Codes.NoData);
         if (original.Cuit != call.Cuit) return call.Error(1510, Codes.VoidOnlyOwn);
         if (original.Kind != Primary) return call.Error(1723, Codes.NotPrimary);
-        if (original.State == "AN" || (await store.ListAsync<StoredSettlement>(Collection, "", ct))
+        if (original.State == Voided || (await store.ListAsync<StoredSettlement>(Collection, "", ct))
                 .Any(d => d.Kind == Counterdocument && d.AdjustedCoe == original.Coe))
             return call.Error(1527, Codes.AlreadyVoided);
 
@@ -272,7 +277,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
             authorization.Child("fechaLiquidacion")?.SetValue(GrainsFormat.Date(now));
             authorization.Child("coe")?.SetValue(coe);
             authorization.Child("coe")?.AddAfterSelf(new XElement("coeAjustado", original.Coe));
-            var document = original with { Coe = coe, Kind = Counterdocument, State = "PA", Request = request.ToString(), Authorization = authorization.ToString() };
+            var document = original with { Coe = coe, Kind = Counterdocument, State = Pending, Request = request.ToString(), Authorization = authorization.ToString() };
             var answer = PrimaryAnswer(call, document, pdf: true);
             return (answer, authorization);
         }, ct, adjusted: original.Coe);
@@ -285,7 +290,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
         var basis = call.Request.Child("ajusteBase") ?? new XElement("ajusteBase");
         using var gate = await LockAsync(basis.Long("coeAjustado"), ct);
         var adjusted = await ByCoeAsync(basis.Long("coeAjustado"), ct);
-        if (adjusted is null || adjusted.State != "AC" || adjusted.Kind is Secondary or Certificate)
+        if (adjusted is null || adjusted.State != Active || adjusted.Kind is Secondary or Certificate)
             return call.Error(1908, Codes.AdjustedMustExist);
         if (adjusted.Kind != Primary) return call.Error(1911, Codes.AdjustedNotAdjustment);
         if (adjusted.Cuit != call.Cuit) return call.Error(1510, Codes.AdjustedSameCuit);
@@ -306,7 +311,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
             var debit = Side(fill, unified, call.Request.Child("ajusteDebito"), "ajusteDebito", now);
             if (unified.Child("totalesUnificados") is { } totals) LpgAmounts.WriteUnified(fill, totals, debit, credit);
             Put(fill, unified, "coe", coe);
-            Put(fill, unified, "estado", "AC");
+            Put(fill, unified, "estado", Active);
             fill.Done();
             return (fill.Root, unified);
         }, ct, adjusted: adjusted.Coe);
@@ -455,7 +460,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
             Put(fill, authorization, "ptoEmision", pointOfIssue);
             Put(fill, authorization, "nroOrden", order);
             Put(fill, authorization, "coe", coe);
-            Put(fill, authorization, "estado", "AC");
+            Put(fill, authorization, "estado", Active);
             Put(fill, authorization, "fechaCertificacion", GrainsFormat.Date(now));
             if (call.Request.Child("primaria") is { } primary && authorization.Child("pesosResumen") is { } weights)
             {
@@ -515,9 +520,9 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
         if (document is null || document.Kind != Certificate) return call.Error(600, Codes.NoData);
         if (call.Cuit != (confirm ? Depositor(document) : document.Cuit)) return call.Error(3502, Codes.CertificatePermission);
         if (!confirm && document.UsedBy is not null) return call.Error(3500, Codes.CertificateInUse);
-        if (document.State != (confirm ? "PA" : "AC")) return call.Error(3501, Codes.CertificateTransition);
+        if (document.State != (confirm ? Pending : Active)) return call.Error(3501, Codes.CertificateTransition);
 
-        var state = confirm || clock.Now.ToArgentina() <= VoidDeadline(document.AuthorizedAt) ? "AN" : "PA";
+        var state = confirm || clock.Now.ToArgentina() <= VoidDeadline(document.AuthorizedAt) ? Voided : Pending;
         var changed = document with { State = state };
         await SaveAsync(changed, ct);
         var fill = new AnswerFill(call.Sample(), call.Contract.Schemas);
