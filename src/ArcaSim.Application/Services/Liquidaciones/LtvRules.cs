@@ -261,7 +261,7 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
     private static readonly SettlementProblem WrongAdjustmentType = new(1136, "El tipo de comprobante del ajuste debe ser el mismo que el del comprobante a ajustar.");
 
     private static string KeyOf(ServiceCall call, XElement voucher) =>
-        SettlementLedger.Key(call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"), voucher.Number("nroComprobante"));
+        AuthorizedVouchers.Key(call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"), voucher.Number("nroComprobante"));
 
     private Task<Settlement?> FindAsync(ServiceCall call, XElement voucher, CancellationToken ct) =>
         _ledger.FindAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"), voucher.Number("nroComprobante"), ct);

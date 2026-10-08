@@ -35,7 +35,7 @@ public sealed record Settlement(
     public const string Annulled = "anulada";
     public const string Adjusted = "ajustada";
 
-    public string KeyOf() => SettlementLedger.Key(Cuit, PointOfSale, VoucherType, Number);
+    public string KeyOf() => AuthorizedVouchers.Key(Cuit, PointOfSale, VoucherType, Number);
 
     public XElement DetailXml() => XElement.Parse(Detail);
 }
@@ -83,9 +83,6 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
 
     public DateOnly Today => clock.Today();
 
-    public static string Key(long cuit, int pointOfSale, int voucherType, long number) =>
-        $"{cuit}/{pointOfSale:D5}/{voucherType:D3}/{number:D8}";
-
     public Task<IDisposable> LockAsync(string service, long cuit, int pointOfSale, int voucherType, CancellationToken ct) =>
         locks.AcquireAsync(service, cuit, pointOfSale, voucherType, ct);
 
@@ -124,7 +121,7 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
     }
 
     public Task<Settlement?> FindAsync(string service, long cuit, int pointOfSale, int voucherType, long number, CancellationToken ct) =>
-        FindAsync(service, Key(cuit, pointOfSale, voucherType, number), ct);
+        FindAsync(service, AuthorizedVouchers.Key(cuit, pointOfSale, voucherType, number), ct);
 
     public Task<Settlement?> FindAsync(string service, string key, CancellationToken ct) =>
         store.GetAsync<Settlement>(service, $"liq/{key}", ct);

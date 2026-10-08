@@ -109,7 +109,7 @@ internal sealed class LiquidacionesSim : IAsyncDisposable
     public async Task EditStoredAsync(string service, long cuit, int pointOfSale, int voucherType, long number, Action<XElement> edit)
     {
         var store = Sim.Services.GetRequiredService<IDocumentStore>();
-        var key = $"liq/{SettlementLedger.Key(cuit, pointOfSale, voucherType, number)}";
+        var key = $"liq/{AuthorizedVouchers.Key(cuit, pointOfSale, voucherType, number)}";
         var stored = (await store.GetAsync<Settlement>(service, key))!;
         var detail = stored.DetailXml();
         edit(detail);
