@@ -3,20 +3,27 @@ using ArcaSim.Application.Wsfe;
 
 namespace ArcaSim.Application.Services.Mtxca;
 
-/// <summary>A voucher type wsmtxca authorizes, with what decides its rules: whether VAT goes per item (class A) and whether it is an FCE.</summary>
-public sealed record MtxcaVoucherType(int Id, string Description)
+/// <summary>
+/// A voucher type wsmtxca authorizes: WSFEv1's row of the table for it (so both
+/// services agree on its class, kind and FCE flag) with the description wsmtxca
+/// gives it. What decides its rules is read from that row.
+/// </summary>
+public sealed record MtxcaVoucherType(VoucherTypeInfo Info, string Description)
 {
+    public int Id => Info.Id;
+
     /// <summary>Class A, A with the retention legend and FCE A: the price goes without VAT and each item carries importeIVA.</summary>
-    public bool ClassA => Id is 1 or 2 or 3 or 51 or 52 or 53 or 201 or 202 or 203;
+    public bool ClassA => Info.Class is VoucherClass.A or VoucherClass.ALey;
 
-    /// <summary>The types 129 and 128 ask a CUIT for: everything but plain class B.</summary>
-    public bool NeedsCuit => Id is not (6 or 7 or 8);
+    /// <summary>Class B and not an FCE: the types 6, 7 and 8, which identify the receiver by the amount instead of always asking for a CUIT.</summary>
+    public bool PlainB => Info.Class == VoucherClass.B && !Info.Fce;
 
-    public bool Fce => Id >= 201;
+    /// <summary>The types 129 and 128 ask a CUIT for: everything but plain class B (an FCE B asks for one).</summary>
+    public bool NeedsCuit => !PlainB;
 
-    public bool Invoice => Id is 1 or 6 or 51 or 201 or 206;
+    public bool Fce => Info.Fce;
 
-    public bool CreditNote => Id is 3 or 8 or 53 or 203 or 208;
+    public bool Invoice => Info.Kind == VoucherKind.Invoice;
 
     public bool Note => !Invoice;
 }
@@ -41,24 +48,30 @@ public sealed record MtxcaRow(int Code, string Description);
 /// </summary>
 public sealed class MtxcaTables(ParameterTables tables)
 {
-    public static readonly IReadOnlyList<MtxcaVoucherType> VoucherTypes =
+    /// <summary>The voucher types wsmtxca authorizes and the descriptions it gives them.</summary>
+    private static readonly (int Id, string Description)[] VoucherTypeDescriptions =
     [
-        new(1, "Factura A"),
-        new(2, "Nota de Débito A"),
-        new(3, "Nota de Crédito A"),
-        new(6, "Factura B"),
-        new(7, "Nota de Débito B"),
-        new(8, "Nota de Crédito B"),
-        new(51, "Factura A con leyenda OPERACIÓN SUJETA A RETENCIÓN"),
-        new(52, "Nota de Débito A con leyenda OPERACIÓN SUJETA A RETENCIÓN"),
-        new(53, "Nota de Crédito A con leyenda OPERACIÓN SUJETA A RETENCIÓN"),
-        new(201, "Factura de Crédito Electrónica MiPyMEs (FCE) A"),
-        new(202, "Nota de Débito Electrónica MiPyMEs (FCE) A"),
-        new(203, "Nota de Crédito Electrónica MiPyMEs (FCE) A"),
-        new(206, "Factura de Crédito Electrónica MiPyMEs (FCE) B"),
-        new(207, "Nota de Débito Electrónica MiPyMEs (FCE) B"),
-        new(208, "Nota de Crédito Electrónica MiPyMEs (FCE) B"),
+        (1, "Factura A"),
+        (2, "Nota de Débito A"),
+        (3, "Nota de Crédito A"),
+        (6, "Factura B"),
+        (7, "Nota de Débito B"),
+        (8, "Nota de Crédito B"),
+        (51, "Factura A con leyenda OPERACIÓN SUJETA A RETENCIÓN"),
+        (52, "Nota de Débito A con leyenda OPERACIÓN SUJETA A RETENCIÓN"),
+        (53, "Nota de Crédito A con leyenda OPERACIÓN SUJETA A RETENCIÓN"),
+        (201, "Factura de Crédito Electrónica MiPyMEs (FCE) A"),
+        (202, "Nota de Débito Electrónica MiPyMEs (FCE) A"),
+        (203, "Nota de Crédito Electrónica MiPyMEs (FCE) A"),
+        (206, "Factura de Crédito Electrónica MiPyMEs (FCE) B"),
+        (207, "Nota de Débito Electrónica MiPyMEs (FCE) B"),
+        (208, "Nota de Crédito Electrónica MiPyMEs (FCE) B"),
     ];
+
+    public IReadOnlyList<MtxcaVoucherType> VoucherTypes { get; } = VoucherTypeDescriptions
+        .Select(t => new MtxcaVoucherType(
+            tables.VoucherType(t.Id) ?? throw new InvalidOperationException($"WSFEv1's table has no voucher type {t.Id}."), t.Description))
+        .ToList();
 
     /// <summary>Condición de IVA of an item (consultarCondicionesIVA, pág. 285) and the rate it stands for.</summary>
     public static readonly IReadOnlyDictionary<int, decimal> ItemVatRates = new Dictionary<int, decimal>
@@ -93,7 +106,7 @@ public sealed class MtxcaTables(ParameterTables tables)
         new(27, "Opción de Transferencia"),
     ];
 
-    public static MtxcaVoucherType? VoucherType(int id) => VoucherTypes.FirstOrDefault(t => t.Id == id);
+    public MtxcaVoucherType? VoucherType(int id) => VoucherTypes.FirstOrDefault(t => t.Id == id);
 
     public static bool HasUnit(int code) => Units.Any(u => u.Code == code);
 

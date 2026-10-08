@@ -211,7 +211,7 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
         if (type.NeedsCuit && v.DocType is { } sent && sent != 80) add(MtxcaRule.ClassADocumentType);
         if (v.DocNumber == issuer) add(MtxcaRule.SameAsIssuer);
 
-        var classB = type.Id is 6 or 7 or 8;
+        var classB = type.PlainB;
         if (v.DocNumber == NotCategorized && (!classB || v.ReceiverCondition is not (null or 7))) add(MtxcaRule.NotCategorizedReceiver);
 
         var receiver = v.DocType == 80 && v.DocNumber is { } cuit ? await taxpayers.FindAsync(cuit, ct) : null;
@@ -220,7 +220,7 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
         {
             add(MtxcaRule.ReceiverInvalid);
         }
-        if (type.Id is 1 or 2 or 3 or 51 or 52 or 53 && receiver is { Active: true })
+        if (type.ClassA && !type.Fce && receiver is { Active: true })
         {
             if (receiver.VatCondition is not (VatCondition.ResponsableInscripto or VatCondition.Exento) && !receiver.VatCondition.IsMonotributo())
                 add(MtxcaRule.ReceiverNotInVat);
@@ -285,11 +285,11 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
 
     private static void CheckAssociated(MtxcaVoucherInput v, MtxcaVoucherType type, DateOnly date, Action<MtxcaRule> add)
     {
-        var plainNote = type.Id is 2 or 3 or 7 or 8 or 52 or 53;
+        var plainNote = type.Note && !type.Fce;
         if (plainNote && v.Associated.Count == 0 && v.Period is null) add(MtxcaRule.NoteWithoutAssociated);
         if (plainNote && v.Associated.Count > 0 && v.Period is not null) add(MtxcaRule.NoteWithBoth);
         if (type.Id is 1 or 2 or 51 or 201 or 206 && v.Period is not null) add(MtxcaRule.InvoiceWithPeriod);
-        if (type.Id is 202 or 203 or 207 or 208 && v.Period is not null) add(MtxcaRule.FceNoteWithPeriod);
+        if (type.Fce && type.Note && v.Period is not null) add(MtxcaRule.FceNoteWithPeriod);
 
         foreach (var associated in v.Associated)
         {

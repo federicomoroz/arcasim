@@ -182,7 +182,7 @@ public sealed partial class MtxcaRules
         var voucher = MtxcaVoucherInput.Read(element);
         var today = clock.Today();
         var date = voucher.Date ?? today;
-        var type = MtxcaTables.VoucherType(voucher.Type);
+        var type = _tables.VoucherType(voucher.Type);
         var issuer = await IssuerAsync(call.Cuit, voucher.PointOfSale, PointOfSaleKind.WebServiceCaea, ct, ClassOf(voucher.Type));
         var caea = voucher.AuthorizationCode is { } sent ? await _state.FindCaeaAsync(sent, ct) : null;
 

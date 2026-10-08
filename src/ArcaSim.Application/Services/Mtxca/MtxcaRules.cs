@@ -78,7 +78,7 @@ public sealed partial class MtxcaRules(
         "informarCAEANoUtilizado" => Some(UnusedAsync(call, null, ct)),
         "informarCAEANoUtilizadoPtoVta" => Some(UnusedAsync(call, call.Request.Int("numeroPuntoVenta"), ct)),
         "consultarPtosVtaCAEANoInformados" => Some(NotInformedAsync(call, ct)),
-        "consultarTiposComprobante" => Done(Table(call, "arrayTiposComprobante", MtxcaTables.VoucherTypes.Select(t => new MtxcaRow(t.Id, t.Description)))),
+        "consultarTiposComprobante" => Done(Table(call, "arrayTiposComprobante", _tables.VoucherTypes.Select(t => new MtxcaRow(t.Id, t.Description)))),
         "consultarTiposDocumento" => Done(Table(call, "arrayTiposDocumento", _tables.DocumentTypes)),
         "consultarAlicuotasIVA" => Done(Table(call, "arrayAlicuotasIVA", _tables.VatRates)),
         "consultarCondicionesIVA" => Done(Table(call, "arrayCondicionesIVA", _tables.ItemVatConditions)),
@@ -110,7 +110,7 @@ public sealed partial class MtxcaRules(
         var voucher = MtxcaVoucherInput.Read(element);
         var today = clock.Today();
         var date = voucher.Date ?? today;
-        var type = MtxcaTables.VoucherType(voucher.Type);
+        var type = _tables.VoucherType(voucher.Type);
         var issuer = await IssuerAsync(call.Cuit, voucher.PointOfSale, PointOfSaleKind.WebServiceCae, ct, ClassOf(voucher.Type));
 
         var findings = new List<MtxcaFinding>();
@@ -218,7 +218,7 @@ public sealed partial class MtxcaRules(
     /// <summary>1500 for a type the service does not authorize; 1501 for a point of sale that is not the issuer's CAE or CAEA one.</summary>
     private async Task<int?> QueryProblemAsync(ServiceCall call, int type, int pointOfSale, CancellationToken ct)
     {
-        if (MtxcaTables.VoucherType(type) is null) return 1500;
+        if (_tables.VoucherType(type) is null) return 1500;
         if (settings.OpenAccess) return null;
         var kind = (await taxpayers.FindAsync(call.Cuit, ct))?.FindPointOfSale(pointOfSale)?.Kind;
         return kind is PointOfSaleKind.WebServiceCae or PointOfSaleKind.WebServiceCaea ? null : 1501;
@@ -234,7 +234,7 @@ public sealed partial class MtxcaRules(
 
     private ContractAnswer ReceiverConditions(ServiceCall call)
     {
-        var type = MtxcaTables.VoucherType(call.Request.Int("codigoTipoComprobante"));
+        var type = _tables.VoucherType(call.Request.Int("codigoTipoComprobante"));
         if (type is null) return QueryError(call, 196);
         return call.Ok(new XElement(call.Operation.Output,
             FceXml.CodeList("arrayCondicionesIVAReceptor", _tables.ReceiverConditions(type).Select(r => (r.Code, r.Description)))));
@@ -289,7 +289,7 @@ public sealed partial class MtxcaRules(
     /// would then reject.
     /// </summary>
     private VoucherClass? ClassOf(int voucherType) =>
-        MtxcaTables.VoucherType(voucherType) is null ? null : parameters.VoucherType(voucherType)?.Class;
+        _tables.VoucherType(voucherType)?.Info.Class;
 
     private static bool Usable(Taxpayer? issuer, int number, PointOfSaleKind kind, DateOnly today) =>
         issuer?.CanIssueFrom(number, kind, today) == true;
