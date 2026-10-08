@@ -70,12 +70,8 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
         return found is null || found.Cuit != call.Cuit ? Missing(call) : Answer(call, found, request.Value("pdf") is "true" or "1");
     }
 
-    private async Task<ContractAnswer> PointsAsync(ServiceCall call, CancellationToken ct)
-    {
-        var address = SettlementLedger.AddressOf(await _ledger.TaxpayerAsync(call.Cuit, ct));
-        var points = await _ledger.PointsOfSaleAsync(call.Cuit, ct);
-        return Ok(call, points.Select(p => new XElement("puntoVenta", new XElement("codigo", p.Number), new XElement("descripcion", address))));
-    }
+    private async Task<ContractAnswer> PointsAsync(ServiceCall call, CancellationToken ct) =>
+        Ok(call, await _ledger.PointsAnswerAsync(call.Cuit, ct));
 
     private async Task<ContractAnswer> TotalsAsync(ServiceCall call, CancellationToken ct)
     {
@@ -259,6 +255,9 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     // ---- Checks ----------------------------------------------------------------------
 
+    private static readonly SettlementProblem NoPoints = new(1003, "No posee puntos de venta habilitados para el actual sistema de ingreso.");
+    private static readonly SettlementProblem InvalidPoint = new(1006, "El punto de venta ingresado no es válido.");
+
     private static string KeyOf(ServiceCall call, XElement voucher) =>
         SettlementLedger.Key(call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"), voucher.Number("nroComprobante"));
 
@@ -267,11 +266,7 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<ContractAnswer?> CommonProblemAsync(ServiceCall call, int pointOfSale, DateOnly date, CancellationToken ct)
     {
-        switch (await _ledger.CheckPointOfSaleAsync(call.Cuit, pointOfSale, ct))
-        {
-            case PointCheck.NoPoints: return Fail(call, 1003, "No posee puntos de venta habilitados para el actual sistema de ingreso.");
-            case PointCheck.Invalid: return Fail(call, 1006, "El punto de venta ingresado no es válido.");
-        }
+        if (await _ledger.PointProblemAsync(call.Cuit, pointOfSale, NoPoints, InvalidPoint, ct) is { } point) return Fail(call, point);
         return Math.Abs(date.DayNumber - _ledger.Today.DayNumber) > 10
             ? Fail(call, 1012, "La fecha de liquidación no puede diferir en más de 10 días anteriores o posteriores a la fecha actual.")
             : null;
@@ -374,5 +369,7 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
     private static ContractAnswer NoData(ServiceCall call) =>
         Fail(call, 1127, "No hay datos para los comprobantes ingresados, o bien, alguno de ellos corresponde a un ajuste.");
 
-    private static ContractAnswer Fail(ServiceCall call, long code, string text) => SettlementXml.Fail(call, null, (code, text));
+    private static ContractAnswer Fail(ServiceCall call, long code, string text) => Fail(call, new SettlementProblem(code, text));
+
+    private static ContractAnswer Fail(ServiceCall call, SettlementProblem problem) => SettlementXml.Fail(call, null, problem);
 }

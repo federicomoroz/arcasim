@@ -29,6 +29,9 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
 {
     private static readonly int[] AdjustmentTypes = [43, 44, 45, 46, 47, 48];
 
+    private static readonly SettlementProblem NoPoints = new(2082, "La cuit representada, no tiene puntos de venta activos para emitir una liquidación.");
+    private static readonly SettlementProblem InvalidPoint = new(2086, "El punto de venta informado no es válido.");
+
     private readonly SettlementLedger _ledger = new(store, taxpayers, codes, locks, clock);
 
     public string Service => "wslum";
@@ -65,12 +68,8 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
         return found is null || found.Cuit != call.Cuit ? NotFound(call) : Answer(call, found, Wants(request));
     }
 
-    private async Task<ContractAnswer> PointsAsync(ServiceCall call, CancellationToken ct)
-    {
-        var address = SettlementLedger.AddressOf(await _ledger.TaxpayerAsync(call.Cuit, ct));
-        var points = await _ledger.PointsOfSaleAsync(call.Cuit, ct);
-        return Ok(call, points.Select(p => new XElement("puntoVenta", new XElement("codigo", p.Number), new XElement("descripcion", address))));
-    }
+    private async Task<ContractAnswer> PointsAsync(ServiceCall call, CancellationToken ct) =>
+        Ok(call, await _ledger.PointsAnswerAsync(call.Cuit, ct));
 
     private async Task<ContractAnswer> GenerateAsync(ServiceCall call, CancellationToken ct)
     {
@@ -88,11 +87,7 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var adjustment = liquidation.Optional("ajuste");
         var today = _ledger.Today;
 
-        switch (await _ledger.CheckPointOfSaleAsync(call.Cuit, pointOfSale, ct))
-        {
-            case PointCheck.NoPoints: return Fail(call, 2082, "La cuit representada, no tiene puntos de venta activos para emitir una liquidación.");
-            case PointCheck.Invalid: return Fail(call, 2086, "El punto de venta informado no es válido.");
-        }
+        if (await _ledger.PointProblemAsync(call.Cuit, pointOfSale, NoPoints, InvalidPoint, ct) is { } point) return Fail(call, point);
         if (producer.Number("cuit") == call.Cuit)
             return Fail(call, 2126, "La cuit del productor tambero y la del adquiriente no pueden ser iguales.");
         if (await _ledger.TaxpayerAsync(producer.Number("cuit"), ct) is { Active: false })
@@ -301,5 +296,7 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
     private static ContractAnswer NotFound(ServiceCall call) =>
         Fail(call, 2044, "La liquidación que intenta obtener no existe según los parámetros de búsqueda.");
 
-    private static ContractAnswer Fail(ServiceCall call, long code, string text) => SettlementXml.Fail(call, null, (code, text));
+    private static ContractAnswer Fail(ServiceCall call, long code, string text) => Fail(call, new SettlementProblem(code, text));
+
+    private static ContractAnswer Fail(ServiceCall call, SettlementProblem problem) => SettlementXml.Fail(call, null, problem);
 }

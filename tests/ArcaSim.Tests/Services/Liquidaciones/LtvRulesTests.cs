@@ -16,9 +16,9 @@ public class LtvRulesTests
         $"<{name}><tipoComprobante>150</tipoComprobante><puntoVenta>1</puntoVenta><nroComprobante>{number}</nroComprobante></{name}>";
 
     /// <summary>Three bales, two of class 1 (95 kg at 100) and one of class 2 (40 kg at 80), A with 21% VAT, minus a retention of 100: 15267.</summary>
-    private static string Liquidation(long number, string bales = "A", int type = 150, long seller = Producer) =>
+    private static string Liquidation(long number, string bales = "A", int type = 150, long seller = Producer, int pointOfSale = 1) =>
         "<solicitud><liquidacion>" +
-        $"<tipoComprobante>{type}</tipoComprobante><nroComprobante>{number}</nroComprobante><puntoVenta>1</puntoVenta>" +
+        $"<tipoComprobante>{type}</tipoComprobante><nroComprobante>{number}</nroComprobante><puntoVenta>{pointOfSale}</puntoVenta>" +
         $"<codDepositoAcopio>1</codDepositoAcopio><fechaLiquidacion>{Day()}</fechaLiquidacion><tipoCompra>CPS</tipoCompra>" +
         "<condicionVenta><codigo>1</codigo></condicionVenta><variedadTabaco>BR</variedadTabaco><codProvinciaOrigenTabaco>10</codProvinciaOrigenTabaco>" +
         "<fechaInicioActividad>2010-01-01</fechaInicioActividad></liquidacion>" +
@@ -80,6 +80,17 @@ public class LtvRulesTests
         Assert.Equal(["1014"], Errors(await ltv.CallAsync("generarLiquidacion", Liquidation(1, "B", type: 151))));
         Assert.Equal(["1015"], Errors(await ltv.CallAsync("generarLiquidacion", Liquidation(2, "B", seller: Monotributista))));
         Assert.Empty(Errors(await ltv.CallAsync("generarLiquidacion", Liquidation(2, "B"))));
+    }
+
+    [Fact]
+    public async Task Points_of_sale_come_from_the_issuer_and_one_it_lacks_is_refused()
+    {
+        await using var ltv = await StartAsync();
+
+        Assert.Equal(["1", "3000"], (await ltv.CallAsync("consultarPuntosVentas")).Elements("puntoVenta").Select(p => p.Element("codigo")!.Value));
+        Assert.Empty((await ltv.CallAsync("consultarPuntosVentas", auth: await ltv.AuthForAsync(Producer))).Elements("puntoVenta"));
+        Assert.Equal(["1006"], Errors(await ltv.CallAsync("generarLiquidacion", Liquidation(1, pointOfSale: 7))));
+        Assert.Equal(["1003"], Errors(await ltv.CallAsync("generarLiquidacion", Liquidation(1), await ltv.AuthForAsync(Producer))));
     }
 
     [Fact]

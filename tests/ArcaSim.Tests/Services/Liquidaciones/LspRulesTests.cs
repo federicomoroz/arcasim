@@ -90,6 +90,7 @@ public class LspRulesTests
             wrongType.Element("errores")!.Element("error")!.Element("descripcion")!.Value);
         Assert.NotNull(wrongType.Element("metadata"));
         Assert.Equal(["1008"], Errors(await lsp.CallAsync("generarLiquidacion", Purchase(1, pointOfSale: 7))));
+        Assert.Equal(["1007"], Errors(await lsp.CallAsync("generarLiquidacion", Purchase(1), await lsp.AuthForAsync(Producer))));
         Assert.Equal(["2200"], Errors(await lsp.CallAsync("generarLiquidacion", Purchase(1, date: Day(-6)))));
         Assert.Equal(["1000"], Errors(await lsp.CallAsync("consultarLiquidacionPorNroComprobante", ByNumber(1, 183, 1))));
     }
@@ -170,6 +171,7 @@ public class LspRulesTests
 
         var points = await lsp.CallAsync("consultarPuntosVenta");
         Assert.Equal(["1", "3000"], points.Elements("puntoVenta").Select(p => p.Element("codigo")!.Value));
+        Assert.Empty((await lsp.CallAsync("consultarPuntosVenta", auth: await lsp.AuthForAsync(Producer))).Elements("puntoVenta"));
 
         var types = await lsp.CallAsync("consultarTiposComprobante");
         Assert.Contains(types.Elements("tipoComprobante"), t => t.Element("codigo")!.Value == "183");

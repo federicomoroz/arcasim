@@ -92,12 +92,8 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         return Answer(call, found);
     }
 
-    private async Task<ContractAnswer> PointsAsync(ServiceCall call, CancellationToken ct)
-    {
-        var address = SettlementLedger.AddressOf(await _ledger.TaxpayerAsync(call.Cuit, ct));
-        var points = await _ledger.PointsOfSaleAsync(call.Cuit, ct);
-        return Ok(call, points.Select(p => new XElement("puntoVenta", new XElement("codigo", p.Number), new XElement("descripcion", address))), Metadata());
-    }
+    private async Task<ContractAnswer> PointsAsync(ServiceCall call, CancellationToken ct) =>
+        Ok(call, await _ledger.PointsAnswerAsync(call.Cuit, ct), Metadata());
 
     // ---- Liquidations ----------------------------------------------------------------
 
@@ -277,13 +273,11 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
             ? operation is >= 201 and <= 208 && type is >= 157 and <= 170
             : TypesByOperation.TryGetValue(operation, out var types) && types.Contains(type);
 
+    private static readonly SettlementProblem NoPoints = new(1007, "La CUIT representada no tiene puntos de venta activos para emitir una liquidación.");
+    private static readonly SettlementProblem InvalidPoint = new(1008, "El punto de venta informado no es válido.");
+
     private async Task<ContractAnswer?> PointProblemAsync(ServiceCall call, int pointOfSale, CancellationToken ct) =>
-        await _ledger.CheckPointOfSaleAsync(call.Cuit, pointOfSale, ct) switch
-        {
-            PointCheck.NoPoints => Fail(call, 1007, "La CUIT representada no tiene puntos de venta activos para emitir una liquidación."),
-            PointCheck.Invalid => Fail(call, 1008, "El punto de venta informado no es válido."),
-            _ => null,
-        };
+        await _ledger.PointProblemAsync(call.Cuit, pointOfSale, NoPoints, InvalidPoint, ct) is { } problem ? Fail(call, problem) : null;
 
     private async Task<ContractAnswer?> WrongNumberAsync(ServiceCall call, int pointOfSale, int type, long number, CancellationToken ct)
     {
@@ -313,7 +307,9 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         return call.Ok(new XElement(call.Operation.Output, answer));
     }
 
-    private ContractAnswer Fail(ServiceCall call, long code, string text) => SettlementXml.Fail(call, Metadata(), (code, text));
+    private ContractAnswer Fail(ServiceCall call, long code, string text) => Fail(call, new SettlementProblem(code, text));
+
+    private ContractAnswer Fail(ServiceCall call, SettlementProblem problem) => SettlementXml.Fail(call, Metadata(), problem);
 
     private ContractAnswer Ok(ServiceCall call, params object?[] content) => SettlementXml.Ok(call, content);
 

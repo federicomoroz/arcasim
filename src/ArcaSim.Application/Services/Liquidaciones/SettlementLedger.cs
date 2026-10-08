@@ -46,13 +46,8 @@ public sealed record LastSettlement(long Number, DateOnly Date);
 /// <summary>Where a CAE points: the settlement's key.</summary>
 public sealed record SettlementByCae(string Key);
 
-/// <summary>What a service's point-of-sale check found for the issuer.</summary>
-public enum PointCheck
-{
-    Ok,
-    NoPoints,
-    Invalid,
-}
+/// <summary>A business rejection: the code a manual gives and its text.</summary>
+public readonly record struct SettlementProblem(long Code, string Text);
 
 /// <summary>
 /// The numbering and authorization the four sector liquidation services share
@@ -134,15 +129,27 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
 
     public Task<Taxpayer?> TaxpayerAsync(long cuit, CancellationToken ct) => taxpayers.FindAsync(cuit, ct);
 
-    /// <summary>The issuer's web service points of sale (RECE): none at all, not this one, or fine.</summary>
-    public async Task<PointCheck> CheckPointOfSaleAsync(long cuit, int pointOfSale, CancellationToken ct)
+    /// <summary>
+    /// The issuer's web service points of sale (RECE): <paramref name="noPoints"/> when it has none at all,
+    /// <paramref name="invalid"/> when it has not this one, nothing when it is fine. Each service
+    /// gives its own code and text for the two.
+    /// </summary>
+    public async Task<SettlementProblem?> PointProblemAsync(long cuit, int pointOfSale, SettlementProblem noPoints, SettlementProblem invalid, CancellationToken ct)
     {
         var points = await PointsOfSaleAsync(cuit, ct);
-        if (points.Count == 0) return PointCheck.NoPoints;
-        return points.Any(p => p.Number == pointOfSale) ? PointCheck.Ok : PointCheck.Invalid;
+        if (points.Count == 0) return noPoints;
+        return points.Any(p => p.Number == pointOfSale) ? null : invalid;
     }
 
-    public async Task<IReadOnlyList<PointOfSale>> PointsOfSaleAsync(long cuit, CancellationToken ct) =>
+    /// <summary>The answer to a query of points of sale, the same in the four services: a puntoVenta per point, each with the issuer's address.</summary>
+    public async Task<List<XElement>> PointsAnswerAsync(long cuit, CancellationToken ct)
+    {
+        var address = AddressOf(await taxpayers.FindAsync(cuit, ct));
+        return (await PointsOfSaleAsync(cuit, ct))
+            .Select(p => new XElement("puntoVenta", new XElement("codigo", p.Number), new XElement("descripcion", address))).ToList();
+    }
+
+    private async Task<IReadOnlyList<PointOfSale>> PointsOfSaleAsync(long cuit, CancellationToken ct) =>
         (await taxpayers.FindAsync(cuit, ct))?.PointsOfSale
             .Where(p => p.Kind == PointOfSaleKind.WebServiceCae && !p.Blocked && (p.DeactivatedOn is null || p.DeactivatedOn > Today))
             .OrderBy(p => p.Number).ToList() ?? [];
@@ -224,16 +231,16 @@ public static class SettlementXml
 
     /// <summary>
     /// A business rejection: the service's own error block (respuesta/errores/error)
-    /// with every error, and the metadata the service sends with every answer when it has one.
+    /// with the error, and the metadata the service sends with every answer when it has one.
     /// </summary>
-    public static ContractAnswer Fail(ServiceCall call, XElement? metadata, params (long Code, string Text)[] errors)
+    public static ContractAnswer Fail(ServiceCall call, XElement? metadata, SettlementProblem problem)
     {
-        var answer = call.Error(errors[0].Code, errors[0].Text);
+        var answer = call.Error(problem.Code, problem.Text);
         if (answer.Body?.Descendants().FirstOrDefault(e => e.Name.LocalName == "errores") is not { } block) return answer;
         block.RemoveNodes();
-        block.Add(errors.Select(e => new XElement("error",
-            new XElement("codigo", e.Code.ToString(CultureInfo.InvariantCulture)),
-            new XElement("descripcion", e.Text))));
+        block.Add(new XElement("error",
+            new XElement("codigo", problem.Code.ToString(CultureInfo.InvariantCulture)),
+            new XElement("descripcion", problem.Text)));
         if (metadata is not null && block.Parent is { } holder && holder.Optional("metadata") is null) block.AddAfterSelf(metadata);
         return answer;
     }

@@ -61,12 +61,8 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
             ? Answer(call, found)
             : Fail(call, 800, "No se encontraron resultados según los parámetros de búsqueda informados.");
 
-    private async Task<ContractAnswer> PointsAsync(ServiceCall call, CancellationToken ct)
-    {
-        var address = SettlementLedger.AddressOf(await _ledger.TaxpayerAsync(call.Cuit, ct));
-        var points = await _ledger.PointsOfSaleAsync(call.Cuit, ct);
-        return Ok(call, points.Select(p => new XElement("puntoVenta", new XElement("codigo", p.Number), new XElement("descripcion", address))), Metadata());
-    }
+    private async Task<ContractAnswer> PointsAsync(ServiceCall call, CancellationToken ct) =>
+        Ok(call, await _ledger.PointsAnswerAsync(call.Cuit, ct), Metadata());
 
     // ---- Liquidations ----------------------------------------------------------------
 
@@ -219,6 +215,9 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     // ---- Checks ----------------------------------------------------------------------
 
+    private static readonly SettlementProblem NoPoints = new(910, "No posee puntos de venta habilitados para Comprobantes en Línea.");
+    private static readonly SettlementProblem InvalidPoint = new(1001, "El punto de venta informado es inválido.");
+
     private static string KeyOf(ServiceCall call, XElement voucher) =>
         SettlementLedger.Key(call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"), voucher.Number("nroComprobante"));
 
@@ -236,11 +235,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<ContractAnswer?> IssuerProblemAsync(ServiceCall call, int pointOfSale, DateOnly date, CancellationToken ct)
     {
-        switch (await _ledger.CheckPointOfSaleAsync(call.Cuit, pointOfSale, ct))
-        {
-            case PointCheck.NoPoints: return Fail(call, 910, "No posee puntos de venta habilitados para Comprobantes en Línea.");
-            case PointCheck.Invalid: return Fail(call, 1001, "El punto de venta informado es inválido.");
-        }
+        if (await _ledger.PointProblemAsync(call.Cuit, pointOfSale, NoPoints, InvalidPoint, ct) is { } point) return Fail(call, point);
         if (await _ledger.TaxpayerAsync(call.Cuit, ct) is { VatCondition: not VatCondition.ResponsableInscripto })
             return Fail(call, 1002, "El emisor no corresponde a un contribuyente inscripto en el Impuesto al Valor Agregado.");
         var today = _ledger.Today;
@@ -390,7 +385,9 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
             new XElement("importeTotal", Money(total)));
     }
 
-    private ContractAnswer Fail(ServiceCall call, long code, string text) => SettlementXml.Fail(call, Metadata(), (code, text));
+    private ContractAnswer Fail(ServiceCall call, long code, string text) => Fail(call, new SettlementProblem(code, text));
+
+    private ContractAnswer Fail(ServiceCall call, SettlementProblem problem) => SettlementXml.Fail(call, Metadata(), problem);
 
     private ContractAnswer Ok(ServiceCall call, params object?[] content) => SettlementXml.Ok(call, content);
 
