@@ -35,6 +35,10 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
     private const string Bovine = "bovina";
     private const string Avian = "avicola";
 
+    /// <summary>How far from the processing date a voucher's date may fall (2200): 5 days, 10 in poultry.</summary>
+    private const int WindowDays = 5;
+    private const int PoultryWindowDays = 10;
+
     private static readonly Dictionary<int, int[]> TypesByOperation = new()
     {
         [1] = [180, 182], [2] = [180, 182], [3] = [180, 182], [4] = [183, 185], [5] = [186, 188, 189], [6] = [190, 191],
@@ -111,7 +115,7 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         if (await PointProblemAsync(call, pointOfSale, ct) is { } pointProblem) return pointProblem;
         var data = request.Child("datosLiquidacion");
         var date = data.Day("fechaComprobante") ?? _ledger.Today;
-        if (OutOfWindow(date, avian) is { } window) return Fail(call, 2200, window);
+        if (OutOfWindow(date, avian) is { } window) return Fail(call, window);
 
         using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, type, ct);
         if (await WrongNumberAsync(call, pointOfSale, type, number, ct) is { } wrong) return wrong;
@@ -211,7 +215,7 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         if (annulment && _ledger.Today > new DateOnly(original.Date.Year, original.Date.Month, 1).AddMonths(1).AddDays(5))
             return Fail(call, 5000, "Solo se puede anular un comprobante hasta el día 6 inclusive del mes siguiente al de la liquidación.");
         if (await PointProblemAsync(call, pointOfSale, ct) is { } pointProblem) return pointProblem;
-        if (OutOfWindow(date, avian) is { } window) return Fail(call, 2200, window);
+        if (OutOfWindow(date, avian) is { } window) return Fail(call, window);
 
         if (await WrongNumberAsync(call, pointOfSale, original.VoucherType, number, ct) is { } wrong) return wrong;
 
@@ -285,12 +289,13 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
             ? Fail(call, 1009, SettlementLedger.WrongNumberText)
             : null;
 
-    private string? OutOfWindow(DateOnly date, bool avian)
+    /// <summary>2200: the voucher's date within N days of the processing date, N = 5 in sales and 10 in poultry (§4.9).</summary>
+    private SettlementProblem? OutOfWindow(DateOnly date, bool avian)
     {
-        var days = avian ? 10 : 5;
+        var days = avian ? PoultryWindowDays : WindowDays;
         return Math.Abs(date.DayNumber - _ledger.Today.DayNumber) <= days
             ? null
-            : $"Liquidación: La fecha de comprobante debe estar comprendida entre los {days} días próximos o anteriores a la fecha de proceso.";
+            : new SettlementProblem(2200, $"Liquidación: La fecha de comprobante debe estar comprendida entre los {days} días próximos o anteriores a la fecha de proceso.");
     }
 
     // ---- Answers ---------------------------------------------------------------------
@@ -306,8 +311,6 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
     private ContractAnswer Fail(ServiceCall call, long code, string text) => Fail(call, new SettlementProblem(code, text));
 
     private ContractAnswer Fail(ServiceCall call, SettlementProblem problem) => SettlementXml.Fail(call, Metadata(), problem);
-
-    private ContractAnswer Ok(ServiceCall call, params object?[] content) => SettlementXml.Ok(call, content);
 
     /// <summary>§2.5: the server and its local time, without a zone (§4.10).</summary>
     private XElement Metadata() => new("metadata",

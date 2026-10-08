@@ -129,7 +129,7 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var gross = romaneos.SelectMany(r => r.Elements("detalleClase")).Sum(c => c.Amount("importe"));
         var totals = Totals.Of(type, gross, request.Optional("bonificacion")?.Amount("importe") ?? 0, request.Optional("flete")?.Amount("importe"),
             request.Children("retencion").ToList(), request.Children("tributo").ToList());
-        if (totals.Total <= 0) return Fail(call, 1072, "El importe total de la liquidación o ajuste debe ser mayor a cero.");
+        if (totals.Total <= 0) return Fail(call, TotalNotPositive);
 
         var cae = _ledger.NewCae();
         var detail = new XElement("liquidacion",
@@ -173,7 +173,7 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
         {
             if (await FindAsync(call, voucher, ct) is not { } found) return Missing(call);
             if (found.IsAdjustment) return NoData(call);
-            if (found.VoucherType != type) return Fail(call, 1136, "El tipo de comprobante del ajuste debe ser el mismo que el del comprobante a ajustar.");
+            if (found.VoucherType != type) return Fail(call, WrongAdjustmentType);
             originals.Add(found);
         }
         if (originals.Count == 0)
@@ -188,7 +188,7 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var classes = request.Children("precioClase").Select(p => ClassLine(p.Value("claseTabaco") ?? "", p.Number("totalFardos"),
             p.Number("totalKilos"), p.Amount("precio"), "claseAjuste")).ToList();
         var totals = Totals.Of(type, classes.Sum(c => c.Amount("importe")), 0, null, request.Children("retencion").ToList(), request.Children("tributo").ToList());
-        if (totals.Total <= 0) return Fail(call, 1072, "El importe total de la liquidación o ajuste debe ser mayor a cero.");
+        if (totals.Total <= 0) return Fail(call, TotalNotPositive);
 
         var cae = _ledger.NewCae();
         var first = originals[0].DetailXml();
@@ -226,7 +226,7 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
         if (await FindAsync(call, target, ct) is not { } original) return Missing(call);
         if (original.IsAdjustment) return NoData(call);
         if (original.State == Settlement.Adjusted) return Fail(call, 1135, "El comprobante ingresado ya fue ajustado previamente.");
-        if (original.VoucherType != type) return Fail(call, 1136, "El tipo de comprobante del ajuste debe ser el mismo que el del comprobante a ajustar.");
+        if (original.VoucherType != type) return Fail(call, WrongAdjustmentType);
         if (await CommonProblemAsync(call, pointOfSale, date, ct) is { } problem) return problem;
         if (await SequenceProblemAsync(call, pointOfSale, type, number, date, ct) is { } wrong) return wrong;
 
@@ -257,6 +257,8 @@ public sealed class LtvRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private static readonly SettlementProblem NoPoints = new(1003, "No posee puntos de venta habilitados para el actual sistema de ingreso.");
     private static readonly SettlementProblem InvalidPoint = new(1006, "El punto de venta ingresado no es válido.");
+    private static readonly SettlementProblem TotalNotPositive = new(1072, "El importe total de la liquidación o ajuste debe ser mayor a cero.");
+    private static readonly SettlementProblem WrongAdjustmentType = new(1136, "El tipo de comprobante del ajuste debe ser el mismo que el del comprobante a ajustar.");
 
     private static string KeyOf(ServiceCall call, XElement voucher) =>
         SettlementLedger.Key(call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"), voucher.Number("nroComprobante"));

@@ -145,7 +145,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
             lines.Add(Item(i + 1, source, item.Amount("diferenciaPrecio"), type, new XElement("detalleAjuste", Copy(target, "comprobanteAjustado"),
                 new XElement("nroOrdenAjustado", order))));
         }
-        if (first is null) return Fail(call, 1601, "La liquidación que intenta ajustar es inexistente: 0.");
+        if (first is null) return MissingOriginal(call, 0);
         if (await IssuerProblemAsync(call, (int)voucher.Number("puntoVenta"), date, ct) is { } issuerProblem) return issuerProblem;
 
         using var _ = await _ledger.LockAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), type, ct);
@@ -224,10 +224,13 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
     private Task<Settlement?> FindAsync(ServiceCall call, XElement voucher, CancellationToken ct) =>
         _ledger.FindAsync(Service, call.Cuit, (int)voucher.Number("puntoVenta"), (int)voucher.Number("tipoComprobante"), voucher.Number("nroComprobante"), ct);
 
+    private ContractAnswer MissingOriginal(ServiceCall call, long number) =>
+        Fail(call, 1601, $"La liquidación que intenta ajustar es inexistente: {number}.");
+
     private ContractAnswer? AdjustableProblem(ServiceCall call, XElement target, Settlement? original, int type)
     {
         var number = target.Number("nroComprobante");
-        if (original is null) return Fail(call, 1601, $"La liquidación que intenta ajustar es inexistente: {number}.");
+        if (original is null) return MissingOriginal(call, number);
         if (original.VoucherType != type)
             return Fail(call, 1600, "El tipo de comprobante informado para el ajuste debe ser igual al tipo de la liquidación que intenta ajustar.");
         return original.State == Settlement.Annulled ? Fail(call, 1604, $"La liquidación que intenta ajustar se encuentra anulada: {number}.") : null;
@@ -385,8 +388,6 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
     private ContractAnswer Fail(ServiceCall call, long code, string text) => Fail(call, new SettlementProblem(code, text));
 
     private ContractAnswer Fail(ServiceCall call, SettlementProblem problem) => SettlementXml.Fail(call, Metadata(), problem);
-
-    private ContractAnswer Ok(ServiceCall call, params object?[] content) => SettlementXml.Ok(call, content);
 
     /// <summary>§2.5: the server and its time, with milliseconds and offset as in the manual's examples.</summary>
     private XElement Metadata() => new("metadata",
