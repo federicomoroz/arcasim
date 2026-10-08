@@ -4,7 +4,6 @@ using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Events;
 using ArcaSim.Application.Padron;
-using ArcaSim.Application.Services.Fce;
 using ArcaSim.Application.Wsfe;
 using ArcaSim.Domain;
 
@@ -83,7 +82,7 @@ public sealed partial class MtxcaRules(
         "consultarAlicuotasIVA" => Done(Table(call, "arrayAlicuotasIVA", _tables.VatRates)),
         "consultarCondicionesIVA" => Done(Table(call, "arrayCondicionesIVA", _tables.ItemVatConditions)),
         "consultarCondicionesIVAReceptor" => Done(ReceiverConditions(call)),
-        "consultarMonedas" => Done(call.Ok(new XElement(call.Operation.Output, FceXml.CodeList("arrayMonedas", _tables.Currencies)))),
+        "consultarMonedas" => Done(call.Ok(new XElement(call.Operation.Output, ContractXml.CodeList("arrayMonedas", _tables.Currencies)))),
         "consultarCotizacionMoneda" => Some(QuoteAsync(call, ct)),
         "consultarUnidadesMedida" => Done(Table(call, "arrayUnidadesMedida", MtxcaTables.Units)),
         "consultarTiposTributo" => Done(Table(call, "arrayTiposTributo", _tables.Taxes)),
@@ -230,14 +229,14 @@ public sealed partial class MtxcaRules(
     // ---- Parameters ------------------------------------------------------------------
 
     private static ContractAnswer Table(ServiceCall call, string array, IEnumerable<MtxcaRow> rows) =>
-        call.Ok(new XElement(call.Operation.Output, FceXml.CodeList(array, rows.Select(r => (r.Code, r.Description)))));
+        call.Ok(new XElement(call.Operation.Output, ContractXml.CodeList(array, rows.Select(r => (r.Code, r.Description)))));
 
     private ContractAnswer ReceiverConditions(ServiceCall call)
     {
         var type = _tables.VoucherType(call.Request.Int("codigoTipoComprobante"));
         if (type is null) return QueryError(call, 196);
         return call.Ok(new XElement(call.Operation.Output,
-            FceXml.CodeList("arrayCondicionesIVAReceptor", _tables.ReceiverConditions(type).Select(r => (r.Code, r.Description)))));
+            ContractXml.CodeList("arrayCondicionesIVAReceptor", _tables.ReceiverConditions(type).Select(r => (r.Code, r.Description)))));
     }
 
     /// <summary>The rate ArcaSim was given for that day or the last one before it; PES is always 1; none, no value.</summary>
@@ -299,7 +298,7 @@ public sealed partial class MtxcaRules(
         settings.OpenAccess || issuer is null ? null : [PadronDirectory.ActivityOf(issuer).Id];
 
     private static XElement Codes(string array, IEnumerable<MtxcaFinding> findings) =>
-        FceXml.CodeList(array, findings.Select(f => (f.Code, f.Text)));
+        ContractXml.CodeList(array, findings.Select(f => (f.Code, f.Text)));
 
     private static string Day(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 }

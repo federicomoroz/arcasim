@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
-using ArcaSim.Application.Services.Fce;
 
 namespace ArcaSim.Application.Services.Mtxca;
 

@@ -31,19 +31,6 @@ public static class FceXml
         return (items, skip >= 0 && all.Count > skip + PageSize);
     }
 
-    /// <summary>
-    /// The direct child's number as an int: null when it is missing or does not read, and
-    /// int.MinValue, which no code, type or point of sale is, when it is a number an int
-    /// cannot hold. A rule then refuses 4294967297 as the invalid value it is, instead of
-    /// reading it as 1. The shared place for this is ContractXml.
-    /// </summary>
-    public static int? ChildInt(this XElement? element, string name) =>
-        element.ChildLong(name) is { } value ? (value is >= int.MinValue and <= int.MaxValue ? (int)value : int.MinValue) : null;
-
-    /// <summary>The same for a field the schema types as xsd:short: short.MinValue when the number does not fit one.</summary>
-    public static short? ChildShort(this XElement? element, string name) =>
-        element.ChildLong(name) is { } value ? (value is >= short.MinValue and <= short.MaxValue ? (short)value : short.MinValue) : null;
-
     /// <summary>The direct child's text, trimmed; null when it is missing or empty.</summary>
     public static string? Value(this XElement? element, string name) => element.ChildText(name) is { Length: > 0 } text ? text : null;
 
@@ -71,22 +58,6 @@ public static class FceXml
         > 250 => text[..250],
         _ => text,
     };
-
-    /// <summary>
-    /// The one builder of the codigo + descripcion lists every one of these
-    /// services answers with (the parameter tables, the errors, the
-    /// observations): one item per row under the block's name, which goes out
-    /// empty when there are no rows. The item is codigoDescripcion, or
-    /// codigoDescripcionString where the code travels as text. It is used by
-    /// the FCE, MTXCA and WSCT rules alike; the shared place for it is
-    /// ContractXml.
-    /// </summary>
-    public static XElement CodeList<TCode>(string block, IEnumerable<(TCode Code, string Text)> rows, string item = "codigoDescripcion") =>
-        new(block, rows.Select(row => new XElement(item, new XElement("codigo", row.Code), new XElement("descripcion", row.Text))));
-
-    /// <summary>The same list, or null when there are no rows: an errors or observations block goes out only with something to say.</summary>
-    public static XElement? Codes(string block, IEnumerable<(long Code, string Text)> codes, string item = "codigoDescripcion") =>
-        CodeList(block, codes, item) is { HasElements: true } list ? list : null;
 }
 
 /// <summary>An idCtaCte as the request sent it: the account code, or the invoice that opened it.</summary>

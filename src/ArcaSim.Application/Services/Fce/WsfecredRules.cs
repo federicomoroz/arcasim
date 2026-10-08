@@ -106,13 +106,13 @@ public sealed class WsfecredRules(
         new(call.Operation.Output, new XElement(result, content));
 
     private static XElement Table(ServiceCall call, IEnumerable<(long Code, string Text)> rows) =>
-        Answer(call, "codigoDescripcionReturn", Codes("arrayCodigoDescripcion", rows));
+        Answer(call, "codigoDescripcionReturn", ContractXml.Codes("arrayCodigoDescripcion", rows));
 
     private static IEnumerable<(long, string)> Texts(IEnumerable<int> codes) => codes.Select(c => ((long)c, FceTexts.Fecred[c]));
 
-    private static XElement? Errors(params int[] codes) => Codes("arrayErrores", Texts(codes));
+    private static XElement? Errors(params int[] codes) => ContractXml.Codes("arrayErrores", Texts(codes));
 
-    private static XElement? Errors(IEnumerable<int> codes) => Codes("arrayErrores", Texts(codes));
+    private static XElement? Errors(IEnumerable<int> codes) => ContractXml.Codes("arrayErrores", Texts(codes));
 
     /// <summary>OperacionFECredReturnType: resultado, the idCtaCte the request sent, and the errors when it failed.</summary>
     private static XElement Operation(ServiceCall call, AccountRef reference, IReadOnlyCollection<int> errors) =>
@@ -252,7 +252,7 @@ public sealed class WsfecredRules(
             State("estadoCtaCte", account.State),
             Voucher(book, book.InvoiceOf(account), "factura"),
             notes.Count == 0 ? null : new XElement("arrayNotasDCAsociadas", notes.Select(n => Voucher(book, n))),
-            Codes("arrayFormasCancelacion", account.Forms.Select(f => ((long)f.Code, f.Description))),
+            ContractXml.Codes("arrayFormasCancelacion", account.Forms.Select(f => ((long)f.Code, f.Description))),
             account.Withholdings.Count == 0 ? null : new XElement("arrayRetenciones", account.Withholdings.Select(w => new XElement("retencion",
                 new XElement("codTipo", w.Code),
                 new XElement("importe", Money(w.Amount)),
@@ -284,7 +284,7 @@ public sealed class WsfecredRules(
 
     // ---- Queries ---------------------------------------------------------------------
 
-    private static XElement NoResults(string block) => Codes(block, [(32767L, FceTexts.Fecred[32767])])!;
+    private static XElement NoResults(string block) => ContractXml.Codes(block, [(32767L, FceTexts.Fecred[32767])])!;
 
     /// <summary>The day a FiltroFechaType's tipo looks at, for a voucher.</summary>
     private static DateOnly? DayOf(FceBook book, FceVoucher voucher, string? kind)
@@ -723,7 +723,7 @@ public sealed class WsfecredRules(
         Answer(call, "operacionFECredReturn",
             new XElement("resultado", "R"),
             Echo(reference),
-            CodeList("arrayErroresFormato", problems, "codigoDescripcionString"));
+            ContractXml.CodeList("arrayErroresFormato", problems, "codigoDescripcionString"));
 
     private async Task<XElement> ReportToAgentAsync(ServiceCall call, FceBook book, CancellationToken ct)
     {

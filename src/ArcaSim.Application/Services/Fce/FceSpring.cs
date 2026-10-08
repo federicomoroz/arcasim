@@ -36,10 +36,10 @@ public static class FceSpring
     public static XElement Result(XName output, params object?[] content) => new(output, new XElement("resultado", content));
 
     public static XElement? Errors(IReadOnlyDictionary<int, string> texts, IEnumerable<int> codes) =>
-        FceXml.Codes("errores", codes.Select(c => ((long)c, texts[c])));
+        ContractXml.Codes("errores", codes.Select(c => ((long)c, texts[c])));
 
     public static XElement? FormatErrors(IReadOnlyDictionary<int, string> texts, IEnumerable<int> codes) =>
-        FceXml.Codes("erroresFormato", codes.Distinct().Select(c => ((long)c, texts[c])), "codigoDescripcionString");
+        ContractXml.Codes("erroresFormato", codes.Distinct().Select(c => ((long)c, texts[c])), "codigoDescripcionString");
 
     public static XElement IdFactura(FceId id) => new("idFactura",
         new XElement("cuitEmisor", id.Cuit),

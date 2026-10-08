@@ -67,7 +67,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
     };
 
     private static XElement Reasons(ServiceCall call) => Result(call.Operation.Output,
-        new XElement("parametros", FceXml.Codes("parametrosTipoCodigosDescripciones",
+        new XElement("parametros", ContractXml.Codes("parametrosTipoCodigosDescripciones",
             FceTables.AgentRejectionReasons.Select(r => ((long)r.Code, r.Description)))));
 
     private static XElement Account(string name, long holder, string id, string? denomination) => new(name,

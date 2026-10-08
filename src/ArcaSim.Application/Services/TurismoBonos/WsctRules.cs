@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Events;
-using ArcaSim.Application.Services.Fce;
 using ArcaSim.Application.Wsfe;
 using ArcaSim.Domain;
 
@@ -167,13 +166,13 @@ public sealed class WsctRules(
         call.Ok(new XElement(call.Operation.Output, new XElement(_returns.GetOrAdd(call.Name, _ => call.Sample().Elements().First().Name), content)));
 
     private ContractAnswer Short(ServiceCall call, string array, IEnumerable<(int Code, string Description)> rows) =>
-        Return(call, FceXml.CodeList(array, rows));
+        Return(call, ContractXml.CodeList(array, rows));
 
     private ContractAnswer Strings(ServiceCall call, string array, IEnumerable<(string Code, string Description)> rows) =>
-        Return(call, FceXml.CodeList(array, rows, "codigoDescripcionString"));
+        Return(call, ContractXml.CodeList(array, rows, "codigoDescripcionString"));
 
     private static XElement Errors(IEnumerable<BookNote> notes, string name = "arrayErrores") =>
-        FceXml.CodeList(name, notes.Select(n => (n.Code, n.Text)));
+        ContractXml.CodeList(name, notes.Select(n => (n.Code, n.Text)));
 
     /// <summary>
     /// What the schema validator reports for a number below its type's
@@ -190,7 +189,7 @@ public sealed class WsctRules(
             problems.Add(("cvc-minInclusive-valid", $" El valor '{value}' no cumple con la restricción minInclusive '1' para el tipo '{type}'."));
             problems.Add(("cvc-type.3.1.3", $" El valor '{value}' del elemento '{field}' no es válido."));
         }
-        return problems.Count == 0 ? null : FceXml.CodeList("arrayErroresFormato", problems, "codigoDescripcionString");
+        return problems.Count == 0 ? null : ContractXml.CodeList("arrayErroresFormato", problems, "codigoDescripcionString");
     }
 
     private bool Production => settings.Environment == ArcaEnvironment.Produccion;

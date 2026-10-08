@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Events;
-using ArcaSim.Application.Services.Fce;
 using ArcaSim.Application.Wsfe;
 using ArcaSim.Domain;
 
