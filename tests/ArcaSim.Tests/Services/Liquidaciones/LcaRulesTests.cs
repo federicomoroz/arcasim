@@ -12,23 +12,23 @@ public class LcaRulesTests
 
     private const string Last = "<solicitud><puntoVenta>3000</puntoVenta><tipoComprobante>171</tipoComprobante></solicitud>";
 
-    private static string Voucher(long number, string name = "comprobante", int type = 171) =>
-        $"<{name}><puntoVenta>3000</puntoVenta><tipoComprobante>{type}</tipoComprobante><nroComprobante>{number}</nroComprobante></{name}>";
+    private static string Voucher(long number, string name = "comprobante", int type = 171, int pointOfSale = 3000) =>
+        $"<{name}><puntoVenta>{pointOfSale}</puntoVenta><tipoComprobante>{type}</tipoComprobante><nroComprobante>{number}</nroComprobante></{name}>";
 
     /// <summary>10000 kg of cane at 15.50 with 21% VAT and a tax of 100: 155000 + 32550 + 100 = 187650.</summary>
-    private static string Liquidation(long number, string note = "00007-00979871", int type = 171, long grower = Producer, long kilos = 10000) =>
-        $"<solicitud><emisor>{Voucher(number, type: type)}<fechaInicioActividades>2010-01-01</fechaInicioActividades></emisor>" +
+    private static string Liquidation(long number, string note = "00007-00979871", int type = 171, long grower = Producer, long kilos = 10000, int pointOfSale = 3000, string? date = null) =>
+        $"<solicitud><emisor>{Voucher(number, type: type, pointOfSale: pointOfSale)}<fechaInicioActividades>2010-01-01</fechaInicioActividades></emisor>" +
         $"<receptor><cuit>{grower}</cuit><localidad>1</localidad><provincia>23</provincia></receptor>" +
-        $"<datosGenerales><fechaComprobante>{Day()}</fechaComprobante><condicionVenta><codigo>1</codigo></condicionVenta>" +
+        $"<datosGenerales><fechaComprobante>{date ?? Day()}</fechaComprobante><condicionVenta><codigo>1</codigo></condicionVenta>" +
         "<medioPago><codigo>1</codigo></medioPago></datosGenerales>" +
         $"<remito><nroRemito>{note}</nroRemito><kilos>{kilos}</kilos></remito>" +
         "<detalle><producto>1</producto><cantidad>10000</cantidad><unidadMedida>1</unidadMedida><precioUnitario>15.50</precioUnitario>" +
         "<alicuotaIVA>21</alicuotaIVA></detalle>" +
         "<tributo><codTributo>1</codTributo><importe>100.00</importe></tributo></solicitud>";
 
-    private static string Price(long number, long target, int kind = 2, int item = 1) =>
+    private static string Price(long number, long target, int kind = 2, int item = 1, string? date = null) =>
         $"<solicitud><emisor>{Voucher(number)}<tipoAjuste>{kind}</tipoAjuste></emisor>" +
-        $"<datosGenerales><fechaComprobante>{Day()}</fechaComprobante><condicionVenta><codigo>1</codigo></condicionVenta>" +
+        $"<datosGenerales><fechaComprobante>{date ?? Day()}</fechaComprobante><condicionVenta><codigo>1</codigo></condicionVenta>" +
         "<medioPago><codigo>1</codigo></medioPago></datosGenerales>" +
         $"<detalle>{Voucher(target, "comprobanteAjustado")}<nroOrdenItemAjustado>{item}</nroOrdenItemAjustado><diferenciaPrecio>1.00</diferenciaPrecio></detalle></solicitud>";
 
@@ -61,6 +61,18 @@ public class LcaRulesTests
     }
 
     [Fact]
+    public async Task A_voucher_with_no_date_takes_todays_and_prints_it()
+    {
+        await using var lca = await StartAsync();
+
+        var issued = await lca.CallAsync("generarLiquidacion", Liquidation(1, date: ""));
+        var adjusted = await lca.CallAsync("generarAjustePrecio", Price(2, 1, date: ""));
+
+        Assert.Equal("2026-10-01-03:00", issued.Element("datosGenerales")!.Element("fechaComprobante")!.Value);
+        Assert.Equal("2026-10-01-03:00", adjusted.Element("datosGenerales")!.Element("fechaComprobante")!.Value);
+    }
+
+    [Fact]
     public async Task Delivery_notes_types_and_numbers_are_checked()
     {
         await using var lca = await StartAsync();
@@ -70,11 +82,38 @@ public class LcaRulesTests
         Assert.Equal(["1303"], Errors(again));
         Assert.Equal("Remito #00007-00979871: El remito que desea agregar ya se encuentra liquidado.", again.Descendants("descripcion").First().Value);
         Assert.Equal(["1500"], Errors(await lca.CallAsync("generarLiquidacion", Liquidation(3, "00007-00979872"))));
+        Assert.Equal(["1201"], Errors(await lca.CallAsync("generarLiquidacion", Liquidation(2, "00007-00979872", date: Day(-1)))));
         Assert.Equal(["1206"], Errors(await lca.CallAsync("generarLiquidacion", Liquidation(2, "00007-00979872", type: 173))));
         Assert.Equal(["1207"], Errors(await lca.CallAsync("generarLiquidacion", Liquidation(1, "00007-00979872", type: 172))));
         Assert.Equal(["1304"], Errors(await lca.CallAsync("generarLiquidacion", Liquidation(2, "00007-00979872", kilos: 9000))));
         Assert.Equal(["1100"], Errors(await lca.CallAsync("generarLiquidacion", Liquidation(2, "00007-00979872", grower: Issuer))));
         Assert.Empty(Errors(await lca.CallAsync("generarLiquidacion", Liquidation(1, "00007-00979872", type: 172, grower: Monotributista))));
+    }
+
+    [Fact]
+    public async Task A_physical_adjustment_of_a_stored_voucher_without_its_date_fails_instead_of_answering_without_it()
+    {
+        await using var lca = await StartAsync();
+        lca.Sim.ExpectLoggedErrors();
+        await lca.CallAsync("generarLiquidacion", Liquidation(1));
+        await lca.EditStoredAsync("wslca", Issuer, 3000, 171, 1, detail => detail.Element("datosGenerales")!.Element("fechaComprobante")!.Remove());
+
+        var (status, body) = await lca.PostAsync("generarAjusteFisico", Physical(2, 1));
+
+        Assert.True(status == 500, body);
+        var failure = Assert.IsType<InvalidOperationException>(Assert.Single(lca.Sim.LoggedErrors).Exception);
+        Assert.Equal("The stored voucher has no <fechaComprobante> to set.", failure.Message);
+    }
+
+    [Fact]
+    public async Task Points_of_sale_come_from_the_issuer_and_one_it_lacks_is_refused()
+    {
+        await using var lca = await StartAsync();
+
+        Assert.Equal(["1", "3000"], (await lca.CallAsync("consultarPuntosVenta")).Elements("puntoVenta").Select(p => p.Element("codigo")!.Value));
+        Assert.Empty((await lca.CallAsync("consultarPuntosVenta", auth: await lca.AuthForAsync(Producer))).Elements("puntoVenta"));
+        Assert.Equal(["1001"], Errors(await lca.CallAsync("generarLiquidacion", Liquidation(1, pointOfSale: 7))));
+        Assert.Equal(["910"], Errors(await lca.CallAsync("generarLiquidacion", Liquidation(1), await lca.AuthForAsync(Producer))));
     }
 
     [Fact]

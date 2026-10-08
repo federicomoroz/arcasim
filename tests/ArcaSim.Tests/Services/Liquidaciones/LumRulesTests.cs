@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,13 +19,13 @@ public class LumRulesTests
     /// October's liquidation: 3500 kg of fat at 100 and 3300 kg of protein at 120, a commercial bonus of 1000,
     /// 21% VAT and another tax of 1.5% over 100000: 746000 + 1000 + 156870 − 1500 = 902370.
     /// </summary>
-    private static string Liquidation(long number, int type = 27, string rate = "<alicuotaIVA>21</alicuotaIVA>", string period = "2026/10",
-        string date = "2026-10-01", string adjustment = "", bool physical = true, string bonus = "<importe>1000</importe>") =>
+    internal static string Liquidation(long number, int type = 27, string rate = "<alicuotaIVA>21</alicuotaIVA>", string period = "2026/10",
+        string date = "2026-10-01", string adjustment = "", bool physical = true, string bonus = "<importe>1000</importe>", int pointOfSale = 1, long tambero = Producer) =>
         "<solicitud><liquidacion>" +
-        $"<periodo>{period}</periodo><fechaComprobante>{date}</fechaComprobante><puntoVenta>1</puntoVenta>" +
+        $"<periodo>{period}</periodo><fechaComprobante>{date}</fechaComprobante><puntoVenta>{pointOfSale}</puntoVenta>" +
         $"<tipoComprobante>{type}</tipoComprobante><nroComprobante>{number}</nroComprobante>{rate}{adjustment}" +
         "<condicionVenta><codigo>1</codigo></condicionVenta></liquidacion>" +
-        $"<tambero><cuit>{Producer}</cuit></tambero>" +
+        $"<tambero><cuit>{tambero}</cuit></tambero>" +
         $"<tambo><nroTamboInterno>1234</nroTamboInterno><nroRenspa>{Renspa}</nroRenspa>" +
         "<ubicacionTambo><latitud>-34.600000</latitud><longitud>-58.400000</longitud><domicilio>Ruta 5 km 100</domicilio>" +
         "<codLocalidad>1</codLocalidad><codProvincia>1</codProvincia><nombrePartidoDepto>Chivilcoy</nombrePartidoDepto><codigoPostal>6620</codigoPostal></ubicacionTambo>" +
@@ -81,6 +82,7 @@ public class LumRulesTests
 
         Assert.Equal(["2074"], Errors(await lum.CallAsync("generarLiquidacion", Liquidation(1))));
         Assert.Equal(["2078"], Errors(await lum.CallAsync("generarLiquidacion", Liquidation(2))));
+        Assert.Equal(["2132"], Errors(await lum.CallAsync("generarLiquidacion", Liquidation(2, period: "2026/09", date: "2026-09-25"))));
     }
 
     [Fact]
@@ -93,6 +95,28 @@ public class LumRulesTests
         Assert.Equal(["2114"], Errors(await lum.CallAsync("generarLiquidacion", Liquidation(1, rate: ""))));
         Assert.Equal(["2115"], Errors(await lum.CallAsync("generarLiquidacion", Liquidation(1, type: 28))));
         Assert.Empty(Errors(await lum.CallAsync("generarLiquidacion", Liquidation(1, period: "2026/09", date: "2026-09-25"))));
+    }
+
+    [Fact]
+    public async Task A_tambero_the_registry_holds_inactive_is_refused_and_one_it_does_not_hold_is_accepted()
+    {
+        await using var lum = await StartAsync();
+        (await lum.Sim.Http.PutAsJsonAsync("/arcasim/api/taxpayers/20333333334",
+            new { name = "Tambo de Baja", vatCondition = "ResponsableInscripto", active = false, pointsOfSale = Array.Empty<object>() })).EnsureSuccessStatusCode();
+
+        Assert.Equal(["2103"], Errors(await lum.CallAsync("generarLiquidacion", Liquidation(1, tambero: 20333333334))));
+        Assert.Empty(Errors(await lum.CallAsync("generarLiquidacion", Liquidation(1, tambero: 20444444445))));
+    }
+
+    [Fact]
+    public async Task Points_of_sale_come_from_the_issuer_and_one_it_lacks_is_refused()
+    {
+        await using var lum = await StartAsync();
+
+        Assert.Equal(["1", "3000"], (await lum.CallAsync("consultarPuntosVenta")).Elements("puntoVenta").Select(p => p.Element("codigo")!.Value));
+        Assert.Empty((await lum.CallAsync("consultarPuntosVenta", auth: await lum.AuthForAsync(Producer))).Elements("puntoVenta"));
+        Assert.Equal(["2086"], Errors(await lum.CallAsync("generarLiquidacion", Liquidation(1, pointOfSale: 7))));
+        Assert.Equal(["2082"], Errors(await lum.CallAsync("generarLiquidacion", Liquidation(1), await lum.AuthForAsync(Producer))));
     }
 
     [Fact]

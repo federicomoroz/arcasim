@@ -1,4 +1,6 @@
 using ArcaSim.Application.Services.Organismos;
+using ArcaSim.Infrastructure.InMemory;
+using ArcaSim.Tests.Services.Aduana;
 
 namespace ArcaSim.Tests.Services.Organismos;
 
@@ -40,7 +42,7 @@ public class VentanillaRulesTests
         var ve = await ServiceProbe.StartAsync(sim, "veconsumerws");
         var published = new DateTimeOffset(2026, 9, 25, 10, 0, 0, TimeSpan.FromHours(-3));
         for (var i = 1; i <= 3; i++)
-            await VentanillaInbox.PublishAsync(ve.Store, new Communication(0, Caller, published.AddDays(i), null, 2, null,
+            await Inbox.PublishAsync(ve.Store, new Communication(0, Caller, published.AddDays(i), null, 2, null,
                 $"Mensaje numero {i} de una intimacion ficticia que supera los cincuenta caracteres del asunto", 1, 1, i == 2 ? "EXP-2" : null, null, false, []));
 
         var page = (await ListAsync(ve, "<fechaDesde>2026-09-20</fechaDesde><fechaHasta>2026-10-01</fechaHasta><pagina>2</pagina><resultadosPorPagina>2</resultadosPorPagina>")).Valid();
@@ -80,8 +82,8 @@ public class VentanillaRulesTests
     {
         await using var sim = ArcaSimHarness.Start();
         var ve = await ServiceProbe.StartAsync(sim, "veconsumerws");
-        var other = await VentanillaInbox.PublishAsync(ve.Store, new Communication(0, 30000000007, sim.Clock.Now, null, 1, "Ajena", "Ajena", 2, 1, null, null, false, []));
-        var mine = await VentanillaInbox.PublishAsync(ve.Store, new Communication(0, Caller, sim.Clock.Now, null, 1, "Interna", "Interna", 2, 1, null, null, true, []));
+        var other = await Inbox.PublishAsync(ve.Store, new Communication(0, 30000000007, sim.Clock.Now, null, 1, "Ajena", "Ajena", 2, 1, null, null, false, []));
+        var mine = await Inbox.PublishAsync(ve.Store, new Communication(0, Caller, sim.Clock.Now, null, 1, "Interna", "Interna", 2, 1, null, null, true, []));
 
         Assert.Equal("Error 104: La Comunicación [999999] no existe", (await ReadAsync(ve, 999999)).Fault);
         Assert.Equal($"Error 105: La CUIT representada [{Caller}] no es la destinataria de la Comunicación indicada [{other.Id}]", (await ReadAsync(ve, other.Id)).Fault);
@@ -115,4 +117,31 @@ public class VentanillaRulesTests
     private static string Auth(ServiceProbe ve) =>
         $"<authRequest><c:token xmlns:c=\"{Core}\">{ve.Token}</c:token><c:sign xmlns:c=\"{Core}\">{ve.Sign}</c:sign>" +
         $"<c:cuitRepresentada xmlns:c=\"{Core}\">{Caller}</c:cuitRepresentada></authRequest>";
+
+    [Fact]
+    public async Task An_inbox_asked_for_by_requests_that_arrive_together_is_seeded_once()
+    {
+        var store = new YieldingDocumentStore(new InMemoryStore());
+        var now = new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3));
+
+        await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => VentanillaInbox.SeedAsync(store, Caller, now, CancellationToken.None)));
+
+        var inbox = await store.ListAsync<Communication>(VentanillaInbox.Communications);
+        Assert.Equal([1L, 2L, 3L], inbox.Where(c => c.Cuit == Caller).Select(c => c.Id).Order());
+    }
+
+    [Fact]
+    public async Task A_communication_preloaded_in_a_state_the_manual_does_not_list_is_still_listed_and_read()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var ve = await ServiceProbe.StartAsync(sim, "veconsumerws");
+        var odd = await Inbox.PublishAsync(ve.Store, new Communication(0, Caller, sim.Clock.Now, null, 1, "Rara", "Rara", 2, 7, null, null, false, []));
+
+        var listed = (await ListAsync(ve, "<fechaDesde>2026-09-20</fechaDesde>")).Valid();
+        var read = (await ReadAsync(ve, odd.Id)).Valid();
+
+        Assert.Equal("1", listed.Value("totalItems"));
+        Assert.Equal(("7", ""), (listed.Value("estado"), listed.Value("estadoDesc")));
+        Assert.Equal(("7", ""), (read.Value("estado"), read.Value("estadoDesc")));
+    }
 }

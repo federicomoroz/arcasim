@@ -29,7 +29,7 @@ public sealed class SimulationSettings
     /// <summary>Null follows the calendar: v4.8 from 01/12/2026, v4.7 before.</summary>
     public ManualVersion? ManualVersionOverride { get; set; }
 
-    /// <summary>WSAA's anti-repeat window. Off by default for tests, which ask for tickets in a loop.</summary>
+    /// <summary>WSAA's anti-repeat window. On, as in ARCA; the test harness turns it off, since tests ask for tickets in a loop.</summary>
     public bool ReplayWindowEnabled { get; set; } = true;
 
     /// <summary>The amount from which a final consumer has to be identified (RG 1415, texto RG 5700/2025).</summary>
@@ -54,7 +54,11 @@ public sealed class SimulationSettings
     public ManualVersion ManualVersionOn(DateOnly day) =>
         ManualVersionOverride ?? (day >= new DateOnly(2026, 12, 1) ? ManualVersion.V4_8 : ManualVersion.V4_7);
 
+    /// <summary>A service's failures for the admin API to switch on: its entry, created the first time.</summary>
     public ServiceChaos ChaosFor(string service) => _chaos.GetOrAdd(service, _ => new ServiceChaos());
+
+    /// <summary>The failures switched on for a service, as a request reads them: its entry, or none, without creating one.</summary>
+    public ServiceChaos ChaosOf(string service) => _chaos.TryGetValue(service, out var chaos) ? chaos : new ServiceChaos();
 
     public IReadOnlyDictionary<string, ServiceChaos> Chaos => _chaos;
 
@@ -65,13 +69,24 @@ public sealed class SimulationSettings
 public sealed class ServiceChaos
 {
     private readonly ConcurrentQueue<int> _forcedObservations = new();
+    private int _dropNextResponse;
 
     public bool Down { get; set; }
 
     public TimeSpan Delay { get; set; }
 
     /// <summary>The next FECAESolicitar gets its CAE recorded but the connection is dropped before the answer.</summary>
-    public bool DropNextResponse { get; set; }
+    public bool DropNextResponse
+    {
+        get => Volatile.Read(ref _dropNextResponse) == 1;
+        set => Volatile.Write(ref _dropNextResponse, value ? 1 : 0);
+    }
+
+    /// <summary>Takes the dropped answer: of two requests at once, only one gets it.</summary>
+    public bool TryTakeDropNextResponse() => Interlocked.Exchange(ref _dropNextResponse, 0) == 1;
+
+    /// <summary>Whether any failure is switched on, for the admin API's status.</summary>
+    public bool Active => Down || Delay > TimeSpan.Zero || DropNextResponse || BalancerMask || PendingForcedRejections > 0;
 
     /// <summary>
     /// What fwshomo's F5 does in homologación: every answer that would go out

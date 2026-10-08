@@ -23,7 +23,7 @@ public sealed record TransferPosition(DateTimeOffset At, double Lat, double Lng,
 /// "Puerta Abierta" is documented; NPM and NPG are documented codes with
 /// ArcaSim's wording.
 /// </summary>
-public sealed class WssvRules(IDocumentStore store) : IServiceBehavior
+public sealed class WssvRules(IDocumentStore store, IClock clock) : IServiceBehavior
 {
     public const string Transfers = "wssv.traslados";
 
@@ -46,14 +46,14 @@ public sealed class WssvRules(IDocumentStore store) : IServiceBehavior
             case "TrasladoBegin":
                 if (id.Length == 0 || device.Length == 0) return Result(call, 5, "Faltan IdTras o IdDES.");
                 if (transfer is not null && !test) return Result(call, 1, $"El traslado {id} ya fue iniciado.");
-                await store.PutAsync(Transfers, key, new VehicleTransfer(call.Cuit, id, device, call.Request.Optional("IdRuta"),
-                    call.Request.Optional("IdCont"), call.Request.Optional("IdSalida"), true, []), ct);
+                await store.PutAsync(Transfers, key, new VehicleTransfer(call.Cuit, id, device, call.Request.OptionalText("IdRuta"),
+                    call.Request.OptionalText("IdCont"), call.Request.OptionalText("IdSalida"), true, []), ct);
                 return Result(call, 0, null);
             case "Reporte":
                 if (id.Length == 0 || device.Length == 0) return Result(call, 5, "Faltan IdTras o IdDES.");
                 if (!test && Refuse(transfer, id, device) is { } problem) return Result(call, problem.Code, problem.Text);
                 transfer ??= new VehicleTransfer(call.Cuit, id, device, null, null, null, true, []);
-                var at = DateTimeOffset.TryParse(call.Request.Text("FHDES"), CultureInfo.InvariantCulture, DateTimeStyles.None, out var moment) ? moment : DateTimeOffset.UtcNow;
+                var at = DateTimeOffset.TryParse(call.Request.Text("FHDES"), CultureInfo.InvariantCulture, DateTimeStyles.None, out var moment) ? moment : clock.Now;
                 var alarms = (call.Request.Find("Alarmas")?.Elements().Select(e => e.Value.Trim()).Where(a => a.Length > 0) ?? []).ToList();
                 transfer.Positions.Add(new TransferPosition(at, Number(call.Request, "Lat"), Number(call.Request, "Lng"), alarms));
                 await store.PutAsync(Transfers, key, transfer, ct);

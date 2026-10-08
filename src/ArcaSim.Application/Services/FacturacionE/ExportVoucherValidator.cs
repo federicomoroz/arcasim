@@ -20,7 +20,7 @@ internal sealed partial class ExportVoucherValidator(ParameterTables tables, IEx
     {
         if (v.VoucherType is not (19 or 20 or 21)) return 1530;
         if (!pointOfSaleEnabled) return 1510;
-        if (v.Number is < 1 or > 99_999_999) return 1520;
+        if (v.Number is < 1 or > VoucherLimits.MaxNumber) return 1520;
 
         DateOnly date = today;
         if (!string.IsNullOrEmpty(v.Date))
@@ -47,7 +47,7 @@ internal sealed partial class ExportVoucherValidator(ParameterTables tables, IEx
         foreach (var item in v.Items)
             if (ItemProblem(item) is { } problem) return problem;
         var sum = v.Items.Sum(i => i.Total);
-        if (v.Total < 0 || !Close(v.Total, sum, 0.01m * v.Items.Count)) return 1610;
+        if (v.Total < 0 || !Amounts.WithinMargin(sum, v.Total, v.Items.Count)) return 1610;
 
         if (v.VoucherType == 19 && string.IsNullOrWhiteSpace(v.PaymentTerms)) return 1620;
         if (v.Language is not (1 or 2 or 3)) return 1630;
@@ -87,7 +87,7 @@ internal sealed partial class ExportVoucherValidator(ParameterTables tables, IEx
         foreach (var permit in v.Permits)
         {
             if (string.IsNullOrEmpty(permit.Id) != (permit.Destination == 0)) return 1730;
-            if (permit.Id is null || !PermitFormat().IsMatch(permit.Id) || !seen.Add((permit.Id, permit.Destination))) return 1740;
+            if (permit.Id is null || !IsPermit(permit.Id) || !seen.Add((permit.Id, permit.Destination))) return 1740;
             if (!tables.Countries.Any(c => c.Id == permit.Destination)) return 1750;
         }
         return null;
@@ -107,7 +107,7 @@ internal sealed partial class ExportVoucherValidator(ParameterTables tables, IEx
             return v.SameCurrency == "S" ? null : 1602;
         if (!Fits(v.Rate.Value, 4, 6)) return 1600;
         if (v.Currency != "PES" && await rates.RateAsync(v.Currency, Fev1Dates.PreviousBusinessDay(date), ct) is { } official
-            && (v.Rate.Value > official.Rate * 4 || v.Rate.Value < official.Rate * 0.02m))
+            && !Amounts.WithinRateBand(v.Rate.Value, official.Rate))
             return 1667;
         return null;
     }
@@ -135,7 +135,7 @@ internal sealed partial class ExportVoucherValidator(ParameterTables tables, IEx
 
         if (item.Unit == 99 ? item.Total >= 0 : item.Unit != 97 && item.Total < 0) return 1810;
         if (!Fits(item.Total, 13, 2)) return 1816;
-        if (!Wsfexv1Tables.IsSpecialUnit(item.Unit) && !Close(item.Total, item.UnitPrice * item.Quantity - item.Discount, 0.01m)) return 1815;
+        if (!Wsfexv1Tables.IsSpecialUnit(item.Unit) && !Amounts.WithinMargin(item.UnitPrice * item.Quantity - item.Discount, item.Total, 1)) return 1815;
         return null;
     }
 
@@ -163,7 +163,7 @@ internal sealed partial class ExportVoucherValidator(ParameterTables tables, IEx
         foreach (var associated in v.Associated)
         {
             if (!Wsfexv1Tables.AssociableTypes.Contains(associated.Type)) return 1680;
-            if (associated.PointOfSale is < 1 or > 99_998) return 1690;
+            if (associated.PointOfSale is < 1 or > VoucherLimits.MaxPointOfSale) return 1690;
             if (associated.Number is < 1 or > 999_999_999) return 1700;
         }
         var vouchers = v.Associated.Where(a => !Wsfexv1Tables.DeliveryNoteTypes.Contains(a.Type)).ToList();
@@ -207,17 +207,12 @@ internal sealed partial class ExportVoucherValidator(ParameterTables tables, IEx
         return ids.Contains("2402") ? null : 2058;
     }
 
-    /// <summary>The manual's tolerance: relative error up to 0.01 %, or absolute error up to the given one.</summary>
-    private static bool Close(decimal sent, decimal expected, decimal absolute)
-    {
-        var error = Math.Abs(sent - expected);
-        return error <= absolute || expected != 0 && error / Math.Abs(expected) <= 0.0001m;
-    }
-
     private static bool Fits(decimal value, int integers, int decimals) =>
         Math.Abs(value) < (decimal)Math.Pow(10, integers) && value == Math.Round(value, decimals);
 
-    /// <summary>99999AAXX999999A: five digits, two letters, two letters or digits, six digits, a letter.</summary>
+    /// <summary>Whether a shipping permit's id has the format 99999AAXX999999A: five digits, two letters, two letters or digits, six digits, a letter.</summary>
+    public static bool IsPermit(string id) => PermitFormat().IsMatch(id);
+
     [GeneratedRegex("^[0-9]{5}[A-Z]{2}[A-Z0-9]{2}[0-9]{6}[A-Z]$")]
     private static partial Regex PermitFormat();
 

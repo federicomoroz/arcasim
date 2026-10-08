@@ -3,6 +3,7 @@ using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
 using System.ServiceModel.Dispatcher;
 using ArcaSim.Tests.Contract.Wsfev1;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Contract;
 
@@ -20,7 +21,7 @@ public class WsdlClientTests
     {
         var (sim, wsfe) = await ArcaSimHarness.StartWithIssuerAsync();
         await using var _ = sim;
-        var ticket = await sim.Wsaa(ArcaSimHarness.Issuer, await sim.IssueCertificateAsync(ArcaSimHarness.Issuer, "facturacion")).LoginAsync("wsfe");
+        var ticket = await sim.TicketAsync(ArcaSimHarness.Issuer, "wsfe");
         var auth = new FEAuthRequest { Token = ticket.Token, Sign = ticket.Sign, Cuit = ArcaSimHarness.Issuer };
         // The bindings svcutil derives from ARCA's https addresses only accept https.
         var client = new ServiceSoapClient(endpoint, "https://localhost/wsfev1/service.asmx");

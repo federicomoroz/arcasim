@@ -47,9 +47,6 @@ public sealed partial class InMemoryStore :
                         && string.Equals(a.Service, service, StringComparison.OrdinalIgnoreCase))
             .ToList());
 
-    public Task<IReadOnlyList<ClientAlias>> ListAliasesAsync(CancellationToken ct = default) =>
-        Read<IReadOnlyList<ClientAlias>>(() => _aliases.ToList());
-
     public Task<IReadOnlyList<ServiceAuthorization>> ListAuthorizationsAsync(CancellationToken ct = default) =>
         Read<IReadOnlyList<ServiceAuthorization>>(() => _authorizations.ToList());
 
@@ -76,14 +73,16 @@ public sealed partial class InMemoryStore :
     public Task AddAsync(IssuedTicket ticket, CancellationToken ct = default) => Write(() => _tickets.Add(ticket));
 
     // ---- Taxpayers ---------------------------------------------------------
+    // Copies in and out, as PostgreSQL's rows are: a caller that changes a taxpayer
+    // changes its own copy until it saves, and two requests never share one.
 
     public Task<Taxpayer?> FindAsync(long cuit, CancellationToken ct = default) =>
-        Read(() => _taxpayers.GetValueOrDefault(cuit));
+        Read(() => _taxpayers.GetValueOrDefault(cuit)?.Copy());
 
     public Task<IReadOnlyList<Taxpayer>> ListAsync(CancellationToken ct = default) =>
-        Read<IReadOnlyList<Taxpayer>>(() => _taxpayers.Values.OrderBy(t => t.Cuit).ToList());
+        Read<IReadOnlyList<Taxpayer>>(() => _taxpayers.Values.OrderBy(t => t.Cuit).Select(t => t.Copy()).ToList());
 
-    public Task SaveAsync(Taxpayer taxpayer, CancellationToken ct = default) => Write(() => _taxpayers[taxpayer.Cuit] = taxpayer);
+    public Task SaveAsync(Taxpayer taxpayer, CancellationToken ct = default) => Write(() => _taxpayers[taxpayer.Cuit] = taxpayer.Copy());
 
     // ---- Vouchers ----------------------------------------------------------
 
@@ -103,6 +102,12 @@ public sealed partial class InMemoryStore :
             .Where(v => cuit is null || v.Cuit == cuit)
             .OrderByDescending(v => v.ProcessedAt)
             .Take(limit)
+            .ToList());
+
+    public Task<IReadOnlyList<StoredVoucher>> ListOfTypesAsync(IReadOnlyCollection<int> voucherTypes, CancellationToken ct = default) =>
+        Read<IReadOnlyList<StoredVoucher>>(() => _vouchers
+            .Where(v => voucherTypes.Contains(v.VoucherType))
+            .OrderByDescending(v => v.ProcessedAt)
             .ToList());
 
     public Task<bool> AnyWithCaeaAsync(long cuit, string caea, int pointOfSale, CancellationToken ct = default) =>

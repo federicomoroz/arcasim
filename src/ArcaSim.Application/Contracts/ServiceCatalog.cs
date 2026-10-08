@@ -89,7 +89,8 @@ public sealed record AuthErrors(
 /// always travel the same (by element name or "Parent/Child" path, with the
 /// same placeholders as AuthErrors' texts), and how far the simulation goes
 /// ("reglas" when it keeps state and applies ARCA's rules, "contrato" when it
-/// answers the contract with valid data).
+/// answers the contract with valid data: a note for whoever reads the catalog,
+/// the engine does not read it).
 /// Header is the SOAP header the service sends that its WSDL does not declare
 /// (FEHeaderInfo, info, serverTime...), as an XML fragment with placeholders;
 /// it replaces the declared headers and, with HeaderOnFaults, travels on
@@ -137,11 +138,13 @@ public sealed record ServiceDefinition(
 /// <summary>The services of docs/arca/servicios.json: every ARCA web service ArcaSim answers through its WSDL.</summary>
 public sealed class ServiceCatalog
 {
+    /// <summary>The catalog's JSON: comments allowed, and a key no property reads is an error rather than a setting silently lost to a typo.</summary>
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
         Converters = { new JsonStringEnumConverter() },
         ReadCommentHandling = JsonCommentHandling.Skip,
         AllowTrailingCommas = true,
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
     };
 
     public IReadOnlyList<ServiceDefinition> Services { get; }

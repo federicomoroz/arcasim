@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 
 namespace ArcaSim.Application.Events;
 
@@ -12,9 +13,9 @@ public interface IArcaSimEvent
 /// The bus between the parts of ArcaSim: whoever acts publishes what happened,
 /// whoever cares subscribes, and neither knows the other. Delivery is
 /// synchronous and in subscription order; a listener that throws does not
-/// stop the others.
+/// stop the others, and its error goes to the log.
 /// </summary>
-public sealed class EventManager
+public sealed class EventManager(ILogger<EventManager>? logger = null)
 {
     private readonly ConcurrentDictionary<Type, ImmutableHandlers> _handlers = new();
 
@@ -44,9 +45,10 @@ public sealed class EventManager
             {
                 handler(@event);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // A broken listener must not break the request that published the event.
+                logger?.LogError(ex, "A listener of {Event} failed", type.Name);
             }
         }
     }

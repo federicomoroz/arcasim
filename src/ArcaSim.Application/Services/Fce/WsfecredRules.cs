@@ -45,15 +45,20 @@ namespace ArcaSim.Application.Services.Fce;
 ///   asks for one estadoHistorico, so it carries the error's instant;
 /// - consultarMontoObligadoRecepcion: a registered, active Responsable
 ///   Inscripto must receive FCE from FceTables.MinimumAmount on; anyone else
-///   need not, without montoDesde.
+///   need not, without montoDesde;
+/// - a transfer option outside the schema's SCA | ADC is a format error, as the
+///   manual's channels say (wsfecred.md, Canales de error): R, the idCtaCte sent
+///   and arrayErroresFormato with cvc-enumeration-valid and cvc-type.3.1.3, the
+///   pair wsct answers live; the Spanish wording is inferred, and no business
+///   rule runs;
+/// - a number its field cannot hold (4294967297 as a type or a point of sale)
+///   is an invalid value with that field's code, never cut to fit.
 /// The deprecated consultarObligadoRecepcion and dummy keep the contract's answer.
 /// </summary>
 public sealed class WsfecredRules(
-    IDocumentStore store, IVoucherStore vouchers, ITaxpayerRepository taxpayers, IClock clock, IExchangeRates rates) : IServiceBehavior
+    FceLedger ledger, ITaxpayerRepository taxpayers, IExchangeRates rates) : IServiceBehavior
 {
-    public const int PageSize = 100;
-
-    private readonly FceLedger _ledger = new(store, vouchers, taxpayers, clock);
+    private readonly FceLedger _ledger = ledger;
 
     public string Service => "wsfecred";
 
@@ -108,13 +113,13 @@ public sealed class WsfecredRules(
         new(call.Operation.Output, new XElement(result, content));
 
     private static XElement Table(ServiceCall call, IEnumerable<(long Code, string Text)> rows) =>
-        Answer(call, "codigoDescripcionReturn", Codes("arrayCodigoDescripcion", rows));
+        Answer(call, "codigoDescripcionReturn", ContractXml.Codes("arrayCodigoDescripcion", rows));
 
     private static IEnumerable<(long, string)> Texts(IEnumerable<int> codes) => codes.Select(c => ((long)c, FceTexts.Fecred[c]));
 
-    private static XElement? Errors(params int[] codes) => Codes("arrayErrores", Texts(codes));
+    private static XElement? Errors(params int[] codes) => ContractXml.Codes("arrayErrores", Texts(codes));
 
-    private static XElement? Errors(IEnumerable<int> codes) => Codes("arrayErrores", Texts(codes));
+    private static XElement? Errors(IEnumerable<int> codes) => ContractXml.Codes("arrayErrores", Texts(codes));
 
     /// <summary>OperacionFECredReturnType: resultado, the idCtaCte the request sent, and the errors when it failed.</summary>
     private static XElement Operation(ServiceCall call, AccountRef reference, IReadOnlyCollection<int> errors) =>
@@ -136,16 +141,17 @@ public sealed class WsfecredRules(
         new XElement("ptoVta", id.PointOfSale),
         new XElement("nroCmp", id.Number));
 
+    /// <summary>The voucher an id names; null when a part is missing, does not read or (the type and point of sale) is a number an int cannot hold: the id is echoed back, where ChildInt's marker would not fit the schema.</summary>
     private static FceId? IdOf(XElement? element) =>
-        element is not null && element.LongOf("CUITEmisor") is { } cuit && element.LongOf("codTipoCmp") is { } type
-        && element.LongOf("ptoVta") is { } point && element.LongOf("nroCmp") is { } number
-            ? new FceId(cuit, (int)type, (int)point, number)
+        element is not null && element.ChildLong("CUITEmisor") is { } cuit && element.ChildInt("codTipoCmp") is { } type
+        && element.ChildInt("ptoVta") is { } point && type != int.MinValue && point != int.MinValue && element.ChildLong("nroCmp") is { } number
+            ? new FceId(cuit, type, point, number)
             : null;
 
     private static AccountRef ReferenceOf(XElement request)
     {
         var id = request.Child("idCtaCte");
-        return new AccountRef(id?.LongOf("codCtaCte"), IdOf(id?.Child("idFactura")));
+        return new AccountRef(id?.ChildLong("codCtaCte"), IdOf(id?.Child("idFactura")));
     }
 
     private static FceAccount? Find(FceBook book, AccountRef reference) =>
@@ -253,7 +259,7 @@ public sealed class WsfecredRules(
             State("estadoCtaCte", account.State),
             Voucher(book, book.InvoiceOf(account), "factura"),
             notes.Count == 0 ? null : new XElement("arrayNotasDCAsociadas", notes.Select(n => Voucher(book, n))),
-            Codes("arrayFormasCancelacion", account.Forms.Select(f => ((long)f.Code, f.Description))),
+            ContractXml.Codes("arrayFormasCancelacion", account.Forms.Select(f => ((long)f.Code, f.Description))),
             account.Withholdings.Count == 0 ? null : new XElement("arrayRetenciones", account.Withholdings.Select(w => new XElement("retencion",
                 new XElement("codTipo", w.Code),
                 new XElement("importe", Money(w.Amount)),
@@ -285,10 +291,7 @@ public sealed class WsfecredRules(
 
     // ---- Queries ---------------------------------------------------------------------
 
-    private static (IReadOnlyList<T> Items, bool More) Page<T>(IReadOnlyList<T> all, int page) =>
-        (all.Skip((page - 1) * PageSize).Take(PageSize).ToList(), all.Count > page * PageSize);
-
-    private static XElement NoResults(string block) => Codes(block, [(32767L, FceTexts.Fecred[32767])])!;
+    private static XElement NoResults(string block) => ContractXml.Codes(block, [(32767L, FceTexts.Fecred[32767])])!;
 
     /// <summary>The day a FiltroFechaType's tipo looks at, for a voucher.</summary>
     private static DateOnly? DayOf(FceBook book, FceVoucher voucher, string? kind)
@@ -300,8 +303,8 @@ public sealed class WsfecredRules(
             "PuestaDispo" => voucher.AvailableOn,
             "VenPago" => voucher.PaymentDue,
             "VenAcep" => voucher.CountsInBalance ? account.AcceptanceDue : null,
-            "Acep" => voucher.AcceptanceKind is not null && voucher.DecidedAt is { } at ? DateOnly.FromDateTime(at.ToArgentina().DateTime) : null,
-            "InfoAgDptoCltv" => account.Agent is { } report ? DateOnly.FromDateTime(report.AvailableAt.ToArgentina().DateTime) : null,
+            "Acep" => voucher.AcceptanceKind is not null && voucher.DecidedAt is { } at ? at.ArgentinaDate() : null,
+            "InfoAgDptoCltv" => account.Agent is { } report ? report.AvailableAt.ArgentinaDate() : null,
             _ => null,
         };
     }
@@ -318,14 +321,14 @@ public sealed class WsfecredRules(
     private static XElement Vouchers(ServiceCall call, FceBook book)
     {
         var request = call.Request;
-        var page = (int)(request.LongOf("nroPagina") ?? 1);
-        if (page <= 0) return Answer(call, "consultarCmpReturn", Errors(12011));
+        var page = request.ChildInt("nroPagina") ?? 1;
+        if (page is < 1 or > short.MaxValue) return Answer(call, "consultarCmpReturn", Errors(12011));
 
         var issuer = request.Value("rolCUITRepresentada") == "Emisor";
-        var counterpart = request.LongOf("CUITContraparte");
-        var type = request.LongOf("codTipoCmp");
+        var counterpart = request.ChildLong("CUITContraparte");
+        var type = request.ChildLong("codTipoCmp");
         var state = request.Value("estadoCmp");
-        var code = request.LongOf("codCtaCte");
+        var code = request.ChildLong("codCtaCte");
         var accountState = request.Value("estadoCtaCte");
         var inRange = DateFilter(book, request.Child("fecha"));
 
@@ -350,11 +353,11 @@ public sealed class WsfecredRules(
     private static XElement Accounts(ServiceCall call, FceBook book)
     {
         var request = call.Request;
-        var page = (int)(request.LongOf("nroPagina") ?? 1);
-        if (page <= 0) return Answer(call, "consultarCtasCtesReturn", Errors(12011));
+        var page = request.ChildInt("nroPagina") ?? 1;
+        if (page is < 1 or > short.MaxValue) return Answer(call, "consultarCtasCtesReturn", Errors(12011));
 
         var issuer = request.Value("rolCUITRepresentada") == "Emisor";
-        var counterpart = request.LongOf("CUITContraparte");
+        var counterpart = request.ChildLong("CUITContraparte");
         var state = request.Value("estadoCtaCte");
         var option = request.Value("opcionTransferencia");
         var inRange = DateFilter(book, request.Child("fecha"));
@@ -455,7 +458,7 @@ public sealed class WsfecredRules(
 
     private async Task<XElement> ObligationAsync(ServiceCall call, CancellationToken ct)
     {
-        var taxpayer = await taxpayers.FindAsync(call.Request.LongOf("cuitConsultada") ?? 0, ct);
+        var taxpayer = await taxpayers.FindAsync(call.Request.ChildLong("cuitConsultada") ?? 0, ct);
         var obliged = taxpayer is { Active: true, VatCondition: VatCondition.ResponsableInscripto };
         return Answer(call, "consultarMontoObligadoRecepcionReturn",
             new XElement("obligado", YesNo(obliged)),
@@ -476,7 +479,7 @@ public sealed class WsfecredRules(
 
     private static List<FceReason> ReasonsOf(XElement request) =>
         request.Child("arrayMotivosRechazo").Children("motivoRechazo")
-            .Select(m => new FceReason((short)(m.LongOf("codMotivo") ?? 0), m.Value("descMotivo") ?? "", m.Value("justificacion") ?? ""))
+            .Select(m => new FceReason(m.ChildShort("codMotivo") ?? 0, m.Value("descMotivo") ?? "", m.Value("justificacion") ?? ""))
             .ToList();
 
     /// <summary>3001 for a code not in the table or repeated, 3000 for a reason without justification.</summary>
@@ -549,18 +552,18 @@ public sealed class WsfecredRules(
         var confirmations = request.Child("arrayConfirmarNotasDC").Children("confirmarNota")
             .Select(n => new Confirmation(n.Value("acepta") == "S", IdOf(n.Child("idNota")))).ToList();
         var forms = request.Child("arrayFormasCancelacion").Children("codigoDescripcion")
-            .Select(f => new FceCodeText((short)(f.LongOf("codigo") ?? 0), f.Value("descripcion") ?? "")).ToList();
+            .Select(f => new FceCodeText(f.ChildShort("codigo") ?? 0, f.Value("descripcion") ?? "")).ToList();
         var withholdings = request.Child("arrayRetenciones").Children("retencion")
-            .Select(r => new FceWithholding((short)(r.LongOf("codTipo") ?? 0), r.DecimalOf("importe") ?? 0, r.DecimalOf("porcentaje") ?? 0, r.Value("descMotivo"))).ToList();
+            .Select(r => new FceWithholding(r.ChildShort("codTipo") ?? 0, r.ChildDecimal("importe") ?? 0, r.ChildDecimal("porcentaje") ?? 0, r.Value("descMotivo"))).ToList();
         var adjustments = request.Child("arrayAjustesOperacion").Children("ajuste")
-            .Select(a => new FceAdjustment((short)(a.LongOf("codigo") ?? 0), a.DecimalOf("importe") ?? 0)).ToList();
+            .Select(a => new FceAdjustment(a.ChildShort("codigo") ?? 0, a.ChildDecimal("importe") ?? 0)).ToList();
         var cancellation = request.Value("tipoCancelacion");
-        var cancelled = request.DecimalOf("importeCancelado");
-        var withheld = request.DecimalOf("importeTotalRetPesos");
-        var embargo = request.DecimalOf("importeEmbargoPesos");
-        var accepted = request.DecimalOf("saldoAceptado") ?? 0;
+        var cancelled = request.ChildDecimal("importeCancelado");
+        var withheld = request.ChildDecimal("importeTotalRetPesos");
+        var embargo = request.ChildDecimal("importeEmbargoPesos");
+        var accepted = request.ChildDecimal("saldoAceptado") ?? 0;
         var currency = request.Value("codMoneda");
-        var rate = request.DecimalOf("cotizacionMonedaUlt") ?? 0;
+        var rate = request.ChildDecimal("cotizacionMonedaUlt") ?? 0;
         var informsCbu = request.Value("informaCBU");
         var cbu = request.Value("CBUComprador");
 
@@ -587,7 +590,7 @@ public sealed class WsfecredRules(
         if (rate <= 0) Add(2006);
         else if (pesos && rate != 1) Add(12000);
         else if (!pesos && await rates.RateAsync(account.Currency, book.Today, ct) is { } official
-                 && (rate < official.Rate * 0.02m || rate > official.Rate * 4m)) Add(2009);
+                 && !Amounts.WithinRateBand(rate, official.Rate)) Add(2009);
 
         if (new[] { cancelled, withheld, embargo }.Any(a => a < 0)) Add(2010);
 
@@ -644,8 +647,6 @@ public sealed class WsfecredRules(
 
         var now = book.Now;
         account.MoveTo(cancelsAll ? FceStates.Cancelled : FceStates.AccountAccepted, now);
-        account.AcceptanceKind = "Expresa";
-        account.AcceptedAt = now;
         account.Forms = forms;
         account.Withholdings = withholdings;
         account.Adjustments = adjustments;
@@ -676,8 +677,8 @@ public sealed class WsfecredRules(
         if (account.State.State != FceStates.AccountAccepted || account.Option != "ADC") return Operation(call, reference, 1108);
 
         var forms = call.Request.Child("arrayFormasCancelacion").Children("codigoDescripcion")
-            .Select(f => new FceCodeText((short)(f.LongOf("codigo") ?? 0), f.Value("descripcion") ?? "")).ToList();
-        var amount = call.Request.DecimalOf("importeCancelacion") ?? 0;
+            .Select(f => new FceCodeText(f.ChildShort("codigo") ?? 0, f.Value("descripcion") ?? "")).ToList();
+        var amount = call.Request.ChildDecimal("importeCancelacion") ?? 0;
         var errors = new List<int>();
         if (forms.Count == 0) errors.Add(4001);
         else if (forms.Any(f => FceTables.CancellationForms.All(t => t.Code != f.Code)) || forms.DistinctBy(f => f.Code).Count() != forms.Count) errors.Add(4002);
@@ -693,19 +694,43 @@ public sealed class WsfecredRules(
 
     // ---- The seller ------------------------------------------------------------------
 
+    /// <summary>The options OpcionTransferenciaSimpleType allows.</summary>
+    private static readonly string[] Options = ["SCA", "ADC"];
+
     private async Task<XElement> ChangeOptionAsync(ServiceCall call, FceBook book, CancellationToken ct)
     {
         var reference = ReferenceOf(call.Request);
+        var option = call.Request.Value("opcionTransferencia") ?? "";
+        if (!Options.Contains(option)) return FormatRefusal(call, reference, NotInEnumeration(option, "opcionTransferencia", Options));
+
         var account = Find(book, reference);
         if (Refusal(account, call.Cuit, buyer: false) is { } refusal) return Operation(call, reference, refusal);
         if (account!.State.State != FceStates.Modifiable) return Operation(call, reference, 1108);
-        var option = call.Request.Value("opcionTransferencia");
         if (option == account.Option) return Operation(call, reference, 7000);
 
-        account.Option = option ?? account.Option;
+        account.Option = option;
         await _ledger.SaveAsync(book, account, ct);
         return Operation(call, reference, []);
     }
+
+    /// <summary>
+    /// A value outside an enumeration, as the schema validator reports it in
+    /// arrayErroresFormato (wsfecred.md, Canales de error: the code is Xerces' and the
+    /// pair is the one wsct shows live for a facet that fails). The wording is the JDK
+    /// validator's Spanish, which is inferred; a missing element is reported as an empty value.
+    /// </summary>
+    private static (string Code, string Text)[] NotInEnumeration(string value, string element, IEnumerable<string> allowed) =>
+    [
+        ("cvc-enumeration-valid", $" El valor '{value}' no es válido de faceta con respecto a la enumeración '[{string.Join(", ", allowed)}]'. Debe ser un valor de la enumeración."),
+        ("cvc-type.3.1.3", $" El valor '{value}' del elemento '{element}' no es válido."),
+    ];
+
+    /// <summary>OperacionFECredReturnType for a request the schema rejects: resultado R, the idCtaCte it sent, and only the format errors (they exclude the business ones).</summary>
+    private static XElement FormatRefusal(ServiceCall call, AccountRef reference, IEnumerable<(string Code, string Text)> problems) =>
+        Answer(call, "operacionFECredReturn",
+            new XElement("resultado", "R"),
+            Echo(reference),
+            ContractXml.CodeList("arrayErroresFormato", problems, "codigoDescripcionString"));
 
     private async Task<XElement> ReportToAgentAsync(ServiceCall call, FceBook book, CancellationToken ct)
     {
@@ -722,7 +747,7 @@ public sealed class WsfecredRules(
         }
 
         var target = call.Request.Child("ctaAgente");
-        var agent = target?.LongOf("cuitAgente") ?? 0;
+        var agent = target?.ChildLong("cuitAgente") ?? 0;
         var agentAccount = await _ledger.AgentAccountAsync(agent, target?.Value("idCuenta") ?? "", ct);
         if (agentAccount is not { State: "A" } || agentAccount.Holder != call.Cuit) return Operation(call, reference, 6002);
 
@@ -741,7 +766,7 @@ public sealed class WsfecredRules(
     }
 
     /// <summary>A CBU's two BCRA check digits: the bank and branch block, and the account block.</summary>
-    public static bool IsValidCbu(string cbu)
+    private static bool IsValidCbu(string cbu)
     {
         if (cbu.Length != 22 || !cbu.All(char.IsAsciiDigit)) return false;
         static bool Block(string digits, int[] weights)

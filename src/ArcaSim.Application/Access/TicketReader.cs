@@ -1,5 +1,6 @@
 using System.Text;
 using System.Xml;
+using ArcaSim.Application.Soap;
 
 namespace ArcaSim.Application.Access;
 
@@ -52,8 +53,7 @@ public sealed class TicketReader(IClock clock, ITokenSigner signer)
         XmlDocument document;
         try
         {
-            document = new XmlDocument();
-            document.LoadXml(Decode(token));
+            document = SafeXml.Document(Decode(token));
         }
         catch (XmlException ex)
         {
@@ -89,8 +89,7 @@ public sealed class TicketReader(IClock clock, ITokenSigner signer)
         var signed = signer.Verify(token, sign);
         try
         {
-            var document = new XmlDocument();
-            document.LoadXml(Decode(token));
+            var document = SafeXml.Document(Decode(token));
             var id = document.SelectSingleNode("/sso/id") as XmlElement;
             var login = document.SelectSingleNode("/sso/operation/login") as XmlElement;
             var relations = document.SelectNodes("/sso/operation/login/relations/relation")?.OfType<XmlElement>()

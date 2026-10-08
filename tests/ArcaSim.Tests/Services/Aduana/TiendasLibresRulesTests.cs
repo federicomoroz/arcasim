@@ -1,3 +1,7 @@
+using ArcaSim.Application;
+using ArcaSim.Application.Services.Aduana;
+using ArcaSim.Infrastructure.InMemory;
+
 namespace ArcaSim.Tests.Services.Aduana;
 
 /// <summary>wgestiendaslibres: goods enter a free shop's depósito, are sold, destroyed or left short, and the stock follows.</summary>
@@ -44,7 +48,7 @@ public class TiendasLibresRulesTests
             $"<argConsultarMovimientosParams>{Query}<FechaDesde>2026-10-01T00:00:00</FechaDesde><FechaHasta>2026-10-01T23:59:59</FechaHasta></argConsultarMovimientosParams>");
 
         Assert.Equal("0", entered.Code());
-        Assert.Equal("arcasim", entered.V("Server"));
+        Assert.Equal("10.30.32.108", entered.V("Server")); // the address the catalog says the service always sends (live capture)
         Assert.Equal("0", sold.Code());
         Assert.Equal(sold.V("idMovimiento"), replay.V("idMovimiento"));
         Assert.Equal(6m, await StockAsync(shop));
@@ -78,6 +82,7 @@ public class TiendasLibresRulesTests
         Assert.Equal("Se registra diferencia por stock en negativo", sold.V("DescripcionAdicional"));
         Assert.Equal(-3m, await StockAsync(shop));
         Assert.Equal("21526", repeated.Code());
+        Assert.Equal("10.30.32.108", repeated.V("Server")); // a refusal sends the same server as a success
         Assert.Equal("Venta ya registrada TIQ 0001-00000002", repeated.V("Descripcion"));
         Assert.Equal("3", dife.V("cantidad"));
         Assert.Equal("2026-10-31", dife.V("fechaVenc")[..10]);
@@ -110,5 +115,36 @@ public class TiendasLibresRulesTests
         Assert.Equal("42303", unknown.Code());
         Assert.Equal("0", destroyed.Code());
         Assert.Equal(7m, await StockAsync(shop));
+    }
+
+    [Fact]
+    public async Task Sales_that_run_together_all_take_their_units_off_the_stock()
+    {
+        var clock = new SimulatedClock(TimeProvider.System);
+        clock.Freeze(AduanaKit.Today);
+        var shop = new RulesProbe(new TiendasLibresRules(new YieldingDocumentStore(new InMemoryStore()), clock), AduanaKit.Today);
+        await shop.CallAsync("IngresarMercaderia", Entry("T-0", quantity: 100), AduanaKit.Caller);
+
+        await Task.WhenAll(Enumerable.Range(1, 20).Select(i =>
+            shop.CallAsync("VentaMercaderia", Sale($"T-{i}", $"0001-{i:D8}", 1), AduanaKit.Caller)));
+
+        var stock = await shop.CallAsync("ConsultarStock", $"<argConsultarStockParams>{Query}</argConsultarStockParams>", AduanaKit.Caller);
+        Assert.Equal("80", stock.V("Cantidad"));
+    }
+
+    [Fact]
+    public async Task The_same_transaction_sent_together_is_processed_once_and_the_others_wait_or_replay()
+    {
+        var clock = new SimulatedClock(TimeProvider.System);
+        clock.Freeze(AduanaKit.Today);
+        var shop = new RulesProbe(new TiendasLibresRules(new YieldingDocumentStore(new InMemoryStore()), clock), AduanaKit.Today);
+        await shop.CallAsync("IngresarMercaderia", Entry("T-0", quantity: 100), AduanaKit.Caller);
+
+        var answers = await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => shop.CallAsync("VentaMercaderia", Sale("T-1", "0001-00000001", 1), AduanaKit.Caller)));
+
+        Assert.All(answers, a => Assert.Contains(a.Code(), new[] { "0", "41973" })); // the answer it had, or "in course" (p.9)
+        Assert.Contains(answers, a => a.Code() == "0");
+        var stock = await shop.CallAsync("ConsultarStock", $"<argConsultarStockParams>{Query}</argConsultarStockParams>", AduanaKit.Caller);
+        Assert.Equal("99", stock.V("Cantidad"));
     }
 }

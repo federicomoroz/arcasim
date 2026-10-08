@@ -32,6 +32,9 @@ public sealed class WdepMovimientosRules(IDocumentStore store, IClock clock) : I
     private const string Ok = "Proceso OK";
     private readonly InFlight _running = new();
 
+    /// <summary>One CUIT's cargo moves one transaction at a time: an exit reads what is available and writes back what is left.</summary>
+    private readonly KeyedLocks<long> _cargo = new();
+
     public string Service => "wdepMovimientos";
 
     public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct) => call.Name switch
@@ -49,20 +52,16 @@ public sealed class WdepMovimientosRules(IDocumentStore store, IClock clock) : I
         if (arg is null) return call.Fail(22, "Campo obligatorio", call.Name == "WdepIngresos" ? "argwdepIngresos" : "argwdepSalidas");
         var number = arg.Long("NroTransaccion");
         if (number <= 0) return call.Fail(36, "Valor invalido.", "NroTransaccion");
-        var key = $"{call.Cuit}/{number}";
-        if (await store.GetAsync<DepOutcome>(Transactions, key, ct) is { } done) return Answer(call, done);
-
-        using var running = _running.TryEnter(key);
-        if (running is null) return call.Fail(31209, "Aguarde, operacion en curso");
-        if (await store.GetAsync<DepOutcome>(Transactions, key, ct) is { } meanwhile) return Answer(call, meanwhile);
-
-        var outcome = Dia.FirstMissing(arg, "Aduana", "LugarOperativo") is { } missing
-            ? new DepOutcome(22, "Campo obligatorio", missing)
-            : arg.Elements().FirstOrDefault(e => e.Name.LocalName == "Carga") is not { } cargo
-                ? new DepOutcome(22, "Campo obligatorio", "Carga")
-                : await process(call, cargo, $"{call.Cuit}/{arg.Field("Aduana")}/{arg.Field("LugarOperativo")}", ct);
-        await store.PutAsync(Transactions, key, outcome, ct);
-        return Answer(call, outcome);
+        var outcome = await _running.OnceAsync(store, Transactions, $"{call.Cuit}/{number}", async () =>
+        {
+            using (await _cargo.AcquireAsync(call.Cuit, ct))
+                return Dia.FirstMissing(arg, "Aduana", "LugarOperativo") is { } missing
+                    ? new DepOutcome(22, "Campo obligatorio", missing)
+                    : arg.Child("Carga") is not { } cargo
+                        ? new DepOutcome(22, "Campo obligatorio", "Carga")
+                        : await process(call, cargo, $"{call.Cuit}/{arg.Field("Aduana")}/{arg.Field("LugarOperativo")}", ct);
+        }, ct);
+        return outcome is null ? call.Fail(31209, "Aguarde, operacion en curso") : Answer(call, outcome);
     }
 
     private static ContractAnswer Answer(ServiceCall call, DepOutcome outcome) =>
@@ -95,7 +94,7 @@ public sealed class WdepMovimientosRules(IDocumentStore store, IClock clock) : I
     /// <summary>WdepSalidas: the títulos with their lines and containers, under the salida's declaración.</summary>
     private Task<DepOutcome> ExitAsync(ServiceCall call, XElement cargo, string place, CancellationToken ct)
     {
-        var exit = cargo.Elements().FirstOrDefault(e => e.Name.LocalName == "Salida");
+        var exit = cargo.Child("Salida");
         var declaration = exit.Field("IdDeclaracion");
         if (declaration == "") return Task.FromResult(new DepOutcome(22, "Campo obligatorio", "IdDeclaracion"));
         var titles = Items(cargo, "Titulos").ToList();
@@ -140,7 +139,7 @@ public sealed class WdepMovimientosRules(IDocumentStore store, IClock clock) : I
         }
 
         var aduana = place.Split('/')[1];
-        var number = $"{clock.Now.ToArgentina():yy}{aduana}SZP{await store.NextAsync("wdepMovimientos.salidas", ct):D6}";
+        var number = Dia.NumberOf(clock.Today(), aduana, "SZP", await store.NextAsync("wdepMovimientos.salidas", ct));
         foreach (var (title, document) in documents) await store.PutAsync(Documents, $"{place}/{title}", document, ct);
         foreach (var container in leaving) await store.PutAsync(Containers, $"{place}/{container.Id}", container with { Salida = number }, ct);
         return new(0, Ok, NroSalida: number);
@@ -165,5 +164,5 @@ public sealed class WdepMovimientosRules(IDocumentStore store, IClock clock) : I
 
     /// <summary>The items of an ASMX array: the children of the named list under the element.</summary>
     private static IEnumerable<XElement> Items(XElement element, string list) =>
-        element.Elements().FirstOrDefault(e => e.Name.LocalName == list)?.Elements() ?? [];
+        element.Child(list)?.Elements() ?? [];
 }

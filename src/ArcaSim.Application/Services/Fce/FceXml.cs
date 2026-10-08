@@ -7,25 +7,25 @@ namespace ArcaSim.Application.Services.Fce;
 /// <summary>
 /// Reading the FCE requests and writing their answers. The three WSDLs leave
 /// their children unqualified, so everything below the operation's element
-/// travels without a namespace, and is read by local name.
+/// travels without a namespace, and is read by local name (ContractXml's Child
+/// family); what is here is what only the FCE needs: a field that is empty is
+/// one that was not sent, and a date is exactly yyyy-MM-dd.
 /// </summary>
 public static class FceXml
 {
-    public static XElement? Child(this XElement element, string name) =>
-        element.Elements().FirstOrDefault(e => e.Name.LocalName == name);
+    /// <summary>
+    /// Items per page in the queries of the three services: ArcaSim's choice, the
+    /// manuals say only that ARCA tunes it internally.
+    /// </summary>
+    public const int PageSize = 100;
 
-    public static IEnumerable<XElement> Children(this XElement? element, string name) =>
-        element?.Elements().Where(e => e.Name.LocalName == name) ?? [];
+    /// <summary>A page of a list (the first is 1) and whether more follows it; one before the first or past the end is empty.</summary>
+    public static (IReadOnlyList<T> Items, bool More) Page<T>(IReadOnlyList<T> all, long page) => Paging.Page(all, page, PageSize);
 
-    public static string? Value(this XElement element, string name) => element.Child(name)?.Value.Trim() is { Length: > 0 } text ? text : null;
+    /// <summary>The direct child's text, trimmed; null when it is missing or empty.</summary>
+    public static string? Value(this XElement? element, string name) => element.ChildText(name) is { Length: > 0 } text ? text : null;
 
-    public static long? LongOf(this XElement element, string name) =>
-        long.TryParse(element.Value(name), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : null;
-
-    public static decimal? DecimalOf(this XElement element, string name) =>
-        decimal.TryParse(element.Value(name), NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : null;
-
-    public static DateOnly? DateOf(this XElement element, string name) =>
+    public static DateOnly? DateOf(this XElement? element, string name) =>
         DateOnly.TryParseExact(element.Value(name), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? date : null;
 
     /// <summary>xsd:date as the services write it: AAAA-MM-DD without a zone.</summary>
@@ -49,15 +49,6 @@ public static class FceXml
         > 250 => text[..250],
         _ => text,
     };
-
-    /// <summary>codigo + descripcion items, under the block's name (arrayErrores, errores, observaciones...).</summary>
-    public static XElement? Codes(string block, IEnumerable<(long Code, string Text)> codes, string item = "codigoDescripcion")
-    {
-        var list = codes.ToList();
-        return list.Count == 0
-            ? null
-            : new XElement(block, list.Select(c => new XElement(item, new XElement("codigo", c.Code), new XElement("descripcion", c.Text))));
-    }
 }
 
 /// <summary>An idCtaCte as the request sent it: the account code, or the invoice that opened it.</summary>

@@ -1,7 +1,7 @@
 using System.Xml.Linq;
-using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Services.Remitos;
 
@@ -14,12 +14,10 @@ public sealed class ServiceClient
 {
     private readonly ArcaSimHarness _sim;
     private readonly ServiceContract _contract;
-    private readonly string _service;
 
-    private ServiceClient(ArcaSimHarness sim, string service, ServiceContract contract, long cuit, string token, string sign)
+    private ServiceClient(ArcaSimHarness sim, ServiceContract contract, long cuit, string token, string sign)
     {
         _sim = sim;
-        _service = service;
         _contract = contract;
         Cuit = cuit;
         Token = token;
@@ -40,10 +38,10 @@ public sealed class ServiceClient
 
     public static async Task<ServiceClient> LoginAsync(ArcaSimHarness sim, string service, long cuit)
     {
-        var contract = Load(service);
+        var contract = ContractOf(service);
         var certificate = await sim.IssueCertificateAsync(cuit, $"{service}-{cuit}", service);
         var ticket = await sim.Wsaa(cuit, certificate).LoginAsync(service);
-        return new ServiceClient(sim, service, contract, cuit, ticket.Token, ticket.Sign);
+        return new ServiceClient(sim, contract, cuit, ticket.Token, ticket.Sign);
     }
 
     /// <summary>Posts the operation's element with the inner XML given, and returns the Body's element after checking it against the WSDL.</summary>
@@ -51,34 +49,22 @@ public sealed class ServiceClient
     {
         var (status, body) = await PostAsync(operation, inner, element, prefix);
         Assert.True(status == 200, body);
-        var answer = XDocument.Parse(body).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
-        Validate(_service, answer);
+        var answer = Soap.Body(body);
+        Xsd.AssertValid(answer, _contract);
         return answer;
     }
 
-    public Task<(int Status, string Body)> PostAsync(string operation, string inner, string? element = null, string prefix = "ns")
+    public Task<(int Status, string Body)> PostAsync(string operation, string inner, string? element = null, string prefix = "ns", CancellationToken ct = default)
     {
         var name = element ?? operation + "Request";
-        var envelope =
-            $"<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:{prefix}=\"{Namespace}\">" +
-            $"<soapenv:Header/><soapenv:Body><{prefix}:{name}>{inner}</{prefix}:{name}></soapenv:Body></soapenv:Envelope>";
-        return _sim.PostSoapAsync(new Uri("http://localhost" + _contract.AddressPath), envelope, $"\"{Namespace}{operation}\"");
+        var envelope = Soap.Envelope($"<{prefix}:{name}>{inner}</{prefix}:{name}>", (prefix, Namespace));
+        return _sim.PostSoapAsync(new Uri("http://localhost" + _contract.AddressPath), envelope, $"\"{Namespace}{operation}\"", ct);
     }
 
-    public static ServiceContract Load(string service) =>
-        ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", $"{service}-homologacion.wsdl"));
+    private static ServiceContract ContractOf(string service) => Contracts.Of($"{service}-homologacion.wsdl");
 
     /// <summary>The answer is valid for the WSDL ARCA publishes: what a generated client deserializes.</summary>
-    public static void Validate(string service, XElement answer)
-    {
-        var contract = Load(service);
-        var problems = new List<string>();
-        new XDocument(new XElement(answer)).Validate(contract.Schemas, (_, e) =>
-        {
-            if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
-        });
-        Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems) + Environment.NewLine + answer);
-    }
+    public static void Validate(string service, XElement answer) => Xsd.AssertValid(answer, ContractOf(service));
 }
 
 public static class RemitoTestKit
@@ -102,6 +88,42 @@ public static class RemitoTestKit
         await sim.PutTaxpayerAsync(Depositary, "Deposito Tercero", VatCondition.ResponsableInscripto);
         return sim;
     }
+
+    // ---- A remito of each service, written the way its manual shows it ---------------------
+
+    public static string CarneRemito(ServiceClient client, long requestId, long holder, bool uncategorized = false) =>
+        client.Auth + $"<idReq>{requestId}</idReq><remito>" + (uncategorized ? "" : "<tipoComprobante>995</tipoComprobante>") + "<tipoMovimiento>ENV</tipoMovimiento>" +
+        $"<categoriaEmisor>1</categoriaEmisor><puntoEmision>9000</puntoEmision><cuitTitularMercaderia>{holder}</cuitTitularMercaderia>" +
+        (uncategorized
+            ? "<tipoReceptor>MI</tipoReceptor><categoriaReceptor>2</categoriaReceptor><documentoReceptor>30111222</documentoReceptor><denomReceptor>Juan Carnicero</denomReceptor>" +
+              "<domDestinoCalle>Rivadavia</domDestinoCalle><domDestinoNumero>100</domDestinoNumero><domDestinoCp>1000</domDestinoCp><domDestinoLoc>CABA</domDestinoLoc><domDestinoIdPcia>0</domDestinoIdPcia>"
+            : $"<tipoReceptor>MI</tipoReceptor><categoriaReceptor>1</categoriaReceptor><cuitReceptor>{Receiver}</cuitReceptor><codDomDestino>0</codDomDestino>") +
+        $"<viaje><cuitTransportista>{Holder}</cuitTransportista><fechaInicioViaje>2026-10-01</fechaInicioViaje><distanciaKm>50</distanciaKm>" +
+        "<vehiculo><dominioVehiculo>AB123CD</dominioVehiculo></vehiculo></viaje>" +
+        "<arrayMercaderias><mercaderia><orden>1</orden><codTipoProd>1.1</codTipoProd><tropa>123</tropa><kilos>1000</kilos><unidades>4</unidades></mercaderia></arrayMercaderias></remito>";
+
+    public static string HarinaRemito(ServiceClient client, long requestId, long holder) =>
+        client.Auth + $"<idReqCliente>{requestId}</idReqCliente>" +
+        "<remito><tipoMovimiento>ENV</tipoMovimiento><tipoEmisor>I</tipoEmisor><puntoEmision>1</puntoEmision>" +
+        $"<cuitTitular>{holder}</cuitTitular><depositario><tipoDepositario>E</tipoDepositario></depositario>" +
+        $"<receptor><cuitPaisReceptor>55000002002</cuitPaisReceptor><receptorNacional><cuitReceptor>{Receiver}</cuitReceptor>" +
+        "<tipoDomReceptor>1</tipoDomReceptor><codDomReceptor>0</codDomReceptor></receptorNacional></receptor>" +
+        "<viaje><transportista><codPaisTransportista>200</codPaisTransportista><transporteNacional>" +
+        $"<cuitTransportista>{Holder}</cuitTransportista></transporteNacional></transportista>" +
+        "<fechaInicioViaje>2026-10-01</fechaInicioViaje><distanciaKm>200</distanciaKm>" +
+        "<vehiculo><automotor><dominioVehiculo>AB123CD</dominioVehiculo></automotor></vehiculo></viaje>" +
+        "<arrayMercaderia><mercaderia><orden>1</orden><codTipo>1</codTipo><codTipoEmb>1</codTipoEmb><cantidadEmb>10</cantidadEmb>" +
+        "<codTipoUnidad>1</codTipoUnidad><cantidadUnidad>500</cantidadUnidad><pesoNetoKg>500</pesoNetoKg></mercaderia></arrayMercaderia></remito>";
+
+    public static string AzucarRemito(ServiceClient client, long requestId, long holder) =>
+        client.Auth + $"<idReqCliente>{requestId}</idReqCliente><remito><puntoEmision>1</puntoEmision>" +
+        $"<cuitTitularMercaderia>{holder}</cuitTitularMercaderia><tipoTitularMercaderia>1</tipoTitularMercaderia>" +
+        $"<receptor><cuitPaisReceptor>55000002002</cuitPaisReceptor><receptorNacional><cuitReceptor>{Receiver}</cuitReceptor></receptorNacional></receptor>" +
+        "<viaje><fechaInicioViaje>2026-10-01</fechaInicioViaje><kmDistancia>100</kmDistancia><tramo><automotor><codPaisTransportista>200</codPaisTransportista>" +
+        $"<transporteNacional><cuitTransportista>{Holder}</cuitTransportista><cuitConductor>{Depositary}</cuitConductor></transporteNacional>" +
+        "<dominioVehiculo>AB123CD</dominioVehiculo></automotor></tramo></viaje>" +
+        "<arrayMercaderias><mercaderia><orden>1</orden><anioZafra>2026</anioZafra><cantidad>1000</cantidad><tipoProducto>1</tipoProducto>" +
+        "<unidadMedida>1</unidadMedida><tipoEmbalaje>1</tipoEmbalaje></mercaderia></arrayMercaderias></remito>";
 
     /// <summary>The first child with that local name, anywhere below.</summary>
     public static XElement One(this XElement element, string name) =>

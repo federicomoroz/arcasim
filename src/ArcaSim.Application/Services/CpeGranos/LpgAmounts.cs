@@ -10,7 +10,7 @@ namespace ArcaSim.Application.Services.CpeGranos;
 /// as their base plus its IVA, and the net, IVA RG 4310 and pago según
 /// condición from those. Round half even, as §4.2 asks.
 /// </summary>
-internal static class Settlement
+internal static class LpgAmounts
 {
     /// <summary>One deducción, retención or importe: what it came from, its base (or rate, for importes), its amount and its IVA.</summary>
     public sealed record Line(XElement Source, decimal Base, decimal Amount, decimal Vat);
@@ -50,10 +50,10 @@ internal static class Settlement
         var certificates = liquidation.Child("certificados")?.Elements("certificado").ToList() ?? [];
         var weight = certificates.Count > 0 ? certificates.Sum(c => c.Decimal("pesoNeto")) : liquidation.Decimal("pesoNetoSinCertificado");
         var factor = liquidation.Child("factorEnt") is null ? 100 : liquidation.Decimal("factorEnt");
-        var price = Round(liquidation.Decimal("precioRefTn") * factor / 100 + liquidation.Decimal("precioFleteTn"), 3) / 1000;
-        price = Round(price, 3);
-        var subTotal = Round(price * weight);
-        var vat = Round(subTotal * liquidation.Decimal("alicIvaOperacion") / 100);
+        var price = GrainsFormat.Round(liquidation.Decimal("precioRefTn") * factor / 100 + liquidation.Decimal("precioFleteTn"), 3) / 1000;
+        price = GrainsFormat.Round(price, 3);
+        var subTotal = GrainsFormat.Round(price * weight);
+        var vat = GrainsFormat.Round(subTotal * liquidation.Decimal("alicIvaOperacion") / 100);
         return new Totals(price, (long)weight, subTotal, vat, [],
             Deductions(request.Child("deducciones"), subTotal, weight),
             Retentions(request.Child("retenciones")),
@@ -67,13 +67,13 @@ internal static class Settlement
         foreach (var (amount, concept, rate) in new[] { ("importeAjustarIva0", "conceptoImporteIva0", 0m), ("importeAjustarIva105", "conceptoImporteIva105", 10.5m), ("importeAjustarIva21", "conceptoImporteIva21", 21m) })
             if (side.Child(amount) is not null)
             {
-                var importe = Round(side.Decimal(amount));
-                importes.Add(new Line(side.Child(concept) ?? new XElement(concept), rate, importe, Round(importe * rate / 100)));
+                var importe = GrainsFormat.Round(side.Decimal(amount));
+                importes.Add(new Line(side.Child(concept) ?? new XElement(concept), rate, importe, GrainsFormat.Round(importe * rate / 100)));
             }
         var subTotal = importes.Sum(i => i.Amount);
         return Zero with
         {
-            Price = Round(side.Decimal("diferenciaPrecioOperacion"), 3),
+            Price = GrainsFormat.Round(side.Decimal("diferenciaPrecioOperacion"), 3),
             Weight = (long)side.Decimal("diferenciaPesoNeto"),
             SubTotal = subTotal,
             Vat = importes.Sum(i => i.Vat),
@@ -90,13 +90,13 @@ internal static class Settlement
             var amount = d.Decimal("baseCalculo");
             if (amount == 0 && d.Decimal("comisionGastosAdm") > 0) amount = subTotal * d.Decimal("comisionGastosAdm") / 100;
             if (amount == 0 && d.Decimal("diasAlmacenaje") > 0) amount = d.Decimal("diasAlmacenaje") * d.Decimal("precioPKGdiario") * weight;
-            amount = Round(amount);
-            return new Line(d, amount, amount, Round(amount * d.Decimal("alicuotaIva") / 100));
+            amount = GrainsFormat.Round(amount);
+            return new Line(d, amount, amount, GrainsFormat.Round(amount * d.Decimal("alicuotaIva") / 100));
         }).ToList();
 
     private static List<Line> Retentions(XElement? list) =>
         (list?.Elements("retencion") ?? []).Select(r =>
-            new Line(r, r.Decimal("baseCalculo"), Round(r.Decimal("baseCalculo") * r.Decimal("alicuota") / 100), 0)).ToList();
+            new Line(r, r.Decimal("baseCalculo"), GrainsFormat.Round(r.Decimal("baseCalculo") * r.Decimal("alicuota") / 100), 0)).ToList();
 
     /// <summary>Writes the amounts into an autorización (or an adjustment side), list by list, in the schema's places.</summary>
     public static void Write(AnswerFill fill, XElement target, Totals totals)
@@ -161,6 +161,4 @@ internal static class Settlement
         }
         list.Repeat(item, lines, each);
     }
-
-    private static decimal Round(decimal value, int decimals = 2) => Math.Round(value, decimals, MidpointRounding.ToEven);
 }

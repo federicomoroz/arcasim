@@ -8,7 +8,7 @@ using SoapFault = ArcaSim.Application.Soap.SoapFault;
 namespace ArcaSim.Application.Services.Organismos;
 
 /// <summary>A sworn statement presented through the web service, under its transaction number.</summary>
-public sealed record Presentation(long Transaction, long Cuit, int Form, string FileName, string Md5, long Size, DateTimeOffset PresentedAt);
+public sealed record Presentation(long Transaction, long Cuit, int Form, string FileName, string Md5, DateTimeOffset PresentedAt);
 
 /// <summary>
 /// Presentación de DDJJ (uploadPresentacionService,
@@ -30,6 +30,9 @@ public sealed partial class DdjjRules(IDocumentStore store, IClock clock) : ISer
     public const string Presentations = "uploadPresentacionService.presentaciones";
     public const int InlineLimit = 1024 * 1024;
     private const long FirstTransaction = 60_000_000;
+
+    /// <summary>The same file uploaded twice at once is one presentation: the second request waits for the first one's transaction.</summary>
+    private readonly KeyedLocks<string> _uploads = new();
 
     [GeneratedRegex(@"^\d*F(?<form>\d{3,4})(\.(?<md5>[0-9a-fA-F]{32}))?\.[A-Za-z0-9]{1,4}$")]
     private static partial Regex FileNameFormat();
@@ -59,16 +62,19 @@ public sealed partial class DdjjRules(IDocumentStore store, IClock clock) : ISer
         catch (FormatException) { return Business("Archivo adjunto inválido"); }
         if (content.Length == 0) return Business("Archivo adjunto inválido");
 
+        // MD5 because the contract says so: the file name carries the file's MD5 and consulta asks for it
+        // (uploadPresentacionService.md). It identifies the file; it protects nothing.
         var md5 = Convert.ToHexString(MD5.HashData(content)).ToLowerInvariant();
         if (match.Groups["md5"].Success && !match.Groups["md5"].Value.Equals(md5, StringComparison.OrdinalIgnoreCase))
             return Business("Archivo adjunto inválido");
 
         var form = int.Parse(match.Groups["form"].Value, CultureInfo.InvariantCulture);
         var key = Key(call.Cuit, form, fileName, md5);
+        using var uploading = await _uploads.AcquireAsync(key, ct);
         var existing = await store.GetAsync<Presentation>(Presentations, key, ct);
         if (existing is null)
         {
-            existing = new Presentation(FirstTransaction + await store.NextAsync(Presentations, ct), call.Cuit, form, fileName, md5, content.LongLength, clock.Now);
+            existing = new Presentation(FirstTransaction + await store.NextAsync(Presentations, ct), call.Cuit, form, fileName, md5, clock.Now);
             await store.PutAsync(Presentations, key, existing, ct);
         }
         return call.Ok(call.Sample().Set("return", existing.Transaction));

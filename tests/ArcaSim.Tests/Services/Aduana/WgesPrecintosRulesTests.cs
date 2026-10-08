@@ -39,8 +39,10 @@ public class WgesPrecintosRulesTests
         Assert.Equal("BTBJ+ABIE", active.V("CodAlarma"));
         Assert.StartsWith("2026-10-01T11:30:00", active.V("FUltEvento"));
 
+        // The depositario asks to deactivate through a channel ArcaSim has no service for: its document changes state.
         var store = kit.Sim.Services.GetRequiredService<IDocumentStore>();
-        Assert.True(await CemaGuard.RequestAsync(store, "CEMA01", "SODE", AduanaKit.Today));
+        var precinto = (await store.GetAsync<Cema>(WgesPrecintosRules.Collection, "CEMA01"))!;
+        await store.PutAsync(WgesPrecintosRules.Collection, "CEMA01", precinto with { Estado = "SODE", FUltEstado = AduanaKit.Today });
         Assert.Equal("SODE", (await cema.CallAsync("ConsultarPrecintosPendientes", "")).V("Estado"));
         Assert.Equal("0", (await cema.CallAsync("TerminarMonitoreo", $"<argTerminarMonitoreo>{Ids("CEMA01")}</argTerminarMonitoreo>")).Code());
         Assert.Equal("0", (await cema.CallAsync("NovedadPrecinto", "<argPrecinto><IdPrecinto>CEMA01</IdPrecinto></argPrecinto>")).Code());

@@ -26,8 +26,10 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
 {
     private const string Collection = "WutiGOPDeclaraciones.declaraciones";
     private const string Ok = "OK Procesado";
-    private const string NoData = "No hay datos para los criterios ingresados";
     private const int PerLote = 2;
+
+    /// <summary>The first query at an aduana and lugar operativo finds its declarations; requests that arrive together make them once.</summary>
+    private readonly KeyedLocks<string> _seeding = new();
 
     public string Service => "WutiGOPDeclaraciones";
 
@@ -43,21 +45,21 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
         {
             var detailed = call.Name == "PndListaGOPDetallada";
             var pending = (await store.ListAsync<GopDeclaration>(Collection, place, ct)).Where(d => detailed ? !d.CaratulaLeida : !d.EstadoLeido).ToList();
-            if (pending.Count == 0) return call.Fail(30286, NoData);
+            if (pending.Count == 0) return call.Fail(30286, Dia.NoData);
             var answer = call.Sample().Receipt(0, Ok, "DesError");
             answer.Repeat("Pendiente", pending, (row, d) => row.Set("IdDecla", d.IdDecla));
             return call.Done(answer);
         }
 
         var key = place + arg.Field("IdDecla");
-        if (await store.GetAsync<GopDeclaration>(Collection, key, ct) is not { } declaration) return call.Fail(30286, NoData);
+        if (await store.GetAsync<GopDeclaration>(Collection, key, ct) is not { } declaration) return call.Fail(30286, Dia.NoData);
         switch (call.Name)
         {
             case "ListaGOPCaratDeta":
                 await store.PutAsync(Collection, key, declaration with { CaratulaLeida = true }, ct);
                 return call.Done(Caratula(call, declaration));
             case "ListaGOPItemsDeta":
-                return ItemsOf(call, declaration, (int)arg!.Decimal("NroLote"));
+                return ItemsOf(call, declaration, arg!.Decimal("NroLote"));
             case "ListaGOPLiquiDeta":
                 return call.Done(Liquidacion(call, declaration));
             case "ListaGOPEstados":
@@ -66,7 +68,7 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
             case "ListaGOPCancelaA":
             case "ListaGOPItemsCancelados":
             case "ListaGOPBloqueos":
-                return call.Fail(30286, NoData);
+                return call.Fail(30286, Dia.NoData);
             default:
                 return null;
         }
@@ -85,8 +87,8 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
             .Set("CuitDesp", d.CuitDesp)
             .Set("CodDivisaFob", "DOL")
             .Set("FechOfic", d.FechOfic)
-            .Set("FechCump", Legajos.None)
-            .Set("FechVencDestSusp", Legajos.None)
+            .Set("FechCump", Dia.NoDate)
+            .Set("FechVencDestSusp", Dia.NoDate)
             .Set("MontoFobTotDol", d.MontoFob)
             .Set("MontoFob", d.MontoFob)
             .Set("CantDiasAutDestSusp", 0)
@@ -99,15 +101,20 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
         return answer;
     }
 
-    private static ContractAnswer ItemsOf(ServiceCall call, GopDeclaration d, int lote)
+    /// <summary>
+    /// The items of one lote, PerLote at a time. A lote past the last has no data (30286, the manual's only business
+    /// code), however large the number; one below the first reads as the first, and a fraction as its whole part.
+    /// </summary>
+    private static ContractAnswer ItemsOf(ServiceCall call, GopDeclaration d, decimal requested)
     {
-        var first = (Math.Max(lote, 1) - 1) * PerLote + 1;
-        if (first > d.Items) return call.Fail(30286, NoData);
+        var lote = Math.Max(decimal.Truncate(requested), 1);
+        if (lote > (d.Items + PerLote - 1) / PerLote) return call.Fail(30286, Dia.NoData);
+        var first = ((int)lote - 1) * PerLote + 1;
         var numbers = Enumerable.Range(first, Math.Min(PerLote, d.Items - first + 1)).ToList();
         var answer = call.Sample().Receipt(0, Ok);
         answer.Find("Items")!
             .Set("IdDecla", d.IdDecla)
-            .Set("NroLote", Math.Max(lote, 1))
+            .Set("NroLote", (int)lote)
             .Set("IndUltLote", numbers[^1] == d.Items ? "S" : "N");
         answer.Repeat("Item", numbers, (row, n) => row
             .Set("NroItem", n)
@@ -141,7 +148,7 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
         var answer = call.Sample().Receipt(0, Ok);
         var states = answer.Find("EstadosDeclaracion")!;
         foreach (var date in states.Elements().Where(e => e.Name.LocalName.StartsWith("Fech", StringComparison.Ordinal)))
-            date.Value = ContractXml.Format(Legajos.None);
+            date.Value = ContractXml.Format(Dia.NoDate);
         states.Set("IdDecla", d.IdDecla)
             .Set("CuitImpoExpo", d.CuitImpoExpo)
             .Set("CodEstDecla", d.CodEstDecla)
@@ -153,14 +160,15 @@ public sealed class WutiGopRules(IDocumentStore store, IClock clock) : IServiceB
 
     private async Task SeedAsync(long cuit, string aduana, string lugar, string place, CancellationToken ct)
     {
+        using var turn = await _seeding.AcquireAsync(place, ct);
         if ((await store.ListAsync<GopDeclaration>(Collection, place, ct)).Count > 0) return;
         var now = clock.Now.ToArgentina();
         for (var i = 0; i < 2; i++)
         {
             var number = await store.NextAsync("WutiGOPDeclaraciones.declaraciones", ct);
-            var id = $"{now:yy}{aduana}IC04{number:D6}{(char)('A' + number % 26)}";
-            await store.PutAsync(Collection, place + id, new GopDeclaration(cuit, aduana, lugar, id, "IC04", 30000000007, "IMPORTADORA DEL SIMULADOR SA",
-                20222222223, now.AddHours(-2 - i), "OFIC", "VERDE", 3 - i, 15000m * (i + 1), 4200m * (i + 1)), ct);
+            var id = Dia.DeclarationOf(now.ArgentinaDate(), aduana, "IC04", number);
+            await store.PutAsync(Collection, place + id, new GopDeclaration(cuit, aduana, lugar, id, "IC04", Dia.SeededCompany, "IMPORTADORA DEL SIMULADOR SA",
+                Dia.SeededBroker, now.AddHours(-2 - i), "OFIC", "VERDE", 3 - i, 15000m * (i + 1), 4200m * (i + 1)), ct);
         }
     }
 }

@@ -24,7 +24,7 @@ internal sealed class ExportStore(IDocumentStore documents, SequenceLocks locks)
         documents.GetAsync<AuthorizedExport>(Vouchers, AuthorizedVouchers.Key(cuit, pointOfSale, voucherType, number), ct);
 
     public async Task<AuthorizedExport?> LastAsync(long cuit, int pointOfSale, int voucherType, CancellationToken ct) =>
-        (await documents.ListAsync<AuthorizedExport>(Vouchers, $"{cuit}/{pointOfSale:D5}/{voucherType:D3}/", ct)).LastOrDefault();
+        (await documents.ListAsync<AuthorizedExport>(Vouchers, $"{AuthorizedVouchers.SequenceKey(cuit, pointOfSale, voucherType)}/", ct)).LastOrDefault();
 
     public async Task<AuthorizedExport?> ByRequestAsync(long cuit, long id, CancellationToken ct) =>
         await documents.GetAsync<RequestRef>(Requests, $"{cuit}/{id}", ct) is { } reference
@@ -41,8 +41,8 @@ internal sealed class ExportStore(IDocumentStore documents, SequenceLocks locks)
         await documents.PutAsync(Vouchers, key, authorized, ct);
         await documents.PutAsync(Requests, $"{authorized.Cuit}/{voucher.Id}", new RequestRef(key), ct);
 
-        // No sequence has point of sale -1: its lock guards the CUIT's last Id.
-        using (await locks.AcquireAsync(authorized.Cuit, -1, -1, ct))
+        // The CUIT's last Id has a lock of its own, apart from the sequence lock the caller holds.
+        using (await locks.AcquireAsync(LastIds, authorized.Cuit, 0, 0, ct))
             if (voucher.Id > await LastIdAsync(authorized.Cuit, ct))
                 await documents.PutAsync(LastIds, authorized.Cuit.ToString(), new LastId(voucher.Id), ct);
 

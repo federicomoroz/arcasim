@@ -447,18 +447,18 @@ No existe en ARCA: prepara los escenarios de prueba. JSON, sin autenticación (e
 
 | Método y ruta | Qué hace |
 |---|---|
-| `GET /status` | Ambiente, versión del manual, acceso, reloj y fallas activas |
+| `GET /status` | Ambiente, versión del manual, acceso, reloj y las fallas encendidas (un servicio vuelto a la normalidad deja de figurar) |
 | `PUT /settings` | `environment` (`Homologacion`/`Produccion`), `manualVersion` (`V4_7`/`V4_8`) o `followCalendar`, `replayWindowEnabled`, `openAccess`, `finalConsumerIdentificationThreshold`, `maxRecordsPerRequest`, `caeLifetimeDays` |
-| `POST /reset` | Borra contribuyentes, comprobantes, fallas, límites y actividad, y vuelve a la hora real |
+| `POST /reset` | Borra contribuyentes, comprobantes, fallas, límites, actividad y las secuencias que numeran los textos de los servicios, y vuelve a la hora real |
 | `GET /taxpayers` · `GET /taxpayers/{cuit}` | Contribuyentes |
 | `PUT /taxpayers/{cuit}` | Crea o actualiza: `name`, `vatCondition` (`ResponsableInscripto`, `Monotributo`, `Exento`…), `active`, `pointsOfSale` (`number`, `kind`: `WebServiceCae`, `WebServiceCaea` u `Other`; `blocked`; `deactivatedOn`) |
-| `POST /certificates` | `cuit`, `alias`, `services` (por defecto `["wsfe"]`), y `csr` (devuelve el certificado en PEM) o `password` (devuelve un PFX con la clave) |
+| `POST /certificates` | `cuit`, `alias`, `services` (por defecto `["wsfe"]`), y `csr` (devuelve el certificado en PEM) o `password` (devuelve un PFX con la clave). Un CSR que no se puede leer responde 400 sin guardar nada |
 | `GET /ca` | La autoridad certificante de ArcaSim, en PEM |
 | `GET /authorizations` · `POST` · `DELETE` | Qué alias puede representar a qué CUIT en qué servicio |
-| `PUT /chaos/{servicio}` | `down`, `delayMilliseconds`, `dropNextResponse`, `forceRejection` (código) para `wsfe` y `wsaa`; `down`, `delayMilliseconds` y `balancerMask` para los demás, por su id (`wsmtxca`, `wscpe`…) |
-| `GET /traffic` · `PUT /traffic/{servicio}` | Medidor del último minuto y límites: `requestsPerMinute`, `capacity`, `serviceTimeMilliseconds`, `queueLimit` |
+| `PUT /chaos/{servicio}` | `down`, `delayMilliseconds`, `dropNextResponse`, `forceRejection` (código) para `wsfe` y `wsaa`; `down`, `delayMilliseconds` y `balancerMask` para los demás, por su id (`wsmtxca`, `wscpe`, `seti-setipago-api`…). Un nombre que ArcaSim no sirve responde 404 |
+| `GET /traffic` · `PUT /traffic/{servicio}` | Medidor del último minuto y límites: `requestsPerMinute`, `capacity`, `serviceTimeMilliseconds`, `queueLimit`. Un nombre que ArcaSim no sirve responde 404 |
 | `POST /clock` · `DELETE /clock` | `freezeAt` (momento) y/o `advanceMinutes`; `DELETE` vuelve a la hora real |
-| `GET /vouchers?cuit=&limit=` | Comprobantes emitidos |
+| `GET /vouchers?cuit=&limit=` | Comprobantes emitidos (un `limit` negativo responde 400) |
 | `GET /activity?limit=` | Registro en vivo: tickets, CAE, rechazos, pedidos saturados |
 | `PUT /rates` | `currency`, `day`, `rate`: la cotización que usan las validaciones de moneda extranjera |
 | `GET /documents/{colección}?prefix=` · `GET`, `PUT`, `DELETE /documents/{colección}/{clave}` | El estado de los demás servicios ([§6](#6-los-demás-servicios-de-arca)): leer lo que guardaron, o cargar antes de un test los registros que la API de ARCA no permite escribir |
@@ -538,4 +538,5 @@ El código de la aplicación no cambia.
 - El **padrón** es ficticio: los contribuyentes son los cargados o los creados al usarlos, y un CUIT desconocido con dígito verificador válido se toma como activo.
 - Las **cotizaciones** se cargan a mano con `PUT /rates`; sin cotización, se omiten las validaciones que dependen de ella.
 - Algunos códigos del manual se responden con el texto del manual, porque el de ARCA nunca se capturó.
+- Un pedido que ninguna regla previó (una letra donde va un número, por ejemplo) recibe el fault del servidor de ese servicio con el texto por defecto de su framework (ASMX, CXF, la pila Java, el `wsaa.internalError` de WSAA, el cuerpo de error de Spring Boot), no un texto capturado de ARCA. Nunca un HTTP 500 vacío.
 - El certificado **TLS** no puede ser el de `*.afip.gov.ar`.

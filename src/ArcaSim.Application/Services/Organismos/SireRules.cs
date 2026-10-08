@@ -82,14 +82,14 @@ public sealed partial class SireRules(IDocumentStore store, PadronDirectory padr
         var data = call.Request.Find("certificado") ?? new XElement("certificado");
         if (await RejectAsync(data, ct) is { } problem) return Refuse(call, problem);
 
-        var trace = data.Optional("codigoTrazabilidad");
+        var trace = data.OptionalText("codigoTrazabilidad");
         if (trace is not null && await store.GetAsync<WithholdingCertificate>(Traces, $"{call.Cuit}/{trace}", ct) is { } earlier)
             return Answer(call, earlier);
 
         var certificate = new WithholdingCertificate(
             await NumberAsync(ct), SecurityCode(), call.Cuit, data.Long("cuitRetenido"), data.Int("regimen"),
             data.Date("fechaRetencion")!.Value, data.Decimal("importeRetencion"), data.Int("tipoComprobante"),
-            data.Optional("numeroComprobante"), trace, "VIGENTE", null, null, null, clock.Now);
+            data.OptionalText("numeroComprobante"), trace, "VIGENTE", null, null, null, clock.Now);
         await store.PutAsync(Certificates, certificate.Number, certificate, ct);
         if (trace is not null) await store.PutAsync(Traces, $"{call.Cuit}/{trace}", certificate, ct);
         return Answer(call, certificate);
@@ -105,7 +105,7 @@ public sealed partial class SireRules(IDocumentStore store, PadronDirectory padr
         var known = table.Count == 0 ? regime is >= 1 and <= 999 : table.Any(r => r.Code == regime);
         if (!known) return $"No existe el regimen {regime} para el impuesto 216.";
 
-        var today = DateOnly.FromDateTime(clock.Now.ToArgentina().DateTime);
+        var today = clock.Today();
         if (data.Date("fechaRetencion") is not { } withheldOn) return "La fecha de retencion es obligatoria.";
         if (withheldOn < FirstDay) return "La fecha de retencion no puede ser anterior al 01/12/2019.";
         if (withheldOn > today) return "La fecha de retencion no puede ser posterior a la fecha actual.";
@@ -115,7 +115,7 @@ public sealed partial class SireRules(IDocumentStore store, PadronDirectory padr
         if (condition is { } c && c is not (1 or 2)) return $"No existe la condicion {c}.";
         if (needsCondition && condition is null) return $"La condicion es obligatoria para el regimen {regime}.";
 
-        if (data.Flag("imposibilidadRetencion") == true && data.Optional("motivoNoRetencion") is null)
+        if (data.Flag("imposibilidadRetencion") == true && data.OptionalText("motivoNoRetencion") is null)
             return "El motivo de no retencion es obligatorio si no se efectuo la retencion.";
         if (data.Flag("regimenExclusion") == true)
         {
@@ -131,18 +131,18 @@ public sealed partial class SireRules(IDocumentStore store, PadronDirectory padr
         if (RefersToOriginal.Contains(type) && voucherDate != withheldOn)
             return $"Para el tipo de comprobante {type} la fecha del comprobante debe ser igual a la fecha de retencion.";
 
-        var number = data.Optional("numeroComprobante");
+        var number = data.OptionalText("numeroComprobante");
         if (NeedsNumber.Contains(type) && number is null) return $"El numero de comprobante es obligatorio para el tipo de comprobante {type}.";
         if (number is not null && NumberedFormat.Contains(type) && !VoucherNumberFormat().IsMatch(number))
             return $"El numero de comprobante {number} no tiene el formato 99999-99999999.";
         if (number is { Length: > 16 }) return $"El numero de comprobante {number} supera los 16 caracteres.";
 
-        if (type == 3 && data.Optional("motivoEmisionNotaCredito") is null) return "El motivo de emision de la nota de credito es obligatorio.";
+        if (type == 3 && data.OptionalText("motivoEmisionNotaCredito") is null) return "El motivo de emision de la nota de credito es obligatorio.";
         if (RefersToOriginal.Contains(type) &&
-            (data.Optional("numeroCertificadoOriginal") is null || data.Date("fechaRetencionCertificadoOriginal") is null
+            (data.OptionalText("numeroCertificadoOriginal") is null || data.Date("fechaRetencionCertificadoOriginal") is null
              || data.Text("importeCertificadoOriginal") is not { Length: > 0 }))
             return $"Los datos del certificado original son obligatorios para el tipo de comprobante {type}.";
-        if (data.Optional("motivoAnulacion") is not null) return "El motivo de anulacion no se informa al emitir un certificado.";
+        if (data.OptionalText("motivoAnulacion") is not null) return "El motivo de anulacion no se informa al emitir un certificado.";
 
         var withheld = data.Long("cuitRetenido");
         if (!Cuits.IsValid(withheld) || await padron.FindAsync(withheld, ct) is null) return $"No existe persona con id {withheld}.";
@@ -165,7 +165,7 @@ public sealed partial class SireRules(IDocumentStore store, PadronDirectory padr
 
         var cancellation = original with
         {
-            Number = await NumberAsync(ct), SecurityCode = SecurityCode(), TraceCode = data.Optional("codigoTrazabilidad"),
+            Number = await NumberAsync(ct), SecurityCode = SecurityCode(), TraceCode = data.OptionalText("codigoTrazabilidad"),
             State = "ANULACION", Cancels = original.Number, CancelledBy = null, CancelReason = reason, IssuedAt = clock.Now,
         };
         await store.PutAsync(Certificates, cancellation.Number, cancellation, ct);

@@ -1,4 +1,5 @@
 using ArcaSim.Application;
+using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Events;
 using ArcaSim.Application.Traffic;
 using ArcaSim.Application.Wsfe;
@@ -30,19 +31,21 @@ public sealed class SimulationController(SimulationSettings settings, SimulatedC
         return StatusView.Of(settings, clock);
     }
 
-    /// <summary>Back to nothing: no taxpayers, vouchers, failures, limits or activity, and the real time.</summary>
+    /// <summary>Back to nothing: no taxpayers, vouchers, failures, limits, activity or numbered sequences, and the real time.</summary>
     [HttpPost("reset")]
     public async Task<StatusView> Reset(
         [FromServices] IEnumerable<IResettable> stores,
         [FromServices] TrafficGate traffic,
         [FromServices] TrafficMeter meter,
         [FromServices] ActivityLog activity,
+        [FromServices] PlaceholderCounters sequences,
         CancellationToken ct)
     {
         foreach (var store in stores) await store.ResetAsync(ct);
         traffic.Reset();
         meter.Reset();
         activity.Reset();
+        sequences.Reset();
         settings.ResetChaos();
         clock.Reset();
         return StatusView.Of(settings, clock);

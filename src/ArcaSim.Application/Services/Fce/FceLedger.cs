@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Wsfe;
 
@@ -13,7 +12,7 @@ namespace ArcaSim.Application.Services.Fce;
 public sealed class FceBook(DateTimeOffset now)
 {
     public DateTimeOffset Now { get; } = now;
-    public DateOnly Today => DateOnly.FromDateTime(Now.ToArgentina().DateTime);
+    public DateOnly Today => Now.ArgentinaDate();
     public Dictionary<long, FceAccount> Accounts { get; } = [];
     public Dictionary<string, FceVoucher> Vouchers { get; } = [];
     internal Dictionary<long, string> Names { get; } = [];
@@ -53,30 +52,27 @@ public sealed class FceBook(DateTimeOffset now)
 /// </summary>
 public sealed class FceLedger(IDocumentStore store, IVoucherStore wsfe, ITaxpayerRepository taxpayers, IClock clock)
 {
-    public const string AccountsCollection = "wsfecred.ctasctes";
-    public const string VouchersCollection = "wsfecred.comprobantes";
-    public const string AgentAccountsCollection = "wsfecredagente.cuentas";
+    private const string AccountsCollection = "wsfecred.ctasctes";
+    private const string VouchersCollection = "wsfecred.comprobantes";
+    private const string AgentAccountsCollection = "wsfecredagente.cuentas";
     private const string AccountCounter = "wsfecred.codCtaCte";
 
-    public const int AcceptanceDays = 30;
-    public const int OperableAfterDays = 2;
+    private const int AcceptanceDays = 30;
+    private const int OperableAfterDays = 2;
 
-    private static readonly ConditionalWeakTable<IDocumentStore, SemaphoreSlim> Gates = new();
+    private readonly SemaphoreSlim _gate = new(1, 1);
 
-    /// <summary>One operation at a time per store: the three services read and write the same accounts.</summary>
+    /// <summary>One operation at a time: the three services read and write the same accounts, through this one ledger.</summary>
     public async Task<IDisposable> LockAsync(CancellationToken ct)
     {
-        var gate = Gates.GetValue(store, _ => new SemaphoreSlim(1, 1));
-        await gate.WaitAsync(ct);
-        return new Release(gate);
+        await _gate.WaitAsync(ct);
+        return new Release(_gate);
     }
 
-    public static DateTimeOffset StartOf(DateOnly day) => new(day.ToDateTime(TimeOnly.MinValue), ArgentinaTime.Offset);
-
     /// <summary>When the buyer may first operate on a voucher (1106), and when it turns Recepcionado.</summary>
-    public static DateTimeOffset OperableFrom(FceVoucher voucher) => StartOf(voucher.AvailableOn.AddDays(OperableAfterDays));
+    public static DateTimeOffset OperableFrom(FceVoucher voucher) => ArgentinaTime.StartOf(voucher.AvailableOn.AddDays(OperableAfterDays));
 
-    public static DateTimeOffset TacitAcceptanceAt(FceAccount account) => StartOf(account.AcceptanceDue.AddDays(1));
+    public static DateTimeOffset TacitAcceptanceAt(FceAccount account) => ArgentinaTime.StartOf(account.AcceptanceDue.AddDays(1));
 
     /// <summary>The accounts and vouchers as they stand now: new FCE vouchers registered, deadlines applied, changes saved.</summary>
     public async Task<FceBook> OpenAsync(CancellationToken ct)
@@ -118,8 +114,13 @@ public sealed class FceLedger(IDocumentStore store, IVoucherStore wsfe, ITaxpaye
     public Task<FceAgentAccount?> AgentAccountAsync(long agent, string accountId, CancellationToken ct) =>
         store.GetAsync<FceAgentAccount>(AgentAccountsCollection, $"{agent}/{accountId}", ct);
 
+    /// <summary>Every agent's accounts, for a seller looking for the ones opened in its name.</summary>
     public Task<IReadOnlyList<FceAgentAccount>> AgentAccountsAsync(CancellationToken ct) =>
         store.ListAsync<FceAgentAccount>(AgentAccountsCollection, "", ct);
+
+    /// <summary>One agent's accounts, read by their key prefix (the agent's CUIT) instead of looking through everyone's.</summary>
+    public Task<IReadOnlyList<FceAgentAccount>> AgentAccountsOfAsync(long agent, CancellationToken ct) =>
+        store.ListAsync<FceAgentAccount>(AgentAccountsCollection, $"{agent}/", ct);
 
     public Task SaveAsync(FceAgentAccount account, CancellationToken ct) =>
         store.PutAsync(AgentAccountsCollection, account.Key, account, ct);
@@ -145,8 +146,6 @@ public sealed class FceLedger(IDocumentStore store, IVoucherStore wsfe, ITaxpaye
         if (account.State.State == FceStates.Modifiable && tacit <= until)
         {
             account.MoveTo(FceStates.AccountAccepted, tacit);
-            account.AcceptanceKind = "Tacita";
-            account.AcceptedAt = tacit;
             account.AcceptedBalance = book.Balance(account);
             foreach (var voucher in vouchers.Where(v => v.CountsInBalance && v.State.State != FceStates.Rejected))
             {
@@ -168,21 +167,21 @@ public sealed class FceLedger(IDocumentStore store, IVoucherStore wsfe, ITaxpaye
     /// <summary>
     /// FCE vouchers authorized since the last look: an invoice opens an
     /// account; a note joins the account of the voucher it references, and
-    /// waits outside until that voucher is known.
+    /// waits outside until that voucher is known. Every voucher WSFEv1 has
+    /// authorized is looked at: a cap would leave the oldest ones without an account.
     /// </summary>
     private async Task RegisterNewAsync(FceBook book, HashSet<long> changed, CancellationToken ct)
     {
         var arrivals = new List<Arrival>();
-        foreach (var stored in await wsfe.ListAsync(null, 100_000, ct))
-            if (FceTypes.IsFce(stored.VoucherType)
-                && !book.Vouchers.ContainsKey(new FceId(stored.Cuit, stored.VoucherType, stored.PointOfSale, stored.From).Key))
+        foreach (var stored in await wsfe.ListOfTypesAsync(FceTypes.All, ct))
+            if (!book.Vouchers.ContainsKey(new FceId(stored.Cuit, stored.VoucherType, stored.PointOfSale, stored.From).Key))
                 arrivals.Add(new Arrival(FromWsfe(stored), stored.ProcessedAt));
 
         // Other services record no CbtesAsoc, so only their invoices can open an account.
         foreach (var other in await store.ListAsync<AuthorizedVoucher>(AuthorizedVouchers.Collection, "", ct))
             if (FceTypes.IsInvoice(other.VoucherType)
                 && !book.Vouchers.ContainsKey(new FceId(other.Cuit, other.VoucherType, other.PointOfSale, other.Number).Key))
-                arrivals.Add(new Arrival(FromOther(other), StartOf(other.Date)));
+                arrivals.Add(new Arrival(FromOther(other), ArgentinaTime.StartOf(other.Date)));
 
         foreach (var arrival in arrivals.OrderBy(a => a.Voucher.IsInvoice ? 0 : 1).ThenBy(a => a.At))
         {
@@ -237,7 +236,7 @@ public sealed class FceLedger(IDocumentStore store, IVoucherStore wsfe, ITaxpaye
             AuthorizationKind = stored.EmissionType == EmissionType.Cae ? "E" : "A",
             AuthorizationCode = long.TryParse(stored.AuthorizationCode, NumberStyles.None, CultureInfo.InvariantCulture, out var code) ? code : 0,
             Date = stored.Date,
-            AvailableOn = DateOnly.FromDateTime(stored.ProcessedAt.ToArgentina().DateTime),
+            AvailableOn = stored.ProcessedAt.ArgentinaDate(),
             PaymentDue = Fev1Dates.TryParse(detail.FchVtoPago, out var due) ? due : null,
             Total = Money(detail.ImpTotal),
             Currency = string.IsNullOrWhiteSpace(detail.MonId) ? "PES" : detail.MonId.Trim(),

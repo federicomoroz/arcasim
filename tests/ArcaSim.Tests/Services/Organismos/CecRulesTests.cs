@@ -34,6 +34,8 @@ public class CecRulesTests
     [Theory]
     [InlineData("consultarComprobantesExpoPeriodo", "<cuit>20111111112</cuit><periodo>202610</periodo><pagina>1</pagina>", "errores", "4016",
         "Periodo de consulta igual al actual. El periodo actual 202610 todavía no venció. Vence el día 5 del mes que le sigue.")]
+    [InlineData("consultarComprobantesExpoPeriodo", "<cuit>20111111112</cuit><periodo>999912</periodo><pagina>1</pagina>", "errores", "4016",
+        "Periodo de consulta igual al actual. El periodo actual 999912 todavía no venció. Vence el día 5 del mes que le sigue.")]
     [InlineData("consultarComprobantesExpoPeriodo", "<cuit>20111111112</cuit><periodo>202613</periodo><pagina>1</pagina>", "erroresFormato", "2009",
         "El periodo de consulta debe respetar el formato 'YYYYMM', con año (YYYY) y mes (MM) válidos. El mes 13 no es válido.")]
     [InlineData("consultarComprobantesExpoPeriodo", "<cuit>20222222223</cuit><periodo>202608</periodo><pagina>1</pagina>", "errores", "4009",
@@ -55,6 +57,33 @@ public class CecRulesTests
         Assert.Equal(code, error.Value("codigo"));
         Assert.Equal(text, error.Value("descripcion"));
         Assert.Equal("0", answer.Value("pagina"));
+    }
+
+    // pagina is an xsd:short, so a conformant client never sends the larger two: they are not valid for the
+    // schema and neither is the answer, but they have to read as "past the last", not wrap around to the first.
+    [Theory]
+    [InlineData(2)]
+    [InlineData(60_000_000)] // (page - 1) * 50 no longer fits an int
+    [InlineData(int.MaxValue)]
+    public async Task A_page_past_the_last_is_empty_and_has_no_more_however_large_the_number(int page)
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var cec = await ServiceProbe.StartAsync(sim, "wscec");
+        await cec.Store.PutAsync(Voucher(1, new DateOnly(2026, 8, 10), 1500m));
+        var created = (await cec.CallAsync("consultarComprobantesExpoPeriodo", Auth(cec) + $"<cuit>{Caller}</cuit><periodo>202608</periodo><pagina>1</pagina>")).Valid();
+        var code = created.Value("codigoConsulta");
+
+        var read = (await cec.CallAsync("consultarComprobantesExpoCodigoConsulta", Auth(cec) + $"<codigoConsulta>{code}</codigoConsulta><pagina>{page}</pagina>")).Element;
+        var again = (await cec.CallAsync("consultarComprobantesExpoPeriodo", Auth(cec) + $"<cuit>{Caller}</cuit><periodo>202608</periodo><pagina>{page}</pagina>")).Element;
+        var listed = (await cec.CallAsync("obtenerConsultas", Auth(cec) + $"<filtro><cuit>{Caller}</cuit></filtro><pagina>{page}</pagina>")).Element;
+
+        foreach (var answer in new[] { read, again })
+        {
+            Assert.Empty(answer.All("comprobanteExportacion"));
+            Assert.Equal((page.ToString(), "N"), (answer.Value("pagina"), answer.Value("hayMas")));
+        }
+        Assert.Empty(listed.All("consulta"));
+        Assert.Equal((page.ToString(), "N"), (listed.Value("pagina"), listed.Value("hayMas")));
     }
 
     private static AuthorizedVoucher Voucher(long number, DateOnly date, decimal total) =>

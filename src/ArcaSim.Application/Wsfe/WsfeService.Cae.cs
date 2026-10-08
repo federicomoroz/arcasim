@@ -22,7 +22,7 @@ public sealed partial class WsfeService
         var today = clock.Today();
         var type = tables.VoucherType(header.CbteTipo);
         var issuer = await IssuerAsync(auth.Cuit, header.PtoVta, PointOfSaleKind.WebServiceCae, type?.Class, ct);
-        var forced = settings.ChaosFor(Name).TryTakeForcedRejection(out var forcedCode) ? forcedCode : (int?)null;
+        var forced = settings.ChaosOf(Name).TryTakeForcedRejection(out var forcedCode) ? forcedCode : (int?)null;
 
         var errors = HeaderErrors(RuleCodes.Cae, header, details.Length, type, issuer, today, PointOfSaleKind.WebServiceCae);
         if (forced is { } code && IsHeaderCode(code))
@@ -51,7 +51,7 @@ public sealed partial class WsfeService
             return response;
         }
 
-        using (await locks.AcquireAsync(auth.Cuit, header.PtoVta, header.CbteTipo, ct))
+        using (await locks.AcquireAsync(Name, auth.Cuit, header.PtoVta, header.CbteTipo, ct))
         {
             var last = await vouchers.LastAsync(auth.Cuit, header.PtoVta, header.CbteTipo, ct);
             var next = (last?.To ?? 0) + 1;
@@ -97,8 +97,7 @@ public sealed partial class WsfeService
             }
         }
 
-        var approved = response.FeDetResp.Count(d => d.Resultado == "A");
-        response.FeCabResp.Resultado = approved == details.Length ? "A" : approved == 0 ? "R" : "P";
+        response.FeCabResp.Resultado = BatchResult(response.FeDetResp.Select(d => d.Resultado), details.Length);
         response.Errors = errors.Count > 0 ? [.. errors] : null;
         return response;
     }
@@ -117,7 +116,7 @@ public sealed partial class WsfeService
         if (header.CantReg != sent)
             errors.Add(catalog.WithMessage(method, 10002, $"Campo CantReg debe ser igual a lo informado en detalle. Informado: {header.CantReg}, Enviado:{sent}").ToErr());
         if (sent > settings.MaxRecordsPerRequest || (type is { Fce: true } && sent > 1)) errors.Add(catalog.For(method, 10003).ToErr());
-        if (header.PtoVta is < 1 or > 99_998) errors.Add(catalog.For(method, caea ? 1300 : 10004).ToErr());
+        if (header.PtoVta is < 1 or > VoucherLimits.MaxPointOfSale) errors.Add(catalog.For(method, caea ? 1300 : 10004).ToErr());
         if (caea)
         {
             if (type is null) errors.Add(catalog.For(method, 700).ToErr());
@@ -128,9 +127,8 @@ public sealed partial class WsfeService
             else if (type is null) errors.Add(catalog.For(method, 10007).ToErr());
         }
 
-        var point = issuer?.FindPointOfSale(header.PtoVta);
-        var usable = point is not null && point.Kind == expectedKind && !point.Blocked && !(point.DeactivatedOn <= today);
-        if (header.PtoVta is >= 1 and <= 99_998 && !usable) errors.Add(catalog.For(method, caea ? 701 : 10005).ToErr());
+        var usable = issuer?.CanIssueFrom(header.PtoVta, expectedKind, today) == true;
+        if (header.PtoVta is >= 1 and <= VoucherLimits.MaxPointOfSale && !usable) errors.Add(catalog.For(method, caea ? 701 : 10005).ToErr());
         return errors;
     }
 
@@ -164,6 +162,10 @@ public sealed partial class WsfeService
     }
 
     private static bool IsHeaderCode(int code) => code is >= 10000 and <= 10007 or < 1000;
+
+    /// <summary>A batch's result: A when every voucher was authorized, R when none was, P in between.</summary>
+    private static string BatchResult(IEnumerable<string?> results, int sent) =>
+        results.Count(r => r == "A") is var approved && approved == sent ? "A" : approved == 0 ? "R" : "P";
 
     /// <summary>The rejection a test asked for through the admin API, with the code's own text when it has one.</summary>
     private Finding Forced(int code)

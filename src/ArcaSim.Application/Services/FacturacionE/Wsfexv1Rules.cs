@@ -13,8 +13,8 @@ namespace ArcaSim.Application.Services.FacturacionE;
 /// type, gives a CAE, and answers a repeated request Id with what it already
 /// granted and Reproceso S; FEXGetLast_ID, FEXGetLast_CMP and FEXGetCMP read
 /// that back; the FEXGetPARAM_* tables answer the values the spec documents.
-/// Every answer carries FEXErr (0 when there was no error) and FEXEvents 0/Ok,
-/// as production does.
+/// Every answer carries FEXErr (0 when there was no error) and FEXEvents, the
+/// event the catalog records as seen live on every answer (103).
 ///
 /// ArcaSim's choices where the spec says NO VERIFICADO:
 /// - a business error answers FEXErr alone, without FEXResultAuth, as a refused ticket does;
@@ -99,7 +99,7 @@ public sealed class Wsfexv1Rules : IServiceBehavior
         var voucher = ExportVoucher.Read(call.Request.Child("Cmp"));
         if (voucher.Id < 0) return Fail(call, 1014);
 
-        using var _ = await _locks.AcquireAsync(call.Cuit, voucher.PointOfSale, voucher.VoucherType, ct);
+        using var _ = await _locks.AcquireAsync(Service, call.Cuit, voucher.PointOfSale, voucher.VoucherType, ct);
         if (await _store.ByRequestAsync(call.Cuit, voucher.Id, ct) is { } granted) return Approved(call, granted, reprocessed: true);
 
         var today = _clock.Today();
@@ -119,8 +119,7 @@ public sealed class Wsfexv1Rules : IServiceBehavior
     private async Task<decimal> RateOfAsync(ExportVoucher voucher, DateOnly date, CancellationToken ct)
     {
         if (voucher.Rate is > 0) return voucher.Rate.Value;
-        if (voucher.Currency == "PES") return 1;
-        return voucher.Currency is { } currency && await _rates.RateAsync(currency, Fev1Dates.PreviousBusinessDay(date), ct) is { } official
+        return voucher.Currency is { } currency && await _rates.QuoteAsync(currency, Fev1Dates.PreviousBusinessDay(date), ct) is { } official
             ? official.Rate
             : 0;
     }
@@ -143,20 +142,16 @@ public sealed class Wsfexv1Rules : IServiceBehavior
     }
 
     /// <summary>
-    /// Whether the issuer has the point of sale for export web services. With
+    /// Whether the issuer can use the point of sale for export web services
+    /// today: it exists for CAE, is not blocked and is not yet deactivated (a
+    /// deactivation date still to come does not block it, as in WSFEv1). With
     /// open access, an issuer or point of sale ArcaSim has not seen is created.
     /// </summary>
     private async Task<bool> ExportPointOfSaleAsync(long cuit, int number, CancellationToken ct)
     {
-        if (number is < 1 or > 99_998) return false;
-        var issuer = await _taxpayers.FindAsync(cuit, ct);
-        if (_settings.OpenAccess && (issuer is null ? Cuits.IsValid(cuit) : issuer.FindPointOfSale(number) is null))
-        {
-            issuer ??= new Taxpayer(cuit, $"Contribuyente {cuit}", VatCondition.ResponsableInscripto);
-            issuer.AddPointOfSale(new PointOfSale(number, PointOfSaleKind.WebServiceCae));
-            await _taxpayers.SaveAsync(issuer, ct);
-        }
-        return issuer is { Active: true } && issuer.FindPointOfSale(number) is { Kind: PointOfSaleKind.WebServiceCae, Blocked: false, DeactivatedOn: null };
+        if (number is < 1 or > VoucherLimits.MaxPointOfSale) return false;
+        var issuer = await _taxpayers.FindOrOpenAsync(_settings, cuit, number, PointOfSaleKind.WebServiceCae, firstClass: null, ct);
+        return issuer is { Active: true } && issuer.CanIssueFrom(number, PointOfSaleKind.WebServiceCae, _clock.Today());
     }
 
     // ---- Queries ---------------------------------------------------------------------
@@ -250,10 +245,7 @@ public sealed class Wsfexv1Rules : IServiceBehavior
         if (!Fev1Dates.TryParse(call.Request.Str("Fecha_CTZ"), out var day)) return Fail(call, 2054);
         var rated = new List<(string Id, string Desc, decimal Rate, DateOnly Day)>();
         foreach (var currency in _tables.Currencies)
-        {
-            if (currency.Id == "PES") rated.Add((currency.Id, currency.Desc, 1, day));
-            else if (await _rates.RateAsync(currency.Id, day, ct) is { } rate) rated.Add((currency.Id, currency.Desc, rate.Rate, rate.Day));
-        }
+            if (await _rates.QuoteAsync(currency.Id, day, ct) is { } rate) rated.Add((currency.Id, currency.Desc, rate.Rate, rate.Day));
         return Table(call, rated, "ClsFEXResponse_Mon_CON_Cotizacion",
             r => [("Mon_Id", r.Id), ("Mon_Ds", r.Desc), ("Mon_ctz", r.Rate), ("Fecha_ctz", Fev1Dates.Format(r.Day))]);
     }
@@ -269,11 +261,10 @@ public sealed class Wsfexv1Rules : IServiceBehavior
             return Fail(call, 1014, "El campo Mon_id no es valido.");
 
         var ns = Ns(call);
-        var rate = currency == "PES" ? (1m, day) : await _rates.RateAsync(currency, day, ct);
-        if (rate is not { } found) return Fail(call, 1014, "No existe cotizacion para la moneda y la fecha informadas.");
+        if (await _rates.QuoteAsync(currency, day, ct) is not { } found) return Fail(call, 1014, "No existe cotizacion para la moneda y la fecha informadas.");
         return Answer(call, new XElement(ns + "FEXResultGet",
-            new XElement(ns + "Mon_ctz", found.Item1),
-            new XElement(ns + "Mon_fecha", Fev1Dates.Format(found.Item2))));
+            new XElement(ns + "Mon_ctz", found.Rate),
+            new XElement(ns + "Mon_fecha", Fev1Dates.Format(found.Day))));
     }
 
     private ContractAnswer CheckPermit(ServiceCall call)
@@ -282,7 +273,7 @@ public sealed class Wsfexv1Rules : IServiceBehavior
         var destination = call.Request.IntOf("Dst_merc");
         if (string.IsNullOrEmpty(permit) || !_tables.Countries.Any(c => c.Id == destination))
             return Fail(call, 1810, Wsfexv1Tables.PermitCheckText);
-        var exists = System.Text.RegularExpressions.Regex.IsMatch(permit, "^[0-9]{5}[A-Z]{2}[A-Z0-9]{2}[0-9]{6}[A-Z]$");
+        var exists = ExportVoucherValidator.IsPermit(permit);
         return Answer(call, new XElement(Ns(call) + "FEXResultGet", new XElement(Ns(call) + "Status", exists ? "OK" : "NO")));
     }
 
@@ -290,7 +281,7 @@ public sealed class Wsfexv1Rules : IServiceBehavior
 
     private static XNamespace Ns(ServiceCall call) => call.Operation.Output.Namespace;
 
-    /// <summary>{Op}Result with the data, FEXErr 0 and FEXEvents 0.</summary>
+    /// <summary>{Op}Result with the data, FEXErr 0 and the service's FEXEvents.</summary>
     private static ContractAnswer Answer(ServiceCall call, XElement data) =>
         call.Ok(new XElement(call.Operation.Output, new XElement(Ns(call) + (call.Name + "Result"), data, Err(call, 0, "OK"), Events(call))));
 
@@ -301,8 +292,11 @@ public sealed class Wsfexv1Rules : IServiceBehavior
     private static XElement Err(ServiceCall call, int code, string text) =>
         new(Ns(call) + "FEXErr", new XElement(Ns(call) + "ErrCode", code), new XElement(Ns(call) + "ErrMsg", text));
 
+    /// <summary>The event the catalog says every answer carries (103, a maintenance notice, seen live); 0 and "Ok" if it says none.</summary>
     private static XElement Events(ServiceCall call) =>
-        new(Ns(call) + "FEXEvents", new XElement(Ns(call) + "EventCode", 0), new XElement(Ns(call) + "EventMsg", "Ok"));
+        new(Ns(call) + "FEXEvents",
+            new XElement(Ns(call) + "EventCode", call.Fixed("EventCode") ?? "0"),
+            new XElement(Ns(call) + "EventMsg", call.Fixed("EventMsg") ?? "Ok"));
 
     /// <summary>A FEXGetPARAM_* list: one item per row, its fields in schema order.</summary>
     private static ContractAnswer Table<T>(ServiceCall call, IEnumerable<T> rows, string item, Func<T, (string Name, object Value)[]> fields)

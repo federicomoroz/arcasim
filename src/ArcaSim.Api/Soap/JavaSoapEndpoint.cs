@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using ArcaSim.Application;
+using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Soap;
 
 namespace ArcaSim.Api.Soap;
@@ -27,7 +28,7 @@ public static class JavaSoapEndpoint
 
     public static void Map(WebApplication app, JavaSoapService service)
     {
-        ServiceRoutes.Register(service.Path, service.ChaosKey);
+        app.Services.GetRequiredService<ServiceDirectory>().Route(service.Path, service.ChaosKey);
 
         app.MapGet(service.Path, (HttpContext context) =>
             WsdlDocuments.AsksForWsdl(context.Request)
@@ -37,21 +38,14 @@ public static class JavaSoapEndpoint
 
         app.MapPost(service.Path, async (HttpContext context) =>
         {
-            var settings = context.RequestServices.GetRequiredService<SimulationSettings>();
-            var chaos = settings.ChaosFor(service.ChaosKey);
-            if (chaos.Delay > TimeSpan.Zero) await Task.Delay(chaos.Delay, context.RequestAborted);
-            if (chaos.Down)
-            {
-                context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-                return;
-            }
+            if (await ChaosGate.RefusedAsync(context, context.RequestServices.GetRequiredService<SimulationSettings>().ChaosOf(service.ChaosKey))) return;
 
             using var reader = new StreamReader(context.Request.Body);
             var body = await reader.ReadToEndAsync();
             XElement request;
             try
             {
-                var document = XDocument.Parse(body);
+                var document = SafeXml.Parse(body);
                 request = document.Root?.Elements().FirstOrDefault(e => e.Name.LocalName == "Body")?.Elements().FirstOrDefault()
                           ?? throw new XmlException("The SOAP body has no element.");
             }
@@ -68,7 +62,17 @@ public static class JavaSoapEndpoint
                 return;
             }
 
-            var result = await service.Handle(context.RequestServices, request.Name.LocalName, request, context.RequestAborted);
+            SoapResult result;
+            try
+            {
+                result = await service.Handle(context.RequestServices, request.Name.LocalName, request, context.RequestAborted);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException || !context.RequestAborted.IsCancellationRequested)
+            {
+                // CXF answers an exception nobody handled with its generic fault, never a bare HTTP 500.
+                context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(JavaSoapEndpoint)).LogError(ex, "{Path} failed", service.Path);
+                result = SoapResult.Fail(new SoapFault("soap:Server", ContractHost.Unexpected(Dialect.Cxf, ex)));
+            }
             if (result.Fault is { } fault) await WriteAsync(context, 500, Fault(fault));
             else await WriteAsync(context, 200, Content(result.Body!, service.Namespace));
         });
@@ -103,25 +107,5 @@ public static class JavaSoapEndpoint
         context.Response.ContentType = "text/xml;charset=UTF-8";
         context.Response.ContentLength = bytes.Length;
         await context.Response.Body.WriteAsync(bytes, context.RequestAborted);
-    }
-}
-
-/// <summary>Which ArcaSim service a path belongs to, for the traffic gate and its meter.</summary>
-public static class ServiceRoutes
-{
-    private static readonly Dictionary<string, string> Paths = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["/wsfev1/service.asmx"] = "wsfe",
-        ["/ws/services/LoginCms"] = "wsaa",
-    };
-
-    public static void Register(string path, string service)
-    {
-        lock (Paths) Paths[path] = service;
-    }
-
-    public static string? ServiceOf(PathString path)
-    {
-        lock (Paths) return Paths.TryGetValue(path.Value ?? "", out var service) ? service : null;
     }
 }

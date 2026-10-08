@@ -1,5 +1,6 @@
 using Arca.Client;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Wsfe;
 
@@ -9,17 +10,7 @@ public class AuthorizeTests
     private static readonly DateOnly Today = new(2026, 10, 1);
 
     /// <summary>A class B invoice to an unidentified final consumer: $1210 with 21 % VAT.</summary>
-    private static Voucher ConsumerInvoice(decimal net = 1000m) => new()
-    {
-        Concept = 1,
-        DocumentType = 99,
-        DocumentNumber = 0,
-        Total = net * 1.21m,
-        Net = net,
-        Vat = net * 0.21m,
-        ReceiverVatCondition = 5,
-        VatLines = [new VatLine(5, net, net * 0.21m)],
-    };
+    private static Voucher ConsumerInvoice(decimal net = 1000m) => Vouchers.ConsumerInvoice(net);
 
     [Fact]
     public async Task A_valid_invoice_gets_a_14_digit_CAE_due_ten_days_after_its_date()
@@ -237,15 +228,30 @@ public class AuthorizeTests
     }
 
     [Fact]
-    public async Task With_the_service_down_the_client_gets_a_retryable_failure()
+    public async Task With_the_service_down_WSAA_will_not_give_a_ticket_and_the_failure_is_retryable()
     {
         var (sim, wsfe) = await ArcaSimHarness.StartWithIssuerAsync();
         await using var _ = sim;
         sim.Settings.ChaosFor("wsfe").Down = true;
 
         // WSAA itself answers wsn.unavailable for a service that is down, before WSFEv1 is even called.
-        var failure = await Assert.ThrowsAnyAsync<ArcaException>(() => wsfe.AuthorizeNextAsync(1, 6, ConsumerInvoice()));
+        var failure = await Assert.ThrowsAsync<WsaaFaultException>(() => wsfe.AuthorizeNextAsync(1, 6, ConsumerInvoice()));
+
+        Assert.Equal("wsn.unavailable", failure.Code);
+        Assert.True(failure.Retryable);
+    }
+
+    [Fact]
+    public async Task With_the_service_down_and_a_ticket_in_hand_WSFEv1_answers_503_and_the_failure_is_retryable()
+    {
+        var (sim, wsfe) = await ArcaSimHarness.StartWithIssuerAsync();
+        await using var _ = sim;
+        await wsfe.LastAuthorizedAsync(1, 6);
+        sim.Settings.ChaosFor("wsfe").Down = true;
+
+        var failure = await Assert.ThrowsAsync<ArcaUnavailableException>(() => wsfe.AuthorizeNextAsync(1, 6, ConsumerInvoice()));
 
         Assert.True(failure.Retryable);
+        Assert.Contains("HTTP 503", failure.Message);
     }
 }

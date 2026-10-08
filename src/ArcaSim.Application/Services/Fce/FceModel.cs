@@ -93,7 +93,7 @@ public sealed class FceSca
     public string? Cbu { get; set; }
     public bool? CbuValidated { get; set; }
 
-    /// <summary>D disponible, P pendiente de recepción, R recibida.</summary>
+    /// <summary>D available ("disponible"), P waiting for reception ("pendiente de recepción"), R received ("recibida").</summary>
     public string State { get; set; } = "D";
 
     public DateTimeOffset? ReadAt { get; set; }
@@ -108,12 +108,11 @@ public sealed class FceAgentReport
     public string? Denomination { get; set; }
     public DateTimeOffset AvailableAt { get; set; }
 
-    /// <summary>D disponible, P pendiente, A aceptada, R rechazada.</summary>
+    /// <summary>D available ("disponible"), P pending ("pendiente"), A accepted ("aceptada"), R rejected ("rechazada").</summary>
     public string State { get; set; } = "D";
 
     public DateTimeOffset? ReadAt { get; set; }
     public DateTimeOffset? ConfirmedAt { get; set; }
-    public short? RejectionCode { get; set; }
     public string? RejectionReason { get; set; }
 }
 
@@ -135,8 +134,6 @@ public sealed class FceAccount
     public DateOnly AcceptanceDue { get; set; }
     public List<string> Notes { get; set; } = [];
     public List<FceState> History { get; set; } = [];
-    public string? AcceptanceKind { get; set; }
-    public DateTimeOffset? AcceptedAt { get; set; }
     public List<FceCodeText> Forms { get; set; } = [];
     public List<FceWithholding> Withholdings { get; set; } = [];
     public List<FceAdjustment> Adjustments { get; set; } = [];
@@ -166,7 +163,7 @@ public sealed class FceAgentAccount
     public long Holder { get; set; }
     public string? Denomination { get; set; }
 
-    /// <summary>A activa, B dada de baja.</summary>
+    /// <summary>A active ("activa"), B removed ("dada de baja").</summary>
     public string State { get; set; } = "A";
 
     public DateOnly OpenedOn { get; set; }
@@ -184,6 +181,9 @@ public static class FceTypes
     public static bool IsCredit(int type) => type is 203 or 208 or 213;
 
     public static bool IsFce(int type) => IsInvoice(type) || IsDebit(type) || IsCredit(type);
+
+    /// <summary>Every FCE type: the invoices, debit notes and credit notes of classes A, B and C.</summary>
+    public static readonly IReadOnlyList<int> All = [201, 202, 203, 206, 207, 208, 211, 212, 213];
 
     /// <summary>Remitos a FCE invoice may reference in CbtesAsoc (wsfev1.md §4.4): what obtenerRemitos returns.</summary>
     public static bool IsDeliveryNote(int type) => type is 91 or 990 or 991 or 993 or 994 or 995;

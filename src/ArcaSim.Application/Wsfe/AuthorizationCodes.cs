@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Security.Cryptography;
 
 namespace ArcaSim.Application.Wsfe;
@@ -25,22 +24,19 @@ public sealed class RandomAuthorizationCodes : IAuthorizationCodes
 }
 
 /// <summary>
-/// One lock per numbering sequence (CUIT, point of sale, voucher type), so two
-/// requests for the same sequence cannot both take the same number.
+/// One lock per numbering sequence (CUIT, point of sale, voucher type) of one
+/// service, so two requests for the same sequence cannot both take the same
+/// number. The service keeps each one's sequences apart: a lock taken inside
+/// another (a remito's request, then its number) never waits on itself, even
+/// when the request names a type or point of sale another lock uses.
 /// </summary>
 public sealed class SequenceLocks
 {
-    private readonly ConcurrentDictionary<(long, int, int), SemaphoreSlim> _locks = new();
+    private readonly KeyedLocks<(string Service, long Cuit, int PointOfSale, int VoucherType)> _locks = new();
 
-    public async Task<IDisposable> AcquireAsync(long cuit, int pointOfSale, int voucherType, CancellationToken ct)
-    {
-        var semaphore = _locks.GetOrAdd((cuit, pointOfSale, voucherType), _ => new SemaphoreSlim(1, 1));
-        await semaphore.WaitAsync(ct);
-        return new Release(semaphore);
-    }
+    public Task<IDisposable> AcquireAsync(string service, long cuit, int pointOfSale, int voucherType, CancellationToken ct) =>
+        _locks.AcquireAsync((service, cuit, pointOfSale, voucherType), ct);
 
-    private sealed class Release(SemaphoreSlim semaphore) : IDisposable
-    {
-        public void Dispose() => semaphore.Release();
-    }
+    /// <summary>The sequences with a lock right now: held or waited for.</summary>
+    public int Count => _locks.Count;
 }

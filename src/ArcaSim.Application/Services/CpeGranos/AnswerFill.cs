@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
@@ -14,6 +13,12 @@ namespace ArcaSim.Application.Services.CpeGranos;
 /// </summary>
 internal sealed class AnswerFill
 {
+    /// <summary>
+    /// How many copies, besides the first, Merge makes of a list the schema leaves unbounded: an answer holds
+    /// 51 items of it at most, and the rest of the request's are left out.
+    /// </summary>
+    private const int MaxExtraCopies = 50;
+
     private readonly HashSet<XElement> _filled = [];
     private readonly Dictionary<string, XmlSchemaElement?> _declarations = new(StringComparer.Ordinal);
 
@@ -71,7 +76,7 @@ internal sealed class AnswerFill
             Merge(child, matches[0]);
             var max = Declaration(child)?.MaxOccurs ?? 1;
             var anchor = child;
-            foreach (var more in matches.Skip(1).Take((int)Math.Min(max - 1, 50)))
+            foreach (var more in matches.Skip(1).Take((int)Math.Min(max - 1, MaxExtraCopies)))
             {
                 var copy = new XElement(template);
                 anchor.AddAfterSelf(copy);
@@ -106,7 +111,7 @@ internal sealed class AnswerFill
         string.Join('/', element.AncestorsAndSelf().Reverse().Select(e => e.Name.LocalName));
 }
 
-/// <summary>What wscpe and wslpg answers share: dates as ARCA writes them and the PDF they attach.</summary>
+/// <summary>What wscpe and wslpg share: dates and amounts as ARCA writes them, the PDF they attach and a request's elements without namespaces.</summary>
 internal static class GrainsFormat
 {
     /// <summary>xsd:dateTime the way the manuals print it, in Argentina's time and without offset: 2016-11-17T11:32:23.</summary>
@@ -116,39 +121,23 @@ internal static class GrainsFormat
     /// <summary>xsd:date without zone (AAAA-MM-DD).</summary>
     public static string Date(DateTimeOffset moment) => moment.ToArgentina().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-    public static string Date(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    /// <summary>Round half even, as §4.2 of the wslpg manual asks; two decimals unless told otherwise.</summary>
+    public static decimal Round(decimal value, int decimals = 2) => Math.Round(value, decimals, MidpointRounding.ToEven);
 
     public static string Amount(decimal value, int decimals = 2) =>
-        Math.Round(value, decimals, MidpointRounding.ToEven).ToString("0." + new string('0', decimals), CultureInfo.InvariantCulture);
+        Round(value, decimals).ToString("0." + new string('0', decimals), CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// A copy of the element and what is in it without namespaces or attributes: the Java services bind
+    /// unqualified fields, and what is stored of a request should read the way they bind it.
+    /// </summary>
+    public static XElement Unqualified(XElement e) =>
+        new(e.Name.LocalName, e.Nodes().Select(n => n is XElement c ? Unqualified(c) : n));
 
     /// <summary>
     /// The document's PDF: ARCA sends the same file its web application
     /// prints; ArcaSim sends a one-page PDF naming the document, enough for a
     /// client that stores or shows it.
     /// </summary>
-    public static string Pdf(string title)
-    {
-        var text = title.Replace("(", "", StringComparison.Ordinal).Replace(")", "", StringComparison.Ordinal);
-        var stream = $"BT /F1 12 Tf 72 770 Td ({text}) Tj ET";
-        var objects = new[]
-        {
-            "<< /Type /Catalog /Pages 2 0 R >>",
-            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
-            $"<< /Length {stream.Length} >>\nstream\n{stream}\nendstream",
-            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-        };
-        var pdf = new StringBuilder("%PDF-1.4\n");
-        var offsets = new List<int>();
-        for (var i = 0; i < objects.Length; i++)
-        {
-            offsets.Add(pdf.Length);
-            pdf.Append(CultureInfo.InvariantCulture, $"{i + 1} 0 obj\n{objects[i]}\nendobj\n");
-        }
-        var xref = pdf.Length;
-        pdf.Append(CultureInfo.InvariantCulture, $"xref\n0 {objects.Length + 1}\n0000000000 65535 f \n");
-        foreach (var offset in offsets) pdf.Append(CultureInfo.InvariantCulture, $"{offset:D10} 00000 n \n");
-        pdf.Append(CultureInfo.InvariantCulture, $"trailer\n<< /Size {objects.Length + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF");
-        return Convert.ToBase64String(Encoding.ASCII.GetBytes(pdf.ToString()));
-    }
+    public static string Pdf(string title) => SimplePdf.Line(title);
 }

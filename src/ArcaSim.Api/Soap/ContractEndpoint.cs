@@ -20,11 +20,11 @@ public static class ContractEndpoint
 {
     public static void Map(WebApplication app, ContractHost host)
     {
+        var directory = app.Services.GetRequiredService<ServiceDirectory>();
         foreach (var definition in host.Catalog.Services)
         {
             var contract = host.ContractOf(definition);
-            foreach (var id in definition.Wsaa) WebService.Register(id, definition.Name);
-            ServiceRoutes.Register(contract.AddressPath, definition.Id);
+            directory.Route(contract.AddressPath, definition.Id);
 
             app.MapGet(contract.AddressPath, (Delegate)((HttpContext context) => DescribeAsync(context, host, definition, contract)));
             app.MapPost(contract.AddressPath, (HttpContext context) => AnswerAsync(context, host, definition, contract));
@@ -88,6 +88,7 @@ public static class ContractEndpoint
         var address = WsdlDocuments.BaseUrl(context.Request) + contract.AddressPath;
         var values = new PlaceholderValues(host.Now)
         {
+            Counters = host.Counters,
             Service = definition.Id,
             Element = element is null ? "" : $"{{{element.NamespaceName}}}{element.LocalName}",
             Expected = expected is null ? "" : $"{{{expected.NamespaceName}}}{expected.LocalName}",
@@ -109,14 +110,8 @@ public static class ContractEndpoint
 
     private static async Task AnswerAsync(HttpContext context, ContractHost host, ServiceDefinition definition, ServiceContract contract)
     {
-        var settings = context.RequestServices.GetRequiredService<SimulationSettings>();
-        var chaos = settings.ChaosFor(definition.Id);
-        if (chaos.Delay > TimeSpan.Zero) await Task.Delay(chaos.Delay, context.RequestAborted);
-        if (chaos.Down)
-        {
-            context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-            return;
-        }
+        var chaos = context.RequestServices.GetRequiredService<SimulationSettings>().ChaosOf(definition.Id);
+        if (await ChaosGate.RefusedAsync(context, chaos)) return;
 
         var request = await SoapRequest.ReadAsync(context.Request);
         if (request is null)
@@ -134,7 +129,7 @@ public static class ContractEndpoint
         XElement? body;
         try
         {
-            var document = XDocument.Parse(request.Body);
+            var document = SafeXml.Parse(request.Body);
             var soapBody = document.Root?.Elements().FirstOrDefault(e => e.Name.LocalName == "Body")
                            ?? throw new XmlException("The SOAP envelope has no Body.");
             body = soapBody.Elements().FirstOrDefault();
@@ -165,7 +160,6 @@ public sealed class DialectWriter(ServiceDefinition definition, SoapVersion vers
 {
     private const string Xsi = "http://www.w3.org/2001/XMLSchema-instance";
     private const string Xsd = "http://www.w3.org/2001/XMLSchema";
-    private static readonly TimeSpan Argentina = TimeSpan.FromHours(-3);
 
     public string? ServiceHeader { get; init; }
 
@@ -203,10 +197,6 @@ public sealed class DialectWriter(ServiceDefinition definition, SoapVersion vers
         Dialect.Axis2 => "Acceso Denegado  - " + message,
         _ => "Couldn't create SOAP message due to exception: " + message,
     };
-
-    public string UnknownOperation(XName? element, string? action) => UnknownOperation(element, action, "");
-
-    public string UnknownOperation(XName? element, string? action, string address) => UnknownOperation(element, action, address, null);
 
     /// <summary>
     /// The fault for a request no operation takes. Axis2 names the endpoint's
@@ -259,7 +249,7 @@ public sealed class DialectWriter(ServiceDefinition definition, SoapVersion vers
     /// </summary>
     private async Task WriteMaskAsync(HttpContext context)
     {
-        var line = $"BL{RandomDigits(13)} {Now.ToOffset(Argentina).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)} 500";
+        var line = $"BL{RandomDigits(13)} {Now.ToArgentina().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)} 500";
         var bytes = Encoding.ASCII.GetBytes(line);
         context.Response.StatusCode = StatusCodes.Status200OK;
         context.Response.ContentLength = bytes.Length;

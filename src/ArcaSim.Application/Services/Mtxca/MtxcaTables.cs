@@ -1,21 +1,29 @@
+using ArcaSim.Application.Services.FacturacionE;
 using ArcaSim.Application.Wsfe;
 
 namespace ArcaSim.Application.Services.Mtxca;
 
-/// <summary>A voucher type wsmtxca authorizes, with what decides its rules: whether VAT goes per item (class A) and whether it is an FCE.</summary>
-public sealed record MtxcaVoucherType(int Id, string Description)
+/// <summary>
+/// A voucher type wsmtxca authorizes: WSFEv1's row of the table for it (so both
+/// services agree on its class, kind and FCE flag) with the description wsmtxca
+/// gives it. What decides its rules is read from that row.
+/// </summary>
+public sealed record MtxcaVoucherType(VoucherTypeInfo Info, string Description)
 {
+    public int Id => Info.Id;
+
     /// <summary>Class A, A with the retention legend and FCE A: the price goes without VAT and each item carries importeIVA.</summary>
-    public bool ClassA => Id is 1 or 2 or 3 or 51 or 52 or 53 or 201 or 202 or 203;
+    public bool ClassA => Info.Class is VoucherClass.A or VoucherClass.ALey;
 
-    /// <summary>The types 129 and 128 ask a CUIT for: everything but plain class B.</summary>
-    public bool NeedsCuit => Id is not (6 or 7 or 8);
+    /// <summary>Class B and not an FCE: the types 6, 7 and 8, which identify the receiver by the amount instead of always asking for a CUIT.</summary>
+    public bool PlainB => Info.Class == VoucherClass.B && !Info.Fce;
 
-    public bool Fce => Id >= 201;
+    /// <summary>The types 129 and 128 ask a CUIT for: everything but plain class B (an FCE B asks for one).</summary>
+    public bool NeedsCuit => !PlainB;
 
-    public bool Invoice => Id is 1 or 6 or 51 or 201 or 206;
+    public bool Fce => Info.Fce;
 
-    public bool CreditNote => Id is 3 or 8 or 53 or 203 or 208;
+    public bool Invoice => Info.Kind == VoucherKind.Invoice;
 
     public bool Note => !Invoice;
 }
@@ -40,24 +48,30 @@ public sealed record MtxcaRow(int Code, string Description);
 /// </summary>
 public sealed class MtxcaTables(ParameterTables tables)
 {
-    public static readonly IReadOnlyList<MtxcaVoucherType> VoucherTypes =
+    /// <summary>The voucher types wsmtxca authorizes and the descriptions it gives them.</summary>
+    private static readonly (int Id, string Description)[] VoucherTypeDescriptions =
     [
-        new(1, "Factura A"),
-        new(2, "Nota de Débito A"),
-        new(3, "Nota de Crédito A"),
-        new(6, "Factura B"),
-        new(7, "Nota de Débito B"),
-        new(8, "Nota de Crédito B"),
-        new(51, "Factura A con leyenda OPERACIÓN SUJETA A RETENCIÓN"),
-        new(52, "Nota de Débito A con leyenda OPERACIÓN SUJETA A RETENCIÓN"),
-        new(53, "Nota de Crédito A con leyenda OPERACIÓN SUJETA A RETENCIÓN"),
-        new(201, "Factura de Crédito Electrónica MiPyMEs (FCE) A"),
-        new(202, "Nota de Débito Electrónica MiPyMEs (FCE) A"),
-        new(203, "Nota de Crédito Electrónica MiPyMEs (FCE) A"),
-        new(206, "Factura de Crédito Electrónica MiPyMEs (FCE) B"),
-        new(207, "Nota de Débito Electrónica MiPyMEs (FCE) B"),
-        new(208, "Nota de Crédito Electrónica MiPyMEs (FCE) B"),
+        (1, "Factura A"),
+        (2, "Nota de Débito A"),
+        (3, "Nota de Crédito A"),
+        (6, "Factura B"),
+        (7, "Nota de Débito B"),
+        (8, "Nota de Crédito B"),
+        (51, "Factura A con leyenda OPERACIÓN SUJETA A RETENCIÓN"),
+        (52, "Nota de Débito A con leyenda OPERACIÓN SUJETA A RETENCIÓN"),
+        (53, "Nota de Crédito A con leyenda OPERACIÓN SUJETA A RETENCIÓN"),
+        (201, "Factura de Crédito Electrónica MiPyMEs (FCE) A"),
+        (202, "Nota de Débito Electrónica MiPyMEs (FCE) A"),
+        (203, "Nota de Crédito Electrónica MiPyMEs (FCE) A"),
+        (206, "Factura de Crédito Electrónica MiPyMEs (FCE) B"),
+        (207, "Nota de Débito Electrónica MiPyMEs (FCE) B"),
+        (208, "Nota de Crédito Electrónica MiPyMEs (FCE) B"),
     ];
+
+    public IReadOnlyList<MtxcaVoucherType> VoucherTypes { get; } = VoucherTypeDescriptions
+        .Select(t => new MtxcaVoucherType(
+            tables.VoucherType(t.Id) ?? throw new InvalidOperationException($"WSFEv1's table has no voucher type {t.Id}."), t.Description))
+        .ToList();
 
     /// <summary>Condición de IVA of an item (consultarCondicionesIVA, pág. 285) and the rate it stands for.</summary>
     public static readonly IReadOnlyDictionary<int, decimal> ItemVatRates = new Dictionary<int, decimal>
@@ -71,22 +85,9 @@ public sealed class MtxcaTables(ParameterTables tables)
     /// <summary>Currencies whose rate the Banco Nación publishes (Anexo, pág. 360-361), written with wsmtxca's three-character codes.</summary>
     public static readonly IReadOnlySet<string> BnaCurrencies = new HashSet<string> { "DOL", "002", "009", "014", "015", "016", "018", "019", "021", "026", "060", "064" };
 
+    /// <summary>The generic units table WSFEXv1 answers (Wsfexv1Tables.Units) plus 95, which the validations use for cancellations and returns.</summary>
     public static readonly IReadOnlyList<MtxcaRow> Units =
-    [
-        new(0, "SIN DESCRIPCION"), new(1, "KILOGRAMO"), new(2, "METROS"), new(3, "METRO CUADRADO"), new(4, "METRO CUBICO"),
-        new(5, "LITROS"), new(6, "1000 KILOWATT HORA"), new(7, "UNIDAD"), new(8, "PAR"), new(9, "DOCENA"), new(10, "QUILATE"),
-        new(11, "MILLAR"), new(12, "MEGA U. INTER. ACT. ANTIB"), new(13, "UNIDAD INT. ACT. INMUNG"), new(14, "GRAMO"),
-        new(15, "MILIMETRO"), new(16, "MILIMETRO CUBICO"), new(17, "KILOMETRO"), new(18, "HECTOLITRO"),
-        new(19, "MEGA UNIDAD INT. ACT. INMUNG"), new(20, "CENTIMETRO"), new(21, "KILOGRAMO ACTIVO"), new(22, "GRAMO ACTIVO"),
-        new(23, "GRAMO BASE"), new(24, "UIACTHOR"), new(25, "JGO.PQT. MAZO NAIPES"), new(26, "MUIACTHOR"),
-        new(27, "CENTIMETRO CUBICO"), new(28, "UIACTANT"), new(29, "TONELADA"), new(30, "DECAMETRO CUBICO"),
-        new(31, "HECTOMETRO CUBICO"), new(32, "KILOMETRO CUBICO"), new(33, "MICROGRAMO"), new(34, "NANOGRAMO"),
-        new(35, "PICOGRAMO"), new(36, "MUIACTANT"), new(37, "UIACTIG"), new(41, "MILIGRAMO"), new(47, "MILILITRO"),
-        new(48, "CURIE"), new(49, "MILICURIE"), new(50, "MICROCURIE"), new(51, "U.INTER. ACT. HORMONAL"),
-        new(52, "MEGA U. INTER. ACT. HOR."), new(53, "KILOGRAMO BASE"), new(54, "GRUESA"), new(55, "MUIACTIG"),
-        new(61, "KILOGRAMO BRUTO"), new(62, "PACK"), new(63, "HORMA"), new(95, "ANULACIÓN/DEVOLUCIÓN"),
-        new(97, "SEÑAS/ANTICIPOS"), new(98, "OTRAS UNIDADES"), new(99, "BONIFICACION"),
-    ];
+        Wsfexv1Tables.Units.Append((Id: 95, Desc: "ANULACIÓN/DEVOLUCIÓN")).OrderBy(u => u.Id).Select(u => new MtxcaRow(u.Id, u.Desc)).ToList();
 
     public static readonly IReadOnlyList<MtxcaRow> ExtraDataTypes =
     [
@@ -105,7 +106,7 @@ public sealed class MtxcaTables(ParameterTables tables)
         new(27, "Opción de Transferencia"),
     ];
 
-    public static MtxcaVoucherType? VoucherType(int id) => VoucherTypes.FirstOrDefault(t => t.Id == id);
+    public MtxcaVoucherType? VoucherType(int id) => VoucherTypes.FirstOrDefault(t => t.Id == id);
 
     public static bool HasUnit(int code) => Units.Any(u => u.Code == code);
 

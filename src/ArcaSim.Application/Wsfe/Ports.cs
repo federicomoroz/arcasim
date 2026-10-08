@@ -32,6 +32,9 @@ public interface IVoucherStore
     Task<StoredVoucher?> FindAsync(long cuit, int pointOfSale, int voucherType, long number, CancellationToken ct = default);
     Task AddAsync(StoredVoucher voucher, CancellationToken ct = default);
     Task<IReadOnlyList<StoredVoucher>> ListAsync(long? cuit, int limit, CancellationToken ct = default);
+
+    /// <summary>Every voucher of these types, newest first as ListAsync gives them, without reading the vouchers of any other type.</summary>
+    Task<IReadOnlyList<StoredVoucher>> ListOfTypesAsync(IReadOnlyCollection<int> voucherTypes, CancellationToken ct = default);
     Task<bool> AnyWithCaeaAsync(long cuit, string caea, int pointOfSale, CancellationToken ct = default);
 }
 

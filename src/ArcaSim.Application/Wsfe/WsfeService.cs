@@ -26,6 +26,12 @@ public sealed partial class WsfeService(
 {
     public const string Name = "wsfe";
 
+    /// <summary>The locks of a CUIT's CAEA request for a fortnight, apart from its numbering.</summary>
+    private const string CaeaRequests = "wsfe.caea";
+
+    /// <summary>The locks of what a point of sale reports under a CAEA: its vouchers or that it had none.</summary>
+    private const string CaeaReports = "wsfe.caea-reports";
+
     /// <summary>"No existen datos en nuestros registros para los parametros ingresados." as ARCA sends it.</summary>
     private Err NoData => new() { Code = 602, Msg = catalog.Message(602) };
 
@@ -46,7 +52,7 @@ public sealed partial class WsfeService(
         if (auth.Failed) return new FERecuperaLastCbteResponse { Errors = [auth.Error!] };
 
         var errors = new List<Err>();
-        if (request.PtoVta is < 1 or > 99_998) errors.Add(catalog.For(method, 11000).ToErr());
+        if (request.PtoVta is < 1 or > VoucherLimits.MaxPointOfSale) errors.Add(catalog.For(method, 11000).ToErr());
         if (tables.VoucherType(request.CbteTipo) is null) errors.Add(catalog.For(method, 11001).ToErr());
         if (errors.Count == 0)
         {
@@ -73,9 +79,9 @@ public sealed partial class WsfeService(
 
         var query = request.FeCompConsReq ?? new FECompConsultaReq();
         var errors = new List<Err>();
-        if (query.PtoVta is < 1 or > 99_998) errors.Add(catalog.For(method, 10200).ToErr());
+        if (query.PtoVta is < 1 or > VoucherLimits.MaxPointOfSale) errors.Add(catalog.For(method, 10200).ToErr());
         if (tables.VoucherType(query.CbteTipo) is null) errors.Add(catalog.For(method, 10201).ToErr());
-        if (query.CbteNro is < 1 or > 99_999_999) errors.Add(catalog.For(method, 10202).ToErr());
+        if (query.CbteNro is < 1 or > VoucherLimits.MaxNumber) errors.Add(catalog.For(method, 10202).ToErr());
         if (errors.Count == 0 && !settings.OpenAccess && (await taxpayers.FindAsync(auth.Cuit, ct))?.FindPointOfSale(query.PtoVta) is null)
             errors.Add(catalog.For(method, 10104).ToErr());
         if (errors.Count > 0) return new FECompConsultaResponse { Errors = [.. errors] };
@@ -236,33 +242,8 @@ public sealed partial class WsfeService(
         return kind == PointOfSaleKind.WebServiceCaea ? $"CAEA - {regime}" : $"CAE - {regime}";
     }
 
-    /// <summary>
-    /// The issuer, as ArcaSim knows it. With open access, a CUIT it has not seen
-    /// is created on the spot (Monotributo if its first voucher is class C,
-    /// Responsable Inscripto otherwise), and so is the point of sale it uses,
-    /// so an application needs nothing but ARCA's endpoints.
-    /// </summary>
-    private async Task<Taxpayer?> IssuerAsync(long cuit, int? pointOfSale, PointOfSaleKind kind, VoucherClass? firstClass, CancellationToken ct)
-    {
-        var issuer = await taxpayers.FindAsync(cuit, ct);
-        if (!settings.OpenAccess) return issuer;
-
-        var changed = false;
-        if (issuer is null)
-        {
-            if (!Cuits.IsValid(cuit)) return null;
-            var condition = firstClass == VoucherClass.C ? VatCondition.Monotributo : VatCondition.ResponsableInscripto;
-            issuer = new Taxpayer(cuit, $"Contribuyente {cuit}", condition);
-            changed = true;
-        }
-        if (pointOfSale is >= 1 and <= 99_998 && issuer.FindPointOfSale(pointOfSale.Value) is null)
-        {
-            issuer.AddPointOfSale(new PointOfSale(pointOfSale.Value, kind));
-            changed = true;
-        }
-        if (changed) await taxpayers.SaveAsync(issuer, ct);
-        return issuer;
-    }
+    private Task<Taxpayer?> IssuerAsync(long cuit, int? pointOfSale, PointOfSaleKind kind, VoucherClass? firstClass, CancellationToken ct) =>
+        taxpayers.FindOrOpenAsync(settings, cuit, pointOfSale, kind, firstClass, ct);
 
     /// <summary>The issuer's checks behind code 10000 (wsfev1-codigos.md §4.1), with the manual's numbered messages.</summary>
     private static string? IssuerProblem(Taxpayer? issuer, VoucherTypeInfo? type)

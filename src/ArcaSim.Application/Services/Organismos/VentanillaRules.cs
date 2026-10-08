@@ -31,8 +31,10 @@ public sealed record Subservice(string Name, string Description);
 /// <summary>
 /// The Ventanilla Electrónica inbox: where ARCA's systems publish what
 /// veconsumerws then lists and reads. Nobody publishes through ARCA's API, so
-/// each CUIT's inbox starts with three plainly fictitious communications;
-/// PublishAsync puts a test's own instead (the inbox then holds only those).
+/// each CUIT's inbox starts with three plainly fictitious communications. A
+/// test or an operator that wants its own puts them as documents in
+/// Communications; SkipSeedAsync of the CUIT's Scope first leaves the inbox
+/// with only those.
 /// </summary>
 public static class VentanillaInbox
 {
@@ -42,15 +44,6 @@ public static class VentanillaInbox
     public static string Key(long id) => id.ToString("D12", CultureInfo.InvariantCulture);
 
     public static string Scope(long cuit) => $"{Communications}/{cuit}";
-
-    /// <summary>Publishes a communication: a new id when it has none, and the CUIT's inbox no longer gets the defaults.</summary>
-    public static async Task<Communication> PublishAsync(IDocumentStore store, Communication communication, CancellationToken ct = default)
-    {
-        await store.SkipSeedAsync(Scope(communication.Cuit), ct);
-        if (communication.Id == 0) communication = communication with { Id = await store.NextAsync(Communications, ct) };
-        await store.PutAsync(Communications, Key(communication.Id), communication, ct);
-        return communication;
-    }
 
     /// <summary>
     /// ArcaSim's own publishing systems: ARCA's list is not in the manual, so
@@ -65,25 +58,27 @@ public static class VentanillaInbox
     public static async Task SeedAsync(IDocumentStore store, long cuit, DateTimeOffset now, CancellationToken ct)
     {
         await store.SeedAsync(Publishers, Publishers, DefaultPublishers(), ct);
-        if (await store.IsSeededAsync(Scope(cuit), ct)) return;
-        var today = new DateTimeOffset(now.ToArgentina().Date, ArgentinaTime.Offset);
-        var ids = new List<long>();
-        for (var i = 0; i < 3; i++) ids.Add(await store.NextAsync(Communications, ct));
-        await store.SeedAsync<Communication>(Scope(cuit), Communications,
-        [
-            (Key(ids[0]), new Communication(ids[0], cuit, today.AddDays(-10).AddHours(9), DateOnly.FromDateTime(today.AddDays(20).Date), 1,
-                "Comunicacion de prueba de ArcaSim",
-                "Esta comunicacion es ficticia: la publica ArcaSim para que la bandeja no este vacia.",
-                2, 1, null, null, false, [])),
-            (Key(ids[1]), new Communication(ids[1], cuit, today.AddDays(-3).AddHours(11), DateOnly.FromDateTime(today.AddDays(10).Date), 2,
-                null,
-                "Recordatorio ficticio de ArcaSim: vence un plazo de prueba. No es una comunicacion de ARCA.",
-                1, 1, "ARCASIM-0001", null, false, [])),
-            (Key(ids[2]), new Communication(ids[2], cuit, today.AddDays(-1).AddHours(15), null, 1,
-                "Adjunto de prueba de ArcaSim",
-                "Comunicacion ficticia de ArcaSim con un adjunto de texto.",
-                3, 1, null, null, false, [new("constancia-arcasim.txt", "Adjunto ficticio generado por ArcaSim."u8.ToArray())])),
-        ], ct);
+        await store.SeedAsync<Communication>(Scope(cuit), Communications, async token =>
+        {
+            var today = ArgentinaTime.StartOf(now.ArgentinaDate());
+            var ids = new List<long>();
+            for (var i = 0; i < 3; i++) ids.Add(await store.NextAsync(Communications, token));
+            return
+            [
+                (Key(ids[0]), new Communication(ids[0], cuit, today.AddDays(-10).AddHours(9), DateOnly.FromDateTime(today.AddDays(20).Date), 1,
+                    "Comunicacion de prueba de ArcaSim",
+                    "Esta comunicacion es ficticia: la publica ArcaSim para que la bandeja no este vacia.",
+                    2, 1, null, null, false, [])),
+                (Key(ids[1]), new Communication(ids[1], cuit, today.AddDays(-3).AddHours(11), DateOnly.FromDateTime(today.AddDays(10).Date), 2,
+                    null,
+                    "Recordatorio ficticio de ArcaSim: vence un plazo de prueba. No es una comunicacion de ARCA.",
+                    1, 1, "ARCASIM-0001", null, false, [])),
+                (Key(ids[2]), new Communication(ids[2], cuit, today.AddDays(-1).AddHours(15), null, 1,
+                    "Adjunto de prueba de ArcaSim",
+                    "Comunicacion ficticia de ArcaSim con un adjunto de texto.",
+                    3, 1, null, null, false, [new("constancia-arcasim.txt", "Adjunto ficticio generado por ArcaSim."u8.ToArray())])),
+            ];
+        }, ct);
     }
 }
 
@@ -94,10 +89,12 @@ public static class VentanillaInbox
 /// marks it read: estado 1 to 2, or answers 104, 105, 110), the three states
 /// and the publishing systems. Business errors are faults "Error NNN: text".
 /// ArcaSim's choices where the manual is silent: dates in filters are
-/// yyyy-MM-dd (102 otherwise); without resultadosPorPagina a page holds the
-/// maximum, 500; a page past the last is 100 only when there are items;
-/// tiempoDeVida is the days between publication and expiry (0 without one);
-/// attachments travel inline as base64 (MTOM is the engine's).
+/// yyyy-MM-dd, or a "yyyy-MM-dd HH:mm:ss" timestamp read as its day (102
+/// otherwise; the manual leaves the expected format as a parameter of the
+/// text); without resultadosPorPagina a page holds the maximum, 500; a page
+/// past the last is 100 only when there are items; tiempoDeVida is the days
+/// between publication and expiry (0 without one); attachments travel inline
+/// as base64 (MTOM is the engine's).
 /// </summary>
 public sealed class VentanillaRules(IDocumentStore store, IClock clock) : IServiceBehavior
 {
@@ -131,11 +128,11 @@ public sealed class VentanillaRules(IDocumentStore store, IClock clock) : IServi
     private async Task<ContractAnswer> ListAsync(ServiceCall call, CancellationToken ct)
     {
         var filter = call.Request.Find("filter") ?? new XElement("filter");
-        var today = DateOnly.FromDateTime(clock.Now.ToArgentina().DateTime);
+        var today = clock.Today();
 
         var fromText = filter.Text("fechaDesde") ?? "";
         if (ParseDate(fromText) is not { } from) return Failure(call, 102, $"Formato de fecha no soportado para [{fromText}]. Se esperaba [yyyy-MM-dd]");
-        var toText = filter.Optional("fechaHasta");
+        var toText = filter.OptionalText("fechaHasta");
         DateOnly? to = null;
         if (toText is not null)
         {
@@ -163,11 +160,11 @@ public sealed class VentanillaRules(IDocumentStore store, IClock clock) : IServi
         if (size == 0) size = MaxPageSize;
 
         var attachment = filter.Flag("tieneAdjunto");
-        var reference1 = filter.Optional("referencia1");
-        var reference2 = filter.Optional("referencia2");
+        var reference1 = filter.OptionalText("referencia1");
+        var reference2 = filter.OptionalText("referencia2");
         var found = (await store.ListAsync<Communication>(VentanillaInbox.Communications, "", ct))
             .Where(c => c.Cuit == call.Cuit && !c.Internal)
-            .Where(c => DateOnly.FromDateTime(c.PublishedAt.ToArgentina().DateTime) is var day && day >= from && (to is null || day <= to))
+            .Where(c => c.PublishedAt.ArgentinaDate() is var day && day >= from && (to is null || day <= to))
             .Where(c => (idFrom is null || c.Id >= idFrom) && (idTo is null || c.Id <= idTo))
             .Where(c => state is null || c.State == state)
             .Where(c => publisher is null || c.PublisherId == publisher)
@@ -215,6 +212,7 @@ public sealed class VentanillaRules(IDocumentStore store, IClock clock) : IServi
             .Set("filename", a.FileName)
             .SetOrDrop("content", withContent ? Convert.ToBase64String(a.Content) : null)
             .Set("compressed", false).Set("signed", false).Set("encrypted", false).Set("processed", false).Set("public", false)
+            // MD5 because the contract has an md5 element for the attachment (veconsumerws.md). It identifies the content; it protects nothing.
             .Set("md5", Convert.ToHexString(MD5.HashData(a.Content)).ToLowerInvariant())
             .Set("contentSize", a.Content.LongLength));
         return call.Ok(answer);
@@ -238,11 +236,12 @@ public sealed class VentanillaRules(IDocumentStore store, IClock clock) : IServi
         .Set("idComunicacion", c.Id)
         .Set("cuitDestinatario", c.Cuit)
         .Set("fechaPublicacion", published)
-        .SetOrDrop("fechaVencimiento", c.ExpiresOn?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))
+        .SetOrDrop("fechaVencimiento", c.ExpiresOn?.Iso())
         .Set("sistemaPublicador", c.PublisherId)
         .Set("sistemaPublicadorDesc", publishers.GetValueOrDefault(c.PublisherId, ""))
         .Set("estado", c.State)
-        .Set("estadoDesc", States.First(s => s.Id == c.State).Description)
+        // A communication preloaded in a state the manual does not list has no description to give.
+        .Set("estadoDesc", States.FirstOrDefault(s => s.Id == c.State).Description ?? "")
         .Set("asunto", c.Subject ?? c.Message[..Math.Min(50, c.Message.Length)])
         .Set("prioridad", c.Priority)
         .Set("tieneAdjunto", c.Attachments.Count > 0)

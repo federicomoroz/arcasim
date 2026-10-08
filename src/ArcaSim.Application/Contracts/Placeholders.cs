@@ -18,6 +18,19 @@ public sealed record PlaceholderValues(DateTimeOffset Now)
     public string? Sign { get; init; }
     public string? Element { get; init; }
     public string? Expected { get; init; }
+
+    /// <summary>Where {seq:start} counts. A host passes its own, so a sequence runs across answers until the simulation resets.</summary>
+    public PlaceholderCounters Counters { get; init; } = new();
+}
+
+/// <summary>The sequences {seq:start} draws from, one per service and start: what ARCA's servers number their transactions with.</summary>
+public sealed class PlaceholderCounters
+{
+    private readonly ConcurrentDictionary<string, long> _last = new(StringComparer.OrdinalIgnoreCase);
+
+    public long Next(string service, long first) => _last.AddOrUpdate($"{service}|{first}", first, (_, last) => last + 1);
+
+    public void Reset() => _last.Clear();
 }
 
 /// <summary>
@@ -27,9 +40,6 @@ public sealed record PlaceholderValues(DateTimeOffset Now)
 /// </summary>
 public static partial class Placeholders
 {
-    private static readonly TimeSpan Argentina = TimeSpan.FromHours(-3);
-    private static readonly ConcurrentDictionary<string, long> Counters = new(StringComparer.OrdinalIgnoreCase);
-
     [GeneratedRegex(@"\{(\w+)(?::([^{}]*))?\}")]
     private static partial Regex Placeholder();
 
@@ -51,7 +61,7 @@ public static partial class Placeholders
         ("exp", _) => Moment(v.ExpirationTime * 1000, argument),
         ("gen", _) => Moment(v.GenerationTime * 1000, argument),
         ("seq", { } start) when long.TryParse(start, CultureInfo.InvariantCulture, out var first) =>
-            Counters.AddOrUpdate($"{v.Service}|{first}", first, (_, last) => last + 1).ToString(CultureInfo.InvariantCulture),
+            v.Counters.Next(v.Service, first).ToString(CultureInfo.InvariantCulture),
         ("digits", { } n) when int.TryParse(n, CultureInfo.InvariantCulture, out var count) => Random("0123456789", count),
         ("letters", { } n) when int.TryParse(n, CultureInfo.InvariantCulture, out var count) =>
             Random("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", count),
@@ -63,7 +73,7 @@ public static partial class Placeholders
     {
         null => (milliseconds / 1000).ToString(CultureInfo.InvariantCulture),
         "ms" => milliseconds.ToString(CultureInfo.InvariantCulture),
-        _ => DateTimeOffset.FromUnixTimeMilliseconds(milliseconds).ToOffset(Argentina).ToString(format, CultureInfo.InvariantCulture),
+        _ => DateTimeOffset.FromUnixTimeMilliseconds(milliseconds).ToArgentina().ToString(format, CultureInfo.InvariantCulture),
     };
 
     /// <summary>How many bytes a lenient base64 decoder (Java's) reads from the text: "abc" gives 2.</summary>

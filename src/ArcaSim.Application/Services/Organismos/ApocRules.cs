@@ -61,8 +61,8 @@ public sealed class ApocRules(IDocumentStore store) : IServiceBehavior
         else answer.Repeat("PublicacionAPOC", cases.OrderBy(c => c.PublishedOn).ThenBy(c => c.Cuit), (e, c) => e
             .Set("Cuit", c.Cuit)
             .Set("Descripcion", c.Description)
-            .Set("FechaCondicion", c.DetectedOn.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture))
-            .Set("FechaPublicacion", c.PublishedOn.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)));
+            .Set("FechaCondicion", c.DetectedOn.DayMonthYear())
+            .Set("FechaPublicacion", c.PublishedOn.DayMonthYear()));
         return call.Ok(answer);
     }
 

@@ -35,6 +35,10 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
     private const string Bovine = "bovina";
     private const string Avian = "avicola";
 
+    /// <summary>How far from the processing date a voucher's date may fall (2200): 5 days, 10 in poultry.</summary>
+    private const int WindowDays = 5;
+    private const int PoultryWindowDays = 10;
+
     private static readonly Dictionary<int, int[]> TypesByOperation = new()
     {
         [1] = [180, 182], [2] = [180, 182], [3] = [180, 182], [4] = [183, 185], [5] = [186, 188, 189], [6] = [190, 191],
@@ -77,14 +81,14 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<ContractAnswer> LastAsync(ServiceCall call, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
+        var request = call.Request.ChildOrEmpty("solicitud");
         var last = await _ledger.LastAsync(Service, call.Cuit, (int)request.Number("puntoVenta"), (int)request.Number("tipoComprobante"), ct);
         return Ok(call, new XElement("nroComprobante", last?.Number ?? 0), Metadata());
     }
 
     private async Task<ContractAnswer> ConsultAsync(ServiceCall call, bool avian, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
+        var request = call.Request.ChildOrEmpty("solicitud");
         var found = await _ledger.FindAsync(Service, call.Cuit, (int)request.Number("puntoVenta"), (int)request.Number("tipoComprobante"),
             request.Number("nroComprobante"), ct);
         if (found is null || found.Kind != (avian ? Avian : Bovine))
@@ -92,19 +96,15 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         return Answer(call, found);
     }
 
-    private async Task<ContractAnswer> PointsAsync(ServiceCall call, CancellationToken ct)
-    {
-        var address = SettlementLedger.AddressOf(await _ledger.TaxpayerAsync(call.Cuit, ct));
-        var points = await _ledger.PointsOfSaleAsync(call.Cuit, ct);
-        return Ok(call, points.Select(p => new XElement("puntoVenta", new XElement("codigo", p.Number), new XElement("descripcion", address))), Metadata());
-    }
+    private async Task<ContractAnswer> PointsAsync(ServiceCall call, CancellationToken ct) =>
+        Ok(call, await _ledger.PointsAnswerAsync(call.Cuit, ct), Metadata());
 
     // ---- Liquidations ----------------------------------------------------------------
 
     private async Task<ContractAnswer> GenerateAsync(ServiceCall call, bool avian, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
-        var issuer = request.Child("emisor");
+        var request = call.Request.ChildOrEmpty("solicitud");
+        var issuer = request.ChildOrEmpty("emisor");
         var operation = (int)request.Number("codOperacion");
         var pointOfSale = (int)issuer.Number("puntoVenta");
         var type = (int)issuer.Number("tipoComprobante");
@@ -113,15 +113,15 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         if (!TypeFits(operation, type, avian))
             return Fail(call, 2006, "Emisor: El tipo de comprobante no es válido para el tipo de operación que intenta realizar.");
         if (await PointProblemAsync(call, pointOfSale, ct) is { } pointProblem) return pointProblem;
-        var data = request.Child("datosLiquidacion");
+        var data = request.ChildOrEmpty("datosLiquidacion");
         var date = data.Day("fechaComprobante") ?? _ledger.Today;
-        if (OutOfWindow(date, avian) is { } window) return Fail(call, 2200, window);
+        if (OutOfWindow(date, avian) is { } window) return Fail(call, window);
 
-        using var _ = await _ledger.LockAsync(call.Cuit, pointOfSale, type, ct);
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, type, ct);
         if (await WrongNumberAsync(call, pointOfSale, type, number, ct) is { } wrong) return wrong;
 
         var lines = request.Children("itemDetalleLiquidacion").Select((item, i) => new Line(i + 1, item.Number("cantidad"),
-            item.Amount("precioUnitario"), item.OptionalAmount("alicuotaIVA"), item)).ToList();
+            item.Amount("precioUnitario"), item.ChildDecimal("alicuotaIVA"), item)).ToList();
         var expenses = request.Children("gasto").Select(Expense).ToList();
         var taxes = request.Children("tributo").Select(Tax).ToList();
         var totals = Totals.Of(lines, expenses, taxes);
@@ -133,39 +133,39 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var detail = avian
             ? new XElement("respuesta",
                 Header(operation, cae, today),
-                AvianIssuer(issuer, taxpayer, type),
-                AvianReceiver(request.Child("receptor")),
+                Issuer(issuer, taxpayer, type, avian),
+                AvianReceiver(request.ChildOrEmpty("receptor")),
                 new XElement("datosLiquidacion",
                     Maybe("fechaComprobante", date), Maybe("fechaOperacion", data.Day("fechaOperacion")), Maybe("codMotivo", data.Value("codMotivo")),
-                    data.Children("condicionVenta").Select(c => Copy(c)), Copy(data.Optional("granja"))),
+                    data.Children("condicionVenta").Select(c => Copy(c)), Copy(data.Child("granja"))),
                 request.Children("dte").Select(d => Copy(d)),
                 request.Children("remito").Select(r => Copy(r)),
-                lines.Select(AvianItem),
-                Production(request.Optional("resultadoProductivo")),
+                lines.Select(l => Item(l, avian)),
+                Production(request.Child("resultadoProductivo")),
                 request.Children("bonificacionesPenalizaciones").Select(b => Copy(b, "bonificacionPenalizacion")),
                 expenses.Select(e => e.Element), taxes.Select(t => t.Element),
                 Maybe("datosAdicionales", request.Value("datosAdicionales")),
                 totals.Element())
             : new XElement("respuesta",
                 Header(operation, cae, today),
-                Issuer(issuer, taxpayer, type),
-                await ReceiverAsync(request.Child("receptor"), ct),
+                Issuer(issuer, taxpayer, type, avian),
+                await ReceiverAsync(request.ChildOrEmpty("receptor"), ct),
                 new XElement("datosLiquidacion",
                     Maybe("fechaComprobante", date), Maybe("fechaOperacion", data.Day("fechaOperacion")),
                     Maybe("lugarRealizacion", data.Value("lugarRealizacion")), Maybe("codMotivo", data.Value("codMotivo")),
                     Maybe("fechaRecepcion", data.Day("fechaRecepcion")), Maybe("fechaFaena", data.Day("fechaFaena")),
-                    data.Optional("frigorifico") is { } plant
+                    data.Child("frigorifico") is { } plant
                         ? new XElement("frigorifico", Maybe("cuit", plant.Value("cuit")), Maybe("nroPlanta", plant.Value("nroPlanta")))
                         : null),
                 request.Children("guia").Select(g => Copy(g)),
                 request.Children("dte").Select(d => Copy(d)),
                 request.Children("remito").Select(r => Copy(r)),
-                lines.Select(BovineItem),
+                lines.Select(l => Item(l, avian)),
                 expenses.Select(e => e.Element), taxes.Select(t => t.Element),
                 Maybe("datosAdicionales", request.Value("datosAdicionales")),
                 totals.Element());
 
-        var receiver = avian ? request.Child("receptor").Number("nroDoc") : request.Child("receptor").Child("operador").Number("cuit");
+        var receiver = avian ? request.ChildOrEmpty("receptor").Number("nroDoc") : request.ChildOrEmpty("receptor").ChildOrEmpty("operador").Number("cuit");
         var settlement = new Settlement(Service, call.Cuit, pointOfSale, type, number, cae, date, today, today.AddDays(SettlementLedger.CaeDays),
             receiver, totals.Net, avian ? Avian : Bovine, false, [], Settlement.Active, detail.ToString(SaveOptions.DisableFormatting));
         await _ledger.IssueAsync(settlement, ct);
@@ -176,25 +176,32 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<ContractAnswer> AdjustAsync(ServiceCall call, bool avian, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
-        var issuer = request.Child("emisor");
-        var target = issuer.Child("comprobanteAAjustar");
+        var request = call.Request.ChildOrEmpty("solicitud");
+        var issuer = request.ChildOrEmpty("emisor");
+        var target = issuer.ChildOrEmpty("comprobanteAAjustar");
         var credit = request.Value("tipoAjuste") == "C";
         var date = request.Day("fechaComprobante") ?? _ledger.Today;
         var pointOfSale = (int)issuer.Number("puntoVenta");
         var number = issuer.Number("nroComprobante");
         var items = request.Children("itemDetalleAjusteLiquidacion").ToList();
-        var financial = request.Child("ajusteFinanciero");
-        var physical = items.Any(i => i.Optional("ajusteFisico") is not null);
-        var monetary = items.Any(i => i.Optional("ajusteMonetario") is not null);
+        var financial = request.ChildOrEmpty("ajusteFinanciero");
+        var physical = items.Any(i => i.Child("ajusteFisico") is not null);
+        var monetary = items.Any(i => i.Child("ajusteMonetario") is not null);
 
-        var original = await _ledger.FindAsync(Service, call.Cuit, (int)target.Number("puntoVenta"), (int)target.Number("tipoComprobante"),
+        var named = await _ledger.FindAsync(Service, call.Cuit, (int)target.Number("puntoVenta"), (int)target.Number("tipoComprobante"),
             target.Number("nroComprobante"), ct);
-        if (original is null) return Fail(call, 3000, "La liquidación que intenta ajustar es inexistente.");
+        if (named is null) return Fail(call, 3000, "La liquidación que intenta ajustar es inexistente.");
+
+        // The original is annulled once, whoever asks and from whatever point of sale: the checks on it and
+        // the mark that it was annulled share one hold, taken inside the sequence's (which the original's type
+        // names), and read it again inside.
+        using var _ = await _ledger.LockAsync(Service, call.Cuit, pointOfSale, named.VoucherType, ct);
+        using var document = await _ledger.LockDocumentAsync(named.KeyOf(), ct);
+        var original = await _ledger.FindAsync(Service, named.KeyOf(), ct) ?? named;
         var originalItems = original.DetailXml().Children("itemDetalleLiquidacion").ToDictionary(i => (int)i.Number("nroItem"));
         var annulment = credit && physical && !monetary && originalItems.Count > 0 && items.Count == originalItems.Count
                         && items.All(i => originalItems.TryGetValue((int)i.Number("nroItemAjustar"), out var item)
-                                          && i.Child("ajusteFisico").Number("cantidad") == item.Number("cantidad"));
+                                          && i.ChildOrEmpty("ajusteFisico").Number("cantidad") == item.Number("cantidad"));
         if (original.IsAdjustment)
             return annulment ? Fail(call, 5001, "No se puede anular un ajuste.") : Fail(call, 3007, "No se puede realizar un ajuste sobre otro ajuste.");
         if (original.Kind != (avian ? Avian : Bovine))
@@ -208,17 +215,16 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         if (annulment && _ledger.Today > new DateOnly(original.Date.Year, original.Date.Month, 1).AddMonths(1).AddDays(5))
             return Fail(call, 5000, "Solo se puede anular un comprobante hasta el día 6 inclusive del mes siguiente al de la liquidación.");
         if (await PointProblemAsync(call, pointOfSale, ct) is { } pointProblem) return pointProblem;
-        if (OutOfWindow(date, avian) is { } window) return Fail(call, 2200, window);
+        if (OutOfWindow(date, avian) is { } window) return Fail(call, window);
 
-        using var _ = await _ledger.LockAsync(call.Cuit, pointOfSale, original.VoucherType, ct);
         if (await WrongNumberAsync(call, pointOfSale, original.VoucherType, number, ct) is { } wrong) return wrong;
 
         var lines = items.Select((item, i) =>
         {
             var source = originalItems.GetValueOrDefault((int)item.Number("nroItemAjustar")) ?? new XElement("itemDetalleLiquidacion");
-            return item.Optional("ajusteFisico") is { } quantity
-                ? new Line(i + 1, quantity.Number("cantidad"), source.Amount("precioUnitario"), source.OptionalAmount("alicuotaIVA"), source)
-                : new Line(i + 1, source.Number("cantidad"), item.Child("ajusteMonetario").Amount("precioUnitario"), source.OptionalAmount("alicuotaIVA"), source);
+            return item.Child("ajusteFisico") is { } quantity
+                ? new Line(i + 1, quantity.Number("cantidad"), source.Amount("precioUnitario"), source.ChildDecimal("alicuotaIVA"), source)
+                : new Line(i + 1, source.Number("cantidad"), item.ChildOrEmpty("ajusteMonetario").Amount("precioUnitario"), source.ChildDecimal("alicuotaIVA"), source);
         }).ToList();
         var expenses = financial.Children("gasto").Select(Expense).ToList();
         var taxes = financial.Children("tributo").Select(Tax).ToList();
@@ -227,16 +233,16 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var cae = _ledger.NewCae();
         var today = _ledger.Today;
         var issued = original.DetailXml();
-        var operation = (int)issued.Child("cabecera").Number("codOperacion");
-        var adjustedIssuer = Copy(issued.Child("emisor"))!;
-        adjustedIssuer.Child("puntoVenta").Value = pointOfSale.ToString(CultureInfo.InvariantCulture);
-        adjustedIssuer.Child("nroComprobante").Value = number.ToString(CultureInfo.InvariantCulture);
-        var data = Copy(issued.Child("datosLiquidacion"))!;
-        data.Child("fechaComprobante").Value = Iso(date);
+        var operation = (int)issued.ChildOrEmpty("cabecera").Number("codOperacion");
+        var adjustedIssuer = Copy(issued.ChildOrEmpty("emisor"))!;
+        adjustedIssuer.SetChild("puntoVenta", pointOfSale.ToString(CultureInfo.InvariantCulture));
+        adjustedIssuer.SetChild("nroComprobante", number.ToString(CultureInfo.InvariantCulture));
+        var data = Copy(issued.ChildOrEmpty("datosLiquidacion"))!;
+        data.SetChild("fechaComprobante", Iso(date));
         var detail = avian
             ? new XElement("respuesta",
-                Header(operation, cae, today), adjustedIssuer, Copy(issued.Optional("receptor")), data,
-                lines.Select(AvianItem),
+                Header(operation, cae, today), adjustedIssuer, Copy(issued.Child("receptor")), data,
+                lines.Select(l => Item(l, avian)),
                 request.Children("bonificacionesPenalizaciones").Select(b => Copy(b, "bonificacionPenalizacion")),
                 expenses.Select(e => e.Element), taxes.Select(t => t.Element),
                 Maybe("datosAdicionales", request.Value("datosAdicionales")),
@@ -250,8 +256,8 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
                         new XElement("tipoComprobante", original.VoucherType),
                         new XElement("puntoVenta", original.PointOfSale),
                         new XElement("nroComprobante", original.Number))),
-                adjustedIssuer, Copy(issued.Optional("receptor")), data,
-                lines.Select(BovineItem),
+                adjustedIssuer, Copy(issued.Child("receptor")), data,
+                lines.Select(l => Item(l, avian)),
                 expenses.Select(e => e.Element), taxes.Select(t => t.Element),
                 Maybe("datosAdicionales", request.Value("datosAdicionales")),
                 totals.Element());
@@ -271,28 +277,25 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
             ? operation is >= 201 and <= 208 && type is >= 157 and <= 170
             : TypesByOperation.TryGetValue(operation, out var types) && types.Contains(type);
 
+    private static readonly SettlementProblem NoPoints = new(1007, "La CUIT representada no tiene puntos de venta activos para emitir una liquidación.");
+    private static readonly SettlementProblem InvalidPoint = new(1008, "El punto de venta informado no es válido.");
+
     private async Task<ContractAnswer?> PointProblemAsync(ServiceCall call, int pointOfSale, CancellationToken ct) =>
-        await _ledger.CheckPointOfSaleAsync(call.Cuit, pointOfSale, ct) switch
-        {
-            PointCheck.NoPoints => Fail(call, 1007, "La CUIT representada no tiene puntos de venta activos para emitir una liquidación."),
-            PointCheck.Invalid => Fail(call, 1008, "El punto de venta informado no es válido."),
-            _ => null,
-        };
+        await _ledger.PointProblemAsync(call.Cuit, pointOfSale, NoPoints, InvalidPoint, ct) is { } problem ? Fail(call, problem) : null;
 
-    private async Task<ContractAnswer?> WrongNumberAsync(ServiceCall call, int pointOfSale, int type, long number, CancellationToken ct)
-    {
-        var last = await _ledger.LastAsync(Service, call.Cuit, pointOfSale, type, ct);
-        return number == (last?.Number ?? 0) + 1
-            ? null
-            : Fail(call, 1009, "N° de comprobante incorrecto para el tipo de comprobante y punto de venta ingresados.");
-    }
+    /// <summary>The manual has no rule on the date against the last voucher's, so only the number is checked.</summary>
+    private async Task<ContractAnswer?> WrongNumberAsync(ServiceCall call, int pointOfSale, int type, long number, CancellationToken ct) =>
+        await _ledger.CheckNumberAsync(Service, call.Cuit, pointOfSale, type, number, date: null, ct) is NumberCheck.WrongNumber
+            ? Fail(call, 1009, SettlementLedger.WrongNumberText)
+            : null;
 
-    private string? OutOfWindow(DateOnly date, bool avian)
+    /// <summary>2200: the voucher's date within N days of the processing date, N = 5 in sales and 10 in poultry (§4.9).</summary>
+    private SettlementProblem? OutOfWindow(DateOnly date, bool avian)
     {
-        var days = avian ? 10 : 5;
+        var days = avian ? PoultryWindowDays : WindowDays;
         return Math.Abs(date.DayNumber - _ledger.Today.DayNumber) <= days
             ? null
-            : $"Liquidación: La fecha de comprobante debe estar comprendida entre los {days} días próximos o anteriores a la fecha de proceso.";
+            : new SettlementProblem(2200, $"Liquidación: La fecha de comprobante debe estar comprendida entre los {days} días próximos o anteriores a la fecha de proceso.");
     }
 
     // ---- Answers ---------------------------------------------------------------------
@@ -300,16 +303,14 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
     private ContractAnswer Answer(ServiceCall call, Settlement settlement)
     {
         var answer = settlement.DetailXml();
-        answer.Add(new XElement("pdf", Pdf($"ARCA - Liquidacion sector pecuario {settlement.VoucherType:D3}-{settlement.PointOfSale:D5}-{settlement.Number:D8}",
-            [$"CUIT emisor: {settlement.Cuit}", $"CUIT receptor: {settlement.ReceiverCuit}", $"Fecha: {Iso(settlement.Date)}",
-                $"Importe neto: {Money(settlement.Total)}", $"CAE: {settlement.Cae}", $"Vencimiento CAE: {Iso(settlement.CaeExpiry)}"])));
+        answer.Add(PdfOf(settlement, "Liquidacion sector pecuario", "emisor", "receptor", "Importe neto"));
         answer.Add(Metadata());
         return call.Ok(new XElement(call.Operation.Output, answer));
     }
 
-    private ContractAnswer Fail(ServiceCall call, long code, string text) => SettlementXml.Fail(call, Metadata(), (code, text));
+    private ContractAnswer Fail(ServiceCall call, long code, string text) => Fail(call, new SettlementProblem(code, text));
 
-    private ContractAnswer Ok(ServiceCall call, params object?[] content) => SettlementXml.Ok(call, content);
+    private ContractAnswer Fail(ServiceCall call, SettlementProblem problem) => SettlementXml.Fail(call, Metadata(), problem);
 
     /// <summary>§2.5: the server and its local time, without a zone (§4.10).</summary>
     private XElement Metadata() => new("metadata",
@@ -326,23 +327,18 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
     /// <summary>§1.5: homologación skips the issuer's checks and answers RI for A and B, MO for C (189).</summary>
     private static string VatOf(int type) => type == 189 ? "MO" : "RI";
 
-    private static XElement Issuer(XElement issuer, Taxpayer? taxpayer, int type) => new("emisor",
+    /// <summary>The emisor block of the answer; cuitAutorizado is only in the bovine schema.</summary>
+    private static XElement Issuer(XElement issuer, Taxpayer? taxpayer, int type, bool avian) => new("emisor",
         Maybe("puntoVenta", issuer.Value("puntoVenta")), Maybe("tipoComprobante", type), Maybe("nroComprobante", issuer.Value("nroComprobante")),
         Maybe("codCaracter", issuer.Value("codCaracter")), Maybe("fechaInicioActividades", issuer.Day("fechaInicioActividades")),
         Maybe("razonSocial", taxpayer?.Name.ToUpperInvariant()), Maybe("iibb", issuer.Value("iibb")),
         Maybe("domicilioPuntoVenta", SettlementLedger.AddressOf(taxpayer)), Maybe("situacionIVA", VatOf(type)),
-        Maybe("nroRUCA", issuer.Value("nroRUCA")), Maybe("nroRenspa", issuer.Value("nroRenspa")), Maybe("cuitAutorizado", issuer.Value("cuitAutorizado")));
-
-    private static XElement AvianIssuer(XElement issuer, Taxpayer? taxpayer, int type) => new("emisor",
-        Maybe("puntoVenta", issuer.Value("puntoVenta")), Maybe("tipoComprobante", type), Maybe("nroComprobante", issuer.Value("nroComprobante")),
-        Maybe("codCaracter", issuer.Value("codCaracter")), Maybe("fechaInicioActividades", issuer.Day("fechaInicioActividades")),
-        Maybe("razonSocial", taxpayer?.Name.ToUpperInvariant()), Maybe("iibb", issuer.Value("iibb")),
-        Maybe("domicilioPuntoVenta", SettlementLedger.AddressOf(taxpayer)), Maybe("situacionIVA", VatOf(type)),
-        Maybe("nroRUCA", issuer.Value("nroRUCA")), Maybe("nroRenspa", issuer.Value("nroRenspa")));
+        Maybe("nroRUCA", issuer.Value("nroRUCA")), Maybe("nroRenspa", issuer.Value("nroRenspa")),
+        avian ? null : Maybe("cuitAutorizado", issuer.Value("cuitAutorizado")));
 
     private async Task<XElement> ReceiverAsync(XElement receiver, CancellationToken ct)
     {
-        var operator_ = receiver.Child("operador");
+        var operator_ = receiver.ChildOrEmpty("operador");
         var taxpayer = await _ledger.TaxpayerAsync(operator_.Number("cuit"), ct);
         var address = taxpayer?.Profile.Address;
         return new XElement("receptor",
@@ -381,32 +377,30 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         public decimal VatAmount => Vat is { } rate ? Round(Gross * rate / 100) : 0;
     }
 
-    private static XElement BovineItem(Line line)
-    {
-        var item = line.Source;
-        return new XElement("itemDetalleLiquidacion",
-            new XElement("nroItem", line.Item),
-            Maybe("cuitCliente", item.Value("cuitCliente")), Maybe("codCategoria", item.Value("codCategoria")),
-            new XElement("cantidad", line.Quantity), Maybe("cantidadCabezas", item.Value("cantidadCabezas")), Copy(item.Optional("raza")),
-            Maybe("tipoLiquidacion", item.Value("tipoLiquidacion")), new XElement("precioUnitario", Money(line.Price)),
-            Maybe("alicuotaIVA", line.Vat), Maybe("tipoIVANulo", item.Value("tipoIVANulo")), Maybe("nroTropa", item.Value("nroTropa")),
-            Maybe("cantidadKgVivo", item.Value("cantidadKgVivo")), Maybe("cantidadPorCorte", item.Value("cantidadPorCorte")),
-            item.OptionalAmount("precioRecupero") is { } recovery ? new XElement("precioRecupero", Money(recovery)) : null,
-            Maybe("codCorte", item.Value("codCorte")),
-            new XElement("importeBruto", Money(line.Gross)), new XElement("importeIVA", Money(line.VatAmount)),
-            new XElement("importeTotal", Money(line.Gross + line.VatAmount)),
-            item.Children("liquidacionCompraAsociada").Select(a => Copy(a)));
-    }
-
-    private static XElement AvianItem(Line line)
+    /// <summary>
+    /// An itemDetalleLiquidacion of the answer, with the fields of the species' schema in its order: the raza, the
+    /// tipoIVANulo, the tropa and the cuts are bovine; the kind of meat is avian.
+    /// </summary>
+    private static XElement Item(Line line, bool avian)
     {
         var item = line.Source;
         return new XElement("itemDetalleLiquidacion",
             new XElement("nroItem", line.Item),
             Maybe("cuitCliente", item.Value("cuitCliente")), Maybe("codCategoria", item.Value("codCategoria")),
             new XElement("cantidad", line.Quantity), Maybe("cantidadCabezas", item.Value("cantidadCabezas")),
+            avian ? null : Copy(item.Child("raza")),
             Maybe("tipoLiquidacion", item.Value("tipoLiquidacion")), new XElement("precioUnitario", Money(line.Price)),
-            Maybe("alicuotaIVA", line.Vat), Maybe("cantidadKgVivo", item.Value("cantidadKgVivo")), Maybe("tipoCarneAviar", item.Value("tipoCarneAviar")),
+            Maybe("alicuotaIVA", line.Vat),
+            avian ? null : Maybe("tipoIVANulo", item.Value("tipoIVANulo")), avian ? null : Maybe("nroTropa", item.Value("nroTropa")),
+            Maybe("cantidadKgVivo", item.Value("cantidadKgVivo")),
+            avian
+                ? Maybe("tipoCarneAviar", item.Value("tipoCarneAviar"))
+                : new[]
+                {
+                    Maybe("cantidadPorCorte", item.Value("cantidadPorCorte")),
+                    item.ChildDecimal("precioRecupero") is { } recovery ? new XElement("precioRecupero", Money(recovery)) : null,
+                    Maybe("codCorte", item.Value("codCorte")),
+                },
             new XElement("importeBruto", Money(line.Gross)), new XElement("importeIVA", Money(line.VatAmount)),
             new XElement("importeTotal", Money(line.Gross + line.VatAmount)),
             item.Children("liquidacionCompraAsociada").Select(a => Copy(a)));
@@ -416,12 +410,12 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private static Charge Expense(XElement expense)
     {
-        var amount = expense.OptionalAmount("importe") ?? Round(expense.Amount("baseImponible") * expense.Amount("alicuota") / 100);
-        var rate = expense.OptionalAmount("alicuotaIVA");
+        var amount = expense.ChildDecimal("importe") ?? Round(expense.Amount("baseImponible") * expense.Amount("alicuota") / 100);
+        var rate = expense.ChildDecimal("alicuotaIVA");
         var vat = rate is { } r ? Round(amount * r / 100) : 0;
         return new Charge(new XElement("gasto",
             Maybe("codGasto", expense.Value("codGasto")), Maybe("descripcion", expense.Value("descripcion")),
-            expense.OptionalAmount("baseImponible") is { } basis ? new XElement("baseImponible", Money(basis)) : null,
+            expense.ChildDecimal("baseImponible") is { } basis ? new XElement("baseImponible", Money(basis)) : null,
             Maybe("alicuota", expense.Value("alicuota")), new XElement("importe", Money(amount)),
             Maybe("alicuotaIVA", expense.Value("alicuotaIVA")), rate is null ? null : new XElement("importeIVA", Money(vat)),
             Maybe("tipoIVANulo", expense.Value("tipoIVANulo"))), amount, vat);
@@ -429,10 +423,10 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private static Charge Tax(XElement tax)
     {
-        var amount = tax.OptionalAmount("importe") ?? Round(tax.Amount("baseImponible") * tax.Amount("alicuota") / 100);
+        var amount = tax.ChildDecimal("importe") ?? Round(tax.Amount("baseImponible") * tax.Amount("alicuota") / 100);
         return new Charge(new XElement("tributo",
             Maybe("codTributo", tax.Value("codTributo")), Maybe("descripcion", tax.Value("descripcion")),
-            tax.OptionalAmount("baseImponible") is { } basis ? new XElement("baseImponible", Money(basis)) : null,
+            tax.ChildDecimal("baseImponible") is { } basis ? new XElement("baseImponible", Money(basis)) : null,
             Maybe("alicuota", tax.Value("alicuota")), new XElement("importe", Money(amount))), amount, 0);
     }
 

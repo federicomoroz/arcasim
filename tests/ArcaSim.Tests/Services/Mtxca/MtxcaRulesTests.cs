@@ -1,7 +1,10 @@
+using System.Net.Http.Json;
+using System.Text.Json;
 using System.Xml.Linq;
-using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
+using ArcaSim.Application.Services.FacturacionE;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArcaSim.Tests.Services.Mtxca;
@@ -17,8 +20,7 @@ public class MtxcaRulesTests
     private const long Receiver = 30000000007;
     private const string Namespace = "http://impl.service.wsmtxca.afip.gov.ar/service/";
 
-    private static readonly ServiceContract Contract =
-        ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", "wsmtxca-homologacion.wsdl"));
+    private static readonly ServiceContract Contract = Contracts.Of("wsmtxca-homologacion.wsdl");
 
     [Fact]
     public async Task A_voucher_with_items_gets_a_CAE_then_the_last_number_and_the_voucher_come_back()
@@ -91,6 +93,86 @@ public class MtxcaRulesTests
         var last = await client.CallAsync("consultarUltimoComprobanteAutorizado",
             "<consultaUltimoComprobanteAutorizadoRequest><codigoTipoComprobante>1</codigoTipoComprobante><numeroPuntoVenta>1</numeroPuntoVenta></consultaUltimoComprobanteAutorizadoRequest>");
         Assert.Equal(["1502"], Codes(last, "arrayErrores"));
+    }
+
+    [Fact]
+    public async Task The_relative_margin_of_the_total_is_measured_on_the_total_informed()
+    {
+        await using var sim = await StartAsync();
+        var client = await MtxcaClient.LoginAsync(sim);
+        string Voucher(string total) =>
+            "<codigoTipoComprobante>1</codigoTipoComprobante><numeroPuntoVenta>1</numeroPuntoVenta><numeroComprobante>1</numeroComprobante>" +
+            $"<fechaEmision>2026-10-01</fechaEmision><codigoTipoDocumento>80</codigoTipoDocumento><numeroDocumento>{Receiver}</numeroDocumento><condicionIVAReceptor>1</condicionIVAReceptor>" +
+            "<importeGravado>100000.00</importeGravado><importeSubtotal>100000.00</importeSubtotal>" +
+            $"<importeTotal>{total}</importeTotal><codigoMoneda>PES</codigoMoneda><cotizacionMoneda>1</cotizacionMoneda><codigoConcepto>1</codigoConcepto>" +
+            "<arrayItems><item><unidadesMtx>1</unidadesMtx><codigoMtx>7790001000012</codigoMtx><codigo>P-1</codigo><descripcion>Producto caro</descripcion>" +
+            "<cantidad>1</cantidad><codigoUnidadMedida>7</codigoUnidadMedida><precioUnitario>100000</precioUnitario><codigoCondicionIVA>5</codigoCondicionIVA>" +
+            "<importeIVA>21000.00</importeIVA><importeItem>121000.00</importeItem></item></arrayItems>" +
+            "<arraySubtotalesIVA><subtotalIVA><codigo>5</codigo><importe>21000.00</importe></subtotalIVA></arraySubtotalesIVA>";
+
+        // The items and the VAT add up to 121000.00. 12.10 under it is exactly 0.01 % of the sum but a little over 0.01 % of the 120987.90 informed.
+        var under = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{Voucher("120987.90")}</comprobanteCAERequest>");
+        var over = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{Voucher("121012.10")}</comprobanteCAERequest>");
+
+        Assert.Equal(["115", "116"], Codes(under, "arrayErrores").Order());
+        Assert.Equal("A", over.Element("resultado")!.Value);
+    }
+
+    [Fact]
+    public async Task With_open_access_the_first_voucher_creates_a_Responsable_Inscripto_with_its_point_of_sale()
+    {
+        await using var sim = ArcaSimHarness.Start(open: true);
+        sim.Clock.Freeze(new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3)));
+        var client = await MtxcaClient.LoginAsync(sim);
+
+        var answer = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{FacturaA(1)}</comprobanteCAERequest>");
+        var taxpayer = await sim.Http.GetFromJsonAsync<JsonElement>($"/arcasim/api/taxpayers/{Caller}");
+
+        Assert.Equal("A", answer.Element("resultado")!.Value);
+        Assert.Equal("ResponsableInscripto", taxpayer.GetProperty("vatCondition").GetString());
+        Assert.Contains(taxpayer.GetProperty("pointsOfSale").EnumerateArray(),
+            p => p.GetProperty("number").GetInt32() == 1 && p.GetProperty("kind").GetString() == "WebServiceCae");
+    }
+
+    [Fact]
+    public async Task A_first_voucher_of_a_type_wsmtxca_does_not_authorize_creates_no_Monotributo()
+    {
+        await using var sim = ArcaSimHarness.Start(open: true);
+        sim.Clock.Freeze(new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3)));
+        var client = await MtxcaClient.LoginAsync(sim);
+        var facturaC = FacturaA(1).Replace("<codigoTipoComprobante>1<", "<codigoTipoComprobante>11<");
+
+        // A Factura C is WSFEv1's way to open a Monotributo, but not an MTXCA type (100): the issuer stays what 10003 accepts.
+        var refused = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{facturaC}</comprobanteCAERequest>");
+        var taxpayer = await sim.Http.GetFromJsonAsync<JsonElement>($"/arcasim/api/taxpayers/{Caller}");
+        var next = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{FacturaA(1)}</comprobanteCAERequest>");
+
+        Assert.Equal(["100"], Codes(refused, "arrayErrores"));
+        Assert.Equal("ResponsableInscripto", taxpayer.GetProperty("vatCondition").GetString());
+        Assert.Equal("A", next.Element("resultado")!.Value);
+    }
+
+    [Fact]
+    public async Task A_number_an_int_cannot_hold_is_an_invalid_value_not_the_one_it_wraps_to()
+    {
+        await using var sim = await StartAsync();
+        var client = await MtxcaClient.LoginAsync(sim);
+        // 4294967297 is 1 once cut to 32 bits: the Factura A type, the issuer's point of sale and the receiver condition of the example.
+        var type = FacturaA(1).Replace("<codigoTipoComprobante>1<", "<codigoTipoComprobante>4294967297<");
+        var point = FacturaA(1).Replace("<numeroPuntoVenta>1<", "<numeroPuntoVenta>4294967297<");
+        var condition = FacturaA(1).Replace("<condicionIVAReceptor>1<", "<condicionIVAReceptor>4294967297<");
+
+        var wrongType = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{type}</comprobanteCAERequest>");
+        var wrongPoint = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{point}</comprobanteCAERequest>");
+        var wrongCondition = await client.CallAsync("autorizarComprobante", $"<comprobanteCAERequest>{condition}</comprobanteCAERequest>");
+
+        Assert.Equal(["100"], Codes(wrongType, "arrayErrores"));
+        Assert.Equal(["101"], Codes(wrongPoint, "arrayErrores"));
+        Assert.Equal("O", wrongCondition.Element("resultado")!.Value);
+        Assert.Equal(["190"], Codes(wrongCondition, "arrayObservaciones"));
+        var last = await client.CallAsync("consultarUltimoComprobanteAutorizado",
+            "<consultaUltimoComprobanteAutorizadoRequest><codigoTipoComprobante>1</codigoTipoComprobante><numeroPuntoVenta>1</numeroPuntoVenta></consultaUltimoComprobanteAutorizadoRequest>");
+        Assert.Equal("1", last.Element("numeroComprobante")!.Value);
     }
 
     [Fact]
@@ -193,6 +275,9 @@ public class MtxcaRulesTests
 
         var badOrder = await client.CallAsync("solicitarCAEA", "<solicitudCAEA><periodo>202610</periodo><orden>3</orden></solicitudCAEA>");
         Assert.Equal(["601"], Codes(badOrder, "arrayErrores"));
+        // 65537 is 1 once cut to 16 bits: the first fortnight, which would have been granted.
+        var wrappedOrder = await client.CallAsync("solicitarCAEA", "<solicitudCAEA><periodo>202610</periodo><orden>65537</orden></solicitudCAEA>");
+        Assert.Equal(["601"], Codes(wrappedOrder, "arrayErrores"));
         var tooLate = await client.CallAsync("solicitarCAEA", "<solicitudCAEA><periodo>202609</periodo><orden>2</orden></solicitudCAEA>");
         Assert.Equal(["602"], Codes(tooLate, "arrayErrores"));
         var unknown = await client.CallAsync("consultarCAEA", "<CAEA>12345678901234</CAEA>");
@@ -219,6 +304,12 @@ public class MtxcaRulesTests
         var units = await client.CallAsync("consultarUnidadesMedida", "");
         Assert.Contains(("7", "UNIDAD"), Rows(units, "arrayUnidadesMedida"));
         Assert.Contains(("99", "BONIFICACION"), Rows(units, "arrayUnidadesMedida"));
+        // The generic table WSFEXv1 answers, with 95 (cancellations and returns) in its place.
+        var unitRows = Rows(units, "arrayUnidadesMedida");
+        Assert.Equal(Wsfexv1Tables.Units.Count + 1, unitRows.Count);
+        Assert.All(Wsfexv1Tables.Units, u => Assert.Contains((u.Id.ToString(), u.Desc), unitRows));
+        Assert.Contains(("95", "ANULACIÓN/DEVOLUCIÓN"), unitRows);
+        Assert.Equal(unitRows.Select(r => int.Parse(r.Code)).Order(), unitRows.Select(r => int.Parse(r.Code)));
         var documents = await client.CallAsync("consultarTiposDocumento", "");
         Assert.Contains(Rows(documents, "arrayTiposDocumento"), r => r.Code == "80");
 
@@ -285,19 +376,12 @@ public class MtxcaRulesTests
 
         public async Task<XElement> CallAsync(string operation, string inner, string ns = Namespace)
         {
-            var envelope = $"<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ser=\"{ns}\">" +
-                           $"<soapenv:Header/><soapenv:Body><ser:{operation}Request>{auth}{inner}</ser:{operation}Request></soapenv:Body></soapenv:Envelope>";
+            var envelope = Soap.Envelope($"<ser:{operation}Request>{auth}{inner}</ser:{operation}Request>", ("ser", ns));
             var (status, body) = await sim.PostSoapAsync(new Uri("http://localhost" + Contract.AddressPath), envelope, Namespace + operation);
             Assert.True(status == 200, body);
-            var answer = XDocument.Parse(body).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
+            var answer = Soap.Body(body);
             Assert.Equal(XName.Get(operation + "Response", Namespace), answer.Name);
-
-            var problems = new List<string>();
-            new XDocument(answer).Validate(Contract.Schemas, (_, e) =>
-            {
-                if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
-            });
-            Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems) + Environment.NewLine + body);
+            Xsd.AssertValid(answer, Contract);
             return answer;
         }
     }

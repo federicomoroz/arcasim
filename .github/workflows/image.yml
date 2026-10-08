@@ -1,18 +1,25 @@
-# Tests, then the public image at ghcr.io/federicomoroz/arcasim, on every push to main.
+# Tests on every pull request and push. On main, the image too: built, started and called,
+# then that same image published at ghcr.io/federicomoroz/arcasim as latest and as the commit.
 name: image
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test-and-publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -20,17 +27,41 @@ jobs:
           global-json-file: global.json
       - name: Tests
         run: dotnet test --configuration Release
+        env:
+          # The PostgreSQL tests skip where Docker is missing; here they must run.
+          ARCASIM_REQUIRE_DOCKER: "1"
+      - name: Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: arcasim:candidate
+          labels: |
+            org.opencontainers.image.source=https://github.com/federicomoroz/arcasim
+            org.opencontainers.image.description=ARCA's web services for development and testing: 52 of the 53 current ones, plus WSAA
+            org.opencontainers.image.licenses=MIT
+      - name: The image answers
+        run: |
+          docker run -d --name arcasim -p 7080:8080 arcasim:candidate
+          for i in $(seq 1 30); do curl -fs http://localhost:7080/wsfev1/service.asmx > /dev/null && break; sleep 1; done
+          curl -fs "http://localhost:7080/wsfev1/service.asmx?WSDL" | grep -q "<wsdl:definitions"
+          curl -fs -H 'Content-Type: text/xml; charset=utf-8' -H 'SOAPAction: "http://ar.gov.afip.dif.FEV1/FEDummy"' \
+            --data '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><FEDummy xmlns="http://ar.gov.afip.dif.FEV1/"/></soap:Body></soap:Envelope>' \
+            http://localhost:7080/wsfev1/service.asmx | grep -q "<AppServer>OK</AppServer>"
+          curl -fs http://localhost:7080/setiws-pago-api/dummy | grep -q '"appserver":"OK"'
+          for i in $(seq 1 40); do [ "$(docker inspect -f '{{.State.Health.Status}}' arcasim)" = healthy ] && break; sleep 1; done
+          [ "$(docker inspect -f '{{.State.Health.Status}}' arcasim)" = healthy ]
+          docker rm -f arcasim
       - uses: docker/login-action@v3
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ghcr.io/federicomoroz/arcasim:latest
-          labels: |
-            org.opencontainers.image.source=https://github.com/federicomoroz/arcasim
-            org.opencontainers.image.description=ARCA's web services (WSAA + WSFEv1) for development and testing
-            org.opencontainers.image.licenses=MIT
+      - name: Publish the image that was tested
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          for tag in latest "$GITHUB_SHA"; do
+            docker tag arcasim:candidate "ghcr.io/federicomoroz/arcasim:$tag"
+            docker push "ghcr.io/federicomoroz/arcasim:$tag"
+          done

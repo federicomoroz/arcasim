@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace ArcaSim.Domain;
 
 /// <summary>Condición frente al IVA, with the ids of FEParamGetCondicionIvaReceptor.</summary>
@@ -29,7 +31,30 @@ public enum PointOfSaleKind
     Other,
 }
 
-public sealed record PointOfSale(int Number, PointOfSaleKind Kind, bool Blocked = false, DateOnly? DeactivatedOn = null);
+public sealed record PointOfSale(int Number, PointOfSaleKind Kind, bool Blocked = false, DateOnly? DeactivatedOn = null)
+{
+    /// <summary>Whether it issues that kind of voucher, is not blocked and is not yet deactivated on that day.</summary>
+    public bool IsUsableFor(PointOfSaleKind kind, DateOnly today) => Kind == kind && !Blocked && !(DeactivatedOn <= today);
+}
+
+public static class VatConditions
+{
+    /// <summary>The three monotributo regimes, which the manuals' rules treat as one: the general, the social and the promoted independent worker.</summary>
+    public static bool IsMonotributo(this VatCondition condition) =>
+        condition is VatCondition.Monotributo or VatCondition.MonotributistaSocial or VatCondition.MonotributoTrabajadorIndependientePromovido;
+}
+
+/// <summary>
+/// The ranges the invoicing manuals give a point of sale (1 to 99998) and a
+/// voucher number (1 to 99999999). A rule whose manual words its range another
+/// way (below 99998, nine digits, zero allowed) writes its own bounds next to its text.
+/// </summary>
+public static class VoucherLimits
+{
+    public const int MaxPointOfSale = 99_998;
+
+    public const int MaxNumber = 99_999_999;
+}
 
 /// <summary>
 /// A made-up taxpayer. WSFEv1, and later the padrón services, read the same
@@ -50,8 +75,6 @@ public sealed class Taxpayer
 
     public PersonKind Kind => Cuits.KindOf(Cuit);
 
-    private Taxpayer() { }
-
     public Taxpayer(long cuit, string name, VatCondition vatCondition, IEnumerable<PointOfSale>? pointsOfSale = null)
     {
         if (!Cuits.IsValid(cuit)) throw new ArgumentException($"CUIT {cuit} has a wrong check digit.", nameof(cuit));
@@ -62,6 +85,9 @@ public sealed class Taxpayer
     }
 
     public PointOfSale? FindPointOfSale(int number) => _pointsOfSale.FirstOrDefault(p => p.Number == number);
+
+    /// <summary>Whether the point of sale exists for that kind of voucher, is not blocked and is not yet deactivated on that day.</summary>
+    public bool CanIssueFrom(int number, PointOfSaleKind kind, DateOnly today) => FindPointOfSale(number)?.IsUsableFor(kind, today) == true;
 
     public void AddPointOfSale(PointOfSale pointOfSale)
     {
@@ -77,6 +103,9 @@ public sealed class Taxpayer
     }
 
     public void SetProfile(TaxpayerProfile profile) => Profile = profile;
+
+    /// <summary>A copy that shares nothing changeable with this one: what a store that serializes, as PostgreSQL's does, hands out.</summary>
+    public Taxpayer Copy() => new(Cuit, Name, VatCondition, _pointsOfSale) { Active = Active, Profile = Profile };
 }
 
 /// <summary>A person (DNI-based CUIT: 20, 23, 24, 27) or a company (30, 33, 34).</summary>
@@ -119,12 +148,16 @@ public static class Cuits
     public static PersonKind KindOf(long cuit) => (cuit / 1_000_000_000) is 30 or 33 or 34 ? PersonKind.Juridica : PersonKind.Fisica;
 
     /// <summary>The DNI inside a person's CUIT: the eight digits between the prefix and the check digit.</summary>
-    public static string DocumentOf(long cuit) => (cuit / 10 % 100_000_000).ToString();
+    public static string DocumentOf(long cuit) => (cuit / 10 % 100_000_000).ToString(CultureInfo.InvariantCulture);
 
-    /// <summary>The CUIT a DNI gets with prefix 20, or 23 when 20 would need check digit 10, as ARCA assigns them.</summary>
+    /// <summary>
+    /// The CUIT a DNI gets with prefix 20, or 23 when 20 would need check
+    /// digit 10, as ARCA assigns a man's. A woman's would be 27, or 23 too:
+    /// ArcaSim does not know which the person is, and always takes the first.
+    /// </summary>
     public static long ForDocument(long document)
     {
-        foreach (var prefix in new[] { 20L, 27L, 23L })
+        foreach (var prefix in new[] { 20L, 23L })
         {
             var body = prefix * 100_000_000 + document;
             for (var check = 0; check <= 9; check++)
@@ -138,7 +171,7 @@ public static class Cuits
 
     private static bool IsCanonical(long cuit)
     {
-        var digits = cuit.ToString();
+        var digits = cuit.ToString(CultureInfo.InvariantCulture);
         var sum = 0;
         for (var i = 0; i < 10; i++) sum += (digits[i] - '0') * Weights[i];
         return 11 - sum % 11 != 10;
@@ -147,7 +180,7 @@ public static class Cuits
     /// <summary>The mod 11 check digit every CUIT carries.</summary>
     public static bool IsValid(long cuit)
     {
-        var digits = cuit.ToString();
+        var digits = cuit.ToString(CultureInfo.InvariantCulture);
         if (digits.Length != 11) return false;
         var sum = 0;
         for (var i = 0; i < 10; i++) sum += (digits[i] - '0') * Weights[i];

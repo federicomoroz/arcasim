@@ -1,4 +1,46 @@
+using static ArcaSim.Application.Services.CpeGranos.CpeStates;
+
 namespace ArcaSim.Application.Services.CpeGranos;
+
+/// <summary>
+/// The codes of cabecera/estado (docs/arca/servicios/wscpe.md, "Códigos en cabecera/estado"). BR (borrador), PA and AP
+/// appear in no diagram and ArcaSim never sends them.
+/// </summary>
+internal static class CpeStates
+{
+    /// <summary>AC: active ("activa").</summary>
+    public const string Active = "AC";
+
+    /// <summary>CF: active, its arrival confirmed ("activa con confirmación de arribo").</summary>
+    public const string Arrived = "CF";
+
+    /// <summary>CN: confirmed ("confirmada").</summary>
+    public const string Confirmed = "CN";
+
+    /// <summary>CO: active under a contingency ("activa con contingencia").</summary>
+    public const string Contingency = "CO";
+
+    /// <summary>DE: deactivated ("desactivada").</summary>
+    public const string Deactivated = "DE";
+
+    /// <summary>RE: rejected ("rechazada").</summary>
+    public const string Rejected = "RE";
+
+    /// <summary>AN: voided ("anulada").</summary>
+    public const string Voided = "AN";
+
+    /// <summary>DD: unloaded at destination ("descargado en destino").</summary>
+    public const string Unloaded = "DD";
+
+    /// <summary>PE: waiting to be issued ("pendiente de emisión"): a DG CPE the industry has to issue.</summary>
+    public const string AwaitingIssue = "PE";
+
+    /// <summary>IN: inactive ("inactiva").</summary>
+    public const string Inactive = "IN";
+
+    /// <summary>PO: waiting for the origin to accept it ("pendiente de aceptación por el origen"): a CPE issued at destination.</summary>
+    public const string AwaitingOrigin = "PO";
+}
 
 /// <summary>
 /// One family of cartas de porte (docs/arca/servicios/wscpe.md, Operaciones):
@@ -23,14 +65,12 @@ internal sealed record CpeFamily(string Name, string Authorize, string Consult, 
     /// </summary>
     public static readonly CpeFamily[] All =
     [
-        new(Automotor, "autorizarCPEAutomotor", "consultarCPEAutomotor", [74, 274], true, "01", "AC"),
-        new(Ferroviaria, "autorizarCPEFerroviaria", "consultarCPEFerroviaria", [75], true, "02", "AC"),
-        new(AutomotorDg, "autorizarCPEAutomotorDG", "consultarCPEAutomotorDG", [284], false, "03", "AC"),
-        new(FerroviariaDg, "autorizarCPEFerroviariaDG", "consultarCPEFerroviariaDG", [285], false, "04", "AC"),
-        new(EmisionDestinoDg, "autorizarCPEEmisionDestinoDG", "consultarCPEEmisionDestinoDG", [286], false, "05", "PO"),
+        new(Automotor, "autorizarCPEAutomotor", "consultarCPEAutomotor", [74, 274], true, "01", Active),
+        new(Ferroviaria, "autorizarCPEFerroviaria", "consultarCPEFerroviaria", [75], true, "02", Active),
+        new(AutomotorDg, "autorizarCPEAutomotorDG", "consultarCPEAutomotorDG", [284], false, "03", Active),
+        new(FerroviariaDg, "autorizarCPEFerroviariaDG", "consultarCPEFerroviariaDG", [285], false, "04", Active),
+        new(EmisionDestinoDg, "autorizarCPEEmisionDestinoDG", "consultarCPEEmisionDestinoDG", [286], false, "05", AwaitingOrigin),
     ];
-
-    public static CpeFamily Named(string name) => All.First(f => f.Name == name);
 
     /// <summary>The types the manual lists (tabla TipoCPE); 287 has no operation that creates it.</summary>
     public static readonly int[] KnownTypes = [74, 75, 274, 284, 285, 286, 287];
@@ -66,38 +106,38 @@ internal sealed record CpeMove(string[] Families, string[] From, string To, CpeE
     /// </summary>
     public static readonly IReadOnlyDictionary<string, CpeMove> ByOperation = new Dictionary<string, CpeMove>
     {
-        ["confirmarArriboCPE"] = new(Every, ["AC", "DD"], "CF"),
-        ["descargadoDestinoCPE"] = new(Every, ["AC"], "DD"),
-        ["descargadoDestinoCPEEmisionDestinoDG"] = new(Emission, ["AC"], "DD"),
-        ["rechazoCPE"] = new(Every, ["CF"], "RE", CpeEffect.Reject),
-        ["confirmacionDefinitivaCPEAutomotor"] = new([CpeFamily.Automotor], ["CF"], "CN", CpeEffect.FinalConfirmation),
-        ["confirmacionDefinitivaCPEFerroviaria"] = new([CpeFamily.Ferroviaria], ["CF"], "CN", CpeEffect.FinalConfirmation),
-        ["confirmacionDefinitivaCPEAutomotorDG"] = new([CpeFamily.AutomotorDg, CpeFamily.EmisionDestinoDg], ["CF"], "CN", CpeEffect.FinalConfirmation),
-        ["confirmacionDefinitivaCPEFerroviariaDG"] = new([CpeFamily.FerroviariaDg], ["CF"], "CN", CpeEffect.FinalConfirmation),
-        ["anularCPE"] = new(Every, ["AC"], "AN", CpeEffect.Void),
-        ["anularCPEEmisionDestinoDG"] = new(Emission, ["AC"], "AN", CpeEffect.Void),
-        ["informarContingencia"] = new(Every, ["AC"], "CO"),
-        ["informarContingenciaEmisionDestinoDG"] = new(Emission, ["AC"], "CO"),
-        ["cerrarContingenciaCPE"] = new(Every, ["CO"], "AC", CpeEffect.CloseContingency),
-        ["cerrarContingenciaCPEEmisionDestinoDG"] = new(Emission, ["CO"], "AC", CpeEffect.CloseContingency),
-        ["desvioCPEAutomotor"] = new([CpeFamily.Automotor], ["CF"], "AC", CpeEffect.Detour),
-        ["desvioCPEFerroviaria"] = new([CpeFamily.Ferroviaria], ["CF"], "AC", CpeEffect.Detour),
-        ["desvioCPEAutomotorDG"] = new([CpeFamily.AutomotorDg, CpeFamily.EmisionDestinoDg], ["CF"], "AC", CpeEffect.Detour),
-        ["desvioCPEFerroviariaDG"] = new([CpeFamily.FerroviariaDg], ["CF"], "AC", CpeEffect.Detour),
-        ["nuevoDestinoDestinatarioCPEAutomotor"] = new([CpeFamily.Automotor], ["RE"], "AC", CpeEffect.NewDestination),
-        ["nuevoDestinoDestinatarioCPEFerroviaria"] = new([CpeFamily.Ferroviaria], ["RE"], "AC", CpeEffect.NewDestination),
-        ["nuevoDestinoDestinatarioCPEAutomotorDG"] = new([CpeFamily.AutomotorDg], ["RE"], "AC", CpeEffect.NewDestination),
-        ["nuevoDestinoDestinatarioCPEFerroviariaDG"] = new([CpeFamily.FerroviariaDg], ["RE"], "AC", CpeEffect.NewDestination),
-        ["nuevoDestinoDestinatarioCPEEmisionDestinoDG"] = new(Emission, ["RE"], "AC", CpeEffect.NewDestination),
-        ["regresoOrigenCPEAutomotor"] = new([CpeFamily.Automotor], ["RE"], "AC", CpeEffect.ReturnToOrigin),
-        ["regresoOrigenCPEFerroviaria"] = new([CpeFamily.Ferroviaria], ["RE"], "AC", CpeEffect.ReturnToOrigin),
-        ["regresoOrigenCPEAutomotorDG"] = new([CpeFamily.AutomotorDg], ["RE"], "AC", CpeEffect.ReturnToOrigin),
-        ["regresoOrigenCPEFerroviariaDG"] = new([CpeFamily.FerroviariaDg], ["RE"], "AC", CpeEffect.ReturnToOrigin),
-        ["regresoOrigenCPEEmisionDestinoDG"] = new(Emission, ["RE"], "AC", CpeEffect.ReturnToOrigin),
-        ["aceptarEmisionDG"] = new([CpeFamily.AutomotorDg, CpeFamily.FerroviariaDg], ["PE"], "AC"),
-        ["rechazarEmisionDG"] = new([CpeFamily.AutomotorDg, CpeFamily.FerroviariaDg], ["PE"], "IN"),
-        ["aceptarEmisionDestinoDG"] = new(Emission, ["PO"], "AC"),
-        ["rechazarEmisionDestinoDG"] = new(Emission, ["PO"], "IN"),
+        ["confirmarArriboCPE"] = new(Every, [Active, Unloaded], Arrived),
+        ["descargadoDestinoCPE"] = new(Every, [Active], Unloaded),
+        ["descargadoDestinoCPEEmisionDestinoDG"] = new(Emission, [Active], Unloaded),
+        ["rechazoCPE"] = new(Every, [Arrived], Rejected, CpeEffect.Reject),
+        ["confirmacionDefinitivaCPEAutomotor"] = new([CpeFamily.Automotor], [Arrived], Confirmed, CpeEffect.FinalConfirmation),
+        ["confirmacionDefinitivaCPEFerroviaria"] = new([CpeFamily.Ferroviaria], [Arrived], Confirmed, CpeEffect.FinalConfirmation),
+        ["confirmacionDefinitivaCPEAutomotorDG"] = new([CpeFamily.AutomotorDg, CpeFamily.EmisionDestinoDg], [Arrived], Confirmed, CpeEffect.FinalConfirmation),
+        ["confirmacionDefinitivaCPEFerroviariaDG"] = new([CpeFamily.FerroviariaDg], [Arrived], Confirmed, CpeEffect.FinalConfirmation),
+        ["anularCPE"] = new(Every, [Active], Voided, CpeEffect.Void),
+        ["anularCPEEmisionDestinoDG"] = new(Emission, [Active], Voided, CpeEffect.Void),
+        ["informarContingencia"] = new(Every, [Active], Contingency),
+        ["informarContingenciaEmisionDestinoDG"] = new(Emission, [Active], Contingency),
+        ["cerrarContingenciaCPE"] = new(Every, [Contingency], Active, CpeEffect.CloseContingency),
+        ["cerrarContingenciaCPEEmisionDestinoDG"] = new(Emission, [Contingency], Active, CpeEffect.CloseContingency),
+        ["desvioCPEAutomotor"] = new([CpeFamily.Automotor], [Arrived], Active, CpeEffect.Detour),
+        ["desvioCPEFerroviaria"] = new([CpeFamily.Ferroviaria], [Arrived], Active, CpeEffect.Detour),
+        ["desvioCPEAutomotorDG"] = new([CpeFamily.AutomotorDg, CpeFamily.EmisionDestinoDg], [Arrived], Active, CpeEffect.Detour),
+        ["desvioCPEFerroviariaDG"] = new([CpeFamily.FerroviariaDg], [Arrived], Active, CpeEffect.Detour),
+        ["nuevoDestinoDestinatarioCPEAutomotor"] = new([CpeFamily.Automotor], [Rejected], Active, CpeEffect.NewDestination),
+        ["nuevoDestinoDestinatarioCPEFerroviaria"] = new([CpeFamily.Ferroviaria], [Rejected], Active, CpeEffect.NewDestination),
+        ["nuevoDestinoDestinatarioCPEAutomotorDG"] = new([CpeFamily.AutomotorDg], [Rejected], Active, CpeEffect.NewDestination),
+        ["nuevoDestinoDestinatarioCPEFerroviariaDG"] = new([CpeFamily.FerroviariaDg], [Rejected], Active, CpeEffect.NewDestination),
+        ["nuevoDestinoDestinatarioCPEEmisionDestinoDG"] = new(Emission, [Rejected], Active, CpeEffect.NewDestination),
+        ["regresoOrigenCPEAutomotor"] = new([CpeFamily.Automotor], [Rejected], Active, CpeEffect.ReturnToOrigin),
+        ["regresoOrigenCPEFerroviaria"] = new([CpeFamily.Ferroviaria], [Rejected], Active, CpeEffect.ReturnToOrigin),
+        ["regresoOrigenCPEAutomotorDG"] = new([CpeFamily.AutomotorDg], [Rejected], Active, CpeEffect.ReturnToOrigin),
+        ["regresoOrigenCPEFerroviariaDG"] = new([CpeFamily.FerroviariaDg], [Rejected], Active, CpeEffect.ReturnToOrigin),
+        ["regresoOrigenCPEEmisionDestinoDG"] = new(Emission, [Rejected], Active, CpeEffect.ReturnToOrigin),
+        ["aceptarEmisionDG"] = new([CpeFamily.AutomotorDg, CpeFamily.FerroviariaDg], [AwaitingIssue], Active),
+        ["rechazarEmisionDG"] = new([CpeFamily.AutomotorDg, CpeFamily.FerroviariaDg], [AwaitingIssue], Inactive),
+        ["aceptarEmisionDestinoDG"] = new(Emission, [AwaitingOrigin], Active),
+        ["rechazarEmisionDestinoDG"] = new(Emission, [AwaitingOrigin], Inactive),
     };
 }
 
@@ -106,14 +146,14 @@ internal sealed record CpeEdit(string[] Families, string[] States)
 {
     public static readonly IReadOnlyDictionary<string, CpeEdit> ByOperation = new Dictionary<string, CpeEdit>
     {
-        ["editarCPEAutomotor"] = new([CpeFamily.Automotor], ["AC", "CN"]),
-        ["editarCPEFerroviaria"] = new([CpeFamily.Ferroviaria], ["AC", "CN"]),
-        ["editarCPEDGAutomotor"] = new([CpeFamily.AutomotorDg, CpeFamily.EmisionDestinoDg], ["AC"]),
-        ["editarCPEDGFerroviaria"] = new([CpeFamily.FerroviariaDg], ["AC", "CN"]),
-        ["editarCPEConfirmadaAutomotor"] = new([CpeFamily.Automotor], ["CN"]),
-        ["editarCPEConfirmadaFerroviaria"] = new([CpeFamily.Ferroviaria], ["CN"]),
-        ["editarCPEDGConfirmadaAutomotor"] = new([CpeFamily.AutomotorDg, CpeFamily.EmisionDestinoDg], ["CN"]),
-        ["editarCPEDGConfirmadaFerroviaria"] = new([CpeFamily.FerroviariaDg], ["CN"]),
+        ["editarCPEAutomotor"] = new([CpeFamily.Automotor], [Active, Confirmed]),
+        ["editarCPEFerroviaria"] = new([CpeFamily.Ferroviaria], [Active, Confirmed]),
+        ["editarCPEDGAutomotor"] = new([CpeFamily.AutomotorDg, CpeFamily.EmisionDestinoDg], [Active]),
+        ["editarCPEDGFerroviaria"] = new([CpeFamily.FerroviariaDg], [Active, Confirmed]),
+        ["editarCPEConfirmadaAutomotor"] = new([CpeFamily.Automotor], [Confirmed]),
+        ["editarCPEConfirmadaFerroviaria"] = new([CpeFamily.Ferroviaria], [Confirmed]),
+        ["editarCPEDGConfirmadaAutomotor"] = new([CpeFamily.AutomotorDg, CpeFamily.EmisionDestinoDg], [Confirmed]),
+        ["editarCPEDGConfirmadaFerroviaria"] = new([CpeFamily.FerroviariaDg], [Confirmed]),
     };
 }
 
@@ -130,10 +170,10 @@ internal static class WscpeTables
     ];
 
     /// <summary>States that still wait for something (the "pendientes de resolución").</summary>
-    public static readonly string[] Pending = ["AC", "CF", "CO", "RE", "DD"];
+    public static readonly string[] Pending = [Active, Arrived, Contingency, Rejected, Unloaded];
 
     /// <summary>States a CPE stays in for good: they get no expiry date.</summary>
-    public static readonly string[] Final = ["CN", "AN", "DE", "IN"];
+    public static readonly string[] Final = [Confirmed, Voided, Deactivated, Inactive];
 
     /// <summary>
     /// How long a state lasts before it blocks the plant or the CUIT. The

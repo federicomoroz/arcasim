@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
+using ArcaSim.Application.Wsfe;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArcaSim.Tests.Services.TurismoBonos;
@@ -113,7 +114,7 @@ public class BfeRulesTests
     }
 
     [Fact]
-    public async Task Wsbfe_and_wsbfev1_number_the_same_book_and_wsbfe_carries_its_RG_5616_event()
+    public async Task Wsbfe_and_wsbfev1_number_the_same_book_and_each_carries_the_event_of_its_catalog_entry()
     {
         await using var sim = ArcaSimHarness.Start();
         var v1 = await OpenAsync(sim);
@@ -125,10 +126,74 @@ public class BfeRulesTests
         Assert.Equal("A", Value(authorized, "Resultado"));
         Assert.Equal("102", Value(authorized, "EventCode"));
         Assert.Equal("A", Value(next, "Resultado"));
-        Assert.Equal("0", Value(next, "EventCode"));
+        Assert.Equal("39", Value(next, "EventCode"));
+        Assert.StartsWith("IMPORTANTE: Por motivos de mantenimiento", Value(next, "EventMsg"));
         var fromOld = await old.CallAsync("BFEGetCMP", Auth(old) + "<x:Cmp><x:Tipo_cbte>1</x:Tipo_cbte><x:Punto_vta>5</x:Punto_vta><x:Cbte_nro>2</x:Cbte_nro></x:Cmp>");
         Assert.Equal(Value(next, "Cae"), Value(fromOld, "Cae"));
         Assert.Equal("2", Value(await LastAsync(old), "Cbte_nro"));
+    }
+
+    [Fact]
+    public async Task A_number_an_int_cannot_hold_is_an_invalid_value_not_the_one_it_wraps_to()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var desk = await OpenAsync(sim);
+        // 4294967297 is 1 and 4294967301 is 5 once cut to 32 bits: the type and the point of sale of the example.
+        var wrongType = await AuthorizeAsync(desk, Cmp(RequestId, 1).Replace("<x:Tipo_cbte>1<", "<x:Tipo_cbte>4294967297<"));
+        var wrongPoint = await AuthorizeAsync(desk, Cmp(RequestId, 1).Replace("<x:Punto_vta>5<", "<x:Punto_vta>4294967301<"));
+        // 4294967387 is 91 once cut to 32 bits, the one type a Factura A may have associated.
+        var associated = "<x:CbtesAsoc><x:CbteAsoc><x:Tipo_cbte>4294967387</x:Tipo_cbte><x:Punto_vta>5</x:Punto_vta><x:Cbte_nro>1</x:Cbte_nro></x:CbteAsoc></x:CbtesAsoc>";
+        var wrongAssociated = await AuthorizeAsync(desk, Cmp(RequestId, 1, extra: associated));
+
+        Assert.Equal(["1014", "1014", "1036"], new[] { wrongType, wrongPoint, wrongAssociated }.Select(a => Value(a, "ErrCode")));
+        Assert.Equal("Tipo de comprobante inválido.", Value(wrongType, "ErrMsg"));
+        Assert.Contains("punto_vta", Value(wrongPoint, "ErrMsg"));
+
+        // The voucher with the right numbers is authorized, and the queries do not answer to the wrapped ones.
+        Assert.Equal("A", Value(await AuthorizeAsync(desk, Cmp(RequestId, 1)), "Resultado"));
+        var consulted = await desk.CallAsync("BFEGetCMP",
+            Auth(desk) + "<x:Cmp><x:Tipo_cbte>1</x:Tipo_cbte><x:Punto_vta>4294967301</x:Punto_vta><x:Cbte_nro>1</x:Cbte_nro></x:Cmp>");
+        var last = await desk.CallAsync("BFEGetLast_CMP",
+            $"<x:Auth><x:Token>{desk.Token}</x:Token><x:Sign>{desk.Sign}</x:Sign><x:Cuit>{ServiceDesk.Issuer}</x:Cuit><x:Pto_venta>4294967301</x:Pto_venta><x:Tipo_cbte>1</x:Tipo_cbte></x:Auth>");
+        Assert.Equal("1020", Value(consulted, "ErrCode"));
+        Assert.Equal("0", Value(last, "Cbte_nro"));
+    }
+
+    [Fact]
+    public async Task Wsbfev1_waits_for_the_lock_of_the_book_it_shares_with_wsbfe()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var desk = await OpenAsync(sim);
+        var locks = sim.Services.GetRequiredService<SequenceLocks>();
+
+        Task<XElement> authorizing;
+        // The book's name is wsbfe, whichever of the two services numbers: its lock for point of sale 5 and type 1.
+        using (await locks.AcquireAsync("wsbfe", ServiceDesk.Issuer, 5, 1, CancellationToken.None))
+        {
+            authorizing = AuthorizeAsync(desk, Cmp(RequestId, 1));
+            Assert.NotSame(authorizing, await Task.WhenAny(authorizing, Task.Delay(300)));
+        }
+
+        Assert.Equal("A", Value(await authorizing, "Resultado"));
+    }
+
+    [Fact]
+    public async Task The_highest_Id_of_a_CUIT_is_read_and_written_under_a_lock_of_its_own()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var desk = await OpenAsync(sim);
+        var locks = sim.Services.GetRequiredService<SequenceLocks>();
+
+        Task<XElement> authorizing;
+        // Two points of sale hold different sequence locks but share the CUIT's highest Id: the book keeps it under "<book>-ultimo-id".
+        using (await locks.AcquireAsync("wsbfe-ultimo-id", ServiceDesk.Issuer, 0, 0, CancellationToken.None))
+        {
+            authorizing = AuthorizeAsync(desk, Cmp(RequestId, 1));
+            Assert.NotSame(authorizing, await Task.WhenAny(authorizing, Task.Delay(300)));
+        }
+
+        Assert.Equal("A", Value(await authorizing, "Resultado"));
+        Assert.Equal(RequestId.ToString(), Value(await desk.CallAsync("BFEGetLast_ID", Auth(desk)), "Id"));
     }
 
     [Fact]

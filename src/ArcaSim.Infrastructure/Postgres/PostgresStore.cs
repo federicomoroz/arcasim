@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Xml;
 using System.Xml.Serialization;
 using ArcaSim.Application;
 using ArcaSim.Application.Wsfe;
@@ -101,9 +102,6 @@ public sealed partial class PostgresStore(NpgsqlDataSource db) :
             "WHERE client_cuit = $1 AND lower(alias) = lower($2) AND lower(service) = lower($3)",
             [clientCuit, alias, service], ReadAuthorization, ct);
 
-    public Task<IReadOnlyList<ClientAlias>> ListAliasesAsync(CancellationToken ct = default) =>
-        ListAsync("SELECT cuit, alias FROM aliases ORDER BY cuit, alias", [], r => new ClientAlias(r.GetInt64(0), r.GetString(1)), ct);
-
     public Task<IReadOnlyList<ServiceAuthorization>> ListAuthorizationsAsync(CancellationToken ct = default) =>
         ListAsync("SELECT client_cuit, alias, represented_cuit, service FROM authorizations ORDER BY client_cuit, alias, service",
             [], ReadAuthorization, ct);
@@ -111,13 +109,13 @@ public sealed partial class PostgresStore(NpgsqlDataSource db) :
     public Task SaveAliasAsync(ClientAlias alias, CancellationToken ct = default) =>
         ExecuteAsync("INSERT INTO aliases (cuit, alias) VALUES ($1, $2) ON CONFLICT DO NOTHING", [alias.Cuit, alias.Alias], ct);
 
-    public Task SaveAuthorizationAsync(ServiceAuthorization a, CancellationToken ct = default) =>
+    public Task SaveAuthorizationAsync(ServiceAuthorization authorization, CancellationToken ct = default) =>
         ExecuteAsync("INSERT INTO authorizations VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING",
-            [a.ClientCuit, a.Alias, a.RepresentedCuit, a.Service], ct);
+            [authorization.ClientCuit, authorization.Alias, authorization.RepresentedCuit, authorization.Service], ct);
 
-    public Task DeleteAuthorizationAsync(ServiceAuthorization a, CancellationToken ct = default) =>
+    public Task DeleteAuthorizationAsync(ServiceAuthorization authorization, CancellationToken ct = default) =>
         ExecuteAsync("DELETE FROM authorizations WHERE client_cuit = $1 AND alias = $2 AND represented_cuit = $3 AND service = $4",
-            [a.ClientCuit, a.Alias, a.RepresentedCuit, a.Service], ct);
+            [authorization.ClientCuit, authorization.Alias, authorization.RepresentedCuit, authorization.Service], ct);
 
     private static ServiceAuthorization ReadAuthorization(NpgsqlDataReader r) =>
         new(r.GetInt64(0), r.GetString(1), r.GetInt64(2), r.GetString(3));
@@ -168,31 +166,47 @@ public sealed partial class PostgresStore(NpgsqlDataSource db) :
 
     public async Task<StoredVoucher?> LastAsync(long cuit, int pointOfSale, int voucherType, CancellationToken ct = default) =>
         (await ListAsync(
-            $"SELECT {VoucherColumns} FROM vouchers WHERE cuit = $1 AND point_of_sale = $2 AND voucher_type = $3 ORDER BY number_to DESC LIMIT 1",
+            $"SELECT {VoucherColumns} FROM vouchers WHERE cuit = $1 AND point_of_sale = $2 AND voucher_type = $3 ORDER BY number_from DESC LIMIT 1",
             [cuit, pointOfSale, voucherType], ReadVoucher, ct)).FirstOrDefault();
 
+    /// <summary>
+    /// The voucher whose range holds the number: the last range of its sequence that starts at or before it.
+    /// The ranges of a sequence never overlap (each starts at the last number plus one), so no other can hold
+    /// it, and the primary key finds that one reading a single entry. Asking for every range that starts at
+    /// or before the number read the whole sequence up to it: the voucher just authorized, the one a client
+    /// most often asks for, was the slowest to find.
+    /// </summary>
     public async Task<StoredVoucher?> FindAsync(long cuit, int pointOfSale, int voucherType, long number, CancellationToken ct = default) =>
         (await ListAsync(
-            $"SELECT {VoucherColumns} FROM vouchers WHERE cuit = $1 AND point_of_sale = $2 AND voucher_type = $3 AND number_from <= $4 AND $4 <= number_to",
+            $"SELECT * FROM (SELECT {VoucherColumns} FROM vouchers WHERE cuit = $1 AND point_of_sale = $2 AND voucher_type = $3 " +
+            "AND number_from <= $4 ORDER BY number_from DESC LIMIT 1) AS last WHERE $4 <= number_to",
             [cuit, pointOfSale, voucherType, number], ReadVoucher, ct)).FirstOrDefault();
 
-    public Task AddAsync(StoredVoucher v, CancellationToken ct = default)
+    public Task AddAsync(StoredVoucher voucher, CancellationToken ct = default)
     {
         using var detail = new StringWriter();
         var copy = new FECAEDetRequest();
-        v.Detail.CopyTo(copy);
+        voucher.Detail.CopyTo(copy);
         DetailSerializer.Serialize(detail, copy);
         return ExecuteAsync(
             $"INSERT INTO vouchers ({VoucherColumns}) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
-            [v.Cuit, v.PointOfSale, v.VoucherType, v.From, v.To, v.Date, v.EmissionType.ToString(), v.AuthorizationCode,
-                v.AuthorizationDue, v.ProcessedAt.ToUniversalTime(), detail.ToString(),
-                Json(v.Observations.Select(o => new ObservationRow(o.Code, o.Msg)))], ct);
+            [voucher.Cuit, voucher.PointOfSale, voucher.VoucherType, voucher.From, voucher.To, voucher.Date, voucher.EmissionType.ToString(), voucher.AuthorizationCode,
+                voucher.AuthorizationDue, voucher.ProcessedAt.ToUniversalTime(), detail.ToString(),
+                Json(voucher.Observations.Select(o => new ObservationRow(o.Code, o.Msg)))], ct);
     }
 
     public Task<IReadOnlyList<StoredVoucher>> ListAsync(long? cuit, int limit, CancellationToken ct = default) =>
         ListAsync(
             $"SELECT {VoucherColumns} FROM vouchers WHERE $1::bigint IS NULL OR cuit = $1 ORDER BY processed_at DESC LIMIT $2",
             [cuit is null ? DBNull.Value : cuit.Value, limit], ReadVoucher, ct);
+
+    /// <summary>
+    /// Filtered here and not by the caller: the FCE ledger asks on every request, and reading every voucher to keep
+    /// the few of its types meant reading and deserializing the whole table each time.
+    /// </summary>
+    public Task<IReadOnlyList<StoredVoucher>> ListOfTypesAsync(IReadOnlyCollection<int> voucherTypes, CancellationToken ct = default) =>
+        ListAsync($"SELECT {VoucherColumns} FROM vouchers WHERE voucher_type = ANY($1) ORDER BY processed_at DESC",
+            [voucherTypes.ToArray()], ReadVoucher, ct);
 
     public async Task<bool> AnyWithCaeaAsync(long cuit, string caea, int pointOfSale, CancellationToken ct = default) =>
         (await ListAsync(
@@ -201,7 +215,8 @@ public sealed partial class PostgresStore(NpgsqlDataSource db) :
 
     private static StoredVoucher ReadVoucher(NpgsqlDataReader r)
     {
-        using var detail = new StringReader(r.GetString(10));
+        // An XmlReader of ArcaSim's own: the detail is what AddAsync wrote, and DTDs stay refused all the same.
+        using var detail = XmlReader.Create(new StringReader(r.GetString(10)), new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit });
         var observations = JsonSerializer.Deserialize<List<ObservationRow>>(r.GetString(11)) ?? [];
         return new StoredVoucher(
             r.GetInt64(0), r.GetInt32(1), r.GetInt32(2), r.GetInt64(3), r.GetInt64(4),
@@ -224,9 +239,9 @@ public sealed partial class PostgresStore(NpgsqlDataSource db) :
     public async Task<IssuedCaea?> FindByCodeAsync(string code, CancellationToken ct = default) =>
         (await ListAsync($"SELECT {CaeaColumns} FROM caeas WHERE code = $1", [code], ReadCaea, ct)).FirstOrDefault();
 
-    public Task AddAsync(IssuedCaea c, CancellationToken ct = default) =>
+    public Task AddAsync(IssuedCaea caea, CancellationToken ct = default) =>
         ExecuteAsync($"INSERT INTO caeas ({CaeaColumns}) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-            [c.Cuit, c.Period, c.Fortnight, c.Code, c.ValidFrom, c.ValidTo, c.ReportDeadline, c.ProcessedAt.ToUniversalTime()], ct);
+            [caea.Cuit, caea.Period, caea.Fortnight, caea.Code, caea.ValidFrom, caea.ValidTo, caea.ReportDeadline, caea.ProcessedAt.ToUniversalTime()], ct);
 
     public Task<IReadOnlyList<CaeaWithoutMovement>> WithoutMovementAsync(long cuit, string caea, CancellationToken ct = default) =>
         ListAsync("SELECT cuit, caea, point_of_sale, reported_on FROM caea_without_movement WHERE cuit = $1 AND caea = $2 ORDER BY point_of_sale",

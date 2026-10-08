@@ -91,7 +91,7 @@ src/
   ArcaSim.Infrastructure   almacenamiento en memoria y en PostgreSQL, la autoridad certificante propia
   ArcaSim.Api              la capa SOAP, el gateway REST de SETIWS, la API y el panel /arcasim/
   Arca.Client              el cliente que usan las aplicaciones
-tests/ArcaSim.Tests        499 tests: escenarios, bytes contra respuestas reales, cliente del WSDL, cada servicio contra su WSDL, los dos almacenamientos
+tests/ArcaSim.Tests        789 tests: escenarios, bytes contra respuestas reales, cliente del WSDL, cada servicio contra su WSDL, los dos almacenamientos
 ```
 
 - **Capa SOAP propia en lugar de CoreWCF.** Los servicios de ARCA corren en servidores distintos (ASMX de .NET, Apache Axis y Axis2, CXF, JAX-WS, Spring-WS) con sus rarezas, y un framework genérico las normaliza. WSFEv1 lee y escribe con `XmlSerializer`, el mismo serializador que usa ASMX: acepta los elementos en cualquier orden, ignora los desconocidos y los que vienen sin namespace, y responde con el mismo formato.
@@ -115,6 +115,7 @@ dotnet run --project src/ArcaSim.Api --urls "http://localhost:5199;https://local
 # Con PostgreSQL, para un equipo o una CI (panel en http://localhost:7080/arcasim/)
 docker compose up -d
 
+# Los tests; los 13 de PostgreSQL levantan un contenedor y se saltean si Docker no está corriendo
 dotnet test
 ```
 

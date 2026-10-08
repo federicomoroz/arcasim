@@ -65,6 +65,9 @@ public class WsagrRulesTests
     [Theory]
     [InlineData("<w:Periodo>202610</w:Periodo><w:Cuit>20222222223</w:Cuit>", "113")]
     [InlineData("<w:Periodo>12/2026</w:Periodo><w:Cuit>20222222223</w:Cuit>", "107")]
+    [InlineData("<w:Periodo>01/0000</w:Periodo><w:Cuit>20222222223</w:Cuit>", "107")]
+    // Arabic-Indic digits (U+0662, U+0660, U+0662, U+0666): \d takes them, and int.Parse does not.
+    [InlineData("<w:Periodo>10/\u0662\u0660\u0662\u0666</w:Periodo><w:Cuit>20222222223</w:Cuit>", "113")]
     [InlineData("<w:Periodo>10/2026</w:Periodo>", "111")]
     [InlineData("<w:Periodo>10/2026</w:Periodo><w:Cuit>20222222223</w:Cuit><w:Cuit>20222222223</w:Cuit>", "104")]
     [InlineData("<w:Periodo>10/2026</w:Periodo><w:Cuit>20222222223</w:Cuit><w:Cuit>30000000007</w:Cuit><w:Cuit>27333333339</w:Cuit>", "102")]

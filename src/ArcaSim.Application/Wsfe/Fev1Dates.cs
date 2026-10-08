@@ -13,8 +13,6 @@ public static class Fev1Dates
     public static string FormatProcessed(DateTimeOffset moment) =>
         moment.ToArgentina().ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
 
-    public static DateOnly Today(this IClock clock) => DateOnly.FromDateTime(clock.Now.ToArgentina().DateTime);
-
     /// <summary>The weekday before the given day. ARCA also skips holidays; ArcaSim does not know them.</summary>
     public static DateOnly PreviousBusinessDay(DateOnly day)
     {

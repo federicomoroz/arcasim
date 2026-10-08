@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Xml.Linq;
 using static ArcaSim.Tests.Services.FacturacionE.FacturacionESoap;
 
@@ -96,6 +97,20 @@ public class Wsfexv1RulesTests
     }
 
     [Fact]
+    public async Task The_relative_margin_of_the_total_is_measured_on_the_total_informed()
+    {
+        var (sim, _, soap) = await StartAsync();
+        await using var _s = sim;
+
+        // The items add up to 1000. 0.10 under it is exactly 0.01 % of the sum but a little over 0.01 % of the 999.90 informed.
+        var under = await soap.CallAsync(Fex, "FEXAuthorize", Export(id: 1, number: 1, total: "999.90"));
+        var over = await soap.CallAsync(Fex, "FEXAuthorize", Export(id: 2, number: 1, total: "1000.10"));
+
+        Assert.Equal("1610", under.Value("FEXErr/ErrCode"));
+        Assert.Equal("A", over.Value("FEXResultAuth/Resultado"));
+    }
+
+    [Fact]
     public async Task A_point_of_sale_not_registered_for_web_services_is_refused_with_1510_and_1607()
     {
         var (sim, _, soap) = await StartAsync();
@@ -106,6 +121,39 @@ public class Wsfexv1RulesTests
 
         Assert.Equal("1510", refused.Value("FEXErr/ErrCode"));
         Assert.Equal("1607", last.Value("FEXErr/ErrCode"));
+    }
+
+    [Fact]
+    public async Task A_point_of_sale_still_to_be_deactivated_can_issue_and_one_already_deactivated_cannot()
+    {
+        var (sim, _, soap) = await StartAsync();
+        await using var _s = sim;
+        await PutPointOfSaleAsync(sim, 1, new DateOnly(2026, 12, 31));
+        await PutPointOfSaleAsync(sim, 2, new DateOnly(2026, 9, 30));
+
+        var issued = await soap.CallAsync(Fex, "FEXAuthorize", Export(id: 1, number: 1));
+        var refused = await soap.CallAsync(Fex, "FEXAuthorize", Export(id: 2, number: 1, pointOfSale: 2));
+        var last = await soap.CallAsync(Fex, "FEXGetLast_CMP", LastCmp(2, 19));
+
+        Assert.Equal("A", issued.Value("FEXResultAuth/Resultado"));
+        Assert.Equal("1510", refused.Value("FEXErr/ErrCode"));
+        Assert.Equal("1607", last.Value("FEXErr/ErrCode"));
+    }
+
+    [Fact]
+    public async Task With_open_access_the_first_export_invoice_creates_a_Responsable_Inscripto_with_its_point_of_sale()
+    {
+        await using var sim = ArcaSimHarness.Start(open: true);
+        sim.Clock.Freeze(new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3)));
+        var soap = await ForAsync(sim);
+
+        var result = await soap.CallAsync(Fex, "FEXAuthorize", Export(id: 1, number: 1, pointOfSale: 7));
+        var taxpayer = await sim.Http.GetFromJsonAsync<System.Text.Json.JsonElement>($"/arcasim/api/taxpayers/{Issuer}");
+
+        Assert.Equal("A", result.Value("FEXResultAuth/Resultado"));
+        Assert.Equal("ResponsableInscripto", taxpayer.GetProperty("vatCondition").GetString());
+        Assert.Contains(taxpayer.GetProperty("pointsOfSale").EnumerateArray(),
+            p => p.GetProperty("number").GetInt32() == 7 && p.GetProperty("kind").GetString() == "WebServiceCae");
     }
 
     [Fact]
@@ -129,6 +177,40 @@ public class Wsfexv1RulesTests
 
         Assert.Equal("1020", missing.Value("FEXErr/ErrCode"));
         Assert.Null(missing.Child("FEXResultGet"));
+    }
+
+    [Fact]
+    public async Task Every_answer_carries_the_event_the_catalog_records_for_the_service()
+    {
+        var (sim, _, soap) = await StartAsync();
+        await using var _s = sim;
+
+        var authorized = await soap.CallAsync(Fex, "FEXAuthorize", Export(id: 1001, number: 1));
+        var refused = await soap.CallAsync(Fex, "FEXAuthorize", Export(id: 1002, number: 7));
+        var table = await soap.CallAsync(Fex, "FEXGetPARAM_MON", "");
+
+        foreach (var answer in new[] { authorized, refused, table })
+        {
+            Assert.Equal("103", answer.Value("FEXEvents/EventCode"));
+            Assert.StartsWith("IMPORTANTE: Por motivos de mantenimiento", answer.Value("FEXEvents/EventMsg"));
+        }
+        Assert.Equal("1535", refused.Value("FEXErr/ErrCode"));
+    }
+
+    [Fact]
+    public async Task A_permit_is_checked_for_its_format_and_for_a_known_country()
+    {
+        var (sim, _, soap) = await StartAsync();
+        await using var _s = sim;
+        static string Check(string id, int country) => $"<s:ID_Permiso>{id}</s:ID_Permiso><s:Dst_merc>{country}</s:Dst_merc>";
+
+        var right = await soap.CallAsync(Fex, "FEXCheck_Permiso", Check("99999AAXX999999A", 203));
+        var lowercase = await soap.CallAsync(Fex, "FEXCheck_Permiso", Check("99999aaxx999999a", 203));
+        var unknownCountry = await soap.CallAsync(Fex, "FEXCheck_Permiso", Check("99999AAXX999999A", 9999));
+
+        Assert.Equal("OK", right.Value("FEXResultGet/Status"));
+        Assert.Equal("NO", lowercase.Value("FEXResultGet/Status"));
+        Assert.Equal("1810", unknownCountry.Value("FEXErr/ErrCode"));
     }
 
     [Fact]

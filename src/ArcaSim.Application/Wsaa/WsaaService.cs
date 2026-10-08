@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using ArcaSim.Application.Events;
+using ArcaSim.Application.Soap;
 using ArcaSim.Domain;
 
 namespace ArcaSim.Application.Wsaa;
@@ -25,10 +26,13 @@ public sealed partial class WsaaService(
     ITicketLog tickets,
     ITokenSigner signer,
     EventManager events,
-    TimeProvider time)
+    TimeProvider time,
+    ServiceDirectory directory)
 {
     public static readonly TimeSpan TicketLifetime = TimeSpan.FromHours(12);
     private static readonly TimeSpan Tolerance = TimeSpan.FromHours(24);
+
+    private readonly KeyedLocks<(string ClientDn, string Service)> _issuing = new();
 
     public async Task<LoginResult> LoginAsync(string? in0, CancellationToken ct = default)
     {
@@ -39,7 +43,7 @@ public sealed partial class WsaaService(
 
     private async Task<LoginResult> CheckAndIssueAsync(string? in0, CancellationToken ct)
     {
-        if (settings.ChaosFor("wsaa").Down) return LoginResult.Fail(WsaaFault.WsaaUnavailable);
+        if (settings.ChaosOf("wsaa").Down) return LoginResult.Fail(WsaaFault.WsaaUnavailable);
 
         // 1-2. Base64, then CMS.
         byte[] der;
@@ -106,7 +110,7 @@ public sealed partial class WsaaService(
         if (tra.ExpirationTime > now + Tolerance) return LoginResult.Fail(WsaaFault.BadExpirationTime);
 
         // 8. The service, the authorization and the anti-repeat window.
-        var service = WebService.Find(tra.Service);
+        var service = directory.Find(tra.Service);
         if (service is null) return LoginResult.Fail(WsaaFault.ServiceNotFound);
 
         var alias = DistinguishedNames.CommonNameOf(certificate.SubjectName) ?? "";
@@ -118,18 +122,23 @@ public sealed partial class WsaaService(
             authorizations = [new ServiceAuthorization(clientCuit!.Value, alias, clientCuit.Value, service.Id)];
         if (authorizations.Count == 0) return LoginResult.Fail(WsaaFault.NotAuthorized);
 
-        if (settings.ReplayWindowEnabled)
+        DateTimeOffset generation, expiration;
+        // The window is checked and the ticket recorded under one lock: two logins at once cannot both pass it.
+        using (await _issuing.AcquireAsync((clientDn, service.Id), ct))
         {
-            var latest = await tickets.LatestAsync(clientDn, service.Id, ct);
-            if (latest is not null && latest.ExpirationTime > now && latest.GenerationTime > now - settings.Profile.ReplayWindow)
-                return LoginResult.Fail(WsaaFault.AlreadyAuthenticated);
+            if (settings.ReplayWindowEnabled)
+            {
+                var latest = await tickets.LatestAsync(clientDn, service.Id, ct);
+                if (latest is not null && latest.ExpirationTime > now && latest.GenerationTime > now - settings.Profile.ReplayWindow)
+                    return LoginResult.Fail(WsaaFault.AlreadyAuthenticated);
+            }
+
+            if (settings.ChaosOf(service.Id).Down) return LoginResult.Fail(WsaaFault.ServiceUnavailable);
+
+            generation = TruncateToMilliseconds(now);
+            expiration = generation + TicketLifetime;
+            await tickets.AddAsync(new IssuedTicket(clientDn, service.Id, generation, expiration), ct);
         }
-
-        if (settings.ChaosFor(service.Id).Down) return LoginResult.Fail(WsaaFault.ServiceUnavailable);
-
-        var generation = TruncateToMilliseconds(now);
-        var expiration = generation + TicketLifetime;
-        await tickets.AddAsync(new IssuedTicket(clientDn, service.Id, generation, expiration), ct);
 
         var token = BuildToken(service, clientDn, authorizations, generation, expiration);
         events.Publish(new TicketIssued(time.GetUtcNow(), clientDn, service.Id));
@@ -157,7 +166,7 @@ public sealed partial class WsaaService(
         XDocument document;
         try
         {
-            document = XDocument.Parse(Encoding.UTF8.GetString(content).TrimStart('﻿'));
+            document = SafeXml.Parse(Encoding.UTF8.GetString(content).TrimStart('﻿'));
         }
         catch (XmlException)
         {

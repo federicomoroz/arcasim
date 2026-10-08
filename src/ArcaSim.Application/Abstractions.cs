@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography.X509Certificates;
 using ArcaSim.Domain;
 
@@ -15,13 +16,24 @@ public static class ArgentinaTime
     public static readonly TimeSpan Offset = TimeSpan.FromHours(-3);
 
     public static DateTimeOffset ToArgentina(this DateTimeOffset value) => value.ToOffset(Offset);
+
+    /// <summary>The day it is in Argentina at that moment.</summary>
+    public static DateOnly ArgentinaDate(this DateTimeOffset value) => DateOnly.FromDateTime(value.ToArgentina().DateTime);
+
+    /// <summary>Today in Argentina, by ArcaSim's clock.</summary>
+    public static DateOnly Today(this IClock clock) => clock.Now.ArgentinaDate();
+
+    /// <summary>The first moment of that day in Argentina.</summary>
+    public static DateTimeOffset StartOf(DateOnly day) => new(day.ToDateTime(TimeOnly.MinValue), Offset);
+
+    /// <summary>A day with Argentina's offset, the way the Java services write an xsd:date: 2026-10-07-03:00.</summary>
+    public static string DateWithOffset(DateOnly day) => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + "-03:00";
 }
 
 /// <summary>Aliases and service authorizations: ArcaSim's stand-in for WSASS.</summary>
 public interface IAccessRepository
 {
     Task<IReadOnlyList<ServiceAuthorization>> AuthorizationsForAsync(long clientCuit, string alias, string service, CancellationToken ct = default);
-    Task<IReadOnlyList<ClientAlias>> ListAliasesAsync(CancellationToken ct = default);
     Task<IReadOnlyList<ServiceAuthorization>> ListAuthorizationsAsync(CancellationToken ct = default);
     Task SaveAliasAsync(ClientAlias alias, CancellationToken ct = default);
     Task SaveAuthorizationAsync(ServiceAuthorization authorization, CancellationToken ct = default);

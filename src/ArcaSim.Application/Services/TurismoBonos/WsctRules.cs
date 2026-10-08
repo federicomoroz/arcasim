@@ -63,9 +63,10 @@ public sealed class WsctRules(
     SequenceLocks locks,
     IClock clock,
     SimulationSettings settings,
-    EventManager events) : IServiceBehavior
+    EventManager events,
+    TimeProvider time) : IServiceBehavior
 {
-    private readonly VoucherBook _book = new(documents, "wsct");
+    private readonly VoucherBook _book = new(documents, "wsct", locks);
     private readonly ConcurrentDictionary<string, XName> _returns = new();
 
     public string Service => "wsct";
@@ -79,6 +80,9 @@ public sealed class WsctRules(
         [("1", "IVA Responsable Inscripto"), ("5", "Consumidor Final"), ("9", "Cliente del Exterior")];
 
     private const string Registered = "1";
+
+    /// <summary>WSCT's points of sale go from 1 to 9999: NumeroPuntoVentaSimpleType is an xsd:short with that maxInclusive (wsct-homologacion.wsdl), not WSFEv1's 99998.</summary>
+    private const int MaxPointOfSale = 9999;
 
     private static readonly (int Code, string Description)[] Relations =
     [
@@ -148,7 +152,7 @@ public sealed class WsctRules(
         "consultarPaises" => Strings(call, "arrayPaises", parameters.Countries.Select(c => (c.Id.ToString(CultureInfo.InvariantCulture), c.Desc))),
         "consultarFormasPago" => Short(call, "arrayFormasPago", PaymentForms),
         "consultarTiposCuenta" => Short(call, "arrayTiposCuenta", AccountTypes),
-        "consultarTiposTarjeta" => call.Request.Whole("formaPago") is 1 or 2
+        "consultarTiposTarjeta" => call.Request.ChildLong("formaPago") is 1 or 2
             ? Short(call, "arrayTiposTarjeta", CardTypes)
             : Return(call, Errors([WsctCodes.Note(1200)])),
         "consultarNovedades" => Return(call),
@@ -162,13 +166,13 @@ public sealed class WsctRules(
         call.Ok(new XElement(call.Operation.Output, new XElement(_returns.GetOrAdd(call.Name, _ => call.Sample().Elements().First().Name), content)));
 
     private ContractAnswer Short(ServiceCall call, string array, IEnumerable<(int Code, string Description)> rows) =>
-        Return(call, new XElement(array, rows.Select(r => new XElement("codigoDescripcion", new XElement("codigo", r.Code), new XElement("descripcion", r.Description)))));
+        Return(call, ContractXml.CodeList(array, rows));
 
     private ContractAnswer Strings(ServiceCall call, string array, IEnumerable<(string Code, string Description)> rows) =>
-        Return(call, new XElement(array, rows.Select(r => new XElement("codigoDescripcionString", new XElement("codigo", r.Code), new XElement("descripcion", r.Description)))));
+        Return(call, ContractXml.CodeList(array, rows, "codigoDescripcionString"));
 
     private static XElement Errors(IEnumerable<BookNote> notes, string name = "arrayErrores") =>
-        new(name, notes.Select(n => new XElement("codigoDescripcion", new XElement("codigo", n.Code), new XElement("descripcion", n.Text))));
+        ContractXml.CodeList(name, notes.Select(n => (n.Code, n.Text)));
 
     /// <summary>
     /// What the schema validator reports for a number below its type's
@@ -180,30 +184,32 @@ public sealed class WsctRules(
         var problems = new List<(string Code, string Text)>();
         foreach (var (field, type) in new[] { ("numeroPuntoVenta", "NumeroPuntoVentaSimpleType"), ("numeroComprobante", "NumeroComprobanteSimpleType") })
         {
-            var value = scope.Field(field);
+            var value = scope.ChildText(field);
             if (value is null || !long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number) || number >= 1) continue;
             problems.Add(("cvc-minInclusive-valid", $" El valor '{value}' no cumple con la restricción minInclusive '1' para el tipo '{type}'."));
             problems.Add(("cvc-type.3.1.3", $" El valor '{value}' del elemento '{field}' no es válido."));
         }
-        return problems.Count == 0
-            ? null
-            : new XElement("arrayErroresFormato", problems.Select(p =>
-                new XElement("codigoDescripcionString", new XElement("codigo", p.Code), new XElement("descripcion", p.Text))));
+        return problems.Count == 0 ? null : ContractXml.CodeList("arrayErroresFormato", problems, "codigoDescripcionString");
     }
 
     private bool Production => settings.Environment == ArcaEnvironment.Produccion;
 
+    /// <summary>
+    /// Whether the point of sale can issue today: in production, one of the
+    /// issuer's web service points that is not blocked and not yet deactivated
+    /// (104: "vigente, no bloqueado y no dado de baja"; a deactivation date still
+    /// to come does not block it, as in WSFEv1).
+    /// </summary>
     private async Task<bool> PointOfSaleUsableAsync(long cuit, int pointOfSale, CancellationToken ct) =>
-        !Production || (await taxpayers.FindAsync(cuit, ct))?.PointsOfSale.Any(p =>
-            p.Number == pointOfSale && p.Kind == PointOfSaleKind.WebServiceCae && !p.Blocked && p.DeactivatedOn is null) == true;
+        !Production || (await taxpayers.FindAsync(cuit, ct))?.CanIssueFrom(pointOfSale, PointOfSaleKind.WebServiceCae, clock.Today()) == true;
 
     // ---- Queries ------------------------------------------------------------------------
 
     private async Task<ContractAnswer> LastAsync(ServiceCall call, CancellationToken ct)
     {
         if (FormatErrors(call.Request) is { } format) return Return(call, format);
-        var type = (int)(call.Request.Whole("codigoTipoComprobante") ?? 0);
-        var point = (int)(call.Request.Whole("numeroPuntoVenta") ?? 0);
+        var type = call.Request.ChildInt("codigoTipoComprobante") ?? 0;
+        var point = call.Request.ChildInt("numeroPuntoVenta") ?? 0;
         if (VoucherTypes.All(t => t.Code != type)) return Return(call, Errors([WsctCodes.Note(1000)]));
         if (!await PointOfSaleUsableAsync(call.Cuit, point, ct)) return Return(call, Errors([WsctCodes.Note(1001)]));
         if (await _book.LastAsync(call.Cuit, point, type, ct) is not { } last) return Return(call, Errors([WsctCodes.Note(1002)]));
@@ -213,11 +219,11 @@ public sealed class WsctRules(
     private async Task<ContractAnswer> ConsultAsync(ServiceCall call, CancellationToken ct)
     {
         if (FormatErrors(call.Request) is { } format) return Return(call, format);
-        var type = (int)(call.Request.Whole("codigoTipoComprobante") ?? 0);
-        var point = (int)(call.Request.Whole("numeroPuntoVenta") ?? 0);
+        var type = call.Request.ChildInt("codigoTipoComprobante") ?? 0;
+        var point = call.Request.ChildInt("numeroPuntoVenta") ?? 0;
         if (VoucherTypes.All(t => t.Code != type)) return Return(call, Errors([WsctCodes.Note(2000)]));
         if (!await PointOfSaleUsableAsync(call.Cuit, point, ct)) return Return(call, Errors([WsctCodes.Note(2001)]));
-        var found = await _book.FindAsync(call.Cuit, point, type, call.Request.Whole("numeroComprobante") ?? 0, ct);
+        var found = await _book.FindAsync(call.Cuit, point, type, call.Request.ChildLong("numeroComprobante") ?? 0, ct);
         if (found is null) return Return(call, Errors([WsctCodes.Note(2002)]));
         return Return(call, Comprobante(found), found.Notes.Count == 0 ? null : Errors(found.Notes, "arrayObservaciones"));
     }
@@ -246,7 +252,7 @@ public sealed class WsctRules(
     {
         if (!Production) return Return(call);
         var points = (await taxpayers.FindAsync(call.Cuit, ct))?.PointsOfSale
-            .Where(p => p.Kind == PointOfSaleKind.WebServiceCae && p.Number is >= 1 and <= 9999).ToList() ?? [];
+            .Where(p => p.Kind == PointOfSaleKind.WebServiceCae && p.Number is >= 1 and <= MaxPointOfSale).ToList() ?? [];
         if (points.Count == 0) return Return(call, Errors([WsctCodes.Note(1106)]));
         return Return(call, new XElement("arrayPuntosVenta", points.Select(p => new XElement("puntoVenta",
             new XElement("numeroPuntoVenta", p.Number),
@@ -256,10 +262,10 @@ public sealed class WsctRules(
 
     private async Task<ContractAnswer> QuoteAsync(ServiceCall call, CancellationToken ct)
     {
-        var currency = call.Request.Field("codigoMoneda");
+        var currency = call.Request.ChildText("codigoMoneda");
         if (parameters.Currencies.All(c => c.Id != currency)) return Return(call, Errors([WsctCodes.Note(210)]));
-        var day = Figures.ParseIsoDay(call.Request.Field("fechaCotizacion")) ?? clock.Today();
-        var quote = currency == "PES" ? (1m, day) : await rates.RateAsync(currency!, day, ct);
+        var day = Figures.ParseIsoDay(call.Request.ChildText("fechaCotizacion")) ?? clock.Today();
+        var quote = await rates.QuoteAsync(currency!, day, ct);
         return quote is { } found ? Return(call, new XElement("cotizacionMoneda", Figures.Number(found.Rate))) : Return(call);
     }
 
@@ -272,11 +278,11 @@ public sealed class WsctRules(
         var request = call.Request.Child("comprobanteRequest") ?? new XElement("comprobanteRequest");
         if (FormatErrors(request) is { } format) return Return(call, format, new XElement("resultado", "R"));
 
-        var type = (int)(request.Whole("codigoTipoComprobante") ?? 0);
-        var point = (int)(request.Whole("numeroPuntoVenta") ?? 0);
-        var number = request.Whole("numeroComprobante") ?? 0;
+        var type = request.ChildInt("codigoTipoComprobante") ?? 0;
+        var point = request.ChildInt("numeroPuntoVenta") ?? 0;
+        var number = request.ChildLong("numeroComprobante") ?? 0;
         var today = clock.Today();
-        var date = Figures.ParseIsoDay(request.Field("fechaEmision")) ?? today;
+        var date = Figures.ParseIsoDay(request.ChildText("fechaEmision")) ?? today;
         var errors = new List<BookNote>();
         var observations = new List<BookNote>();
         void Fail(int code) => errors.Add(WsctCodes.Note(code));
@@ -287,14 +293,14 @@ public sealed class WsctRules(
             if (issuer is not { Active: true }) Fail(100);
             else if (issuer.VatCondition != VatCondition.ResponsableInscripto) Fail(103);
         }
-        var authorization = request.Field("codigoTipoAutorizacion");
+        var authorization = request.ChildText("codigoTipoAutorizacion");
         if (string.IsNullOrEmpty(authorization)) Fail(200);
         else if (authorization != "E") Fail(201);
         if (request.Child("codigoAutorizacion") is not null) Fail(202);
         if (request.Child("fechaVencimiento") is not null) Fail(203);
         if (VoucherTypes.All(t => t.Code != type)) Fail(300);
         if (!await PointOfSaleUsableAsync(call.Cuit, point, ct)) Fail(301);
-        if (request.Child("fechaEmision") is not null && (Figures.ParseIsoDay(request.Field("fechaEmision")) is not { } sent
+        if (request.Child("fechaEmision") is not null && (Figures.ParseIsoDay(request.ChildText("fechaEmision")) is not { } sent
                                                            || Math.Abs(sent.DayNumber - today.DayNumber) > 10)) Fail(303);
 
         var rate = await CheckCurrencyAsync(request, type, date, today, Fail, ct);
@@ -304,14 +310,14 @@ public sealed class WsctRules(
         CheckPayments(request, Fail);
         await CheckAssociatedAsync(request, call.Cuit, type, date, observations, Fail, ct);
 
-        using (await locks.AcquireAsync(call.Cuit, point, type, ct))
+        using (await locks.AcquireAsync(Service, call.Cuit, point, type, ct))
         {
             var last = await _book.LastAsync(call.Cuit, point, type, ct);
             if (number != (last?.Number ?? 0) + 1) Fail(302);
             if (errors.Count > 0)
             {
                 var unique = errors.DistinctBy(e => e.Code).ToList();
-                events.Publish(new VoucherRejected(DateTimeOffset.UtcNow, call.Cuit, point, type, number, unique.Select(e => e.Code).ToList()));
+                events.Publish(new VoucherRejected(time.GetUtcNow(), call.Cuit, point, type, number, unique.Select(e => e.Code).ToList()));
                 return Return(call, Errors(unique), new XElement("resultado", "R"));
             }
 
@@ -321,12 +327,12 @@ public sealed class WsctRules(
             var cae = codes.NextCae();
             var due = date.AddDays(settings.CaeLifetimeDays);
             var total = request.Amount("importeTotal") ?? 0;
-            var voucher = new BookedVoucher(Service, call.Cuit, point, type, number, 0, date, request.Field("fechaEmision"), cae, due,
-                observations.Count > 0 ? "O" : "A", observations, detail.ToString(SaveOptions.DisableFormatting), clock.Now);
-            long.TryParse(request.Field("numeroDocumento"), NumberStyles.None, CultureInfo.InvariantCulture, out var receiver);
+            var voucher = new BookedVoucher(Service, call.Cuit, point, type, number, 0, date, request.ChildText("fechaEmision"), cae, due,
+                observations.Count > 0 ? "O" : "A", observations, detail.ToString(SaveOptions.DisableFormatting));
+            long.TryParse(request.ChildText("numeroDocumento"), NumberStyles.None, CultureInfo.InvariantCulture, out var receiver);
             await _book.AddAsync(voucher, new AuthorizedVoucher(Service, call.Cuit, point, type, number, date, total,
-                (int)(request.Whole("codigoTipoDocumento") ?? 0), receiver, "CAE", cae, due), ct);
-            events.Publish(new VoucherAuthorized(DateTimeOffset.UtcNow, call.Cuit, point, type, number, number, "CAE", cae));
+                request.ChildInt("codigoTipoDocumento") ?? 0, receiver, "CAE", cae, due), ct);
+            events.Publish(new VoucherAuthorized(time.GetUtcNow(), call.Cuit, point, type, number, number, "CAE", cae));
 
             return Return(call,
                 new XElement("comprobanteResponse",
@@ -345,9 +351,9 @@ public sealed class WsctRules(
     /// <summary>304-306, 317-320 and 322; the rate the voucher keeps (ARCA's when it may be left out).</summary>
     private async Task<decimal> CheckCurrencyAsync(XElement request, int type, DateOnly date, DateOnly today, Action<int> fail, CancellationToken ct)
     {
-        var currency = request.Field("codigoMoneda");
+        var currency = request.ChildText("codigoMoneda");
         var rate = request.Amount("cotizacionMoneda");
-        var same = request.Field("cancelaEnMismaMonedaExtranjera") == "S";
+        var same = request.ChildText("cancelaEnMismaMonedaExtranjera") == "S";
         if (parameters.Currencies.All(c => c.Id != currency))
         {
             fail(304);
@@ -371,19 +377,19 @@ public sealed class WsctRules(
             return official?.Rate ?? 0;
         }
         if (same && official is { } bna && rate != bna.Rate) fail(320);
-        if (await rates.RateAsync(currency!, today, ct) is { } latest && (rate < latest.Rate * 0.02m || rate > latest.Rate * 5)) fail(306);
+        if (await rates.RateAsync(currency!, today, ct) is { } latest && !Amounts.WithinRateBand(rate.Value, latest.Rate, ceiling: 5m)) fail(306);
         return rate.Value;
     }
 
     /// <summary>307-316 and 350-356: who the receiver is and how it relates to the issuer.</summary>
     private async Task CheckReceiverAsync(XElement request, long issuer, Action<int> fail, CancellationToken ct)
     {
-        var docType = (int)(request.Whole("codigoTipoDocumento") ?? 0);
-        var document = request.Field("numeroDocumento") ?? "";
-        var condition = request.Field("idImpositivo");
-        var country = request.Whole("codigoPais");
-        var relation = (int)(request.Whole("codigoRelacionEmisorReceptor") ?? 0);
-        var address = request.Field("domicilioReceptor");
+        var docType = request.ChildInt("codigoTipoDocumento") ?? 0;
+        var document = request.ChildText("numeroDocumento") ?? "";
+        var condition = request.ChildText("idImpositivo");
+        var country = request.ChildLong("codigoPais");
+        var relation = request.ChildInt("codigoRelacionEmisorReceptor") ?? 0;
+        var address = request.ChildText("domicilioReceptor");
         var foreigner = new[] { 91, 94, 96 }.Contains(docType);
 
         if (country is { } code && parameters.Countries.All(c => c.Id != code)) fail(307);
@@ -420,10 +426,10 @@ public sealed class WsctRules(
 
     private static List<Line> Lines(XElement request) =>
         request.Child("arrayItems")?.Children("item").Select(i => new Line(
-            (int)(i.Whole("tipo") ?? -1),
-            (int?)i.Whole("codigoTurismo"),
-            i.Field("descripcion"),
-            (int)(i.Whole("codigoAlicuotaIVA") ?? 0),
+            i.ChildInt("tipo") ?? -1,
+            i.ChildInt("codigoTurismo"),
+            i.ChildText("descripcion"),
+            i.ChildInt("codigoAlicuotaIVA") ?? 0,
             i.Amount("importeIVA") ?? 0,
             i.Amount("importeItem") ?? 0)).ToList() ?? [];
 
@@ -440,13 +446,13 @@ public sealed class WsctRules(
             if (line.Type == 99 && line.Amount >= 0) fail(408);
             if (line.Type == 0 && line.VatAmount < 0) fail(409);
             if (line.Type == 99 && line.VatAmount >= 0) fail(411);
-            if (line.Vat == Vat21 && !Figures.Close(Math.Round(line.Amount * 21 / 121, 2, MidpointRounding.ToEven), line.VatAmount, 1)) fail(413);
+            if (line.Vat == Vat21 && !Amounts.WithinMargin(Math.Round(line.Amount * 21 / 121, 2, MidpointRounding.ToEven), line.VatAmount, 1)) fail(413);
             if (line.VatAmount > 0 && line.Amount < 0 || line.VatAmount < 0 && line.Amount > 0) fail(414);
         }
         if (type == 195 && lines.Count > 0 && lines.All(l => l.Tourism == 5)) fail(415);
 
         var subtotals = request.Child("arraySubtotalesIVA")?.Children("subtotalIVA")
-            .Select(s => (Code: (int)(s.Whole("codigo") ?? 0), Amount: s.Amount("importe") ?? 0)).ToList();
+            .Select(s => (Code: s.ChildInt("codigo") ?? 0, Amount: s.Amount("importe") ?? 0)).ToList();
         if (subtotals is null) fail(500);
         else
         {
@@ -456,16 +462,16 @@ public sealed class WsctRules(
             foreach (var rate in lines.Select(l => l.Vat).Concat(subtotals.Select(s => s.Code)).Distinct())
             {
                 var items = lines.Where(l => l.Vat == rate).ToList();
-                if (!Figures.Close(items.Sum(l => l.VatAmount), subtotals.Where(s => s.Code == rate).Sum(s => s.Amount), items.Count)) fail(504);
+                if (!Amounts.WithinMargin(items.Sum(l => l.VatAmount), subtotals.Where(s => s.Code == rate).Sum(s => s.Amount), items.Count)) fail(504);
             }
         }
 
         var taxes = request.Child("arrayOtrosTributos")?.Children("otroTributo").ToList() ?? [];
         foreach (var tax in taxes)
         {
-            var code = (int)(tax.Whole("codigo") ?? 0);
+            var code = tax.ChildInt("codigo") ?? 0;
             if (parameters.Taxes.All(t => t.Id != code.ToString(CultureInfo.InvariantCulture))) fail(600);
-            var description = tax.Field("descripcion");
+            var description = tax.ChildText("descripcion");
             if (code == 99 && string.IsNullOrWhiteSpace(description) || description?.Length > 50) fail(602);
             if (tax.Amount("baseImponible") < 0) fail(603);
             if ((tax.Amount("importe") ?? -1) < 0) fail(604);
@@ -478,7 +484,7 @@ public sealed class WsctRules(
         var refund = request.Amount("importeReintegro");
         var total = request.Amount("importeTotal") ?? 0;
         if (taxed is null or < 0) fail(360);
-        else if (!Figures.Close(lines.Sum(l => l.Amount - l.VatAmount), taxed.Value, lines.Count)) fail(361);
+        else if (!Amounts.WithinMargin(lines.Sum(l => l.Amount - l.VatAmount), taxed.Value, lines.Count)) fail(361);
         if (untaxed != 0) fail(362);
         if (exempt != 0) fail(363);
 
@@ -486,25 +492,25 @@ public sealed class WsctRules(
         if (hotel.Count > 0)
         {
             if (refund is null or > 0) fail(364);
-            else if (!Figures.Close(hotel.Sum(l => l.VatAmount), -refund.Value, hotel.Count)) fail(366);
+            else if (!Amounts.WithinMargin(hotel.Sum(l => l.VatAmount), -refund.Value, hotel.Count)) fail(366);
         }
         if (type is 196 or 197 && lines.Count > 0 && lines.All(l => l.Tourism == 5) && refund is { } excess && excess != 0) fail(365);
 
         if (others < 0) fail(367);
-        if ((taxes.Count > 0 || others is not null) && !Figures.Close(taxes.Sum(t => t.Amount("importe") ?? 0), others ?? 0, taxes.Count)) fail(368);
+        if ((taxes.Count > 0 || others is not null) && !Amounts.WithinMargin(taxes.Sum(t => t.Amount("importe") ?? 0), others ?? 0, taxes.Count)) fail(368);
 
         var sum = (taxed ?? 0) + untaxed + exempt + (refund ?? 0) + (others ?? 0) + (subtotals?.Sum(s => s.Amount) ?? 0);
-        if (!Figures.Close(sum, total, lines.Count)) fail(369);
+        if (!Amounts.WithinMargin(sum, total, lines.Count)) fail(369);
     }
 
     /// <summary>700-732: each payment form with the fields its kind asks for.</summary>
     private static void CheckPayments(XElement request, Action<int> fail)
     {
         var forms = request.Child("arrayFormasPago")?.Children("formaPago").ToList() ?? [];
-        var relation = request.Whole("codigoRelacionEmisorReceptor");
+        var relation = request.ChildLong("codigoRelacionEmisorReceptor");
         foreach (var form in forms)
         {
-            var code = form.Whole("codigo");
+            var code = form.ChildLong("codigo");
             bool Has(string field) => form.Child(field) is not null;
             switch (code)
             {
@@ -512,15 +518,15 @@ public sealed class WsctRules(
                     if (Has("swiftCode")) fail(701);
                     if (Has("tipoCuenta")) fail(702);
                     if (Has("numeroCuenta")) fail(703);
-                    if (CardTypes.All(c => c.Code != form.Whole("tipoTarjeta"))) fail(704);
+                    if (CardTypes.All(c => c.Code != form.ChildLong("tipoTarjeta"))) fail(704);
                     if (!Has("numeroTarjeta")) fail(705);
                     break;
                 case 3:
                     if (Has("tipoTarjeta")) fail(720);
                     if (Has("numeroTarjeta")) fail(721);
-                    if (AccountTypes.All(a => a.Code != form.Whole("tipoCuenta"))) fail(722);
+                    if (AccountTypes.All(a => a.Code != form.ChildLong("tipoCuenta"))) fail(722);
                     if (!Has("numeroCuenta")) fail(723);
-                    if (form.Field("swiftCode") is { Length: >= 6 } swift && swift[4..6].Equals("AR", StringComparison.OrdinalIgnoreCase) != relation is 2 or 6)
+                    if (form.ChildText("swiftCode") is { Length: >= 6 } swift && swift[4..6].Equals("AR", StringComparison.OrdinalIgnoreCase) != relation is 2 or 6)
                         fail(724);
                     break;
                 case 4:
@@ -532,7 +538,7 @@ public sealed class WsctRules(
                     break;
             }
         }
-        if (forms.Count(f => f.Whole("codigo") == 4) > 1) fail(731);
+        if (forms.Count(f => f.ChildLong("codigo") == 4) > 1) fail(731);
     }
 
     /// <summary>800-807: which vouchers carry associated ones, and that those exist for the same issuer and receiver.</summary>
@@ -540,24 +546,24 @@ public sealed class WsctRules(
     {
         var associated = request.Child("arrayComprobantesAsociados")?.Children("comprobanteAsociado").ToList() ?? [];
         if (type == 195 && associated.Count > 0 || type is 196 or 197 && associated.Count == 0) fail(800);
-        var seen = new HashSet<(long, long, long)>();
+        var seen = new HashSet<(int, int, long)>();
         decimal adjusted = 0;
         foreach (var asoc in associated)
         {
-            var asocType = asoc.Whole("codigoTipoComprobante") ?? 0;
-            var asocPoint = asoc.Whole("numeroPuntoVenta") ?? 0;
-            var asocNumber = asoc.Whole("numeroComprobante") ?? 0;
+            var asocType = asoc.ChildInt("codigoTipoComprobante") ?? 0;
+            var asocPoint = asoc.ChildInt("numeroPuntoVenta") ?? 0;
+            var asocNumber = asoc.ChildLong("numeroComprobante") ?? 0;
             if (VoucherTypes.All(t => t.Code != asocType)) fail(801);
             if (!seen.Add((asocType, asocPoint, asocNumber))) fail(804);
-            if (await _book.FindAsync(cuit, (int)asocPoint, (int)asocType, asocNumber, ct) is not { } found)
+            if (await _book.FindAsync(cuit, asocPoint, asocType, asocNumber, ct) is not { } found)
             {
                 fail(803);
                 continue;
             }
             if (found.Date > date) fail(805);
             var original = XElement.Parse(found.Detail);
-            if (original.Field("codigoTipoDocumento") != request.Field("codigoTipoDocumento")
-                || original.Field("numeroDocumento") != request.Field("numeroDocumento")) fail(806);
+            if (original.ChildText("codigoTipoDocumento") != request.ChildText("codigoTipoDocumento")
+                || original.ChildText("numeroDocumento") != request.ChildText("numeroDocumento")) fail(806);
             adjusted += original.Amount("importeTotal") ?? 0;
         }
         if (type == 197 && associated.Count > 0 && (request.Amount("importeTotal") ?? 0) > adjusted) observations.Add(WsctCodes.Note(807));

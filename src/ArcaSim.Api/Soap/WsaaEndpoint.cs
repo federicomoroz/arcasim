@@ -12,7 +12,7 @@ namespace ArcaSim.Api.Soap;
 /// loginCmsReturn, and every fault with HTTP 500, ns1 bound to Axis'
 /// namespace and characters beyond ASCII written as references.
 /// </summary>
-public sealed class WsaaEndpoint(WsaaService service, SimulationSettings settings)
+public sealed class WsaaEndpoint(WsaaService service, SimulationSettings settings, ILogger<WsaaEndpoint> logger)
 {
     private const string Path = "/ws/services/LoginCms";
     private const string WsaaNamespace = "http://wsaa.view.sua.dvadac.desein.afip.gov";
@@ -37,7 +37,7 @@ public sealed class WsaaEndpoint(WsaaService service, SimulationSettings setting
             return;
         }
 
-        var chaos = settings.ChaosFor("wsaa");
+        var chaos = settings.ChaosOf("wsaa");
         if (chaos.Delay > TimeSpan.Zero) await Task.Delay(chaos.Delay, context.RequestAborted);
 
         if (request.Version == SoapVersion.Soap11 && !context.Request.Headers.ContainsKey("SOAPAction"))
@@ -70,7 +70,18 @@ public sealed class WsaaEndpoint(WsaaService service, SimulationSettings setting
             return;
         }
 
-        var result = await service.LoginAsync(in0, context.RequestAborted);
+        LoginResult result;
+        try
+        {
+            result = await service.LoginAsync(in0, context.RequestAborted);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !context.RequestAborted.IsCancellationRequested)
+        {
+            // An exception nobody handled is WSAA's own internal error, as its manual lists it, never a bare HTTP 500.
+            logger.LogError(ex, "WSAA loginCms failed");
+            await SendAsync(context, request, 500, Fault(request, $"ns1:{WsaaFault.InternalError.Code}", WsaaFault.InternalError.Message, exceptionName: true));
+            return;
+        }
         if (result.Fault is { } fault)
         {
             await SendAsync(context, request, 500, Fault(request, $"ns1:{fault.Code}", fault.Message, exceptionName: true));

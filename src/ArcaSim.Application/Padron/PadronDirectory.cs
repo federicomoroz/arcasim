@@ -5,8 +5,10 @@ namespace ArcaSim.Application.Padron;
 /// <summary>
 /// The padrón's view of ArcaSim's taxpayers: the same records WSFEv1
 /// invoices against, so a lookup and an invoice never disagree. With open
-/// access a valid CUIT nobody loaded still exists, as an obviously made-up
-/// Responsable Inscripto, the way WSFEv1 already treats it.
+/// access a valid CUIT nobody loaded still exists, as WSFEv1 also lets it
+/// invoice: an obviously made-up Responsable Inscripto whose name splits
+/// into the first and last names the padrón answers with. It is not saved;
+/// a first voucher saves the CUIT with WSFEv1's own name and condition.
 /// </summary>
 public sealed class PadronDirectory(ITaxpayerRepository taxpayers, SimulationSettings settings)
 {

@@ -54,11 +54,12 @@ public sealed partial class MtxcaRules(
     IAuthorizationCodes codes,
     IClock clock,
     SimulationSettings settings,
-    EventManager events) : IServiceBehavior
+    EventManager events,
+    TimeProvider time) : IServiceBehavior
 {
     private readonly MtxcaTables _tables = new(parameters);
     private readonly MtxcaStore _state = new(documents);
-    private readonly MtxcaValidator _validator = new(new MtxcaTables(parameters), taxpayers, rates, settings);
+    private MtxcaValidator? _validator;
     private readonly ConcurrentDictionary<(long, int, int), byte> _busy = new();
     private readonly SemaphoreSlim _caeaGate = new(1, 1);
 
@@ -76,13 +77,12 @@ public sealed partial class MtxcaRules(
         "informarCAEANoUtilizado" => Some(UnusedAsync(call, null, ct)),
         "informarCAEANoUtilizadoPtoVta" => Some(UnusedAsync(call, call.Request.Int("numeroPuntoVenta"), ct)),
         "consultarPtosVtaCAEANoInformados" => Some(NotInformedAsync(call, ct)),
-        "consultarTiposComprobante" => Done(Table(call, "arrayTiposComprobante", MtxcaTables.VoucherTypes.Select(t => new MtxcaRow(t.Id, t.Description)))),
+        "consultarTiposComprobante" => Done(Table(call, "arrayTiposComprobante", _tables.VoucherTypes.Select(t => new MtxcaRow(t.Id, t.Description)))),
         "consultarTiposDocumento" => Done(Table(call, "arrayTiposDocumento", _tables.DocumentTypes)),
         "consultarAlicuotasIVA" => Done(Table(call, "arrayAlicuotasIVA", _tables.VatRates)),
         "consultarCondicionesIVA" => Done(Table(call, "arrayCondicionesIVA", _tables.ItemVatConditions)),
         "consultarCondicionesIVAReceptor" => Done(ReceiverConditions(call)),
-        "consultarMonedas" => Done(call.Ok(new XElement(call.Operation.Output, new XElement("arrayMonedas",
-            _tables.Currencies.Select(c => new XElement("codigoDescripcion", new XElement("codigo", c.Code), new XElement("descripcion", c.Description))))))),
+        "consultarMonedas" => Done(call.Ok(new XElement(call.Operation.Output, ContractXml.CodeList("arrayMonedas", _tables.Currencies)))),
         "consultarCotizacionMoneda" => Some(QuoteAsync(call, ct)),
         "consultarUnidadesMedida" => Done(Table(call, "arrayUnidadesMedida", MtxcaTables.Units)),
         "consultarTiposTributo" => Done(Table(call, "arrayTiposTributo", _tables.Taxes)),
@@ -94,6 +94,9 @@ public sealed partial class MtxcaRules(
         _ => Task.FromResult<ContractAnswer?>(null),
     };
 
+    /// <summary>The checks of autorizarComprobante and informarComprobanteCAEA, over the same tables as the queries.</summary>
+    private MtxcaValidator Validator => _validator ??= new MtxcaValidator(_tables, taxpayers, rates, settings);
+
     private static async Task<ContractAnswer?> Some(Task<ContractAnswer> answer) => await answer;
 
     private static Task<ContractAnswer?> Done(ContractAnswer answer) => Task.FromResult<ContractAnswer?>(answer);
@@ -102,12 +105,12 @@ public sealed partial class MtxcaRules(
 
     private async Task<ContractAnswer> AuthorizeAsync(ServiceCall call, CancellationToken ct)
     {
-        var element = MtxcaVoucherInput.Child(call.Request, "comprobanteCAERequest") ?? new XElement("comprobanteCAERequest");
+        var element = call.Request.Child("comprobanteCAERequest") ?? new XElement("comprobanteCAERequest");
         var voucher = MtxcaVoucherInput.Read(element);
         var today = clock.Today();
         var date = voucher.Date ?? today;
-        var type = MtxcaTables.VoucherType(voucher.Type);
-        var issuer = await IssuerAsync(call.Cuit, voucher.PointOfSale, PointOfSaleKind.WebServiceCae, ct);
+        var type = _tables.VoucherType(voucher.Type);
+        var issuer = await IssuerAsync(call.Cuit, voucher.PointOfSale, PointOfSaleKind.WebServiceCae, ct, ClassOf(voucher.Type));
 
         var findings = new List<MtxcaFinding>();
         if (issuer is not { Active: true }) findings.Add(MtxcaCodes.Error(MtxcaTable.Cae, 10000));
@@ -115,7 +118,7 @@ public sealed partial class MtxcaRules(
         if (type is null) findings.Add(MtxcaCodes.Error(MtxcaTable.Cae, 100));
         if (!Usable(issuer, voucher.PointOfSale, PointOfSaleKind.WebServiceCae, today)) findings.Add(MtxcaCodes.Error(MtxcaTable.Cae, 101));
         if (type is not null)
-            findings.AddRange(await _validator.ValidateAsync(false, voucher, type, call.Cuit, date, today, Activities(issuer), ct));
+            findings.AddRange(await Validator.ValidateAsync(false, voucher, type, call.Cuit, date, today, Activities(issuer), ct));
 
         var sequence = (call.Cuit, voucher.PointOfSale, voucher.Type);
         if (!_busy.TryAdd(sequence, 0)) return Rejected(call, [MtxcaCodes.Error(MtxcaTable.Cae, 135)]);
@@ -126,7 +129,7 @@ public sealed partial class MtxcaRules(
             if (date < last?.Date) findings.Add(MtxcaCodes.Error(MtxcaTable.Cae, 104));
             if (findings.Any(f => f.Rejects))
             {
-                events.Publish(new VoucherRejected(DateTimeOffset.UtcNow, call.Cuit, voucher.PointOfSale, voucher.Type, voucher.Number,
+                events.Publish(new VoucherRejected(time.GetUtcNow(), call.Cuit, voucher.PointOfSale, voucher.Type, voucher.Number,
                     findings.Where(f => f.Rejects).Select(f => f.Code).ToList()));
                 return Rejected(call, findings.Where(f => f.Rejects));
             }
@@ -134,7 +137,7 @@ public sealed partial class MtxcaRules(
             var cae = long.Parse(codes.NextCae(), CultureInfo.InvariantCulture);
             var due = date.AddDays(settings.CaeLifetimeDays);
             await _state.AddAsync(Stored(call.Cuit, voucher, date, "E", cae, due, findings), voucher.DocType ?? 0, voucher.DocNumber ?? 0, voucher.Total, ct);
-            events.Publish(new VoucherAuthorized(DateTimeOffset.UtcNow, call.Cuit, voucher.PointOfSale, voucher.Type, voucher.Number,
+            events.Publish(new VoucherAuthorized(time.GetUtcNow(), call.Cuit, voucher.PointOfSale, voucher.Type, voucher.Number,
                 voucher.Number, "CAE", cae.ToString(CultureInfo.InvariantCulture)));
 
             return call.Ok(new XElement(call.Operation.Output,
@@ -165,8 +168,8 @@ public sealed partial class MtxcaRules(
         var copy = MtxcaVoucherInput.Unqualified(voucher.Element);
         copy.Name = "comprobante";
         foreach (var name in new[] { "fechaEmision", "codigoTipoAutorizacion", "codigoAutorizacion", "fechaVencimiento" })
-            MtxcaVoucherInput.Child(copy, name)?.Remove();
-        var anchor = MtxcaVoucherInput.Child(copy, "numeroComprobante");
+            copy.Child(name)?.Remove();
+        var anchor = copy.Child("numeroComprobante");
         XElement[] authorization =
         [
             new("fechaEmision", Day(date)),
@@ -178,13 +181,13 @@ public sealed partial class MtxcaRules(
         else copy.AddFirst(authorization);
 
         return new MtxcaVoucher(cuit, voucher.PointOfSale, voucher.Type, voucher.Number, date, authorizationType, code, due,
-            DateTimeOffset.UtcNow, copy.ToString(SaveOptions.DisableFormatting),
+            copy.ToString(SaveOptions.DisableFormatting),
             observations.Where(o => !o.Rejects).Select(o => new MtxcaNote(o.Code, o.Text)).ToList());
     }
 
     private async Task<ContractAnswer> LastAsync(ServiceCall call, CancellationToken ct)
     {
-        var query = MtxcaVoucherInput.Child(call.Request, "consultaUltimoComprobanteAutorizadoRequest") ?? call.Request;
+        var query = call.Request.Child("consultaUltimoComprobanteAutorizadoRequest") ?? call.Request;
         var type = query.Int("codigoTipoComprobante");
         var pointOfSale = query.Int("numeroPuntoVenta");
         if (await QueryProblemAsync(call, type, pointOfSale, ct) is { } problem) return QueryError(call, problem);
@@ -197,7 +200,7 @@ public sealed partial class MtxcaRules(
 
     private async Task<ContractAnswer> ConsultAsync(ServiceCall call, CancellationToken ct)
     {
-        var query = MtxcaVoucherInput.Child(call.Request, "consultaComprobanteRequest") ?? call.Request;
+        var query = call.Request.Child("consultaComprobanteRequest") ?? call.Request;
         var type = query.Int("codigoTipoComprobante");
         var pointOfSale = query.Int("numeroPuntoVenta");
         if (await QueryProblemAsync(call, type, pointOfSale, ct) is { } problem) return QueryError(call, problem);
@@ -214,7 +217,7 @@ public sealed partial class MtxcaRules(
     /// <summary>1500 for a type the service does not authorize; 1501 for a point of sale that is not the issuer's CAE or CAEA one.</summary>
     private async Task<int?> QueryProblemAsync(ServiceCall call, int type, int pointOfSale, CancellationToken ct)
     {
-        if (MtxcaTables.VoucherType(type) is null) return 1500;
+        if (_tables.VoucherType(type) is null) return 1500;
         if (settings.OpenAccess) return null;
         var kind = (await taxpayers.FindAsync(call.Cuit, ct))?.FindPointOfSale(pointOfSale)?.Kind;
         return kind is PointOfSaleKind.WebServiceCae or PointOfSaleKind.WebServiceCaea ? null : 1501;
@@ -226,16 +229,14 @@ public sealed partial class MtxcaRules(
     // ---- Parameters ------------------------------------------------------------------
 
     private static ContractAnswer Table(ServiceCall call, string array, IEnumerable<MtxcaRow> rows) =>
-        call.Ok(new XElement(call.Operation.Output, new XElement(array, rows.Select(r =>
-            new XElement("codigoDescripcion", new XElement("codigo", r.Code), new XElement("descripcion", r.Description))))));
+        call.Ok(new XElement(call.Operation.Output, ContractXml.CodeList(array, rows.Select(r => (r.Code, r.Description)))));
 
     private ContractAnswer ReceiverConditions(ServiceCall call)
     {
-        var type = MtxcaTables.VoucherType(call.Request.Int("codigoTipoComprobante"));
+        var type = _tables.VoucherType(call.Request.Int("codigoTipoComprobante"));
         if (type is null) return QueryError(call, 196);
-        return call.Ok(new XElement(call.Operation.Output, new XElement("arrayCondicionesIVAReceptor",
-            _tables.ReceiverConditions(type).Select(r =>
-                new XElement("codigoDescripcion", new XElement("codigo", r.Code), new XElement("descripcion", r.Description))))));
+        return call.Ok(new XElement(call.Operation.Output,
+            ContractXml.CodeList("arrayCondicionesIVAReceptor", _tables.ReceiverConditions(type).Select(r => (r.Code, r.Description)))));
     }
 
     /// <summary>The rate ArcaSim was given for that day or the last one before it; PES is always 1; none, no value.</summary>
@@ -244,7 +245,7 @@ public sealed partial class MtxcaRules(
         var currency = call.Request.Text("codigoMoneda") ?? "";
         if (!_tables.HasCurrency(currency)) return QueryError(call, 1600);
         var day = call.Request.Date("fechaCotizacion") ?? clock.Today();
-        var rate = currency == "PES" ? 1m : (await rates.RateAsync(currency, day, ct))?.Rate;
+        var rate = (await rates.QuoteAsync(currency, day, ct))?.Rate;
         return call.Ok(new XElement(call.Operation.Output, rate is { } value ? new XElement("cotizacionMoneda", value) : null));
     }
 
@@ -272,37 +273,32 @@ public sealed partial class MtxcaRules(
 
     // ---- Shared ----------------------------------------------------------------------
 
-    /// <summary>The issuer; with open access, created with the point of sale on first use, as WSFEv1 does.</summary>
-    private async Task<Taxpayer?> IssuerAsync(long cuit, int pointOfSale, PointOfSaleKind kind, CancellationToken ct)
-    {
-        var issuer = await taxpayers.FindAsync(cuit, ct);
-        if (!settings.OpenAccess) return issuer;
+    /// <summary>
+    /// The issuer; with open access, created with the point of sale on first use,
+    /// as WSFEv1 does: a Monotributo when its first voucher is class C, a
+    /// Responsable Inscripto otherwise.
+    /// </summary>
+    private Task<Taxpayer?> IssuerAsync(long cuit, int pointOfSale, PointOfSaleKind kind, CancellationToken ct, VoucherClass? firstClass = null) =>
+        taxpayers.FindOrOpenAsync(settings, cuit, pointOfSale, kind, firstClass, ct);
 
-        var changed = false;
-        if (issuer is null)
-        {
-            if (!Cuits.IsValid(cuit)) return null;
-            issuer = new Taxpayer(cuit, $"Contribuyente {cuit}", VatCondition.ResponsableInscripto);
-            changed = true;
-        }
-        if (pointOfSale is >= 1 and <= 99_998 && issuer.FindPointOfSale(pointOfSale) is null)
-        {
-            issuer.AddPointOfSale(new PointOfSale(pointOfSale, kind));
-            changed = true;
-        }
-        if (changed) await taxpayers.SaveAsync(issuer, ct);
-        return issuer;
-    }
+    /// <summary>
+    /// The class of a voucher type MTXCA authorizes, which is A, B or A with the
+    /// retention legend; none for any other type (class C is not MTXCA's: error
+    /// 100), so a wrong first request does not open a Monotributo that 10003
+    /// would then reject.
+    /// </summary>
+    private VoucherClass? ClassOf(int voucherType) =>
+        _tables.VoucherType(voucherType)?.Info.Class;
 
     private static bool Usable(Taxpayer? issuer, int number, PointOfSaleKind kind, DateOnly today) =>
-        issuer?.FindPointOfSale(number) is { } point && point.Kind == kind && !point.Blocked && !(point.DeactivatedOn <= today);
+        issuer?.CanIssueFrom(number, kind, today) == true;
 
     /// <summary>The issuer's current activities, from the padrón; unknown with open access, where any activity goes.</summary>
     private IReadOnlyCollection<long>? Activities(Taxpayer? issuer) =>
         settings.OpenAccess || issuer is null ? null : [PadronDirectory.ActivityOf(issuer).Id];
 
     private static XElement Codes(string array, IEnumerable<MtxcaFinding> findings) =>
-        new(array, findings.Select(f => new XElement("codigoDescripcion", new XElement("codigo", f.Code), new XElement("descripcion", f.Text))));
+        ContractXml.CodeList(array, findings.Select(f => (f.Code, f.Text)));
 
     private static string Day(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 }

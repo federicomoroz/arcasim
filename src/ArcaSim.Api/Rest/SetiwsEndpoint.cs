@@ -34,7 +34,7 @@ public static class SetiwsEndpoint
 
     public static void Map(WebApplication app)
     {
-        ServiceRoutes.Register($"{Base}/{Veps}", SetiwsGateway.Service);
+        app.Services.GetRequiredService<ServiceDirectory>().Route($"{Base}/{Veps}", SetiwsGateway.Service);
         app.MapGet($"{Base}/dummy", () => Results.Json(new { appserver = "OK", dbserver = "OK" }));
         app.Map(Base + "/{**path}", (HttpContext context, string? path) => AnswerAsync(context, path ?? ""));
     }
@@ -42,6 +42,8 @@ public static class SetiwsEndpoint
     private static async Task AnswerAsync(HttpContext context, string path)
     {
         var services = context.RequestServices;
+        // The admin API's failures, as for every other service; the GET dummy stays up, as the ASMX ones do.
+        if (await ChaosGate.RefusedAsync(context, services.GetRequiredService<SimulationSettings>().ChaosOf(SetiwsGateway.Service))) return;
         var headers = context.Request.Headers;
         var (represented, problems) = services.GetRequiredService<SetiwsGateway>().Check(
             headers.Authorization, headers[SetiwsGateway.TokenHeader], headers[SetiwsGateway.SignHeader], headers[SetiwsGateway.RepresentedHeader]);
@@ -59,12 +61,22 @@ public static class SetiwsEndpoint
 
         var operation = HttpMethods.IsPost(context.Request.Method) ? "createVep"
             : HttpMethods.IsGet(context.Request.Method) ? "findMyVEPByTransactionId" : null;
-        var error = operation switch
+        VepError? error;
+        try
         {
-            "createVep" => await CreateAsync(context, represented),
-            "findMyVEPByTransactionId" => await FindAsync(context, represented),
-            _ => new VepError(400, "HttpRequestMethodNotSupportedException", $"Request method '{context.Request.Method}' is not supported"),
-        };
+            error = operation switch
+            {
+                "createVep" => await CreateAsync(context, represented),
+                "findMyVEPByTransactionId" => await FindAsync(context, represented),
+                _ => new VepError(400, "HttpRequestMethodNotSupportedException", $"Request method '{context.Request.Method}' is not supported"),
+            };
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !context.RequestAborted.IsCancellationRequested)
+        {
+            // What Spring Boot answers for an exception nobody handled: a 500 with the error body, never a bare one.
+            services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(SetiwsEndpoint)).LogError(ex, "SETIWS {Operation} failed", operation);
+            error = new VepError(StatusCodes.Status500InternalServerError, ex.GetType().Name, ex.Message);
+        }
         if (error is not null) await ErrorAsync(context, error);
         services.GetRequiredService<EventManager>().Publish(new ServiceCalled(DateTimeOffset.UtcNow, SetiwsGateway.Service,
             operation ?? context.Request.Method, represented, error is null ? "ok" : "error", error?.Message ?? ""));
@@ -145,7 +157,7 @@ public static class SetiwsEndpoint
     private static async Task ErrorAsync(HttpContext context, VepError error)
     {
         var request = context.Request;
-        var now = context.RequestServices.GetRequiredService<IClock>().Now.ToOffset(SetiwsGateway.Argentina);
+        var now = context.RequestServices.GetRequiredService<IClock>().Now.ToArgentina();
         context.Response.StatusCode = error.Status;
         await context.Response.WriteAsJsonAsync(new
         {

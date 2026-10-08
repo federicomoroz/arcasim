@@ -213,8 +213,8 @@ public sealed class WsctaRules(IDocumentStore store, IClock clock, SequenceLocks
         .Set("cuitSolicitante", certificate.Applicant)
         .Set("nroTramite", certificate.Procedure)
         .Set("estado", StateOf(certificate))
-        .SetOrDrop("fechaAprobacion", Moment(certificate.ApprovedAt))
-        .SetOrDrop("fechaRechazo", Moment(certificate.RejectedAt))
+        .SetOrDrop("fechaAprobacion", Stamp(certificate.ApprovedAt))
+        .SetOrDrop("fechaRechazo", Stamp(certificate.RejectedAt))
         .SetOrDrop("registroSeccionalDNRPA", certificate.Registry)
         .Set("documentoPDF", PdfOf(certificate));
 
@@ -228,7 +228,7 @@ public sealed class WsctaRules(IDocumentStore store, IClock clock, SequenceLocks
     }
 
     /// <summary>One certificate at a time; its 14-digit number never meets an 11-digit CUIT among the vouchers' locks.</summary>
-    private Task<IDisposable> LockAsync(long number, CancellationToken ct) => locks.AcquireAsync(number, -1, 381, ct);
+    private Task<IDisposable> LockAsync(long number, CancellationToken ct) => locks.AcquireAsync(Service, number, -1, 381, ct);
 
     private static ContractAnswer Refuse(ServiceCall call, string message) => call.Fault(message, BusinessFault);
 
@@ -236,8 +236,9 @@ public sealed class WsctaRules(IDocumentStore store, IClock clock, SequenceLocks
 
     private static string PdfOf(TransferCertificate certificate) => certificate.Pdf is { Length: > 0 } pdf ? pdf : CertificatePdf.Render(certificate);
 
-    private static string? Moment(DateTimeOffset? at) => at?.ToArgentina().ToString("dd-MM-yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+    /// <summary>A moment as the service prints one: dd-MM-yyyy HH:mm:ss in Argentina's time.</summary>
+    private static string? Stamp(DateTimeOffset? at) => at?.ToArgentina().ToString("dd-MM-yyyy HH:mm:ss", CultureInfo.InvariantCulture);
 
     private static int Days(DateTimeOffset from, DateTimeOffset to) =>
-        DateOnly.FromDateTime(to.ToArgentina().DateTime).DayNumber - DateOnly.FromDateTime(from.ToArgentina().DateTime).DayNumber;
+        to.ArgentinaDate().DayNumber - from.ArgentinaDate().DayNumber;
 }

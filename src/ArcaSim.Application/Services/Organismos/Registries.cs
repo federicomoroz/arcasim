@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
 
 namespace ArcaSim.Application.Services.Organismos;
@@ -16,44 +14,43 @@ public static class Registries
 {
     private const string Seeds = "organismos.seeds";
 
-    internal sealed record SeedMark(DateTimeOffset At);
+    /// <summary>
+    /// One scope seeds at a time in each store: requests that reach an empty scope together would each find it
+    /// empty and each write defaults of their own.
+    /// </summary>
+    private static readonly KeyedLocks<(IDocumentStore Store, string Scope)> Seeding = new();
 
-    public static async Task SeedAsync<T>(
+    /// <summary>The mark that a scope was seeded. It holds nothing: its existence is the mark.</summary>
+    internal sealed record SeedMark;
+
+    /// <summary>Writes the defaults of a scope the first time it is asked for, except the documents that are already there.</summary>
+    public static Task SeedAsync<T>(
         this IDocumentStore store, string scope, string collection, IEnumerable<(string Key, T Document)> defaults, CancellationToken ct)
+        where T : class =>
+        store.SeedAsync(scope, collection, _ => Task.FromResult(defaults), ct);
+
+    /// <summary>
+    /// The same, for defaults that need the store to be made (ids from a counter): they are built inside the
+    /// scope's turn and only when the scope still needs them, so requests that arrive together spend no ids on
+    /// seeds nobody keeps.
+    /// </summary>
+    public static async Task SeedAsync<T>(
+        this IDocumentStore store, string scope, string collection, Func<CancellationToken, Task<IEnumerable<(string Key, T Document)>>> defaults,
+        CancellationToken ct)
         where T : class
     {
+        using var turn = await Seeding.AcquireAsync((store, scope), ct);
         if (await store.GetAsync<SeedMark>(Seeds, scope, ct) is not null) return;
-        foreach (var (key, document) in defaults)
+        foreach (var (key, document) in await defaults(ct))
             if (await store.GetAsync<T>(collection, key, ct) is null)
                 await store.PutAsync(collection, key, document, ct);
-        await store.PutAsync(Seeds, scope, new SeedMark(DateTimeOffset.UtcNow), ct);
+        await store.PutAsync(Seeds, scope, new SeedMark(), ct);
     }
-
-    public static async Task<bool> IsSeededAsync(this IDocumentStore store, string scope, CancellationToken ct = default) =>
-        await store.GetAsync<SeedMark>(Seeds, scope, ct) is not null;
 
     /// <summary>Marks a scope as seeded without writing its defaults, so it holds only what was preloaded.</summary>
-    public static Task SkipSeedAsync(this IDocumentStore store, string scope, CancellationToken ct = default) =>
-        store.PutAsync(Seeds, scope, new SeedMark(DateTimeOffset.UtcNow), ct);
-
-    /// <summary>Sets the element when there is a value, removes it when there is none: an optional field.</summary>
-    internal static XElement SetOrDrop(this XElement element, string name, object? value)
+    public static async Task SkipSeedAsync(this IDocumentStore store, string scope, CancellationToken ct = default)
     {
-        if (element.Find(name) is not { } target) return element;
-        if (value is null || value is string { Length: 0 }) target.Remove();
-        else target.Value = ContractXml.Format(value);
-        return element;
+        using var turn = await Seeding.AcquireAsync((store, scope), ct);
+        await store.PutAsync(Seeds, scope, new SeedMark(), ct);
     }
-
-    internal static bool? Flag(this XElement element, string name) => element.Text(name)?.ToLowerInvariant() switch
-    {
-        "true" or "1" => true,
-        "false" or "0" => false,
-        _ => null,
-    };
-
-    internal static long? OptionalLong(this XElement element, string name) =>
-        long.TryParse(element.Text(name), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : null;
-
-    internal static string? Optional(this XElement element, string name) => element.Text(name) is { Length: > 0 } text ? text : null;
 }

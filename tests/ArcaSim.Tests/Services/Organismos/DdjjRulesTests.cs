@@ -1,5 +1,9 @@
 using System.Security.Cryptography;
 using System.Text;
+using ArcaSim.Application;
+using ArcaSim.Application.Services.Organismos;
+using ArcaSim.Infrastructure.InMemory;
+using ArcaSim.Tests.Services.Aduana;
 
 namespace ArcaSim.Tests.Services.Organismos;
 
@@ -54,6 +58,20 @@ public class DdjjRulesTests
 
         Assert.Equal(500, answer.Status);
         Assert.Equal($"Archivo inexistente. Parámetros: contribuyenteCuit [{ServiceProbe.Caller}] fileName [F2002.{Md5}.txt] formulario [2002] md5 [{Md5}]", answer.Fault);
+    }
+
+    [Fact]
+    public async Task The_same_file_uploaded_by_requests_that_arrive_together_gets_one_transaction()
+    {
+        var now = new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3));
+        var clock = new SimulatedClock(TimeProvider.System);
+        clock.Freeze(now);
+        var ddjj = new RulesProbe(new DdjjRules(new YieldingDocumentStore(new InMemoryStore()), clock), now);
+        var upload = $"<presentacion><presentacionDataHandler>{Convert.ToBase64String(Content)}</presentacionDataHandler><fileName>F2002.{Md5}.txt</fileName></presentacion>";
+
+        var answers = await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => ddjj.CallAsync("upload", upload, ServiceProbe.Caller)));
+
+        Assert.Single(answers.Select(a => a.Value).Distinct());
     }
 
     private static Task<SoapAnswer> UploadAsync(ServiceProbe ddjj, string fileName, byte[] content) =>

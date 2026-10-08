@@ -230,7 +230,7 @@ public abstract class OperationRequest
 [XmlRoot("FEDummy", Namespace = Fev1.Namespace)]
 public class FEDummyRequest;
 
-/// <summary>The twelve operations that take nothing but Auth share this shape under their own element name.</summary>
+/// <summary>The eleven operations that take nothing but Auth share this shape under their own element name.</summary>
 [XmlType(Namespace = Fev1.Namespace)]
 public class AuthOnlyRequest : OperationRequest;
 

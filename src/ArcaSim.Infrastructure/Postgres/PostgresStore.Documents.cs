@@ -4,18 +4,31 @@ using NpgsqlTypes;
 
 namespace ArcaSim.Infrastructure.Postgres;
 
-/// <summary>The services answered through their WSDL keep their documents in two tables, whatever the service.</summary>
+/// <summary>
+/// The services answered through their WSDL keep their documents in two tables, whatever the service.
+/// The key is collated "C": the order ListAsync gives (ordinal, as the in-memory store) is the primary
+/// key's own, and a key prefix is a range of it, so a listing reads its documents and no others. With
+/// the database's collation the prefix could not narrow the index: a listing read every document of its
+/// collection, or the whole table, and sorted what it kept.
+/// </summary>
 public sealed partial class PostgresStore : IDocumentStore
 {
     private const string DocumentsSchema = """
         CREATE TABLE IF NOT EXISTS documents (
             collection text NOT NULL,
-            key text NOT NULL,
+            key text COLLATE "C" NOT NULL,
             body jsonb NOT NULL,
             PRIMARY KEY (collection, key));
         CREATE TABLE IF NOT EXISTS counters (
             name text PRIMARY KEY,
             value bigint NOT NULL);
+        DO $$
+        BEGIN
+            IF (SELECT c.collname FROM pg_attribute a JOIN pg_collation c ON c.oid = a.attcollation
+                WHERE a.attrelid = 'documents'::regclass AND a.attname = 'key') <> 'C' THEN
+                ALTER TABLE documents ALTER COLUMN key TYPE text COLLATE "C";
+            END IF;
+        END $$;
         """;
 
     private static readonly JsonSerializerOptions DocumentJson = new(JsonSerializerDefaults.Web);

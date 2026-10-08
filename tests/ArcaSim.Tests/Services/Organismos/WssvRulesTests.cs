@@ -39,6 +39,19 @@ public class WssvRulesTests
         Assert.Equal(["PTA", "NPM", "NPG"], (await CallAsync(sv, "ListarAlarmas", "")).Valid().All("Id").Select(a => a.Value));
     }
 
+    [Fact]
+    public async Task A_position_reported_without_a_time_gets_ArcaSims_clock()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var sv = await ServiceProbe.StartAsync(sim, "wssv"); // frozen at 2026-10-01 12:00 in Argentina
+
+        await CallAsync(sv, "TrasladoBegin", "<IdTras>T-1</IdTras><IdDES>PEMA-1</IdDES>");
+        await CallAsync(sv, "Reporte", "<IdTras>T-1</IdTras><IdDES>PEMA-1</IdDES><Lat>-34.6037</Lat><Lng>-58.3816</Lng>");
+
+        var positions = (await CallAsync(sv, "ListarTraslado", "<IdTras>T-1</IdTras><IdDES>PEMA-1</IdDES>")).Valid();
+        Assert.Equal("2026-10-01T15:00:00Z", positions.Value("Fecha"));
+    }
+
     private static Task<SoapAnswer> CallAsync(ServiceProbe sv, string operation, string inner) =>
         sv.CallAsync(operation, $"<AuthObj><Token>{sv.Token}</Token><Sign>{sv.Sign}</Sign><CUIT>{ServiceProbe.Caller}</CUIT></AuthObj>" + inner, qualified: true);
 }

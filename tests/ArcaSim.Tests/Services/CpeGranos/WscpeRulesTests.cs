@@ -46,6 +46,26 @@ public class WscpeRulesTests
     }
 
     [Fact]
+    public async Task The_PDF_of_a_CPE_is_the_one_page_ArcaSim_has_always_sent()
+    {
+        await using var sim = Start();
+        var cpe = await ConnectAsync(sim);
+
+        var authorized = await AuthorizeAsync(cpe, 1);
+
+        Assert.Equal(
+            "%PDF-1.4\n" +
+            "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n" +
+            "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n" +
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n" +
+            "4 0 obj\n<< /Length 80 >>\nstream\nBT /F1 12 Tf 72 770 Td (Carta de Porte Electronica - CTG 10200000001 - AC) Tj ET\nendstream\nendobj\n" +
+            "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n" +
+            "xref\n0 6\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000241 00000 n \n0000000371 00000 n \n" +
+            "trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n441\n%%EOF",
+            System.Text.Encoding.ASCII.GetString(Convert.FromBase64String(authorized.Value("pdf")!)));
+    }
+
+    [Fact]
     public async Task The_destination_confirms_arrival_and_closes_it_with_the_unloaded_weights()
     {
         await using var sim = Start();

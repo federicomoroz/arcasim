@@ -7,6 +7,7 @@ using ArcaSim.Application.Access;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Events;
 using ArcaSim.Application.Padron;
+using ArcaSim.Application.Services.Fce;
 using ArcaSim.Application.Setiws;
 using ArcaSim.Application.Traffic;
 using ArcaSim.Application.Wsaa;
@@ -59,6 +60,8 @@ builder.Services.AddSingleton(_ => ValidationCatalog.Load());
 builder.Services.AddSingleton(_ => ParameterTables.Load());
 builder.Services.AddSingleton<IAuthorizationCodes, RandomAuthorizationCodes>();
 builder.Services.AddSingleton<SequenceLocks>();
+builder.Services.AddSingleton<ServiceDirectory>();
+builder.Services.AddSingleton<PlaceholderCounters>();
 builder.Services.AddSingleton<EventManager>();
 builder.Services.AddSingleton<TrafficGate>();
 builder.Services.AddSingleton<TrafficMeter>();
@@ -74,6 +77,7 @@ builder.Services.AddSingleton<WsfeEndpoint>();
 builder.Services.AddSingleton<WsaaEndpoint>();
 builder.Services.AddSingleton<SetiwsGateway>();
 builder.Services.AddSingleton<VepService>();
+builder.Services.AddSingleton<FceLedger>();
 
 // The rest of ARCA's services, answered from their WSDL; IServiceBehavior adds a service's rules on top.
 // Every rule set in the Application assembly is picked up: adding a service's rules is adding a class.
@@ -83,7 +87,8 @@ foreach (var behavior in typeof(ContractHost).Assembly.GetTypes()
 builder.Services.AddSingleton(_ => ServiceCatalog.Load(Path.Combine(AppContext.BaseDirectory, "arca-servicios.json")));
 builder.Services.AddSingleton(sp => new ContractHost(
     sp.GetRequiredService<ServiceCatalog>(), WsdlDocuments.Directory, sp.GetRequiredService<TicketReader>(),
-    sp.GetRequiredService<IClock>(), sp.GetRequiredService<EventManager>(), sp.GetServices<IServiceBehavior>()));
+    sp.GetRequiredService<IClock>(), sp.GetRequiredService<EventManager>(), sp.GetServices<IServiceBehavior>(),
+    sp.GetRequiredService<PlaceholderCounters>(), sp.GetRequiredService<ILogger<ContractHost>>()));
 
 var app = builder.Build();
 

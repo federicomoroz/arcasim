@@ -25,7 +25,15 @@ public static class AuthorizedVouchers
     public const string Collection = "comprobantes";
 
     public static string Key(long cuit, int pointOfSale, int voucherType, long number) =>
-        $"{cuit}/{pointOfSale:D5}/{voucherType:D3}/{number:D8}";
+        $"{SequenceKey(cuit, pointOfSale, voucherType)}/{number:D8}";
+
+    /// <summary>
+    /// A sequence's key (CUIT, point of sale, type): the front of <see cref="Key"/>, for a
+    /// service that keeps its last number apart from its vouchers or lists one sequence's
+    /// vouchers by key prefix.
+    /// </summary>
+    public static string SequenceKey(long cuit, int pointOfSale, int voucherType) =>
+        $"{cuit}/{pointOfSale:D5}/{voucherType:D3}";
 
     public static Task PutAsync(this IDocumentStore store, AuthorizedVoucher voucher, CancellationToken ct = default) =>
         store.PutAsync(Collection, Key(voucher.Cuit, voucher.PointOfSale, voucher.VoucherType, voucher.Number), voucher, ct);

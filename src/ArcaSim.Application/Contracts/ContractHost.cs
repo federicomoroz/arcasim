@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using ArcaSim.Application.Access;
 using ArcaSim.Application.Events;
 using ArcaSim.Application.Soap;
+using Microsoft.Extensions.Logging;
 
 namespace ArcaSim.Application.Contracts;
 
@@ -49,6 +50,18 @@ public sealed class ServiceCall(
 
     public ContractAnswer Ok(XElement body) => new(body, Headers(), null);
 
+    /// <summary>
+    /// The value the catalog says this service always sends in that element (by
+    /// name or "Parent/Child" path), its placeholders filled for this call; null
+    /// when it sets none. Answers the rules build by hand put it where Sample()
+    /// would have, so the service sends the same fixed values whatever builds
+    /// the answer: the event a server attaches to everything, its address.
+    /// </summary>
+    public string? Fixed(string name) =>
+        Definition.Values?.GetValueOrDefault(name) is { } value
+            ? Placeholders.Fill(value, new PlaceholderValues(Context.Now) { Service = Definition.Id, Cuit = Context.Cuit, Counters = Context.Counters })
+            : null;
+
     /// <summary>A business error the way the service reports it: in its error block when the response has one, else as a fault.</summary>
     public ContractAnswer Error(long code, string message) => Errors([(code, message)]);
 
@@ -71,10 +84,17 @@ public sealed class ServiceCall(
 /// when it has them, and otherwise answers the contract with schema-valid data.
 /// </summary>
 public sealed class ContractHost(
-    ServiceCatalog catalog, string wsdlFolder, TicketReader tickets, IClock clock, EventManager events, IEnumerable<IServiceBehavior> behaviors)
+    ServiceCatalog catalog, string wsdlFolder, TicketReader tickets, IClock clock, EventManager events, IEnumerable<IServiceBehavior> behaviors,
+    PlaceholderCounters? counters = null, ILogger<ContractHost>? logger = null)
 {
-    private readonly ConcurrentDictionary<string, (ServiceContract Contract, SchemaSampler Sampler)> _contracts = new(StringComparer.OrdinalIgnoreCase);
-    private readonly ILookup<string, IServiceBehavior> _behaviors = behaviors.ToLookup(b => b.Service, StringComparer.OrdinalIgnoreCase);
+    private readonly PlaceholderCounters _counters = counters ?? new();
+    /// <summary>
+    /// Each WSDL read and compiled once per process: the files do not change while
+    /// ArcaSim runs, so every host shares them (the suite starts one per test).
+    /// </summary>
+    private static readonly ConcurrentDictionary<string, Lazy<(ServiceContract Contract, SchemaSampler Sampler)>> Contracts = new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly Dictionary<string, IServiceBehavior> _behaviors = RulesByService(behaviors);
 
     public ServiceCatalog Catalog => catalog;
 
@@ -83,33 +103,46 @@ public sealed class ContractHost(
 
     public ServiceContract ContractOf(ServiceDefinition definition) => Load(definition).Contract;
 
+    /// <summary>The sequences {seq:start} draws from, for what the endpoint fills on its own (an unknown operation's text).</summary>
+    public PlaceholderCounters Counters => _counters;
+
     /// <summary>ArcaSim's clock, for what the endpoint writes on its own (the balancer's mask).</summary>
     public DateTimeOffset Now => clock.Now;
 
     /// <summary>Any element of the service's schema with data and the service's fixed values, as an answer outside SOAP needs it (the HTTP GET dummy).</summary>
     public XElement SampleOf(ServiceDefinition definition, XName element)
     {
-        var context = new SampleContext(0, clock.Now) { Always = definition.Always };
+        var context = new SampleContext(0, clock.Now) { Always = definition.Always, Counters = _counters };
         return Apply(Load(definition).Sampler.Sample(element, context), definition, context);
     }
 
     /// <summary>The header the service sends that its WSDL does not declare, with this moment's values; null when it sends none.</summary>
     public string? HeaderOf(ServiceDefinition definition) =>
-        definition.Header is { } header ? Placeholders.Fill(header, new PlaceholderValues(clock.Now) { Service = definition.Id }) : null;
+        definition.Header is { } header ? Placeholders.Fill(header, new PlaceholderValues(clock.Now) { Service = definition.Id, Counters = _counters }) : null;
 
-    public bool HasRules(ServiceDefinition definition) => _behaviors.Contains(definition.Id);
+    public bool HasRules(ServiceDefinition definition) => _behaviors.ContainsKey(definition.Id);
+
+    /// <summary>One rules class per service: a second class for the same service stops ArcaSim from starting instead of hiding behind the first.</summary>
+    private static Dictionary<string, IServiceBehavior> RulesByService(IEnumerable<IServiceBehavior> behaviors)
+    {
+        var byService = new Dictionary<string, IServiceBehavior>(StringComparer.OrdinalIgnoreCase);
+        foreach (var behavior in behaviors)
+            if (!byService.TryAdd(behavior.Service, behavior))
+                throw new InvalidOperationException($"{behavior.GetType().Name} and {byService[behavior.Service].GetType().Name} both answer {behavior.Service}.");
+        return byService;
+    }
 
     private (ServiceContract Contract, SchemaSampler Sampler) Load(ServiceDefinition definition) =>
-        _contracts.GetOrAdd(definition.Id, _ =>
+        Contracts.GetOrAdd(Path.GetFullPath(Path.Combine(wsdlFolder, definition.Wsdl)), file => new(() =>
         {
-            var contract = ServiceContract.Load(Path.Combine(wsdlFolder, definition.Wsdl));
+            var contract = ServiceContract.Load(file);
             return (contract, new SchemaSampler(contract.Schemas));
-        });
+        })).Value;
 
     public async Task<ContractAnswer> AnswerAsync(ServiceDefinition definition, OperationContract operation, XElement? request, CancellationToken ct)
     {
         var (contract, sampler) = Load(definition);
-        var context = new SampleContext(0, clock.Now) { Always = definition.Always };
+        var context = new SampleContext(0, clock.Now) { Always = definition.Always, Counters = _counters };
         long cuit = 0;
 
         if (operation.Input is not null && sampler.CarriesTicket(operation.Input))
@@ -119,7 +152,7 @@ public sealed class ContractHost(
             var check = tickets.Check(auth.Token, auth.Sign, cuit, definition.Wsaa);
             if (check.Failed)
             {
-                var rows = RowsFor(definition, check, auth, context.Now);
+                var rows = RowsFor(definition, check, auth, context);
                 var refusal = Refuse(definition, contract, sampler, operation, rows, context with { Cuit = cuit });
                 events.Publish(new ServiceCalled(DateTimeOffset.UtcNow, definition.Id, operation.Name, cuit, "error", rows[0].Text));
                 return refusal;
@@ -129,8 +162,16 @@ public sealed class ContractHost(
 
         var call = new ServiceCall(definition, contract, sampler, operation, request, cuit, context);
         ContractAnswer? answer = null;
-        foreach (var behavior in _behaviors[definition.Id])
-            if ((answer = await behavior.AnswerAsync(call, ct)) is not null) break;
+        try
+        {
+            if (_behaviors.TryGetValue(definition.Id, out var behavior)) answer = await behavior.AnswerAsync(call, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+        {
+            // A request the rules did not foresee is a server fault, as on ARCA's servers, never a bare HTTP 500.
+            logger?.LogError(ex, "{Service}.{Operation} failed", definition.Id, operation.Name);
+            answer = call.Fault(Unexpected(definition.Dialect, ex), "soap:Server");
+        }
         answer ??= call.Ok(call.Sample());
 
         events.Publish(new ServiceCalled(DateTimeOffset.UtcNow, definition.Id, operation.Name, cuit,
@@ -138,13 +179,11 @@ public sealed class ContractHost(
         return answer;
     }
 
-    /// <summary>Fixed values the service always sends, by element name: FEHeaderInfo's ambiente and version, a server name.</summary>
-    public static XElement Apply(XElement answer, ServiceDefinition definition) => Apply(answer, definition, new SampleContext(0, DateTimeOffset.Now));
-
     /// <summary>
-    /// The same, with the placeholders filled for this answer: values go by
-    /// element name or by "Parent/Child" path, the path winning; the elements
-    /// in Drop are taken out.
+    /// The fixed values the service always sends (FEHeaderInfo's ambiente and
+    /// version, a server name), with the placeholders filled for this answer:
+    /// values go by element name or by "Parent/Child" path, the path winning;
+    /// the elements in Drop are taken out.
     /// </summary>
     public static XElement Apply(XElement answer, ServiceDefinition definition, SampleContext context)
     {
@@ -152,7 +191,7 @@ public sealed class ContractHost(
             foreach (var element in answer.Descendants().Where(e => drop.Any(d => Matches(e, d))).ToList())
                 element.Remove();
         if (definition.Values is not { Count: > 0 } values) return answer;
-        var fill = new PlaceholderValues(context.Now) { Service = definition.Id, Cuit = context.Cuit };
+        var fill = new PlaceholderValues(context.Now) { Service = definition.Id, Cuit = context.Cuit, Counters = context.Counters };
         foreach (var element in answer.DescendantsAndSelf().Where(e => !e.HasElements))
         {
             var path = element.Parent is { } parent ? $"{parent.Name.LocalName}/{element.Name.LocalName}" : null;
@@ -211,7 +250,7 @@ public sealed class ContractHost(
     {
         try
         {
-            var login = XDocument.Parse(System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token ?? "")));
+            var login = SafeXml.Parse(System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token ?? "")));
             var key = login.Descendants("relation").Select(r => r.Attribute("key")?.Value).FirstOrDefault();
             return long.TryParse(key, NumberStyles.None, CultureInfo.InvariantCulture, out var cuit) ? cuit : 0;
         }
@@ -229,12 +268,13 @@ public sealed class ContractHost(
     /// when the elements did not come, then the problem, then "*"), each
     /// completed with the service's code and text; or one error with them.
     /// </summary>
-    private static List<Refusal> RowsFor(ServiceDefinition definition, TicketCheck check, Auth auth, DateTimeOffset now)
+    private static List<Refusal> RowsFor(ServiceDefinition definition, TicketCheck check, Auth auth, SampleContext context)
     {
         var errors = definition.Errors;
         var configured = (auth.HasTicket ? null : Row(errors, "NoTicket")) ?? Row(errors, check.Problem.ToString()) ?? Row(errors, "*");
-        var values = new PlaceholderValues(check.Now != 0 ? DateTimeOffset.FromUnixTimeSeconds(check.Now) : now)
+        var values = new PlaceholderValues(check.Now != 0 ? DateTimeOffset.FromUnixTimeSeconds(check.Now) : context.Now)
         {
+            Counters = context.Counters,
             Service = definition.Id,
             Cuit = check.Cuit,
             Detail = check.Detail,
@@ -328,6 +368,19 @@ public sealed class ContractHost(
             [TicketProblem.WrongService] = $"El token no corresponde al servicio {service}.",
             [TicketProblem.CuitNotRelated] = "La CUIT {cuit} no se encuentra entre los representados del token.",
         },
+    };
+
+    /// <summary>
+    /// The fault text a server of each family gives for an error nobody
+    /// handled: ASMX wraps the exception the way WSFEv1's own faults read,
+    /// CXF says its generic sentence, and the Java stacks pass the message on.
+    /// These are the frameworks' defaults, not texts captured from ARCA.
+    /// </summary>
+    public static string Unexpected(Dialect dialect, Exception ex) => dialect switch
+    {
+        Dialect.Asmx => $"System.Web.Services.Protocols.SoapException: Server was unable to process request. ---> {ex.GetType().FullName}: {ex.Message}",
+        Dialect.Cxf => "Fault occurred while processing.",
+        _ => ex.Message,
     };
 
     /// <summary>The expired token as the Java services print it (wsmtxca live, wsct 2021, the wscta manual).</summary>

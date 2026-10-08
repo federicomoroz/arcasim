@@ -64,7 +64,7 @@ public sealed class RgivaRules(IDocumentStore store, PadronDirectory padron, ICl
     {
         if (call.Name != "consultarConstanciaPorLote_v2") return null;
         await store.SeedAsync(Subjects, Subjects, Defaults(), ct);
-        var today = DateOnly.FromDateTime(clock.Now.ToArgentina().DateTime);
+        var today = clock.Today();
         var date = today.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture);
         var validUntil = new DateOnly(today.Year, today.Month, 1).AddMonths(1).AddDays(-1).ToString("dd-MM-yyyy", CultureInfo.InvariantCulture);
 
@@ -104,7 +104,7 @@ public sealed class RgivaRules(IDocumentStore store, PadronDirectory padron, ICl
         {
             VatCondition.ResponsableInscripto => 18,
             VatCondition.Exento => 2,
-            VatCondition.Monotributo or VatCondition.MonotributistaSocial or VatCondition.MonotributoTrabajadorIndependientePromovido => 20,
+            var condition when condition.IsMonotributo() => 20,
             _ => 23,
         };
         return new PerceptionSubject(cuit, taxpayer.Name.ToUpperInvariant(), legend);

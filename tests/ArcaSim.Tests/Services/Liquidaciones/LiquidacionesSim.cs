@@ -1,7 +1,9 @@
 using System.Xml.Linq;
-using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
+using ArcaSim.Application.Services.Liquidaciones;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ArcaSim.Tests.Services.Liquidaciones;
 
@@ -44,7 +46,7 @@ internal sealed class LiquidacionesSim : IAsyncDisposable
             new PointOfSale(1, PointOfSaleKind.WebServiceCae), new PointOfSale(3000, PointOfSaleKind.WebServiceCae));
         await sim.PutTaxpayerAsync(Producer, "Juan Productor", VatCondition.ResponsableInscripto);
         await sim.PutTaxpayerAsync(Monotributista, "Ana Chacarera", VatCondition.Monotributo);
-        var contract = ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", wsdl));
+        var contract = Contracts.Of(wsdl);
         return new LiquidacionesSim(sim, contract, service, cuitField, await AuthAsync(sim, Issuer, service, cuitField));
     }
 
@@ -55,7 +57,7 @@ internal sealed class LiquidacionesSim : IAsyncDisposable
     {
         var certificate = await sim.IssueCertificateAsync(cuit, $"liquidaciones{Guid.NewGuid():N}", service);
         var ticket = await sim.Wsaa(cuit, certificate).LoginAsync(service);
-        return $"<auth><token>{ticket.Token}</token><sign>{ticket.Sign}</sign><{cuitField}>{cuit}</{cuitField}></auth>";
+        return $"<auth>{Login.Credentials(ticket, cuit, cuitField)}</auth>";
     }
 
     /// <summary>Calls an operation with the ticket in auth and the rest as given; returns the answer's first child (respuesta, or the response itself when it has none).</summary>
@@ -65,31 +67,38 @@ internal sealed class LiquidacionesSim : IAsyncDisposable
         return answer.Element("respuesta") ?? answer;
     }
 
+    /// <summary>The raw answer, whatever its status: for what the service refuses with a fault.</summary>
+    public Task<(int Status, string Body)> PostAsync(string operation, string inner, CancellationToken ct = default)
+    {
+        var contract = _contract.Operations.Single(o => o.Name == operation);
+        var element = contract.Input!;
+        var envelope = Soap.Envelope($"<x:{element.LocalName}>{_auth}{inner}</x:{element.LocalName}>", ("x", element.NamespaceName));
+        return Sim.PostSoapAsync(new Uri("http://localhost" + _contract.AddressPath), envelope, $"\"{contract.Action}\"", ct);
+    }
+
     /// <summary>The Body's element, valid for the WSDL.</summary>
     public async Task<XElement> RawAsync(string operation, string inner)
     {
         var contract = _contract.Operations.Single(o => o.Name == operation);
         var element = contract.Input!;
-        var envelope = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" " +
-                       $"xmlns:x=\"{element.NamespaceName}\"><soapenv:Header/><soapenv:Body><x:{element.LocalName}>{inner}</x:{element.LocalName}>" +
-                       "</soapenv:Body></soapenv:Envelope>";
+        var envelope = Soap.Envelope($"<x:{element.LocalName}>{inner}</x:{element.LocalName}>", ("x", element.NamespaceName));
         var (status, body) = await Sim.PostSoapAsync(new Uri("http://localhost" + _contract.AddressPath), envelope, $"\"{contract.Action}\"");
         Assert.True(status == 200, body);
-        var answer = XDocument.Parse(body).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
+        var answer = Soap.Body(body);
         Assert.Equal(contract.Output, answer.Name);
-        Validate(answer);
+        Xsd.AssertValid(answer, _contract);
         return answer;
     }
 
-    /// <summary>The answer is valid for the WSDL ARCA publishes: what a generated client deserializes.</summary>
-    public void Validate(XElement answer)
+    /// <summary>Edits the detail of a voucher the service stored, as if the store held one built without a field.</summary>
+    public async Task EditStoredAsync(string service, long cuit, int pointOfSale, int voucherType, long number, Action<XElement> edit)
     {
-        var problems = new List<string>();
-        new XDocument(new XElement(answer)).Validate(_contract.Schemas, (_, e) =>
-        {
-            if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
-        });
-        Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems) + Environment.NewLine + answer);
+        var store = Sim.Services.GetRequiredService<IDocumentStore>();
+        var key = $"liq/{AuthorizedVouchers.Key(cuit, pointOfSale, voucherType, number)}";
+        var stored = (await store.GetAsync<Settlement>(service, key))!;
+        var detail = stored.DetailXml();
+        edit(detail);
+        await store.PutAsync(service, key, stored with { Detail = detail.ToString(SaveOptions.DisableFormatting) });
     }
 
     public static string Day(int offset = 0) => Now.AddDays(offset).ToString("yyyy-MM-dd");

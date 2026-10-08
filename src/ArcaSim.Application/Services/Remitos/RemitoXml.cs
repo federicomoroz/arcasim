@@ -17,21 +17,32 @@ public static class RemitoXml
             element.Attributes().Where(a => !a.IsNamespaceDeclaration).Select(a => new XAttribute(a.Name.LocalName, a.Value)),
             element.Nodes().Select(n => n is XElement child ? Plain(child) : n is XText text ? new XText(text.Value) : (XNode?)null));
 
-    public static XElement Parse(string xml) => XElement.Parse(xml);
+    public static string Date(DateOnly date) => ArgentinaTime.DateWithOffset(date);
 
-    public static string Date(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + "-03:00";
+    /// <summary>The day it is in Argentina at that moment, written the way the remitos write a date.</summary>
+    public static string Date(DateTimeOffset moment) => Date(moment.ArgentinaDate());
 
-    public static string? Child(this XElement? element, string name) => element?.Element(name)?.Value.Trim();
-
-    public static long? ChildLong(this XElement? element, string name) =>
-        long.TryParse(element.Child(name), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : null;
-
-    public static decimal? ChildDecimal(this XElement? element, string name) =>
-        decimal.TryParse(element.Child(name), NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : null;
-
-    public static DateOnly? ChildDate(this XElement? element, string name) => element?.Element(name)?.Date(name);
+    /// <summary>Changes the remito's XML where it is kept: parses it, lets the callback edit it and writes it back.</summary>
+    public static void Edit(Remito remito, Action<XElement> change)
+    {
+        var document = XElement.Parse(remito.Xml);
+        change(document);
+        remito.Xml = document.ToString(SaveOptions.DisableFormatting);
+    }
 
     public static string Number(decimal value) => value.ToString("0.##", CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// The lines of a reception by their orden. The manuals document no error
+    /// for an orden sent twice (harina 2.5.7.5 lists 120, 160, 1000, 3023-3027),
+    /// so the line informed last counts, as it would in a map keyed by orden.
+    /// </summary>
+    public static Dictionary<long, T> ByOrder<T>(IEnumerable<XElement> lines, Func<XElement, T> value)
+    {
+        var byOrder = new Dictionary<long, T>();
+        foreach (var line in lines) byOrder[line.ChildLong("orden") ?? 0] = value(line);
+        return byOrder;
+    }
 
     /// <summary>
     /// Sets a child in its schema place: replaced when it is there, otherwise

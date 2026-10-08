@@ -1,9 +1,9 @@
 namespace ArcaSim.Tests.Services.Aduana;
 
 /// <summary>
-/// wEnysa: a vehicle announced by its form and its border events. The rules
-/// are called directly: the engine refuses wEnysa's tickets before them, since
-/// its authentication has no CUIT next to the token.
+/// wEnysa: a vehicle announced by its form and its border events, over HTTP like
+/// the other customs services. Its authentication has no CUIT next to the token,
+/// so the engine takes the ticket's own (cuitFromTicket in the catalog).
 /// </summary>
 public class WEnysaRulesTests
 {
@@ -17,16 +17,19 @@ public class WEnysaRulesTests
         $"<codigoPais>CL</codigoPais><fechaEvento>2026/10/01 10:00:00 -03</fechaEvento><numeroFormulario>{number}</numeroFormulario>" +
         $"<pasajeros>3</pasajeros><patente>ABCD12</patente><tipoTransaccion>{kind}</tipoTransaccion></eventoEntradaSalida>";
 
+    private static Task<AduanaService> EnysaAsync(AduanaKit kit) => kit.ServiceAsync("wEnysa", AduanaKit.Enysa);
+
     [Fact]
     public async Task A_vehicle_is_announced_and_its_events_recorded_once_each()
     {
         await using var kit = await AduanaKit.StartAsync();
+        var enysa = await EnysaAsync(kit);
 
-        var announced = await kit.DirectAsync("wEnysa", "CargaDatosVehiculo", Vehicle());
-        var entered = await kit.DirectAsync("wEnysa", "CargaEventoEntradaSalida", Event("ED"));
-        var left = await kit.DirectAsync("wEnysa", "CargaEventoEntradaSalida", Event("SD"));
-        var again = await kit.DirectAsync("wEnysa", "CargaEventoEntradaSalida", Event("ED"));
-        var duplicate = await kit.DirectAsync("wEnysa", "CargaDatosVehiculo", Vehicle());
+        var announced = await enysa.CallAsync("CargaDatosVehiculo", Vehicle());
+        var entered = await enysa.CallAsync("CargaEventoEntradaSalida", Event("ED"));
+        var left = await enysa.CallAsync("CargaEventoEntradaSalida", Event("SD"));
+        var again = await enysa.CallAsync("CargaEventoEntradaSalida", Event("ED"));
+        var duplicate = await enysa.CallAsync("CargaDatosVehiculo", Vehicle());
 
         Assert.Equal("0", announced.Code());
         Assert.Equal("Operación correcta", announced.V("descripcion"));
@@ -41,12 +44,13 @@ public class WEnysaRulesTests
     public async Task Events_on_unknown_forms_and_bad_data_get_the_manuals_codes()
     {
         await using var kit = await AduanaKit.StartAsync();
+        var enysa = await EnysaAsync(kit);
 
-        var unknown = await kit.DirectAsync("wEnysa", "CargaEventoEntradaSalida", Event("ED", "9999"));
-        var badKind = await kit.DirectAsync("wEnysa", "CargaEventoEntradaSalida", Event("XX"));
-        var noPassengers = await kit.DirectAsync("wEnysa", "CargaDatosVehiculo", Vehicle(passengers: 0));
-        var missing = await kit.DirectAsync("wEnysa", "CargaDatosVehiculo", "<datosVehiculo><pasajeros>1</pasajeros></datosVehiculo>");
-        var query = await kit.DirectAsync("wEnysa", "ConsultaDatosVehiculo",
+        var unknown = await enysa.CallAsync("CargaEventoEntradaSalida", Event("ED", "9999"));
+        var badKind = await enysa.CallAsync("CargaEventoEntradaSalida", Event("XX"));
+        var noPassengers = await enysa.CallAsync("CargaDatosVehiculo", Vehicle(passengers: 0));
+        var missing = await enysa.CallAsync("CargaDatosVehiculo", "<datosVehiculo><pasajeros>1</pasajeros></datosVehiculo>");
+        var query = await enysa.CallAsync("ConsultaDatosVehiculo",
             "<anioFormulario>2026</anioFormulario><tipoTransaccion>SO</tipoTransaccion><aduanaFormulario>073</aduanaFormulario><numeroFormulario>5</numeroFormulario>");
 
         Assert.Equal("5", unknown.Code());
