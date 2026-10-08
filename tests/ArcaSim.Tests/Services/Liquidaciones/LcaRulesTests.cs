@@ -26,9 +26,9 @@ public class LcaRulesTests
         "<alicuotaIVA>21</alicuotaIVA></detalle>" +
         "<tributo><codTributo>1</codTributo><importe>100.00</importe></tributo></solicitud>";
 
-    private static string Price(long number, long target, int kind = 2, int item = 1) =>
+    private static string Price(long number, long target, int kind = 2, int item = 1, string? date = null) =>
         $"<solicitud><emisor>{Voucher(number)}<tipoAjuste>{kind}</tipoAjuste></emisor>" +
-        $"<datosGenerales><fechaComprobante>{Day()}</fechaComprobante><condicionVenta><codigo>1</codigo></condicionVenta>" +
+        $"<datosGenerales><fechaComprobante>{date ?? Day()}</fechaComprobante><condicionVenta><codigo>1</codigo></condicionVenta>" +
         "<medioPago><codigo>1</codigo></medioPago></datosGenerales>" +
         $"<detalle>{Voucher(target, "comprobanteAjustado")}<nroOrdenItemAjustado>{item}</nroOrdenItemAjustado><diferenciaPrecio>1.00</diferenciaPrecio></detalle></solicitud>";
 
@@ -58,6 +58,18 @@ public class LcaRulesTests
         Assert.Equal(["800"], Errors(await lca.CallAsync("consultarLiquidacionPorNroComprobante", $"<solicitud>{Voucher(2)}</solicitud>")));
 
         Assert.NotNull(await lca.Sim.Services.GetRequiredService<IDocumentStore>().FindVoucherAsync(Issuer, 3000, 171, 1));
+    }
+
+    [Fact]
+    public async Task A_voucher_with_no_date_takes_todays_and_prints_it()
+    {
+        await using var lca = await StartAsync();
+
+        var issued = await lca.CallAsync("generarLiquidacion", Liquidation(1, date: ""));
+        var adjusted = await lca.CallAsync("generarAjustePrecio", Price(2, 1, date: ""));
+
+        Assert.Equal("2026-10-01-03:00", issued.Element("datosGenerales")!.Element("fechaComprobante")!.Value);
+        Assert.Equal("2026-10-01-03:00", adjusted.Element("datosGenerales")!.Element("fechaComprobante")!.Value);
     }
 
     [Fact]

@@ -107,7 +107,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
             Authorization(cae),
             await IssuerAsync(call.Cuit, voucher, request.ChildOrEmpty("emisor"), ct),
             await ReceiverAsync(receiver, ct),
-            General(general),
+            General(general, date),
             notes.Select(n => new XElement("remito", new XElement("nroRemito", n.Value("nroRemito")), new XElement("kilos", n.Number("kilos")))),
             lines.Select(l => l.Element), concepts.Select(c => c.Element), taxes.Select(t => t.Element),
             Summary(lines, concepts, taxes, out var total));
@@ -160,7 +160,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
             new XElement("ajuste", new XElement("tipoAjuste", kind)),
             await IssuerAsync(call.Cuit, voucher, issued.ChildOrEmpty("emisor"), ct),
             Copy(issued.Child("receptor")),
-            General(general),
+            General(general, date),
             lines.Select(l => l.Element), concepts.Select(c => c.Element), taxes.Select(t => t.Element),
             Summary(lines, concepts, taxes, out var total));
 
@@ -318,8 +318,9 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
             new XElement("localidad", receiver.Number("localidad")), new XElement("provincia", receiver.Number("provincia")));
     }
 
-    private static XElement General(XElement general) => new("datosGenerales",
-        new XElement("fechaComprobante", Stamp(general.Day("fechaComprobante") ?? DateOnly.MinValue)),
+    /// <summary>The datosGenerales block: the voucher's date is the one the checks used, which is today's when the request leaves it out.</summary>
+    private static XElement General(XElement general, DateOnly date) => new("datosGenerales",
+        new XElement("fechaComprobante", Stamp(date)),
         general.Children("condicionVenta").Select(c => new XElement("condicionVenta", new XElement("codigo", c.Number("codigo")), Maybe("detalle", c.Value("detalle")))),
         general.Children("medioPago").Select(m => new XElement("medioPago", new XElement("codigo", m.Number("codigo")), Maybe("detalle", m.Value("detalle")))));
 
