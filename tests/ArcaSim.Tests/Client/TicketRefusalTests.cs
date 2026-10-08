@@ -5,7 +5,8 @@ namespace ArcaSim.Tests.Client;
 /// <summary>What WsfeClient does when WSFEv1 says the ticket it sent does not hold: ask for a new one and call again, once.</summary>
 public class TicketRefusalTests
 {
-    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(10);
+    // Long enough for a loaded machine: the suite runs hundreds of hosts at once and a continuation can wait seconds for a thread. A passing test never waits for it.
+    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(60);
 
     [Fact]
     public async Task A_refused_ticket_is_replaced_and_the_call_is_made_again_with_the_new_one()

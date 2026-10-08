@@ -9,7 +9,8 @@ namespace ArcaSim.Tests.Client;
 /// </summary>
 public class WsaaTicketTests
 {
-    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(10);
+    // Long enough for a loaded machine: the suite runs hundreds of hosts at once and a continuation can wait seconds for a thread. A passing test never waits for it.
+    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(60);
 
     [Fact]
     public async Task A_ticket_is_kept_until_ten_minutes_before_it_expires()
@@ -162,7 +163,7 @@ public class WsaaTicketTests
             {
                 failures.Add(ex);
             }
-        }))).WaitAsync(TimeSpan.FromSeconds(60));
+        }))).WaitAsync(TimeSpan.FromSeconds(120));
 
         Assert.Empty(failures);
     }
