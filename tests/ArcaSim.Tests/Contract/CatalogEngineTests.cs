@@ -39,7 +39,7 @@ public class CatalogEngineTests
     public void Every_catalog_header_and_detail_is_well_formed_and_every_row_names_a_problem()
     {
         var keys = Enum.GetNames<Application.Access.TicketProblem>().Append("NoTicket").Append("*").ToHashSet();
-        var values = new PlaceholderValues(DateTimeOffset.Now) { Token = "abc", Sign = "abc" };
+        var values = new PlaceholderValues(TestTime.Reference) { Token = "abc", Sign = "abc" };
         var problems = new List<string>();
         foreach (var service in Contracts.Catalog.Services)
         {
@@ -72,7 +72,7 @@ public class CatalogEngineTests
         var sampler = new SchemaSampler(contract.Schemas);
         var operation = contract.Operations.First(o => o.Name.StartsWith("consultarConstancia", StringComparison.Ordinal));
 
-        var answer = sampler.ErrorResponse(operation.Output, new SampleContext(Caller, DateTimeOffset.Now),
+        var answer = sampler.ErrorResponse(operation.Output, new SampleContext(Caller, TestTime.Reference),
             [(505, "uno"), (506, "dos")], new ErrorShape("constancia", "codigoError", "descripcionError"))!;
 
         var rows = answer.Descendants().Where(e => e.Name.LocalName == "constancia").ToList();
@@ -88,8 +88,8 @@ public class CatalogEngineTests
         var sampler = new SchemaSampler(contract.Schemas);
         var operation = contract.Operations.First(o => o.Name == "Consulta");
 
-        var byName = sampler.ErrorResponse(operation.Output, new SampleContext(Caller, DateTimeOffset.Now), 501, "x", new ErrorShape("Err"))!;
-        var byPath = sampler.ErrorResponse(operation.Output, new SampleContext(Caller, DateTimeOffset.Now), 501, "x", new ErrorShape("Respuesta/Err"))!;
+        var byName = sampler.ErrorResponse(operation.Output, new SampleContext(Caller, TestTime.Reference), 501, "x", new ErrorShape("Err"))!;
+        var byPath = sampler.ErrorResponse(operation.Output, new SampleContext(Caller, TestTime.Reference), 501, "x", new ErrorShape("Respuesta/Err"))!;
 
         Assert.Equal("DetalleCuits", byName.Descendants().First(e => e.Name.LocalName == "Err").Parent!.Name.LocalName);
         Assert.Equal("Respuesta", byPath.Descendants().First(e => e.Name.LocalName == "Err").Parent!.Name.LocalName);
@@ -103,7 +103,7 @@ public class CatalogEngineTests
         var contract = Contracts.Of("wsfexv1-homologacion.wsdl");
         var sampler = new SchemaSampler(contract.Schemas);
         var operation = contract.Operations.First(o => o.Name == "FEXGetPARAM_MON");
-        var context = new SampleContext(Caller, DateTimeOffset.Now) { Always = ["FEXEvents"] };
+        var context = new SampleContext(Caller, TestTime.Reference) { Always = ["FEXEvents"] };
 
         var data = sampler.Sample(operation.Output, context);
         var error = sampler.ErrorResponse(operation.Output, context, 1000, "x")!;
@@ -345,7 +345,7 @@ public class CatalogEngineTests
         var contract = Contracts.Of(Contracts.Definition(id));
         var sampler = new SchemaSampler(contract.Schemas);
         var operation = contract.Operations.First(o => o.Name == operationName);
-        var request = operation.Input is null ? null : sampler.Sample(operation.Input, new SampleContext(Caller, DateTimeOffset.Now));
+        var request = operation.Input is null ? null : sampler.Sample(operation.Input, new SampleContext(Caller, sim.Clock.Now));
         if (request is not null) Soap.Sign(request, token, sign, Caller);
 
         using var content = new StringContent(Soap.Envelope(request), Encoding.UTF8);

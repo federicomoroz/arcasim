@@ -118,7 +118,7 @@ public abstract class StoreContractTests
         var store = await CreateAsync();
         await store.SaveAsync(new Taxpayer(20111111112, "Empresa", VatCondition.Monotributo));
         await store.AddAsync(new IssuedCaea(20111111112, 202610, 1, "12345678901234", new DateOnly(2026, 10, 1),
-            new DateOnly(2026, 10, 15), new DateOnly(2026, 11, 15), DateTimeOffset.UtcNow));
+            new DateOnly(2026, 10, 15), new DateOnly(2026, 11, 15), TestTime.Reference));
 
         await store.ResetAsync();
 

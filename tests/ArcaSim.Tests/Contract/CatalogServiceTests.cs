@@ -48,7 +48,7 @@ public class CatalogServiceTests
         var answered = 0;
         foreach (var operation in contract.Operations)
         {
-            var request = operation.Input is null ? null : sampler.Sample(operation.Input, new SampleContext(Caller, DateTimeOffset.Now));
+            var request = operation.Input is null ? null : sampler.Sample(operation.Input, new SampleContext(Caller, sim.Clock.Now));
             if (request is not null) Support.Soap.Sign(request, ticket.Token, ticket.Sign, Caller);
             var (status, body) = await sim.PostSoapAsync(url, Support.Soap.Envelope(request), operation.Action ?? "");
             if (status != 200 && hasRules && body.Contains("Fault>", StringComparison.Ordinal) && !body.Contains("oken", StringComparison.Ordinal))
@@ -70,7 +70,7 @@ public class CatalogServiceTests
 
         // The refusals above are told from a crash only by the log: the engine answers a request its rules did not
         // foresee with the service's fault, which is what a refusal looks like.
-        problems.AddRange(sim.LoggedErrors.Select(error => $"the engine logged an unforeseen error: {error.Message} {error.Exception?.Message}"));
+        sim.AssertNoLoggedErrors();
         // Without one operation answered, the refusals would let the test pass without reading a single answer.
         if (answered == 0) problems.Add($"no operation was answered with HTTP 200 (refused: {string.Join(", ", refused)}): no answer was checked against the WSDL");
         Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems));
@@ -86,7 +86,7 @@ public class CatalogServiceTests
         var operation = contract.Operations.First(o => o.Input is not null && sampler.CarriesTicket(o.Input));
         await using var sim = ArcaSimHarness.Start();
 
-        var request = sampler.Sample(operation.Input!, new SampleContext(Caller, DateTimeOffset.Now));
+        var request = sampler.Sample(operation.Input!, new SampleContext(Caller, sim.Clock.Now));
         Support.Soap.Sign(request, "abc", "abc", Caller);
         var (status, body) = await sim.PostSoapAsync(new Uri("http://localhost" + contract.AddressPath), Support.Soap.Envelope(request), operation.Action ?? "");
 

@@ -28,7 +28,9 @@ public class TrafficTests
     public async Task With_one_slot_and_one_place_in_the_queue_the_third_concurrent_request_is_refused()
     {
         await using var sim = ArcaSimHarness.Start();
-        await SetLimitsAsync(sim, "wsfe", new { capacity = 1, serviceTimeMilliseconds = 300, queueLimit = 1 });
+        // The gate works in real time: the second and third requests have to arrive while the first is being served,
+        // and on a busy machine a request can take a while to get going, so the service time is generous.
+        await SetLimitsAsync(sim, "wsfe", new { capacity = 1, serviceTimeMilliseconds = 1000, queueLimit = 1 });
 
         var calls = Enumerable.Range(0, 3).Select(_ => sim.PostWsfeAsync("FEDummy", "")).ToList();
         var statuses = (await Task.WhenAll(calls)).Select(r => r.Status).Order().ToList();
@@ -36,7 +38,7 @@ public class TrafficTests
 
         Assert.Equal([200, 200, 503], statuses);
         // The queued one waited for the first to finish: its time includes the first one's service time.
-        Assert.True(wsfe.GetProperty("lastMinute").GetProperty("p95Milliseconds").GetDouble() >= 550);
+        Assert.True(wsfe.GetProperty("lastMinute").GetProperty("p95Milliseconds").GetDouble() >= 1800);
     }
 
     [Fact]
