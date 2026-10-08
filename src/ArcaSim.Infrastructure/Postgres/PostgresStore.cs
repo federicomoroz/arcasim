@@ -169,9 +169,17 @@ public sealed partial class PostgresStore(NpgsqlDataSource db) :
             $"SELECT {VoucherColumns} FROM vouchers WHERE cuit = $1 AND point_of_sale = $2 AND voucher_type = $3 ORDER BY number_from DESC LIMIT 1",
             [cuit, pointOfSale, voucherType], ReadVoucher, ct)).FirstOrDefault();
 
+    /// <summary>
+    /// The voucher whose range holds the number: the last range of its sequence that starts at or before it.
+    /// The ranges of a sequence never overlap (each starts at the last number plus one), so no other can hold
+    /// it, and the primary key finds that one reading a single entry. Asking for every range that starts at
+    /// or before the number read the whole sequence up to it: the voucher just authorized, the one a client
+    /// most often asks for, was the slowest to find.
+    /// </summary>
     public async Task<StoredVoucher?> FindAsync(long cuit, int pointOfSale, int voucherType, long number, CancellationToken ct = default) =>
         (await ListAsync(
-            $"SELECT {VoucherColumns} FROM vouchers WHERE cuit = $1 AND point_of_sale = $2 AND voucher_type = $3 AND number_from <= $4 AND $4 <= number_to",
+            $"SELECT * FROM (SELECT {VoucherColumns} FROM vouchers WHERE cuit = $1 AND point_of_sale = $2 AND voucher_type = $3 " +
+            "AND number_from <= $4 ORDER BY number_from DESC LIMIT 1) AS last WHERE $4 <= number_to",
             [cuit, pointOfSale, voucherType, number], ReadVoucher, ct)).FirstOrDefault();
 
     public Task AddAsync(StoredVoucher voucher, CancellationToken ct = default)

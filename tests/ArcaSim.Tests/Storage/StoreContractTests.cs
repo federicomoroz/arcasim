@@ -128,6 +128,19 @@ public abstract class StoreContractTests
     }
 
     [DockerFact]
+    public async Task A_number_is_found_in_the_range_that_holds_it_among_the_others_of_its_sequence()
+    {
+        var store = await CreateAsync();
+        foreach (var (from, to) in new[] { (1L, 3L), (4L, 4L), (5L, 9L) }) await store.AddAsync(Stored(6, from, to, TestTime.Reference));
+        await store.AddAsync(Stored(1, 1, 50, TestTime.Reference));
+
+        var found = new List<long?>();
+        foreach (var number in new long[] { 1, 3, 4, 5, 9, 10, 0 }) found.Add((await store.FindAsync(20111111112, 1, 6, number))?.From);
+
+        Assert.Equal([1L, 1L, 4L, 5L, 5L, null, null], found);
+    }
+
+    [DockerFact]
     public async Task Vouchers_of_some_types_are_listed_newest_first_without_any_other_type()
     {
         var store = await CreateAsync();
