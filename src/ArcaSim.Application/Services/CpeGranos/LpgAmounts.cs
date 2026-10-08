@@ -10,7 +10,7 @@ namespace ArcaSim.Application.Services.CpeGranos;
 /// as their base plus its IVA, and the net, IVA RG 4310 and pago según
 /// condición from those. Round half even, as §4.2 asks.
 /// </summary>
-internal static class Settlement
+internal static class LpgAmounts
 {
     /// <summary>One deducción, retención or importe: what it came from, its base (or rate, for importes), its amount and its IVA.</summary>
     public sealed record Line(XElement Source, decimal Base, decimal Amount, decimal Vat);

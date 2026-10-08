@@ -137,7 +137,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
         {
             var fill = new AnswerFill(call.Sample(), call.Contract.Schemas);
             var authorization = Return(fill.Root).Child("autorizacion")!;
-            var totals = Settlement.ForPrimary(call.Request, liquidation);
+            var totals = LpgAmounts.ForPrimary(call.Request, liquidation);
             Put(fill, authorization, "ptoEmision", pointOfIssue);
             Put(fill, authorization, "nroOrden", order);
             Put(fill, authorization, "codTipoOperacion", liquidation.Text("codTipoOperacion"));
@@ -145,7 +145,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
             Put(fill, authorization, "fechaLiquidacion", GrainsFormat.Date(now));
             Put(fill, authorization, "precioOperacion", GrainsFormat.Amount(totals.Price, 3));
             Put(fill, authorization, "totalPesoNeto", totals.Weight);
-            Settlement.Write(fill, authorization, totals);
+            LpgAmounts.Write(fill, authorization, totals);
             Put(fill, authorization, "coe", coe);
             if (liquidation.Long("numeroContrato") > 0) Put(fill, authorization, "numeroContrato", liquidation.Long("numeroContrato"));
             Put(fill, authorization, "estado", "AC");
@@ -304,7 +304,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
             Put(fill, unified, "codTipoOperacion", original.Text("codTipoOperacion"));
             var credit = Side(fill, unified, call.Request.Child("ajusteCredito"), "ajusteCredito", now);
             var debit = Side(fill, unified, call.Request.Child("ajusteDebito"), "ajusteDebito", now);
-            if (unified.Child("totalesUnificados") is { } totals) Settlement.WriteUnified(fill, totals, debit, credit);
+            if (unified.Child("totalesUnificados") is { } totals) LpgAmounts.WriteUnified(fill, totals, debit, credit);
             Put(fill, unified, "coe", coe);
             Put(fill, unified, "estado", "AC");
             fill.Done();
@@ -313,23 +313,23 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
     }
 
     /// <summary>One side of the adjustment; a side the request leaves out comes back in zeros, as the schema requires both.</summary>
-    private static Settlement.Totals Side(AnswerFill fill, XElement unified, XElement? request, string name, DateTimeOffset now)
+    private static LpgAmounts.Totals Side(AnswerFill fill, XElement unified, XElement? request, string name, DateTimeOffset now)
     {
         request ??= new XElement(name);
-        var totals = Settlement.ForAdjustment(request);
+        var totals = LpgAmounts.ForAdjustment(request);
         if (unified.Child(name) is not { } side) return totals;
         Put(fill, side, "nroOpComercial", 0);
         Put(fill, side, "fechaLiquidacion", GrainsFormat.Date(now));
         Put(fill, side, "precioOperacion", GrainsFormat.Amount(request.Decimal("diferenciaPrecioOperacion"), 3));
         Put(fill, side, "totalPesoNeto", (long)request.Decimal("diferenciaPesoNeto"));
-        Settlement.Rows(side.Child("importes"), "importeReturn", totals.Importes, (row, line) =>
+        LpgAmounts.Rows(side.Child("importes"), "importeReturn", totals.Importes, (row, line) =>
         {
             Put(fill, row, "importe", GrainsFormat.Amount(line.Amount));
             Put(fill, row, "concepto", line.Source.Value.Trim());
             Put(fill, row, "alicuota", line.Base);
             Put(fill, row, "ivaCalculado", GrainsFormat.Amount(line.Vat));
         });
-        Settlement.Write(fill, side, totals);
+        LpgAmounts.Write(fill, side, totals);
         return totals;
     }
 
