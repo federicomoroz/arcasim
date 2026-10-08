@@ -32,9 +32,36 @@ namespace ArcaSim.Application.Services.Liquidaciones;
 /// </summary>
 public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpayers, IClock clock, SequenceLocks locks) : IServiceBehavior
 {
+    // The resultado of an answer (§1.3): accepted, accepted with an observation, rejected.
+    private const string Accepted = "A";
+    private const string AcceptedWithNote = "O";
+    private const string Rejected = "R";
+
+    /// <summary>The manual's SiNo type: S.</summary>
+    private const string Yes = "S";
+
+    // What SEFI decides about a denaturation: pending, or the removal of all the CATHE asked (the others are not simulated).
     private const string Pending = "P";
-    private static readonly string[] Waiting = ["PC", "PV"];
-    private static readonly string[] Refused = ["RC", "RV"];
+    private const string Approved = "A";
+
+    // A change of holder waits for the buyer (PC) or the seller (PV) and ends approved (AP) or refused by one of them (RC, RV).
+    private const string WaitingBuyer = "PC";
+    private const string WaitingSeller = "PV";
+    private const string ChangeApproved = "AP";
+    private const string RefusedByBuyer = "RC";
+    private const string RefusedBySeller = "RV";
+
+    private static readonly string[] Waiting = [WaitingBuyer, WaitingSeller];
+    private static readonly string[] Refused = [RefusedByBuyer, RefusedBySeller];
+
+    /// <summary>A request for CATHE is capped at the units a fortnight of production needs: 15 days of the daily units the deposit declared.</summary>
+    private const int FortnightDays = 15;
+
+    /// <summary>Of the CATHE a deposit asked for before, at least this percent must be linked before it asks again (1202).</summary>
+    private const int MinLinkedPercent = 80;
+
+    /// <summary>A denaturation date less than this many days away is accepted with the observation 1701.</summary>
+    private const int DenaturationLeadDays = 15;
 
     private readonly TabacoBook _book = new(store);
 
@@ -51,11 +78,11 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
             case "consultarTiposMercaderia":
                 return Table(call, "arrayTiposMercaderia", ("1", "Tabaco en Hebras"), ("2", "Tabaco reconstituido"));
             case "consultarTiposEstadoSolicitudCambioTitular":
-                return Table(call, "arrayTiposEstados", ("PC", "Pendiente aprobación del Comprador"), ("PV", "Pendiente aprobación del Vendedor"),
-                    ("AP", "Aprobada"), ("RC", "Rechazada por el Comprador"), ("RV", "Rechazada por el Vendedor"));
+                return Table(call, "arrayTiposEstados", (WaitingBuyer, "Pendiente aprobación del Comprador"), (WaitingSeller, "Pendiente aprobación del Vendedor"),
+                    (ChangeApproved, "Aprobada"), (RefusedByBuyer, "Rechazada por el Comprador"), (RefusedBySeller, "Rechazada por el Vendedor"));
             case "consultarTiposResultadoDesnaturalizacion":
-                return Table(call, "arrayTiposResultado", ("P", "Pendiente de procesar en SEFI"),
-                    ("A", "Procedente la baja de la totalidad de los CATHE solicitados"),
+                return Table(call, "arrayTiposResultado", (Pending, "Pendiente de procesar en SEFI"),
+                    (Approved, "Procedente la baja de la totalidad de los CATHE solicitados"),
                     ("B", "No procedente la baja de la totalidad de los CATHE solicitados"),
                     ("C", "Procedente la baja de los CATHE que se detallan"));
         }
@@ -91,7 +118,7 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
             "confirmarCambioTitularSinMovFisico" => await ConfirmChangeAsync(call, ct),
             "consultarSolicitudCambioTitular" => await ChangeAsync(call, ct),
             "consultarSolicCambioTitularPendientes" => await ChangesAsync(call, Waiting, ct),
-            "consultarSolicCambioTitularAprobadas" => await ChangesAsync(call, ["AP"], ct),
+            "consultarSolicCambioTitularAprobadas" => await ChangesAsync(call, [ChangeApproved], ct),
             "consultarSolicCambioTitularRechazadas" => await ChangesAsync(call, Refused, ct),
             _ => null,
         };
@@ -134,7 +161,7 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
                 return Reject(call, (1103, $"El CATA {row.Number("cata")} ya fue informado como existencia inicial."));
         foreach (var row in rows)
             await _book.PutAsync(new Cata(row.Number("cata"), call.Cuit, row.Number("deposito"), row.Amount("kilos"), row.Amount("kilos")), ct);
-        return Reply(call, new XElement("resultado", "A"));
+        return Reply(call, new XElement("resultado", Accepted));
     }
 
     private async Task<ContractAnswer> CatasAsync(ServiceCall call, CancellationToken ct)
@@ -171,14 +198,14 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
         var deposit = call.Request.Number("deposito");
         var quantity = call.Request.Number("cantidad");
         if (TooMany(call, quantity) is { } tooMany) return tooMany;
-        if (call.Request.Value("inicial") != "S")
+        if (call.Request.Value("inicial") != Yes)
         {
             if (await _book.ParametersAsync(call.Cuit, deposit, ct) is not { } parameters)
                 return Reject(call, (1200, "El depósito debe tener informados sus parámetros productivos."));
-            if (quantity > parameters.Quantity * 15)
-                return Reject(call, (1201, $"La cantidad solicitada supera la necesaria para una producción quincenal ({parameters.Quantity * 15} CATHE)."));
+            if (quantity > parameters.Quantity * FortnightDays)
+                return Reject(call, (1201, $"La cantidad solicitada supera la necesaria para una producción quincenal ({parameters.Quantity * FortnightDays} CATHE)."));
             var previous = (await _book.CathesAsync(call.Cuit, ct)).Where(c => c.Deposit == deposit && c.Dispatch is null).ToList();
-            if (previous.Count > 0 && previous.Count(c => c.State != Cathe.Requested) < previous.Count * 0.8)
+            if (previous.Count > 0 && previous.Count(c => c.State != Cathe.Requested) * 100 < previous.Count * MinLinkedPercent)
                 return Reject(call, (1202, "Deben estar vinculados al menos el 80 % de los CATHE solicitados anteriormente para el depósito."));
         }
         var codes = new List<long>();
@@ -238,7 +265,7 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
     private async Task<ContractAnswer> LinkElaboratedAsync(ServiceCall call, CancellationToken ct)
     {
         var request = call.Request;
-        var recovery = request.Value("recupero") == "S";
+        var recovery = request.Value("recupero") == Yes;
         var goods = (int)request.Number("tipoMercaderia");
         var made = request.Child("arrayCathesElaborados").Children("datosTabacoElaborado").ToList();
         var used = request.Child("arrayCathesUsados").Children("datosCatheUsado").ToList();
@@ -414,9 +441,9 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
         await _book.PutAsync(new Denaturation(id, call.Cuit, deposit, date, request.Value("motivo") ?? "",
             codes.ToDictionary(c => c.ToString(CultureInfo.InvariantCulture), _ => Pending), Pending, null), ct);
         foreach (var cathe in cathes) await _book.PutAsync(cathe with { Lock = $"desnat/{id}" }, ct);
-        var early = date.DayNumber - Today.DayNumber < 15;
-        return Respond(call, early ? "O" : "A", new XElement("idSolicitud", id),
-            early ? Codes("observaciones", (1701, "La fecha de desnaturalización debería ser al menos 15 días corridos posterior a la fecha actual.")) : null);
+        var early = date.DayNumber - Today.DayNumber < DenaturationLeadDays;
+        return Respond(call, early ? AcceptedWithNote : Accepted, new XElement("idSolicitud", id),
+            early ? Codes("observaciones", (1701, $"La fecha de desnaturalización debería ser al menos {DenaturationLeadDays} días corridos posterior a la fecha actual.")) : null);
     }
 
     private async Task<ContractAnswer> DenaturationAsync(ServiceCall call, CancellationToken ct)
@@ -439,8 +466,8 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
         var (from, to) = range;
         var found = (await _book.DenaturationsAsync(ct))
             .Where(d => d.Owner == call.Cuit && (d.Result != Pending) == processed && d.Date >= from && d.Date <= to).ToList();
-        if (found.Count == 0) return Respond(call, "O", Codes("observaciones", (2101, "No se encontraron solicitudes para los parámetros informados.")));
-        return Respond(call, "A", new XElement("arraySolicitudes", found.Select(d => new XElement("datosSolicitud",
+        if (found.Count == 0) return Respond(call, AcceptedWithNote, Codes("observaciones", (2101, "No se encontraron solicitudes para los parámetros informados.")));
+        return Respond(call, Accepted, new XElement("arraySolicitudes", found.Select(d => new XElement("datosSolicitud",
             new XElement("idSolicitud", d.Id), new XElement("deposito", d.Deposit), new XElement("fechaDesnat", Iso(d.Date)), new XElement("motivo", d.Reason),
             processed ? new XElement("resultado", d.Result) : null,
             processed ? new XElement("fechaResultado", Iso(d.ResolvedOn ?? d.Date)) : null))));
@@ -458,7 +485,7 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
             foreach (var code in request.Cathes.Keys)
                 if (await _book.CatheAsync(request.Owner, long.Parse(code, CultureInfo.InvariantCulture), ct) is { } cathe)
                     await _book.PutAsync(cathe with { State = Cathe.Retired, Lock = null, Retirement = "desnaturalizacion" }, ct);
-            await _book.PutAsync(request with { Result = "A", ResolvedOn = request.Date, Cathes = request.Cathes.ToDictionary(c => c.Key, _ => "S") }, ct);
+            await _book.PutAsync(request with { Result = Approved, ResolvedOn = request.Date, Cathes = request.Cathes.ToDictionary(c => c.Key, _ => Yes) }, ct);
         }
     }
 
@@ -484,12 +511,12 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
         }
 
         var id = await _book.NewRequestIdAsync(ct);
-        var state = call.Cuit == seller ? "PC" : "PV";
+        var state = call.Cuit == seller ? WaitingBuyer : WaitingSeller;
         await _book.PutAsync(new TitleChange(id, call.Cuit, seller, buyer, request.Day("fechaCambio") ?? Today, request.Value("modoFactura") ?? "",
             request.Value("tipoComprobante") ?? "", request.Number("puntoVenta"), request.Number("numeroComprobante"),
             request.Amount("importeNetoGravado"), request.Amount("importeTotal"), codes, state), ct);
         foreach (var cathe in cathes) await _book.PutAsync(cathe with { Lock = $"cambio/{id}" }, ct);
-        return Respond(call, "A", new XElement("idSolicitud", id), new XElement("estado", state));
+        return Respond(call, Accepted, new XElement("idSolicitud", id), new XElement("estado", state));
     }
 
     private async Task<ContractAnswer> ConfirmChangeAsync(ServiceCall call, CancellationToken ct)
@@ -497,18 +524,18 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
         if (await _book.TitleChangeAsync(call.Request.Number("idSolicitud"), ct) is not { } change)
             return Reject(call, (1900, "La solicitud de cambio de titular no existe."));
         if (!Waiting.Contains(change.State)) return Reject(call, (1901, "La solicitud de cambio de titular no está pendiente de aprobación."));
-        var buyerTurn = change.State == "PC";
+        var buyerTurn = change.State == WaitingBuyer;
         if (call.Cuit != (buyerTurn ? change.Buyer : change.Seller))
             return Reject(call, (1902, $"La solicitud debe ser confirmada por el {(buyerTurn ? "comprador" : "vendedor")}."));
 
-        var state = call.Request.Value("confirma") != "S"
-            ? (buyerTurn ? "RC" : "RV")
-            : (buyerTurn || change.Informant == change.Buyer ? "AP" : "PC");
+        var state = call.Request.Value("confirma") != Yes
+            ? (buyerTurn ? RefusedByBuyer : RefusedBySeller)
+            : (buyerTurn || change.Informant == change.Buyer ? ChangeApproved : WaitingBuyer);
         await _book.PutAsync(change with { State = state }, ct);
-        if (state != "PC")
+        if (state != WaitingBuyer)
             foreach (var code in change.Cathes)
                 if (await _book.CatheAsync(change.Informant, code, ct) is { } cathe)
-                    await _book.PutAsync(cathe with { Lock = null, Holder = state == "AP" ? change.Buyer : cathe.Holder }, ct);
+                    await _book.PutAsync(cathe with { Lock = null, Holder = state == ChangeApproved ? change.Buyer : cathe.Holder }, ct);
         return Accept(call);
     }
 
@@ -532,8 +559,8 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
         var (from, to) = range;
         var found = (await _book.TitleChangesAsync(ct))
             .Where(c => Takes(c, call.Cuit) && states.Contains(c.State) && c.Date >= from && c.Date <= to).ToList();
-        if (found.Count == 0) return Respond(call, "O", Codes("observaciones", (2001, "No se encontraron solicitudes para los parámetros informados.")));
-        return Respond(call, "A", new XElement("arraySolicitudes", found.Select(c => new XElement("datosSolicitud",
+        if (found.Count == 0) return Respond(call, AcceptedWithNote, Codes("observaciones", (2001, "No se encontraron solicitudes para los parámetros informados.")));
+        return Respond(call, Accepted, new XElement("arraySolicitudes", found.Select(c => new XElement("datosSolicitud",
             new XElement("idSolicitud", c.Id), new XElement("cuitInformante", c.Informant), new XElement("cuitComprador", c.Buyer),
             new XElement("cuitVendedor", c.Seller), new XElement("fechaCambio", Iso(c.Date)), new XElement("tipoComprobante", c.VoucherType),
             new XElement("puntoVenta", c.PointOfSale), new XElement("numeroComprobante", c.Number), new XElement("estado", c.State)))));
@@ -563,7 +590,7 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
     private static ContractAnswer Respond(ServiceCall call, string result, params object?[] content) =>
         call.Ok(new XElement(call.Operation.Output, new XElement("resultado", result), content));
 
-    private static ContractAnswer Accept(ServiceCall call, params object?[] content) => Respond(call, "A", content);
+    private static ContractAnswer Accept(ServiceCall call, params object?[] content) => Respond(call, Accepted, content);
 
     /// <summary>The answers without resultado (parameters, initial CATA).</summary>
     private static ContractAnswer Reply(ServiceCall call, params object?[] content) => call.Ok(new XElement(call.Operation.Output, content));
@@ -573,7 +600,7 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
     {
         var answer = call.Error(error.Code, error.Text);
         if (answer.Body is not { } body) return answer;
-        body.Element("resultado")?.SetValue("R");
+        body.Element("resultado")?.SetValue(Rejected);
         body.Element("idSolicitud")?.SetValue(call.Request.Number("idSolicitud"));
         body.Element("errores")?.ReplaceWith(Codes("errores", error));
         return answer;
