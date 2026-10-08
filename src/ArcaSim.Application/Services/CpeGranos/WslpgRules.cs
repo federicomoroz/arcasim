@@ -232,7 +232,7 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
         }
         var voided = document! with { State = Voided };
         await SaveAsync(voided, ct);
-        Pdf(fill, result, call.Request.Text("pdf") != "N", voided);
+        Pdf(fill, result, !DeclinesPdf(call), voided);
         return call.Ok(fill.Done());
     }
 
@@ -591,7 +591,14 @@ public sealed class WslpgRules(IDocumentStore store, IClock clock, SequenceLocks
     /// <summary>The return element every answer wraps its data in (liqReturn, oReturn, liqConsReturn...).</summary>
     private static XElement Return(XElement answer) => answer.Elements().First();
 
+    /// <summary>The queries attach the PDF only when asked with pdf = S.</summary>
     private static bool Wants(ServiceCall call) => string.Equals(call.Request.Text("pdf"), "S", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The voids attach the PDF unless the client says N: liquidacionAnular has no flag to ask for it with and
+    /// lsgAnular's is optional, so a client that sends none gets the PDF the answer's schema allows.
+    /// </summary>
+    private static bool DeclinesPdf(ServiceCall call) => call.Request.Text("pdf") == "N";
 
     private static void Pdf(AnswerFill fill, XElement result, bool wanted, StoredSettlement document)
     {
