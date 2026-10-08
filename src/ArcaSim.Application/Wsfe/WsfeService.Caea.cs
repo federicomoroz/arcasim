@@ -255,24 +255,22 @@ public sealed partial class WsfeService
     /// <summary>A CAEA as ARCA writes one: fourteen digits.</summary>
     private static bool IsCaeaCode(string? code) => code is { Length: 14 } && code.All(char.IsAsciiDigit);
 
-    /// <summary>The days a fortnight covers: "orden" 1 is the 1st to the 15th, 2 the 16th to the end of the month.</summary>
+    /// <summary>The days a fortnight covers (<see cref="CaeaFortnights"/>), or WSFEv1's code for a period or an order that is not one.</summary>
     private static bool TryFortnight(int period, short fortnight, out DateOnly from, out DateOnly to, out int error)
     {
         from = to = default;
         error = 0;
-        if (period is < 190001 or > 999912 || period % 100 is < 1 or > 12)
+        if (!CaeaFortnights.IsPeriod(period))
         {
             error = 15004;
             return false;
         }
-        if (fortnight is not (1 or 2))
+        if (!CaeaFortnights.IsOrder(fortnight))
         {
             error = 15005;
             return false;
         }
-        var first = new DateOnly(period / 100, period % 100, 1);
-        from = fortnight == 1 ? first : first.AddDays(15);
-        to = fortnight == 1 ? first.AddDays(14) : first.AddMonths(1).AddDays(-1);
+        (from, to) = CaeaFortnights.Days(period, fortnight);
         return true;
     }
 
