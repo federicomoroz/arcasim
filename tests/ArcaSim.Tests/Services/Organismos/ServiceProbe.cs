@@ -1,7 +1,7 @@
 using System.Xml.Linq;
-using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArcaSim.Tests.Services.Organismos;
@@ -15,8 +15,6 @@ internal sealed class ServiceProbe(ArcaSimHarness sim, ServiceContract contract,
 {
     public const long Caller = ArcaSimHarness.Issuer;
 
-    private static readonly ServiceCatalog Catalog = ServiceCatalog.Load(Path.Combine(AppContext.BaseDirectory, "arca-servicios.json"));
-
     public string Token { get; } = token;
     public string Sign { get; } = sign;
     public ArcaSimHarness Sim => sim;
@@ -27,8 +25,8 @@ internal sealed class ServiceProbe(ArcaSimHarness sim, ServiceContract contract,
     public static async Task<ServiceProbe> StartAsync(ArcaSimHarness sim, string service, string? wsaa = null)
     {
         sim.Clock.Freeze(new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3)));
-        var definition = Catalog.Find(service)!;
-        var contract = ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", definition.Wsdl));
+        var definition = Contracts.Definition(service);
+        var contract = Contracts.Of(definition);
         await sim.PutTaxpayerAsync(Caller, "Empresa de Prueba SA", VatCondition.ResponsableInscripto);
         var id = wsaa ?? definition.Wsaa[0];
         var certificate = await sim.IssueCertificateAsync(Caller, id, id);
@@ -49,9 +47,7 @@ internal sealed class ServiceProbe(ArcaSimHarness sim, ServiceContract contract,
         var element = qualified
             ? $"<{input.LocalName} xmlns=\"{namespaceName}\">{inner}</{input.LocalName}>"
             : $"<x:{input.LocalName} xmlns:x=\"{namespaceName}\">{inner}</x:{input.LocalName}>";
-        var envelope = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"><soapenv:Header/>" +
-                       $"<soapenv:Body>{element}</soapenv:Body></soapenv:Envelope>";
-        var (status, body) = await sim.PostSoapAsync(new Uri("http://localhost" + contract.AddressPath), envelope, op.Action ?? "");
+        var (status, body) = await sim.PostSoapAsync(new Uri("http://localhost" + contract.AddressPath), Soap.Envelope(element), op.Action ?? "");
         return new SoapAnswer(status, body, contract);
     }
 }
@@ -59,7 +55,7 @@ internal sealed class ServiceProbe(ArcaSimHarness sim, ServiceContract contract,
 /// <summary>What came back: the Body's element, valid for the WSDL, or the fault's text.</summary>
 internal sealed record SoapAnswer(int Status, string Body, ServiceContract Contract)
 {
-    public XElement Element => XDocument.Parse(ArcaSim.Tests.Contract.CatalogServiceTests.Soap(Body)).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
+    public XElement Element => Soap.Body(Body);
 
     /// <summary>The answer, after checking it is a 200 that validates against the WSDL: what a generated client deserializes.</summary>
     public XElement Valid()
@@ -67,12 +63,7 @@ internal sealed record SoapAnswer(int Status, string Body, ServiceContract Contr
         Assert.True(Status == 200, Body);
         var answer = Element;
         Assert.NotEqual("Fault", answer.Name.LocalName);
-        var problems = new List<string>();
-        new XDocument(answer).Validate(Contract.Schemas, (_, e) =>
-        {
-            if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
-        });
-        Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems) + Environment.NewLine + Body);
+        Xsd.AssertValid(answer, Contract);
         return answer;
     }
 

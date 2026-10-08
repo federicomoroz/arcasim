@@ -1,9 +1,9 @@
 using System.Security;
 using System.Xml.Linq;
-using System.Xml.Schema;
 using Arca.Client;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Services.Aduana;
 
@@ -17,8 +17,6 @@ internal sealed class AduanaKit : IAsyncDisposable
 {
     public const long Caller = ArcaSimHarness.Issuer;
     public const long Other = 20222222223;
-
-    private static readonly ServiceCatalog Catalog = ServiceCatalog.Load(Path.Combine(AppContext.BaseDirectory, "arca-servicios.json"));
 
     public static readonly DateTimeOffset Today = new(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3));
 
@@ -38,10 +36,10 @@ internal sealed class AduanaKit : IAsyncDisposable
     /// <summary>A service called by one CUIT, its ticket written by the wrapper the service uses.</summary>
     public async Task<AduanaService> ServiceAsync(string id, Func<AccessTicket, long, string> auth, long cuit = Caller)
     {
-        var definition = Catalog.Find(id)!;
+        var definition = Contracts.Definition(id);
         var certificate = await Sim.IssueCertificateAsync(cuit, $"{id}-{cuit}", definition.Wsaa[0]);
         var ticket = await Sim.Wsaa(cuit, certificate).LoginAsync(definition.Wsaa[0]);
-        var contract = ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", definition.Wsdl));
+        var contract = Contracts.Of(definition);
         return new AduanaService(Sim, contract, auth(ticket, cuit));
     }
 
@@ -61,17 +59,6 @@ internal sealed class AduanaKit : IAsyncDisposable
         $"<autenticacion><token>{t.Token}</token><firma>{t.Sign}</firma></autenticacion>";
 
     public ValueTask DisposeAsync() => Sim.DisposeAsync();
-
-    /// <summary>The answer is valid for the WSDL ARCA publishes: what a generated client deserializes.</summary>
-    public static void Validate(ServiceContract contract, XElement answer)
-    {
-        var problems = new List<string>();
-        new XDocument(new XElement(answer)).Validate(contract.Schemas, (_, e) =>
-        {
-            if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
-        });
-        Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems) + Environment.NewLine + answer);
-    }
 }
 
 internal sealed class AduanaService(ArcaSimHarness sim, ServiceContract contract, string auth)
@@ -85,9 +72,9 @@ internal sealed class AduanaService(ArcaSimHarness sim, ServiceContract contract
     {
         var (status, body) = await RawAsync(operation, inner);
         Assert.True(status == 200, body);
-        var answer = XDocument.Parse(body).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
+        var answer = Soap.Body(body);
         Assert.Equal(XName.Get(operation + "Response", Ns), answer.Name);
-        AduanaKit.Validate(contract, answer);
+        Xsd.AssertValid(answer, contract);
         return answer.Elements().First();
     }
 

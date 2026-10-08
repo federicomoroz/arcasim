@@ -1,9 +1,9 @@
 using System.Security.Cryptography.X509Certificates;
 using System.Xml.Linq;
-using System.Xml.Schema;
 using Arca.Client;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Services.Fce;
 
@@ -24,8 +24,6 @@ public sealed class FceWorld : IAsyncDisposable
     public const string BuyerCbu = "0170001554000000987650";
 
     private static readonly string[] Services = ["wsfecred", "wsfecredagente", "wsfecredsca"];
-    private static readonly Dictionary<string, ServiceContract> Contracts = Services.ToDictionary(s => s,
-        s => ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", $"{s}-homologacion.wsdl")));
 
     private readonly Dictionary<long, WsaaClient> _wsaa = [];
 
@@ -118,32 +116,20 @@ public sealed class FceWorld : IAsyncDisposable
     /// <summary>One operation as the party calls it; the answer's single child (xxxReturn or resultado), already validated.</summary>
     public async Task<XElement> CallAsync(string service, long cuit, string operation, string inner)
     {
-        var contract = Contracts[service];
+        var contract = Contracts.Of($"{service}-homologacion.wsdl");
         var op = contract.Operations.Single(o => o.Name == operation);
         var ticket = await _wsaa[cuit].GetTicketAsync(service);
         var auth = service == "wsfecred" ? "authRequest" : "autenticacion";
-        var envelope =
-            $"<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ser=\"{contract.TargetNamespace}\"><soapenv:Header/><soapenv:Body>" +
-            $"<ser:{op.Input!.LocalName}><{auth}><token>{ticket.Token}</token><sign>{ticket.Sign}</sign><cuitRepresentada>{cuit}</cuitRepresentada></{auth}>{inner}</ser:{op.Input.LocalName}>" +
-            "</soapenv:Body></soapenv:Envelope>";
+        var envelope = Soap.Envelope(
+            $"<ser:{op.Input!.LocalName}><{auth}>{Login.Credentials(ticket, cuit)}</{auth}>{inner}</ser:{op.Input.LocalName}>",
+            ("ser", contract.TargetNamespace));
 
         var (status, body) = await Sim.PostSoapAsync(new Uri("http://localhost" + contract.AddressPath), envelope, op.Action ?? "");
         Assert.True(status == 200, body);
-        var answer = XDocument.Parse(body).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
+        var answer = Soap.Body(body);
         Assert.Equal(op.Output, answer.Name);
-        Validate(contract, answer);
+        Xsd.AssertValid(answer, contract);
         return answer.Elements().Single();
-    }
-
-    /// <summary>The answer is valid for the WSDL ARCA publishes: what a generated client deserializes.</summary>
-    private static void Validate(ServiceContract contract, XElement answer)
-    {
-        var problems = new List<string>();
-        new XDocument(answer).Validate(contract.Schemas, (_, e) =>
-        {
-            if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
-        });
-        Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems) + Environment.NewLine + answer);
     }
 
     /// <summary>The codes of a codigoDescripcion block (arrayErrores, errores, erroresFormato...).</summary>

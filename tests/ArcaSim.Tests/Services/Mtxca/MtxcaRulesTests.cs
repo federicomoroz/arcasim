@@ -1,10 +1,10 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Xml.Linq;
-using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Services.FacturacionE;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArcaSim.Tests.Services.Mtxca;
@@ -20,8 +20,7 @@ public class MtxcaRulesTests
     private const long Receiver = 30000000007;
     private const string Namespace = "http://impl.service.wsmtxca.afip.gov.ar/service/";
 
-    private static readonly ServiceContract Contract =
-        ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", "wsmtxca-homologacion.wsdl"));
+    private static readonly ServiceContract Contract = Contracts.Of("wsmtxca-homologacion.wsdl");
 
     [Fact]
     public async Task A_voucher_with_items_gets_a_CAE_then_the_last_number_and_the_voucher_come_back()
@@ -377,19 +376,12 @@ public class MtxcaRulesTests
 
         public async Task<XElement> CallAsync(string operation, string inner, string ns = Namespace)
         {
-            var envelope = $"<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ser=\"{ns}\">" +
-                           $"<soapenv:Header/><soapenv:Body><ser:{operation}Request>{auth}{inner}</ser:{operation}Request></soapenv:Body></soapenv:Envelope>";
+            var envelope = Soap.Envelope($"<ser:{operation}Request>{auth}{inner}</ser:{operation}Request>", ("ser", ns));
             var (status, body) = await sim.PostSoapAsync(new Uri("http://localhost" + Contract.AddressPath), envelope, Namespace + operation);
             Assert.True(status == 200, body);
-            var answer = XDocument.Parse(body).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
+            var answer = Soap.Body(body);
             Assert.Equal(XName.Get(operation + "Response", Namespace), answer.Name);
-
-            var problems = new List<string>();
-            new XDocument(answer).Validate(Contract.Schemas, (_, e) =>
-            {
-                if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
-            });
-            Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems) + Environment.NewLine + body);
+            Xsd.AssertValid(answer, Contract);
             return answer;
         }
     }

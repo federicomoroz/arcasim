@@ -1,13 +1,12 @@
 using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Contract;
 
 /// <summary>The numbers a catalog text counts with {seq:start}: one sequence per simulator, back to its start on reset.</summary>
 public class SequenceTests
 {
-    private static readonly ServiceCatalog Catalog = ServiceCatalog.Load(Path.Combine(AppContext.BaseDirectory, "arca-servicios.json"));
-
     [Fact]
     public async Task A_sequence_counts_per_simulator_and_starts_over_on_reset()
     {
@@ -29,14 +28,13 @@ public class SequenceTests
     /// <summary>wgesTabRef answers an unreadable token with 7004 and the next "ID MWE" of its sequence.</summary>
     private static async Task<string> ForgedTicketAsync(ArcaSimHarness sim)
     {
-        var definition = Catalog.Find("wgesTabRef")!;
-        var contract = ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", definition.Wsdl));
+        var contract = Contracts.Of(Contracts.Definition("wgesTabRef"));
         var sampler = new SchemaSampler(contract.Schemas);
         var operation = contract.Operations.First(o => o.Input is not null && sampler.CarriesTicket(o.Input));
         var request = sampler.Sample(operation.Input!, new SampleContext(ArcaSimHarness.Issuer, new DateTimeOffset(2026, 10, 7, 12, 0, 0, TimeSpan.FromHours(-3))));
-        CatalogServiceTests.Sign(request, "abc", "abc");
+        Soap.Sign(request, "abc", "abc", ArcaSimHarness.Issuer);
 
-        var (_, body) = await sim.PostSoapAsync(new Uri("http://localhost" + contract.AddressPath), CatalogServiceTests.Envelope(request), operation.Action ?? "");
+        var (_, body) = await sim.PostSoapAsync(new Uri("http://localhost" + contract.AddressPath), Soap.Envelope(request), operation.Action ?? "");
 
         return XDocument.Parse(body).Descendants().First(e => e.Name.LocalName == "InfoAdicional").Value;
     }

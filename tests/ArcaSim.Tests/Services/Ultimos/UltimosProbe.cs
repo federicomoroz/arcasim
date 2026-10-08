@@ -1,9 +1,9 @@
 using System.Net.Http.Json;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml.Linq;
-using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArcaSim.Tests.Services.Ultimos;
@@ -18,8 +18,6 @@ namespace ArcaSim.Tests.Services.Ultimos;
 internal sealed class UltimosProbe
 {
     public const long Caller = ArcaSimHarness.Issuer;
-
-    private static readonly ServiceCatalog Catalog = ServiceCatalog.Load(Path.Combine(AppContext.BaseDirectory, "arca-servicios.json"));
 
     private readonly X509Certificate2 _certificate;
     private readonly string _wsaa;
@@ -44,8 +42,8 @@ internal sealed class UltimosProbe
     public static async Task<UltimosProbe> StartAsync(ArcaSimHarness sim, string service, string? wsaa = null)
     {
         sim.Clock.Freeze(new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3)));
-        var definition = Catalog.Find(service)!;
-        var contract = ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", definition.Wsdl));
+        var definition = Contracts.Definition(service);
+        var contract = Contracts.Of(definition);
         await sim.PutTaxpayerAsync(Caller, "Organismo de Prueba", VatCondition.ResponsableInscripto);
         var id = wsaa ?? definition.Wsaa[0];
         var probe = new UltimosProbe(sim, contract, await sim.IssueCertificateAsync(Caller, id, id), id, definition.Dialect == Dialect.Asmx);
@@ -74,9 +72,7 @@ internal sealed class UltimosProbe
     /// <summary>Posts whatever goes in the Body, even nothing, with that SOAPAction.</summary>
     public async Task<SoapReply> PostAsync(string body, string action)
     {
-        var envelope = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"><soapenv:Header/>" +
-                       $"<soapenv:Body>{body}</soapenv:Body></soapenv:Envelope>";
-        var (status, text) = await Sim.PostSoapAsync(new Uri("http://localhost" + Contract.AddressPath), envelope, action);
+        var (status, text) = await Sim.PostSoapAsync(new Uri("http://localhost" + Contract.AddressPath), Soap.Envelope(body), action);
         return new SoapReply(status, text, Contract);
     }
 
@@ -91,7 +87,7 @@ internal sealed class UltimosProbe
 /// <summary>What came back: the Body's element, valid for the WSDL, or the fault.</summary>
 internal sealed record SoapReply(int Status, string Body, ServiceContract Contract)
 {
-    public XElement Element => XDocument.Parse(Body).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
+    public XElement Element => Soap.Body(Body);
 
     /// <summary>The answer, after checking it is a 200 that validates against the WSDL: what a generated client deserializes.</summary>
     public XElement Valid()
@@ -99,12 +95,7 @@ internal sealed record SoapReply(int Status, string Body, ServiceContract Contra
         Assert.True(Status == 200, Body);
         var answer = Element;
         Assert.NotEqual("Fault", answer.Name.LocalName);
-        var problems = new List<string>();
-        new XDocument(answer).Validate(Contract.Schemas, (_, e) =>
-        {
-            if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
-        });
-        Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems) + Environment.NewLine + Body);
+        Xsd.AssertValid(answer, Contract);
         return answer;
     }
 

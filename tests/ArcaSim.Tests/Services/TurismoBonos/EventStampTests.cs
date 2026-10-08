@@ -5,6 +5,7 @@ using ArcaSim.Application.Events;
 using ArcaSim.Application.Services.Mtxca;
 using ArcaSim.Application.Services.TurismoBonos;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArcaSim.Tests.Services.TurismoBonos;
@@ -18,7 +19,6 @@ namespace ArcaSim.Tests.Services.TurismoBonos;
 public class EventStampTests
 {
     private static readonly DateTimeOffset Fixed = new(2031, 3, 4, 5, 6, 7, TimeSpan.Zero);
-    private static readonly ServiceCatalog Catalog = ServiceCatalog.Load(Path.Combine(AppContext.BaseDirectory, "arca-servicios.json"));
 
     [Fact]
     public async Task A_rejected_WSCT_voucher_is_stamped_by_the_time_provider_it_was_given()
@@ -67,8 +67,8 @@ public class EventStampTests
         var seen = new List<IArcaSimEvent>();
         sim.Services.GetRequiredService<EventManager>().SubscribeAll(seen.Add);
 
-        var definition = Catalog.Find(service)!;
-        var contract = ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", definition.Wsdl));
+        var definition = Contracts.Definition(service);
+        var contract = Contracts.Of(definition);
         var request = XElement.Parse($"<{operation} xmlns=\"{SecurityElement.Escape(contract.TargetNamespace)}\">{inner}</{operation}>");
         var call = new ServiceCall(definition, contract, new SchemaSampler(contract.Schemas), contract.Operations.First(o => o.Name == operation),
             request, ArcaSimHarness.Issuer, new SampleContext(ArcaSimHarness.Issuer, sim.Clock.Now));

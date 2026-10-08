@@ -1,8 +1,8 @@
 using System.Net.Http.Json;
 using System.Xml.Linq;
-using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Services.TurismoBonos;
 
@@ -22,7 +22,7 @@ internal sealed class ServiceDesk
     private ServiceDesk(ArcaSimHarness sim, string wsdl, string prefix, string token, string sign)
     {
         _sim = sim;
-        _contract = ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", wsdl));
+        _contract = Contracts.Of(wsdl);
         _prefix = prefix;
         Token = token;
         Sign = sign;
@@ -49,17 +49,11 @@ internal sealed class ServiceDesk
     public async Task<XElement> CallAsync(string operation, string inner)
     {
         var action = _contract.Operations.Single(o => o.Name == operation).Action;
-        var envelope = $"<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:{_prefix}=\"{_contract.TargetNamespace}\">" +
-                       $"<soapenv:Header/><soapenv:Body><{_prefix}:{operation}>{inner}</{_prefix}:{operation}></soapenv:Body></soapenv:Envelope>";
+        var envelope = Soap.Envelope($"<{_prefix}:{operation}>{inner}</{_prefix}:{operation}>", (_prefix, _contract.TargetNamespace));
         var (status, body) = await _sim.PostSoapAsync(new Uri("http://localhost" + _contract.AddressPath), envelope, $"\"{action}\"");
         Assert.True(status == 200, body);
         var answer = XDocument.Parse(body, LoadOptions.PreserveWhitespace).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
-        var problems = new List<string>();
-        new XDocument(answer).Validate(_contract.Schemas, (_, e) =>
-        {
-            if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
-        });
-        Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems) + Environment.NewLine + answer);
+        Xsd.AssertValid(answer, _contract);
         return answer;
     }
 

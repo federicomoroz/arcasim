@@ -1,4 +1,3 @@
-using System.Xml.Linq;
 using ArcaSim.Application.Access;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Domain;
@@ -49,8 +48,8 @@ public class CatalogServiceTests
         foreach (var operation in contract.Operations)
         {
             var request = operation.Input is null ? null : sampler.Sample(operation.Input, new SampleContext(Caller, sim.Clock.Now));
-            if (request is not null) Support.Soap.Sign(request, ticket.Token, ticket.Sign, Caller);
-            var (status, body) = await sim.PostSoapAsync(url, Support.Soap.Envelope(request), operation.Action ?? "");
+            if (request is not null) Soap.Sign(request, ticket.Token, ticket.Sign, Caller);
+            var (status, body) = await sim.PostSoapAsync(url, Soap.Envelope(request), operation.Action ?? "");
             if (status != 200 && hasRules && body.Contains("Fault>", StringComparison.Ordinal) && !body.Contains("oken", StringComparison.Ordinal))
             {
                 refused.Add(operation.Name);
@@ -61,7 +60,7 @@ public class CatalogServiceTests
                 problems.Add($"{operation.Name}: HTTP {status} {body[Math.Max(0, body.IndexOf("<faultstring", StringComparison.Ordinal))..]}");
                 continue;
             }
-            var answer = Support.Soap.Body(body);
+            var answer = Soap.Body(body);
             if (answer.Name != operation.Output) problems.Add($"{operation.Name}: answered {answer.Name}");
             var invalid = Xsd.Problems(answer, contract);
             problems.AddRange(invalid.Select(problem => $"{operation.Name}: {problem}"));
@@ -87,8 +86,8 @@ public class CatalogServiceTests
         await using var sim = ArcaSimHarness.Start();
 
         var request = sampler.Sample(operation.Input!, new SampleContext(Caller, sim.Clock.Now));
-        Support.Soap.Sign(request, "abc", "abc", Caller);
-        var (status, body) = await sim.PostSoapAsync(new Uri("http://localhost" + contract.AddressPath), Support.Soap.Envelope(request), operation.Action ?? "");
+        Soap.Sign(request, "abc", "abc", Caller);
+        var (status, body) = await sim.PostSoapAsync(new Uri("http://localhost" + contract.AddressPath), Soap.Envelope(request), operation.Action ?? "");
 
         // "abc" is an unreadable token: the service's row for it, or for any problem, says what comes back.
         var errors = definition.Errors;
@@ -107,14 +106,4 @@ public class CatalogServiceTests
         }
         sim.AssertNoLoggedErrors();
     }
-
-    // The group kits under Services/ still call these three on this class; they move to Support.Soap
-    // with the kits, and these go with them.
-
-    /// <summary>The SOAP envelope of an answer, out of its MTOM package when the service sends one.</summary>
-    public static string Soap(string body) => Support.Soap.Unwrap(body);
-
-    internal static void Sign(XElement request, string token, string sign) => Support.Soap.Sign(request, token, sign, Caller);
-
-    internal static string Envelope(XElement? request) => Support.Soap.Envelope(request);
 }

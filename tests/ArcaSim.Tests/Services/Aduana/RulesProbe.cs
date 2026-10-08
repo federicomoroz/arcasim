@@ -1,6 +1,7 @@
 using System.Security;
 using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Services.Aduana;
 
@@ -12,8 +13,6 @@ namespace ArcaSim.Tests.Services.Aduana;
 /// </summary>
 internal sealed class RulesProbe
 {
-    private static readonly ServiceCatalog Catalog = ServiceCatalog.Load(Path.Combine(AppContext.BaseDirectory, "arca-servicios.json"));
-
     private readonly IServiceBehavior _rules;
     private readonly ServiceDefinition _definition;
     private readonly ServiceContract _contract;
@@ -24,8 +23,8 @@ internal sealed class RulesProbe
     {
         _rules = rules;
         _now = now;
-        _definition = Catalog.Find(rules.Service)!;
-        _contract = ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", _definition.Wsdl));
+        _definition = Contracts.Definition(rules.Service);
+        _contract = Contracts.Of(_definition);
         _sampler = new SchemaSampler(_contract.Schemas);
     }
 
@@ -37,7 +36,7 @@ internal sealed class RulesProbe
             request, cuit, new SampleContext(cuit, _now) { Always = _definition.Always });
         var answer = await _rules.AnswerAsync(call, CancellationToken.None);
         Assert.NotNull(answer?.Body);
-        AduanaKit.Validate(_contract, answer.Body);
+        Xsd.AssertValid(answer.Body, _contract);
         return answer.Body.Elements().First();
     }
 }
