@@ -55,7 +55,8 @@ public sealed partial class MtxcaRules(
     IAuthorizationCodes codes,
     IClock clock,
     SimulationSettings settings,
-    EventManager events) : IServiceBehavior
+    EventManager events,
+    TimeProvider time) : IServiceBehavior
 {
     private readonly MtxcaTables _tables = new(parameters);
     private readonly MtxcaStore _state = new(documents);
@@ -126,7 +127,7 @@ public sealed partial class MtxcaRules(
             if (date < last?.Date) findings.Add(MtxcaCodes.Error(MtxcaTable.Cae, 104));
             if (findings.Any(f => f.Rejects))
             {
-                events.Publish(new VoucherRejected(DateTimeOffset.UtcNow, call.Cuit, voucher.PointOfSale, voucher.Type, voucher.Number,
+                events.Publish(new VoucherRejected(time.GetUtcNow(), call.Cuit, voucher.PointOfSale, voucher.Type, voucher.Number,
                     findings.Where(f => f.Rejects).Select(f => f.Code).ToList()));
                 return Rejected(call, findings.Where(f => f.Rejects));
             }
@@ -134,7 +135,7 @@ public sealed partial class MtxcaRules(
             var cae = long.Parse(codes.NextCae(), CultureInfo.InvariantCulture);
             var due = date.AddDays(settings.CaeLifetimeDays);
             await _state.AddAsync(Stored(call.Cuit, voucher, date, "E", cae, due, findings), voucher.DocType ?? 0, voucher.DocNumber ?? 0, voucher.Total, ct);
-            events.Publish(new VoucherAuthorized(DateTimeOffset.UtcNow, call.Cuit, voucher.PointOfSale, voucher.Type, voucher.Number,
+            events.Publish(new VoucherAuthorized(time.GetUtcNow(), call.Cuit, voucher.PointOfSale, voucher.Type, voucher.Number,
                 voucher.Number, "CAE", cae.ToString(CultureInfo.InvariantCulture)));
 
             return call.Ok(new XElement(call.Operation.Output,
@@ -178,7 +179,7 @@ public sealed partial class MtxcaRules(
         else copy.AddFirst(authorization);
 
         return new MtxcaVoucher(cuit, voucher.PointOfSale, voucher.Type, voucher.Number, date, authorizationType, code, due,
-            DateTimeOffset.UtcNow, copy.ToString(SaveOptions.DisableFormatting),
+            copy.ToString(SaveOptions.DisableFormatting),
             observations.Where(o => !o.Rejects).Select(o => new MtxcaNote(o.Code, o.Text)).ToList());
     }
 

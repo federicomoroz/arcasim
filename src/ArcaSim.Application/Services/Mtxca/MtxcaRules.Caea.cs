@@ -52,7 +52,7 @@ public sealed partial class MtxcaRules
             var caea = new MtxcaCaea(call.Cuit, period, order, code, granted.From, granted.To, granted.To.AddMonths(1), today,
                 false, [], []);
             await _state.SaveCaeaAsync(caea, ct);
-            events.Publish(new CaeaGranted(DateTimeOffset.UtcNow, call.Cuit, period, order, code.ToString(CultureInfo.InvariantCulture)));
+            events.Publish(new CaeaGranted(time.GetUtcNow(), call.Cuit, period, order, code.ToString(CultureInfo.InvariantCulture)));
             return call.Ok(new XElement(call.Operation.Output, CaeaElement(caea)));
         }
         finally
@@ -210,7 +210,7 @@ public sealed partial class MtxcaRules
             if (date < last?.Date) findings.Add(MtxcaCodes.Error(MtxcaTable.Caea, 704));
             if (findings.Any(f => f.Rejects))
             {
-                events.Publish(new VoucherRejected(DateTimeOffset.UtcNow, call.Cuit, voucher.PointOfSale, voucher.Type, voucher.Number,
+                events.Publish(new VoucherRejected(time.GetUtcNow(), call.Cuit, voucher.PointOfSale, voucher.Type, voucher.Number,
                     findings.Where(f => f.Rejects).Select(f => f.Code).ToList()));
                 return InformRejected(call, today, findings.Where(f => f.Rejects));
             }
@@ -228,7 +228,7 @@ public sealed partial class MtxcaRules
             }
             await _state.AddAsync(Stored(call.Cuit, voucher, date, "A", caea.Code, caea.To, findings),
                 voucher.DocType ?? 0, voucher.DocNumber ?? 0, voucher.Total, ct);
-            events.Publish(new VoucherAuthorized(DateTimeOffset.UtcNow, call.Cuit, voucher.PointOfSale, voucher.Type, voucher.Number,
+            events.Publish(new VoucherAuthorized(time.GetUtcNow(), call.Cuit, voucher.PointOfSale, voucher.Type, voucher.Number,
                 voucher.Number, "CAEA", caea.Code.ToString(CultureInfo.InvariantCulture)));
 
             return call.Ok(new XElement(call.Operation.Output,

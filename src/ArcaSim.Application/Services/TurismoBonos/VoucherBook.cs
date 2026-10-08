@@ -25,8 +25,7 @@ public sealed record BookedVoucher(
     DateOnly CaeDue,
     string Result,
     List<BookNote> Notes,
-    string Detail,
-    DateTimeOffset ProcessedAt);
+    string Detail);
 
 /// <summary>The last number of a sequence (CUIT, point of sale, type) and its date.</summary>
 public sealed record BookedLast(long Number, DateOnly Date);

@@ -123,7 +123,8 @@ public abstract class AsmxVoucherRules(
     SequenceLocks locks,
     IClock clock,
     SimulationSettings settings,
-    EventManager events) : IServiceBehavior
+    EventManager events,
+    TimeProvider time) : IServiceBehavior
 {
     public abstract string Service { get; }
 
@@ -240,17 +241,17 @@ public abstract class AsmxVoucherRules(
             var date = Figures.ParseDay(cmp.DateText) ?? today;
             var voucher = new BookedVoucher(Service, call.Cuit, cmp.PointOfSale, cmp.VoucherType, cmp.Number, cmp.Id, date,
                 string.IsNullOrEmpty(cmp.DateText) ? null : cmp.DateText, codes.NextCae(), date.AddDays(settings.CaeLifetimeDays), "A", Observe(cmp),
-                Figures.Strip(cmp.Raw).ToString(SaveOptions.DisableFormatting), clock.Now);
+                Figures.Strip(cmp.Raw).ToString(SaveOptions.DisableFormatting));
             await Book.AddAsync(voucher, new AuthorizedVoucher(Service, call.Cuit, cmp.PointOfSale, cmp.VoucherType, cmp.Number, date,
                 cmp.Total, cmp.DocType, cmp.DocNumber, "CAE", voucher.Cae, voucher.CaeDue), ct);
-            events.Publish(new VoucherAuthorized(DateTimeOffset.UtcNow, call.Cuit, cmp.PointOfSale, cmp.VoucherType, cmp.Number, cmp.Number, "CAE", voucher.Cae));
+            events.Publish(new VoucherAuthorized(time.GetUtcNow(), call.Cuit, cmp.PointOfSale, cmp.VoucherType, cmp.Number, cmp.Number, "CAE", voucher.Cae));
             return Answer(call, Authorized(ns, voucher, reprocessed: false));
         }
     }
 
     private ContractAnswer Rejected(ServiceCall call, AsmxCmp cmp, AsmxRefusal refusal)
     {
-        events.Publish(new VoucherRejected(DateTimeOffset.UtcNow, call.Cuit, cmp.PointOfSale, cmp.VoucherType, cmp.Number, [refusal.Code]));
+        events.Publish(new VoucherRejected(time.GetUtcNow(), call.Cuit, cmp.PointOfSale, cmp.VoucherType, cmp.Number, [refusal.Code]));
         var ns = Ns(call);
         return Answer(call, new XElement(ns + $"{Prefix}ResultAuth", new XElement(ns + "Id", 0), new XElement(ns + "Cuit", 0)), refusal);
     }

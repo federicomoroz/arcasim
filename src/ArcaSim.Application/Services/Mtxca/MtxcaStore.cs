@@ -18,7 +18,6 @@ public sealed record MtxcaVoucher(
     string AuthorizationType,
     long AuthorizationCode,
     DateOnly AuthorizationDue,
-    DateTimeOffset ProcessedAt,
     string Voucher,
     List<MtxcaNote> Observations);
 

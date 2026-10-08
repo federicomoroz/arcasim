@@ -43,8 +43,8 @@ namespace ArcaSim.Application.Services.TurismoBonos;
 /// </summary>
 public sealed class WssegRules(
     ParameterTables parameters, IDocumentStore documents, IExchangeRates rates, IAuthorizationCodes codes,
-    SequenceLocks locks, IClock clock, SimulationSettings settings, EventManager events)
-    : AsmxVoucherRules(parameters, documents, rates, codes, locks, clock, settings, events)
+    SequenceLocks locks, IClock clock, SimulationSettings settings, EventManager events, TimeProvider time)
+    : AsmxVoucherRules(parameters, documents, rates, codes, locks, clock, settings, events, time)
 {
     public const string RetirementNotice =
         "El servicio WSSEG sera dado de baja. Cabe destacar que la Resolución General Nro 5866/2026 indica que este servicio sera reemplazado por " +

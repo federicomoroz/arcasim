@@ -15,8 +15,8 @@ namespace ArcaSim.Application.Services.TurismoBonos;
 /// </summary>
 public sealed class WsbfeV1Rules(
     ParameterTables parameters, IDocumentStore documents, IExchangeRates rates, IAuthorizationCodes codes,
-    SequenceLocks locks, IClock clock, SimulationSettings settings, EventManager events)
-    : BfeRules(parameters, documents, rates, codes, locks, clock, settings, events)
+    SequenceLocks locks, IClock clock, SimulationSettings settings, EventManager events, TimeProvider time)
+    : BfeRules(parameters, documents, rates, codes, locks, clock, settings, events, time)
 {
     public override string Service => "wsbfev1";
 
@@ -35,8 +35,8 @@ public sealed class WsbfeV1Rules(
 /// </summary>
 public sealed class WsbfeRules(
     ParameterTables parameters, IDocumentStore documents, IExchangeRates rates, IAuthorizationCodes codes,
-    SequenceLocks locks, IClock clock, SimulationSettings settings, EventManager events)
-    : BfeRules(parameters, documents, rates, codes, locks, clock, settings, events)
+    SequenceLocks locks, IClock clock, SimulationSettings settings, EventManager events, TimeProvider time)
+    : BfeRules(parameters, documents, rates, codes, locks, clock, settings, events, time)
 {
     public override string Service => "wsbfe";
 
@@ -80,8 +80,8 @@ public sealed class WsbfeRules(
 /// </summary>
 public abstract class BfeRules(
     ParameterTables parameters, IDocumentStore documents, IExchangeRates rates, IAuthorizationCodes codes,
-    SequenceLocks locks, IClock clock, SimulationSettings settings, EventManager events)
-    : AsmxVoucherRules(parameters, documents, rates, codes, locks, clock, settings, events)
+    SequenceLocks locks, IClock clock, SimulationSettings settings, EventManager events, TimeProvider time)
+    : AsmxVoucherRules(parameters, documents, rates, codes, locks, clock, settings, events, time)
 {
     protected override string Prefix => "BFE";
 

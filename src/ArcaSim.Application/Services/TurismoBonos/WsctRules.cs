@@ -64,7 +64,8 @@ public sealed class WsctRules(
     SequenceLocks locks,
     IClock clock,
     SimulationSettings settings,
-    EventManager events) : IServiceBehavior
+    EventManager events,
+    TimeProvider time) : IServiceBehavior
 {
     private readonly VoucherBook _book = new(documents, "wsct", locks);
     private readonly ConcurrentDictionary<string, XName> _returns = new();
@@ -314,7 +315,7 @@ public sealed class WsctRules(
             if (errors.Count > 0)
             {
                 var unique = errors.DistinctBy(e => e.Code).ToList();
-                events.Publish(new VoucherRejected(DateTimeOffset.UtcNow, call.Cuit, point, type, number, unique.Select(e => e.Code).ToList()));
+                events.Publish(new VoucherRejected(time.GetUtcNow(), call.Cuit, point, type, number, unique.Select(e => e.Code).ToList()));
                 return Return(call, Errors(unique), new XElement("resultado", "R"));
             }
 
@@ -325,11 +326,11 @@ public sealed class WsctRules(
             var due = date.AddDays(settings.CaeLifetimeDays);
             var total = request.Amount("importeTotal") ?? 0;
             var voucher = new BookedVoucher(Service, call.Cuit, point, type, number, 0, date, request.ChildText("fechaEmision"), cae, due,
-                observations.Count > 0 ? "O" : "A", observations, detail.ToString(SaveOptions.DisableFormatting), clock.Now);
+                observations.Count > 0 ? "O" : "A", observations, detail.ToString(SaveOptions.DisableFormatting));
             long.TryParse(request.ChildText("numeroDocumento"), NumberStyles.None, CultureInfo.InvariantCulture, out var receiver);
             await _book.AddAsync(voucher, new AuthorizedVoucher(Service, call.Cuit, point, type, number, date, total,
                 request.ChildInt("codigoTipoDocumento") ?? 0, receiver, "CAE", cae, due), ct);
-            events.Publish(new VoucherAuthorized(DateTimeOffset.UtcNow, call.Cuit, point, type, number, number, "CAE", cae));
+            events.Publish(new VoucherAuthorized(time.GetUtcNow(), call.Cuit, point, type, number, number, "CAE", cae));
 
             return Return(call,
                 new XElement("comprobanteResponse",
