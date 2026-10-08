@@ -1,4 +1,5 @@
 using ArcaSim.Application.Contracts;
+using ArcaSim.Application.Wsfe;
 
 namespace ArcaSim.Application.Services.TurismoBonos;
 
@@ -24,8 +25,7 @@ public sealed record BookedVoucher(
     DateOnly CaeDue,
     string Result,
     List<BookNote> Notes,
-    string Detail,
-    DateTimeOffset ProcessedAt);
+    string Detail);
 
 /// <summary>The last number of a sequence (CUIT, point of sale, type) and its date.</summary>
 public sealed record BookedLast(long Number, DateOnly Date);
@@ -42,17 +42,18 @@ public sealed record BookedLastId(long Id);
 /// requirement Ids already authorized and the highest of them. Every voucher
 /// is also recorded in AuthorizedVouchers, for constatación.
 /// </summary>
-public sealed class VoucherBook(IDocumentStore store, string family)
+public sealed class VoucherBook(IDocumentStore store, string family, SequenceLocks locks)
 {
     private string Vouchers => $"{family}-comprobantes";
     private string Lasts => $"{family}-ultimos";
     private string Requests => $"{family}-requerimientos";
     private string LastIds => $"{family}-ultimo-id";
 
+    /// <summary>A sequence's key (CUIT, point of sale, type): the front of AuthorizedVouchers.Key, which names the vouchers.</summary>
     private static string Sequence(long cuit, int pointOfSale, int type) => $"{cuit}/{pointOfSale:D5}/{type:D3}";
 
     public Task<BookedVoucher?> FindAsync(long cuit, int pointOfSale, int type, long number, CancellationToken ct) =>
-        store.GetAsync<BookedVoucher>(Vouchers, $"{Sequence(cuit, pointOfSale, type)}/{number:D8}", ct);
+        store.GetAsync<BookedVoucher>(Vouchers, AuthorizedVouchers.Key(cuit, pointOfSale, type, number), ct);
 
     public Task<BookedLast?> LastAsync(long cuit, int pointOfSale, int type, CancellationToken ct) =>
         store.GetAsync<BookedLast>(Lasts, Sequence(cuit, pointOfSale, type), ct);
@@ -68,14 +69,17 @@ public sealed class VoucherBook(IDocumentStore store, string family)
     /// <summary>Keeps the voucher, moves its sequence forward, files its requirement Id and records it for constatación.</summary>
     public async Task AddAsync(BookedVoucher voucher, AuthorizedVoucher authorized, CancellationToken ct)
     {
-        var sequence = Sequence(voucher.Cuit, voucher.PointOfSale, voucher.VoucherType);
-        await store.PutAsync(Vouchers, $"{sequence}/{voucher.Number:D8}", voucher, ct);
-        await store.PutAsync(Lasts, sequence, new BookedLast(voucher.Number, voucher.Date), ct);
+        await store.PutAsync(Vouchers, AuthorizedVouchers.Key(voucher.Cuit, voucher.PointOfSale, voucher.VoucherType, voucher.Number), voucher, ct);
+        await store.PutAsync(Lasts, Sequence(voucher.Cuit, voucher.PointOfSale, voucher.VoucherType), new BookedLast(voucher.Number, voucher.Date), ct);
         if (voucher.RequestId > 0)
         {
             await store.PutAsync(Requests, $"{voucher.Cuit}/{voucher.RequestId}", new BookedRequest(voucher.PointOfSale, voucher.VoucherType, voucher.Number), ct);
-            if (voucher.RequestId > await LastRequestIdAsync(voucher.Cuit, ct))
-                await store.PutAsync(LastIds, voucher.Cuit.ToString(), new BookedLastId(voucher.RequestId), ct);
+
+            // The caller holds the lock of this point of sale and type; the CUIT's highest Id is shared by all of
+            // them, so it is read and written under a lock of its own, apart from the sequences' (another key space).
+            using (await locks.AcquireAsync(LastIds, voucher.Cuit, 0, 0, ct))
+                if (voucher.RequestId > await LastRequestIdAsync(voucher.Cuit, ct))
+                    await store.PutAsync(LastIds, voucher.Cuit.ToString(), new BookedLastId(voucher.RequestId), ct);
         }
         await store.PutAsync(authorized, ct);
     }

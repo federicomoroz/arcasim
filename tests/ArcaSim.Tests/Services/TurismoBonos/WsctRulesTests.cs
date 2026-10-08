@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
+using ArcaSim.Domain;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArcaSim.Tests.Services.TurismoBonos;
@@ -93,6 +94,47 @@ public class WsctRulesTests
     }
 
     [Fact]
+    public async Task The_relative_margin_of_the_total_is_measured_on_the_total_informed_as_the_manual_defines_it()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var desk = await OpenAsync(sim);
+        const string longStay = "<item><tipo>0</tipo><codigoTurismo>1</codigoTurismo><descripcion>Estadia larga</descripcion><codigoAlicuotaIVA>5</codigoAlicuotaIVA><importeIVA>21000.00</importeIVA><importeItem>121000.00</importeItem></item>";
+        string Invoice(string total) =>
+            HotelInvoice(1, refund: "<importeReintegro>-21000.00</importeReintegro>", total: total, items: longStay, vat: "21000.00", taxed: "100000.00");
+
+        // The amounts add up to 100001.00. 10.00 under it is 0.01 % of the sum but over 0.01 % of the 99991.00 informed (wsct.md, Aritmética: error relativo = error absoluto / |real|).
+        var under = await AuthorizeAsync(desk, Invoice("99991.00"));
+        var over = await AuthorizeAsync(desk, Invoice("100011.00"));
+
+        Assert.Equal(["369"], Codes(under));
+        Assert.Equal("A", over.Descendants("resultado").Single().Value);
+    }
+
+    [Fact]
+    public async Task A_number_an_int_cannot_hold_is_an_invalid_value_not_the_one_it_wraps_to()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var desk = await OpenAsync(sim);
+        await AuthorizeAsync(desk, HotelInvoice(1));
+        // 4294967491 is 195 (a Factura T), 4294967297 is 1 (the point of sale) once cut to 32 bits.
+        const string wrappedInvoice = "<arrayComprobantesAsociados><comprobanteAsociado><codigoTipoComprobante>195</codigoTipoComprobante><numeroPuntoVenta>4294967297</numeroPuntoVenta><numeroComprobante>1</numeroComprobante></comprobanteAsociado></arrayComprobantesAsociados>";
+
+        var type = await AuthorizeAsync(desk, HotelInvoice(1).Replace("<codigoTipoComprobante>195<", "<codigoTipoComprobante>4294967491<"));
+        var tourism = await AuthorizeAsync(desk, HotelInvoice(2).Replace("<codigoTurismo>1<", "<codigoTurismo>4294967297<"));
+        var associated = await AuthorizeAsync(desk, HotelInvoice(1, wrappedInvoice, type: 197));
+        var last = await desk.CallAsync("consultarUltimoComprobanteAutorizado",
+            Auth(desk) + "<codigoTipoComprobante>195</codigoTipoComprobante><numeroPuntoVenta>4294967297</numeroPuntoVenta>");
+        var consulted = await desk.CallAsync("consultarComprobanteTipoPVentaNro",
+            Auth(desk) + "<codigoTipoComprobante>195</codigoTipoComprobante><numeroPuntoVenta>4294967297</numeroPuntoVenta><numeroComprobante>1</numeroComprobante>");
+
+        Assert.Contains("300", Codes(type));
+        Assert.Equal(["401"], Codes(tourism));
+        Assert.Contains("803", Codes(associated));
+        Assert.Equal(["1002"], Codes(last));
+        Assert.Equal(["2002"], Codes(consulted));
+    }
+
+    [Fact]
     public async Task A_voucher_sent_again_is_refused_as_out_of_sequence()
     {
         await using var sim = ArcaSimHarness.Start();
@@ -122,6 +164,23 @@ public class WsctRulesTests
         var consulted = await desk.CallAsync("consultarComprobanteTipoPVentaNro",
             Auth(desk) + "<codigoTipoComprobante>197</codigoTipoComprobante><numeroPuntoVenta>1</numeroPuntoVenta><numeroComprobante>1</numeroComprobante>");
         Assert.Equal(["807"], Codes(consulted, "arrayObservaciones"));
+    }
+
+    [Fact]
+    public async Task In_production_a_point_of_sale_still_to_be_deactivated_can_issue_and_one_already_deactivated_cannot()
+    {
+        await using var sim = ArcaSimHarness.Start();
+        var desk = await OpenAsync(sim);
+        sim.Settings.Environment = ArcaEnvironment.Produccion;
+        await desk.PutPointOfSaleAsync(1, new DateOnly(2026, 12, 31));
+        await desk.PutPointOfSaleAsync(2, new DateOnly(2026, 9, 30));
+        string Last(int point) => Auth(desk) + $"<codigoTipoComprobante>195</codigoTipoComprobante><numeroPuntoVenta>{point}</numeroPuntoVenta>";
+
+        var coming = await desk.CallAsync("consultarUltimoComprobanteAutorizado", Last(1));
+        var gone = await desk.CallAsync("consultarUltimoComprobanteAutorizado", Last(2));
+
+        Assert.Equal(["1002"], Codes(coming));
+        Assert.Equal(["1001"], Codes(gone));
     }
 
     [Fact]

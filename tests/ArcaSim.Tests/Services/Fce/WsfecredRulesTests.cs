@@ -1,4 +1,6 @@
 using System.Xml.Linq;
+using ArcaSim.Application.Wsfe;
+using Microsoft.Extensions.DependencyInjection;
 using static ArcaSim.Tests.Services.Fce.FceWorld;
 
 namespace ArcaSim.Tests.Services.Fce;
@@ -49,6 +51,23 @@ public class WsfecredRulesTests
     }
 
     [Fact]
+    public async Task An_invoice_older_than_a_hundred_thousand_other_vouchers_still_opens_its_account()
+    {
+        await using var world = await StartAsync();
+        var invoice = await world.InvoiceAsync();
+        var vouchers = world.Sim.Services.GetRequiredService<IVoucherStore>();
+        var detail = new FECAEDetRequest();
+        var later = new DateTimeOffset(2026, 10, 2, 12, 0, 0, TimeSpan.FromHours(-3));
+        for (var number = 1; number <= 100_001; number++)
+            await vouchers.AddAsync(new StoredVoucher(
+                Seller, 9, 6, number, number, new DateOnly(2026, 10, 2), EmissionType.Cae, "70000000000000", new DateOnly(2026, 10, 12), later, detail, []));
+
+        var issued = await world.FecredAsync(Seller, "consultarComprobantes", "<rolCUITRepresentada>Emisor</rolCUITRepresentada>");
+
+        Assert.Equal([invoice.ToString()], issued.Element("arrayComprobantes")!.Elements("comprobante").Select(v => v.Element("nroCmp")!.Value));
+    }
+
+    [Fact]
     public async Task A_balance_that_does_not_add_up_is_refused_with_12002_and_the_seller_may_not_accept()
     {
         await using var world = await StartAsync();
@@ -88,6 +107,59 @@ public class WsfecredRulesTests
         Assert.Equal("1", factura.Element("arrayMotivosRechazo")!.Element("motivoRechazo")!.Element("codMotivo")!.Value);
         var listed = await world.FecredAsync(Buyer, "consultarCtasCtes", "<rolCUITRepresentada>Receptor</rolCUITRepresentada><estadoCtaCte>Rechazada</estadoCtaCte>");
         Assert.Single(listed.Element("arrayInfosCtaCte")!.Elements());
+    }
+
+    [Fact]
+    public async Task A_reason_code_the_schema_cannot_hold_is_an_invalid_code_not_the_one_it_wraps_to()
+    {
+        await using var world = await StartAsync();
+        var invoice = await world.InvoiceAsync();
+        world.UntilOperable();
+
+        // 65537 is 1 once cut to 16 bits: a reason of the table.
+        var wrapped = await world.FecredAsync(Buyer, "rechazarFECred", Account(invoice) + Reason(65537, "No llegó la mercadería"));
+
+        Assert.Equal("R", wrapped.Element("resultado")!.Value);
+        Assert.Equal(["3001"], Codes(wrapped.Element("arrayErrores")));
+        var account = (await world.FecredAsync(Seller, "consultarCtaCte", Account(invoice))).Element("ctaCte")!;
+        Assert.Equal("Modificable", account.Element("estadoCtaCte")!.Element("estado")!.Value);
+    }
+
+    [Fact]
+    public async Task A_voucher_id_the_schema_cannot_hold_names_no_voucher_instead_of_the_one_it_wraps_to()
+    {
+        await using var world = await StartAsync();
+        var invoice = await world.InvoiceAsync();
+        string Id(string type, string point) =>
+            $"<idCtaCte><idFactura><CUITEmisor>{Seller}</CUITEmisor><codTipoCmp>{type}</codTipoCmp><ptoVta>{point}</ptoVta><nroCmp>{invoice}</nroCmp></idFactura></idCtaCte>";
+
+        // 4294967297 is 1 and 4294967497 is 201 once cut to 32 bits: the invoice's point of sale and type.
+        var point = await world.FecredAsync(Buyer, "consultarCtaCte", Id("201", "4294967297"));
+        var type = await world.FecredAsync(Buyer, "consultarCtaCte", Id("4294967497", "1"));
+        var right = await world.FecredAsync(Buyer, "consultarCtaCte", Id("201", "1"));
+
+        Assert.Equal(["1102"], Codes(point.Element("arrayErrores")));
+        Assert.Null(point.Element("ctaCte"));
+        Assert.Equal(["1102"], Codes(type.Element("arrayErrores")));
+        Assert.NotNull(right.Element("ctaCte"));
+    }
+
+    [Theory]
+    [InlineData("4294967297")]
+    [InlineData("40000")]
+    public async Task A_page_number_the_schema_cannot_hold_is_12011_not_a_page(string page)
+    {
+        await using var world = await StartAsync();
+        await world.InvoiceAsync();
+
+        // 4294967297 is page 1 once cut to 32 bits; 40000 does not fit the short the answer repeats it in.
+        var vouchers = await world.FecredAsync(Seller, "consultarComprobantes", $"<rolCUITRepresentada>Emisor</rolCUITRepresentada><nroPagina>{page}</nroPagina>");
+        var accounts = await world.FecredAsync(Seller, "consultarCtasCtes", $"<rolCUITRepresentada>Emisor</rolCUITRepresentada><nroPagina>{page}</nroPagina>");
+
+        Assert.Equal(["12011"], Codes(vouchers.Element("arrayErrores")));
+        Assert.Null(vouchers.Element("arrayComprobantes"));
+        Assert.Equal(["12011"], Codes(accounts.Element("arrayErrores")));
+        Assert.Null(accounts.Element("arrayInfosCtaCte"));
     }
 
     [Fact]
@@ -208,5 +280,34 @@ public class WsfecredRulesTests
         var info = (await world.FecredAsync(Buyer, "consultarCtasCtes", "<rolCUITRepresentada>Receptor</rolCUITRepresentada>"))
             .Element("arrayInfosCtaCte")!.Element("infoCtaCte")!;
         Assert.Equal("SCA", info.Element("opcionTransferencia")!.Value);
+    }
+
+    [Fact]
+    public async Task An_option_outside_the_enumeration_is_a_format_error_and_changes_nothing()
+    {
+        await using var world = await StartAsync();
+        var invoice = await world.InvoiceAsync();
+
+        var wrong = await world.FecredAsync(Seller, "modificarOpcionTransferencia", Account(invoice) + "<opcionTransferencia>XYZ</opcionTransferencia>");
+        var lower = await world.FecredAsync(Seller, "modificarOpcionTransferencia", Account(invoice) + "<opcionTransferencia>sca</opcionTransferencia>");
+        var missing = await world.FecredAsync(Seller, "modificarOpcionTransferencia", Account(invoice));
+
+        foreach (var answer in new[] { wrong, lower, missing })
+        {
+            Assert.Equal("R", answer.Element("resultado")!.Value);
+            Assert.Equal(invoice.ToString(), answer.Element("idCtaCte")!.Element("idFactura")!.Element("nroCmp")!.Value);
+            Assert.Null(answer.Element("arrayErrores"));
+            Assert.Equal(["cvc-enumeration-valid", "cvc-type.3.1.3"], Codes(answer.Element("arrayErroresFormato")));
+        }
+        Assert.Contains("'XYZ'", wrong.Element("arrayErroresFormato")!.Value);
+        Assert.Contains("'[SCA, ADC]'", wrong.Element("arrayErroresFormato")!.Value);
+
+        // The format check comes before the business ones, which it excludes: an account nobody has gets the same answer.
+        var unknown = await world.FecredAsync(Seller, "modificarOpcionTransferencia", "<idCtaCte><codCtaCte>999</codCtaCte></idCtaCte><opcionTransferencia>XYZ</opcionTransferencia>");
+        Assert.Equal(["cvc-enumeration-valid", "cvc-type.3.1.3"], Codes(unknown.Element("arrayErroresFormato")));
+
+        var info = (await world.FecredAsync(Seller, "consultarCtasCtes", "<rolCUITRepresentada>Emisor</rolCUITRepresentada>"))
+            .Element("arrayInfosCtaCte")!.Element("infoCtaCte")!;
+        Assert.Equal("ADC", info.Element("opcionTransferencia")!.Value);
     }
 }

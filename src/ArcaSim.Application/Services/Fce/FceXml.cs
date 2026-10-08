@@ -7,25 +7,47 @@ namespace ArcaSim.Application.Services.Fce;
 /// <summary>
 /// Reading the FCE requests and writing their answers. The three WSDLs leave
 /// their children unqualified, so everything below the operation's element
-/// travels without a namespace, and is read by local name.
+/// travels without a namespace, and is read by local name (ContractXml's Child
+/// family); what is here is what only the FCE needs: a field that is empty is
+/// one that was not sent, and a date is exactly yyyy-MM-dd.
 /// </summary>
 public static class FceXml
 {
-    public static XElement? Child(this XElement element, string name) =>
-        element.Elements().FirstOrDefault(e => e.Name.LocalName == name);
+    /// <summary>
+    /// Items per page in the queries of the three services: ArcaSim's choice, the
+    /// manuals say only that ARCA tunes it internally.
+    /// </summary>
+    public const int PageSize = 100;
 
-    public static IEnumerable<XElement> Children(this XElement? element, string name) =>
-        element?.Elements().Where(e => e.Name.LocalName == name) ?? [];
+    /// <summary>
+    /// A page of a list (the first is 1) and whether more follows it. A page past
+    /// the end is empty. The arithmetic is long, so no page number can wrap it
+    /// into the middle of the list.
+    /// </summary>
+    public static (IReadOnlyList<T> Items, bool More) Page<T>(IReadOnlyList<T> all, long page)
+    {
+        var skip = (page - 1) * PageSize;
+        IReadOnlyList<T> items = skip < 0 || skip >= all.Count ? [] : all.Skip((int)skip).Take(PageSize).ToList();
+        return (items, skip >= 0 && all.Count > skip + PageSize);
+    }
 
-    public static string? Value(this XElement element, string name) => element.Child(name)?.Value.Trim() is { Length: > 0 } text ? text : null;
+    /// <summary>
+    /// The direct child's number as an int: null when it is missing or does not read, and
+    /// int.MinValue, which no code, type or point of sale is, when it is a number an int
+    /// cannot hold. A rule then refuses 4294967297 as the invalid value it is, instead of
+    /// reading it as 1. The shared place for this is ContractXml.
+    /// </summary>
+    public static int? ChildInt(this XElement? element, string name) =>
+        element.ChildLong(name) is { } value ? (value is >= int.MinValue and <= int.MaxValue ? (int)value : int.MinValue) : null;
 
-    public static long? LongOf(this XElement element, string name) =>
-        long.TryParse(element.Value(name), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : null;
+    /// <summary>The same for a field the schema types as xsd:short: short.MinValue when the number does not fit one.</summary>
+    public static short? ChildShort(this XElement? element, string name) =>
+        element.ChildLong(name) is { } value ? (value is >= short.MinValue and <= short.MaxValue ? (short)value : short.MinValue) : null;
 
-    public static decimal? DecimalOf(this XElement element, string name) =>
-        decimal.TryParse(element.Value(name), NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : null;
+    /// <summary>The direct child's text, trimmed; null when it is missing or empty.</summary>
+    public static string? Value(this XElement? element, string name) => element.ChildText(name) is { Length: > 0 } text ? text : null;
 
-    public static DateOnly? DateOf(this XElement element, string name) =>
+    public static DateOnly? DateOf(this XElement? element, string name) =>
         DateOnly.TryParseExact(element.Value(name), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? date : null;
 
     /// <summary>xsd:date as the services write it: AAAA-MM-DD without a zone.</summary>
@@ -50,14 +72,21 @@ public static class FceXml
         _ => text,
     };
 
-    /// <summary>codigo + descripcion items, under the block's name (arrayErrores, errores, observaciones...).</summary>
-    public static XElement? Codes(string block, IEnumerable<(long Code, string Text)> codes, string item = "codigoDescripcion")
-    {
-        var list = codes.ToList();
-        return list.Count == 0
-            ? null
-            : new XElement(block, list.Select(c => new XElement(item, new XElement("codigo", c.Code), new XElement("descripcion", c.Text))));
-    }
+    /// <summary>
+    /// The one builder of the codigo + descripcion lists every one of these
+    /// services answers with (the parameter tables, the errors, the
+    /// observations): one item per row under the block's name, which goes out
+    /// empty when there are no rows. The item is codigoDescripcion, or
+    /// codigoDescripcionString where the code travels as text. It is used by
+    /// the FCE, MTXCA and WSCT rules alike; the shared place for it is
+    /// ContractXml.
+    /// </summary>
+    public static XElement CodeList<TCode>(string block, IEnumerable<(TCode Code, string Text)> rows, string item = "codigoDescripcion") =>
+        new(block, rows.Select(row => new XElement(item, new XElement("codigo", row.Code), new XElement("descripcion", row.Text))));
+
+    /// <summary>The same list, or null when there are no rows: an errors or observations block goes out only with something to say.</summary>
+    public static XElement? Codes(string block, IEnumerable<(long Code, string Text)> codes, string item = "codigoDescripcion") =>
+        CodeList(block, codes, item) is { HasElements: true } list ? list : null;
 }
 
 /// <summary>An idCtaCte as the request sent it: the account code, or the invoice that opened it.</summary>

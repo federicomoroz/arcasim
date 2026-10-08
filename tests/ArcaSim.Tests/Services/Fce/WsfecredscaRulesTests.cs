@@ -79,6 +79,24 @@ public class WsfecredscaRulesTests
     }
 
     [Fact]
+    public async Task An_invoice_id_the_schema_cannot_hold_is_not_the_invoice_it_wraps_to()
+    {
+        await using var world = await StartAsync();
+        var invoice = await ScaInvoiceAsync(world);
+        await world.FecredAsync(Buyer, "aceptarFECred", Accept(invoice, "<informaCBU>N</informaCBU>"));
+        await world.ScaAsync("consultarFacturasAceptadas", Query("D"));
+
+        // 4294967297 is 1 once cut to 32 bits: the invoice's point of sale.
+        var wrapped = $"<facturas><factura><idFactura><cuitEmisor>{Seller}</cuitEmisor><tipoCmp>201</tipoCmp><ptoVta>4294967297</ptoVta><nroCmp>{invoice}</nroCmp></idFactura></factura></facturas>";
+        var refused = await world.ScaAsync("confirmarRecepcionFacturas", wrapped);
+        var received = await world.ScaAsync("confirmarRecepcionFacturas", Confirm(invoice));
+
+        Assert.Equal(["2002"], Codes(refused.Element("erroresFormato")));
+        Assert.Empty(refused.Element("resultados")!.Elements());
+        Assert.Equal("A", received.Element("resultados")!.Element("resultado")!.Element("resultado")!.Value);
+    }
+
+    [Fact]
     public async Task The_SCA_option_needs_the_buyer_to_say_whether_it_informs_a_CBU()
     {
         await using var world = await StartAsync();

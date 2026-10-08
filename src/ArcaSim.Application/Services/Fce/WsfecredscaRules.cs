@@ -36,7 +36,7 @@ public sealed class WsfecredscaRules(FceLedger ledger) : IServiceBehavior
 
     public string Service => "wsfecredsca";
 
-    public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct)
+    public Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct)
     {
         Func<ServiceCall, CancellationToken, Task<XElement>>? operation = call.Name switch
         {
@@ -44,11 +44,7 @@ public sealed class WsfecredscaRules(FceLedger ledger) : IServiceBehavior
             "confirmarRecepcionFacturas" => ConfirmAsync,
             _ => null,
         };
-        if (operation is null) return null;
-
-        if (!await _ledger.IsRegisteredAsync(call.Cuit, ct)) return call.Ok(Refused(call, Errors(Texts, [4009]), null));
-        using var _ = await _ledger.LockAsync(ct);
-        return call.Ok(await operation(call, ct));
+        return RunAsync(call, _ledger, Texts, operation, Refused, ct);
     }
 
     private static XElement Refused(ServiceCall call, XElement? errors, XElement? formatErrors) =>
@@ -67,8 +63,8 @@ public sealed class WsfecredscaRules(FceLedger ledger) : IServiceBehavior
     private async Task<XElement> InvoicesAsync(ServiceCall call, CancellationToken ct)
     {
         var request = call.Request;
-        var issuer = request.LongOf("cuitEmisor");
-        var receiver = request.LongOf("cuitReceptor");
+        var issuer = request.ChildLong("cuitEmisor");
+        var receiver = request.ChildLong("cuitReceptor");
         var format = CheckQuery(request, out var page, out var range);
         if (BadCuit(issuer) || BadCuit(receiver)) format.Insert(0, 2002);
         if (format.Count > 0) return Refused(call, null, FormatErrors(Texts, format));
@@ -83,7 +79,7 @@ public sealed class WsfecredscaRules(FceLedger ledger) : IServiceBehavior
             .Where(a => InRange(MomentOf(a.Sca!, range.Kind), range))
             .OrderBy(a => a.Sca!.AvailableAt).ThenBy(a => a.Code)
             .ToList();
-        var items = all.Skip((page - 1) * PageSize).Take(PageSize).ToList();
+        var (items, more) = FceXml.Page(all, page);
 
         foreach (var account in items.Where(a => a.Sca!.State == "D"))
         {
@@ -120,7 +116,7 @@ public sealed class WsfecredscaRules(FceLedger ledger) : IServiceBehavior
         return Result(call.Operation.Output,
             new XElement("facturas", rows),
             new XElement("nroPagina", page),
-            new XElement("hayMas", FceXml.YesNo(all.Count > page * PageSize)));
+            new XElement("hayMas", FceXml.YesNo(more)));
     }
 
     private async Task<XElement> ConfirmAsync(ServiceCall call, CancellationToken ct)

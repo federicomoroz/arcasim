@@ -139,8 +139,8 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
         [MtxcaRule.ActivityNotCurrent] = (R(167), O(367)),
     };
 
-    /// <summary>The code a rule carries in a method, for tests and for the manual's cross-references.</summary>
-    public static (int Code, bool Rejects)? CodeOf(MtxcaRule rule, bool caea) => caea ? Codes[rule].Caea : Codes[rule].Cae;
+    /// <summary>The code a rule carries in a method (autorizarComprobante's or informarComprobanteCAEA's), and whether it rejects; none if the method does not check it.</summary>
+    private static (int Code, bool Rejects)? CodeOf(MtxcaRule rule, bool caea) => caea ? Codes[rule].Caea : Codes[rule].Cae;
 
     /// <param name="caea">informarComprobanteCAEA's codes instead of autorizarComprobante's.</param>
     /// <param name="date">The voucher's date: the one sent, or the day it is processed.</param>
@@ -199,13 +199,6 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
         return concept != 1 || date <= today || (date.Year == today.Year && date.Month == today.Month);
     }
 
-    /// <summary>Error relativo ≤ 0,01 % o absoluto ≤ 0,01 × cantidad de elementos sumados, as every sum check of the manual says.</summary>
-    public static bool Close(decimal expected, decimal actual, int count)
-    {
-        var difference = Math.Abs(expected - actual);
-        return difference <= 0.01m * Math.Max(count, 1) || (expected != 0 && difference / Math.Abs(expected) <= 0.0001m);
-    }
-
     private async Task CheckReceiverAsync(MtxcaVoucherInput v, MtxcaVoucherType type, long issuer, Action<MtxcaRule> add, CancellationToken ct)
     {
         if ((v.DocType is null) != (v.DocNumber is null)) add(MtxcaRule.DocumentPair);
@@ -218,7 +211,7 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
         if (type.NeedsCuit && v.DocType is { } sent && sent != 80) add(MtxcaRule.ClassADocumentType);
         if (v.DocNumber == issuer) add(MtxcaRule.SameAsIssuer);
 
-        var classB = type.Id is 6 or 7 or 8;
+        var classB = type.PlainB;
         if (v.DocNumber == NotCategorized && (!classB || v.ReceiverCondition is not (null or 7))) add(MtxcaRule.NotCategorizedReceiver);
 
         var receiver = v.DocType == 80 && v.DocNumber is { } cuit ? await taxpayers.FindAsync(cuit, ct) : null;
@@ -227,7 +220,7 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
         {
             add(MtxcaRule.ReceiverInvalid);
         }
-        if (type.Id is 1 or 2 or 3 or 51 or 52 or 53 && receiver is { Active: true })
+        if (type.ClassA && !type.Fce && receiver is { Active: true })
         {
             if (receiver.VatCondition is not (VatCondition.ResponsableInscripto or VatCondition.Exento) && !receiver.VatCondition.IsMonotributo())
                 add(MtxcaRule.ReceiverNotInVat);
@@ -271,7 +264,7 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
             if (rate != 1) add(MtxcaRule.PesosRate);
             return;
         }
-        if (await rates.RateAsync(v.Currency, today, ct) is { Rate: var reference } && (rate < reference * 0.02m || rate > reference * 4m))
+        if (await rates.RateAsync(v.Currency, today, ct) is { } reference && !Amounts.WithinRateBand(rate, reference.Rate))
             add(MtxcaRule.RateRange);
     }
 
@@ -292,11 +285,11 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
 
     private static void CheckAssociated(MtxcaVoucherInput v, MtxcaVoucherType type, DateOnly date, Action<MtxcaRule> add)
     {
-        var plainNote = type.Id is 2 or 3 or 7 or 8 or 52 or 53;
+        var plainNote = type.Note && !type.Fce;
         if (plainNote && v.Associated.Count == 0 && v.Period is null) add(MtxcaRule.NoteWithoutAssociated);
         if (plainNote && v.Associated.Count > 0 && v.Period is not null) add(MtxcaRule.NoteWithBoth);
         if (type.Id is 1 or 2 or 51 or 201 or 206 && v.Period is not null) add(MtxcaRule.InvoiceWithPeriod);
-        if (type.Id is 202 or 203 or 207 or 208 && v.Period is not null) add(MtxcaRule.FceNoteWithPeriod);
+        if (type.Fce && type.Note && v.Period is not null) add(MtxcaRule.FceNoteWithPeriod);
 
         foreach (var associated in v.Associated)
         {
@@ -330,7 +323,7 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
             if (!tables.HasTax(tax.Code)) add(MtxcaRule.OtherTaxCode);
             if (tax.Code == 99 && string.IsNullOrWhiteSpace(tax.Description)) add(MtxcaRule.OtherTaxDescription);
         }
-        if (!Close(v.OtherTaxes.Sum(t => t.Amount), v.OtherTaxesTotal ?? 0, v.OtherTaxes.Count)) add(MtxcaRule.OtherTaxesSum);
+        if (!Amounts.WithinMargin(v.OtherTaxes.Sum(t => t.Amount), v.OtherTaxesTotal ?? 0, v.OtherTaxes.Count)) add(MtxcaRule.OtherTaxesSum);
     }
 
     private static decimal RateOf(MtxcaItem item) => MtxcaTables.ItemVatRates.GetValueOrDefault(item.VatCondition);
@@ -367,12 +360,12 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
                 {
                     if (item.VatCondition is 1 or 2 or 3 && vat != 0) add(MtxcaRule.ItemVatZero);
                     var expected = special ? item.Amount - item.Amount / (1 + rate) : sign * net * rate;
-                    if (item.VatCondition is 4 or 5 or 6 && !Close(expected, vat, 1)) add(MtxcaRule.ItemVatAmount);
+                    if (item.VatCondition is 4 or 5 or 6 && !Amounts.WithinMargin(expected, vat, 1)) add(MtxcaRule.ItemVatAmount);
                     if (item.Unit is 99 or 95 ? vat > 0 : item.Unit != 97 && vat < 0) add(MtxcaRule.ItemVatSign);
                 }
-                if (!special && !Close(sign * net * (1 + rate), item.Amount, 1)) add(MtxcaRule.ItemAmount);
+                if (!special && !Amounts.WithinMargin(sign * net * (1 + rate), item.Amount, 1)) add(MtxcaRule.ItemAmount);
             }
-            else if (!special && !Close(sign * net, item.Amount, 1)) add(MtxcaRule.ItemAmount);
+            else if (!special && !Amounts.WithinMargin(sign * net, item.Amount, 1)) add(MtxcaRule.ItemAmount);
         }
 
         if (type.ClassA)
@@ -380,7 +373,7 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
             {
                 var bonus = Math.Abs(group.Where(i => i.Unit == 99).Sum(i => i.Vat ?? 0));
                 var rest = group.Where(i => i.Unit != 99).Sum(i => i.Vat ?? 0);
-                if (bonus > 0 && bonus > rest && !Close(rest, bonus, 1)) add(MtxcaRule.ItemBonusVat);
+                if (bonus > 0 && bonus > rest && !Amounts.WithinMargin(rest, bonus, 1)) add(MtxcaRule.ItemBonusVat);
             }
     }
 
@@ -396,7 +389,7 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
         {
             if (code is not (4 or 5 or 6)) add(MtxcaRule.SubtotalCode);
             var items = v.Items.Where(i => i.VatCondition == code).ToList();
-            if (items.Count > 0 && !Close(items.Sum(i => VatOf(i, type)), amount, items.Count)) add(MtxcaRule.SubtotalAmount);
+            if (items.Count > 0 && !Amounts.WithinMargin(items.Sum(i => VatOf(i, type)), amount, items.Count)) add(MtxcaRule.SubtotalAmount);
         }
         if (v.Subtotals.Select(s => s.Code).Distinct().Count() != v.Subtotals.Count) add(MtxcaRule.SubtotalRepeated);
         if (v.HasSubtotals && !taxedRates.SetEquals(v.Subtotals.Select(s => s.Code))) add(MtxcaRule.SubtotalPresence);
@@ -408,13 +401,13 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
         var taxed = v.Items.Where(i => i.VatCondition is 3 or 4 or 5 or 6).ToList();
         var notTaxed = v.Items.Where(i => i.VatCondition == 1).ToList();
         var exempt = v.Items.Where(i => i.VatCondition == 2).ToList();
-        if (!Close(taxed.Sum(i => i.Amount - VatOf(i, type)), v.Net ?? 0, taxed.Count)) add(MtxcaRule.NetSum);
-        if (!Close(notTaxed.Sum(i => i.Amount), v.NotTaxed ?? 0, notTaxed.Count)) add(MtxcaRule.NotTaxedSum);
-        if (!Close(exempt.Sum(i => i.Amount), v.Exempt ?? 0, exempt.Count)) add(MtxcaRule.ExemptSum);
-        if (!Close((v.NotTaxed ?? 0) + (v.Net ?? 0) + (v.Exempt ?? 0), v.Subtotal, 3)) add(MtxcaRule.SubtotalSum);
+        if (!Amounts.WithinMargin(taxed.Sum(i => i.Amount - VatOf(i, type)), v.Net ?? 0, taxed.Count)) add(MtxcaRule.NetSum);
+        if (!Amounts.WithinMargin(notTaxed.Sum(i => i.Amount), v.NotTaxed ?? 0, notTaxed.Count)) add(MtxcaRule.NotTaxedSum);
+        if (!Amounts.WithinMargin(exempt.Sum(i => i.Amount), v.Exempt ?? 0, exempt.Count)) add(MtxcaRule.ExemptSum);
+        if (!Amounts.WithinMargin((v.NotTaxed ?? 0) + (v.Net ?? 0) + (v.Exempt ?? 0), v.Subtotal, 3)) add(MtxcaRule.SubtotalSum);
         var otherTaxes = v.OtherTaxesTotal ?? 0;
-        if (!Close(v.Subtotal + otherTaxes + v.Subtotals.Sum(s => s.Amount), v.Total, 2 + v.Subtotals.Count)) add(MtxcaRule.TotalSum);
-        if (!Close(otherTaxes + v.Items.Sum(i => i.Amount), v.Total, 1 + v.Items.Count)) add(MtxcaRule.TotalItems);
+        if (!Amounts.WithinMargin(v.Subtotal + otherTaxes + v.Subtotals.Sum(s => s.Amount), v.Total, 2 + v.Subtotals.Count)) add(MtxcaRule.TotalSum);
+        if (!Amounts.WithinMargin(otherTaxes + v.Items.Sum(i => i.Amount), v.Total, 1 + v.Items.Count)) add(MtxcaRule.TotalItems);
     }
 
     private static void CheckBuyers(MtxcaVoucherInput v, MtxcaVoucherType type, bool caea, Action<MtxcaRule> add)

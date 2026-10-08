@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Xml.Linq;
+using ArcaSim.Application.Contracts;
+using ArcaSim.Application.Services.Fce;
 
 namespace ArcaSim.Application.Services.Mtxca;
 
@@ -59,69 +61,62 @@ public sealed class MtxcaVoucherInput
     public static MtxcaVoucherInput Read(XElement voucher) => new()
     {
         Element = voucher,
-        Type = (int)(Long(voucher, "codigoTipoComprobante") ?? 0),
-        PointOfSale = (int)(Long(voucher, "numeroPuntoVenta") ?? 0),
-        Number = Long(voucher, "numeroComprobante") ?? 0,
+        Type = voucher.ChildInt("codigoTipoComprobante") ?? 0,
+        PointOfSale = voucher.ChildInt("numeroPuntoVenta") ?? 0,
+        Number = voucher.ChildLong("numeroComprobante") ?? 0,
         Date = DateOf(voucher, "fechaEmision"),
         AuthorizationType = Text(voucher, "codigoTipoAutorizacion"),
-        AuthorizationCode = Long(voucher, "codigoAutorizacion"),
+        AuthorizationCode = voucher.ChildLong("codigoAutorizacion"),
         AuthorizationDue = DateOf(voucher, "fechaVencimiento"),
-        DocType = (int?)Long(voucher, "codigoTipoDocumento"),
-        DocNumber = Long(voucher, "numeroDocumento"),
-        ReceiverCondition = (int?)Long(voucher, "condicionIVAReceptor"),
-        Net = Decimal(voucher, "importeGravado"),
-        NotTaxed = Decimal(voucher, "importeNoGravado"),
-        Exempt = Decimal(voucher, "importeExento"),
-        Subtotal = Decimal(voucher, "importeSubtotal") ?? 0,
-        OtherTaxesTotal = Decimal(voucher, "importeOtrosTributos"),
-        Total = Decimal(voucher, "importeTotal") ?? 0,
+        DocType = voucher.ChildInt("codigoTipoDocumento"),
+        DocNumber = voucher.ChildLong("numeroDocumento"),
+        ReceiverCondition = voucher.ChildInt("condicionIVAReceptor"),
+        Net = voucher.ChildDecimal("importeGravado"),
+        NotTaxed = voucher.ChildDecimal("importeNoGravado"),
+        Exempt = voucher.ChildDecimal("importeExento"),
+        Subtotal = voucher.ChildDecimal("importeSubtotal") ?? 0,
+        OtherTaxesTotal = voucher.ChildDecimal("importeOtrosTributos"),
+        Total = voucher.ChildDecimal("importeTotal") ?? 0,
         Currency = Text(voucher, "codigoMoneda") ?? "",
-        Rate = Decimal(voucher, "cotizacionMoneda"),
+        Rate = voucher.ChildDecimal("cotizacionMoneda"),
         SameCurrency = Text(voucher, "cancelaEnMismaMonedaExtranjera"),
-        Concept = (int)(Long(voucher, "codigoConcepto") ?? 0),
+        Concept = voucher.ChildInt("codigoConcepto") ?? 0,
         ServiceFrom = DateOf(voucher, "fechaServicioDesde"),
         ServiceTo = DateOf(voucher, "fechaServicioHasta"),
         PaymentDue = DateOf(voucher, "fechaVencimientoPago"),
         GenerationTime = Text(voucher, "fechaHoraGen"),
-        Associated = List(voucher, "arrayComprobantesAsociados").Select(a => new MtxcaAssociated(
-            (int)(Long(a, "codigoTipoComprobante") ?? 0), (int)(Long(a, "numeroPuntoVenta") ?? 0), Long(a, "numeroComprobante") ?? 0,
-            Long(a, "cuit"), DateOf(a, "fechaEmision"))).ToList(),
-        Period = Child(voucher, "periodoComprobantesAsociados") is { } period && DateOf(period, "fechaDesde") is { } from && DateOf(period, "fechaHasta") is { } to
+        Associated = ArrayItems(voucher, "arrayComprobantesAsociados").Select(a => new MtxcaAssociated(
+            a.ChildInt("codigoTipoComprobante") ?? 0, a.ChildInt("numeroPuntoVenta") ?? 0, a.ChildLong("numeroComprobante") ?? 0,
+            a.ChildLong("cuit"), DateOf(a, "fechaEmision"))).ToList(),
+        Period = voucher.Child("periodoComprobantesAsociados") is { } period && DateOf(period, "fechaDesde") is { } from && DateOf(period, "fechaHasta") is { } to
             ? (from, to)
             : null,
-        OtherTaxes = List(voucher, "arrayOtrosTributos").Select(t => new MtxcaOtherTax(
-            (int)(Long(t, "codigo") ?? 0), Text(t, "descripcion"), Decimal(t, "baseImponible") ?? 0, Decimal(t, "importe") ?? 0)).ToList(),
-        Items = List(voucher, "arrayItems").Select(i => new MtxcaItem(
-            (int?)Long(i, "unidadesMtx"), Text(i, "codigoMtx"), Text(i, "codigo"), Child(i, "descripcion")?.Value ?? "",
-            Decimal(i, "cantidad"), (int)(Long(i, "codigoUnidadMedida") ?? -1), Decimal(i, "precioUnitario"),
-            Decimal(i, "importeBonificacion"), (int)(Long(i, "codigoCondicionIVA") ?? 0), Decimal(i, "importeIVA"),
-            Decimal(i, "importeItem") ?? 0)).ToList(),
-        HasSubtotals = Child(voucher, "arraySubtotalesIVA") is not null,
-        Subtotals = List(voucher, "arraySubtotalesIVA").Select(s => ((int)(Long(s, "codigo") ?? 0), Decimal(s, "importe") ?? 0)).ToList(),
-        ExtraData = List(voucher, "arrayDatosAdicionales").Select(d => (int)(Long(d, "t") ?? 0)).ToList(),
-        Buyers = List(voucher, "arrayCompradores").Select(b => new MtxcaBuyer(
-            (int)(Long(b, "codigoTipoDocumento") ?? 0), Long(b, "numeroDocumento") ?? 0, Decimal(b, "porcentaje") ?? 0)).ToList(),
-        Activities = List(voucher, "arrayActividades").Select(a => Long(a, "codigo") ?? 0).ToList(),
+        OtherTaxes = ArrayItems(voucher, "arrayOtrosTributos").Select(t => new MtxcaOtherTax(
+            t.ChildInt("codigo") ?? 0, Text(t, "descripcion"), t.ChildDecimal("baseImponible") ?? 0, t.ChildDecimal("importe") ?? 0)).ToList(),
+        Items = ArrayItems(voucher, "arrayItems").Select(i => new MtxcaItem(
+            i.ChildInt("unidadesMtx"), Text(i, "codigoMtx"), Text(i, "codigo"), i.Child("descripcion")?.Value ?? "",
+            i.ChildDecimal("cantidad"), i.ChildInt("codigoUnidadMedida") ?? -1, i.ChildDecimal("precioUnitario"),
+            i.ChildDecimal("importeBonificacion"), i.ChildInt("codigoCondicionIVA") ?? 0, i.ChildDecimal("importeIVA"),
+            i.ChildDecimal("importeItem") ?? 0)).ToList(),
+        HasSubtotals = voucher.Child("arraySubtotalesIVA") is not null,
+        Subtotals = ArrayItems(voucher, "arraySubtotalesIVA").Select(s => (s.ChildInt("codigo") ?? 0, s.ChildDecimal("importe") ?? 0)).ToList(),
+        ExtraData = ArrayItems(voucher, "arrayDatosAdicionales").Select(d => d.ChildInt("t") ?? 0).ToList(),
+        Buyers = ArrayItems(voucher, "arrayCompradores").Select(b => new MtxcaBuyer(
+            b.ChildInt("codigoTipoDocumento") ?? 0, b.ChildLong("numeroDocumento") ?? 0, b.ChildDecimal("porcentaje") ?? 0)).ToList(),
+        Activities = ArrayItems(voucher, "arrayActividades").Select(a => a.ChildLong("codigo") ?? 0).ToList(),
     };
 
     /// <summary>The voucher with every element unqualified, as ComprobanteType travels, ready to keep and answer back.</summary>
     public static XElement Unqualified(XElement element) =>
         new(element.Name.LocalName, element.HasElements ? element.Elements().Select(Unqualified) : element.Value);
 
-    public static XElement? Child(XElement parent, string name) =>
-        parent.Elements().FirstOrDefault(e => e.Name.LocalName == name);
+    /// <summary>The items of an array element, whatever they are called; none when the voucher did not send it.</summary>
+    private static IEnumerable<XElement> ArrayItems(XElement parent, string array) =>
+        parent.Child(array)?.Elements() ?? [];
 
-    private static IEnumerable<XElement> List(XElement parent, string array) =>
-        Child(parent, array)?.Elements() ?? [];
-
+    /// <summary>The direct child's text; null when it is missing or empty, which counts as not sent.</summary>
     private static string? Text(XElement parent, string name) =>
-        Child(parent, name)?.Value.Trim() is { Length: > 0 } text ? text : null;
-
-    private static long? Long(XElement parent, string name) =>
-        long.TryParse(Text(parent, name), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var value) ? value : null;
-
-    private static decimal? Decimal(XElement parent, string name) =>
-        decimal.TryParse(Text(parent, name), NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : null;
+        parent.ChildText(name) is { Length: > 0 } text ? text : null;
 
     /// <summary>An xsd:date, with or without a time zone after it.</summary>
     private static DateOnly? DateOf(XElement parent, string name) =>

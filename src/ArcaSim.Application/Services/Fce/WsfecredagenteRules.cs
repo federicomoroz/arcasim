@@ -42,7 +42,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
 
     public string Service => "wsfecredagente";
 
-    public async Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct)
+    public Task<ContractAnswer?> AnswerAsync(ServiceCall call, CancellationToken ct)
     {
         Func<ServiceCall, CancellationToken, Task<XElement>>? operation = call.Name switch
         {
@@ -54,11 +54,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
             "confirmarFacturasInformadas" => ConfirmAsync,
             _ => null,
         };
-        if (operation is null) return null;
-
-        if (!await _ledger.IsRegisteredAsync(call.Cuit, ct)) return call.Ok(Refused(call, Errors(Texts, [4009]), null));
-        using var _ = await _ledger.LockAsync(ct);
-        return call.Ok(await operation(call, ct));
+        return RunAsync(call, _ledger, Texts, operation, Refused, ct);
     }
 
     /// <summary>The operation's answer with only errors: queries keep their empty list, batches their empty resultados.</summary>
@@ -85,7 +81,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
 
     private static List<AccountItem> AccountItems(XElement request) =>
         request.Child("cuentas").Children("cuenta")
-            .Select(c => new AccountItem(c.LongOf("cuitTitular"), c.Child("cuentaId")?.Value.Trim() ?? "", c.Value("denominacion")))
+            .Select(c => new AccountItem(c.ChildLong("cuitTitular"), c.ChildText("cuentaId") ?? "", c.Value("denominacion")))
             .ToList();
 
     /// <summary>2009 for too many accounts, 2002 for a holder without its check digit, 2005 for a cuentaId out of 3 to 20 characters.</summary>
@@ -157,23 +153,22 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
     private async Task<XElement> AccountsAsync(ServiceCall call, CancellationToken ct)
     {
         var request = call.Request;
-        var holder = request.LongOf("cuitTitular");
+        var holder = request.ChildLong("cuitTitular");
         var format = CheckQuery(request, out var page, out var range);
         if (BadCuit(holder)) format.Insert(0, 2002);
         if (format.Count > 0) return Refused(call, null, FormatErrors(Texts, format));
 
         var state = request.Value("estadoCuenta");
-        var all = (await _ledger.AgentAccountsAsync(ct))
-            .Where(a => a.Agent == call.Cuit)
+        var all = (await _ledger.AgentAccountsOfAsync(call.Cuit, ct))
             .Where(a => state is null || a.State == state)
             .Where(a => holder is null || a.Holder == holder)
             .Where(a => (range.Kind == "Baja" ? a.ClosedOn : a.OpenedOn) is { } day && day >= range.From && day <= range.To)
             .ToList();
-        var items = all.Skip((page - 1) * PageSize).Take(PageSize);
+        var (items, more) = FceXml.Page(all, page);
         return Result(call.Operation.Output,
             new XElement("cuentasAgente", items.Select(a => Account("cuenta", a.Holder, a.AccountId, a.Denomination))),
             new XElement("nroPagina", page),
-            new XElement("hayMas", FceXml.YesNo(all.Count > page * PageSize)));
+            new XElement("hayMas", FceXml.YesNo(more)));
     }
 
     // ---- Reported invoices -----------------------------------------------------------
@@ -189,7 +184,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
     private async Task<XElement> InvoicesAsync(ServiceCall call, CancellationToken ct)
     {
         var request = call.Request;
-        var issuer = request.LongOf("cuitEmisor");
+        var issuer = request.ChildLong("cuitEmisor");
         var format = CheckQuery(request, out var page, out var range);
         if (BadCuit(issuer)) format.Insert(0, 2002);
         if (format.Count > 0) return Refused(call, null, FormatErrors(Texts, format));
@@ -203,7 +198,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
             .Where(a => InRange(MomentOf(a.Agent!, range.Kind), range))
             .OrderBy(a => a.Agent!.AvailableAt).ThenBy(a => a.Code)
             .ToList();
-        var items = all.Skip((page - 1) * PageSize).Take(PageSize).ToList();
+        var (items, more) = FceXml.Page(all, page);
 
         foreach (var account in items.Where(a => a.Agent!.State == "D"))
         {
@@ -234,7 +229,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
         return Result(call.Operation.Output,
             new XElement("facturasInformadas", rows),
             new XElement("nroPagina", page),
-            new XElement("hayMas", FceXml.YesNo(all.Count > page * PageSize)));
+            new XElement("hayMas", FceXml.YesNo(more)));
     }
 
     private sealed record Confirmation(FceId? Id, bool Accepts, short? Reason);
@@ -242,7 +237,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
     private async Task<XElement> ConfirmAsync(ServiceCall call, CancellationToken ct)
     {
         var items = call.Request.Child("facturas").Children("factura")
-            .Select(f => new Confirmation(IdOf(f.Child("idFactura")), f.Value("aceptada") == "S", (short?)f.LongOf("codRechazo")))
+            .Select(f => new Confirmation(IdOf(f.Child("idFactura")), f.Value("aceptada") == "S", f.ChildShort("codRechazo")))
             .ToList();
         var format = new List<int>();
         if (items.Count > BatchSize) format.Add(2009);
@@ -277,7 +272,6 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
             else
             {
                 report.State = "R";
-                report.RejectionCode = item.Reason;
                 report.RejectionReason = FceTables.AgentRejectionReasons.First(r => r.Code == item.Reason).Description;
                 account!.MoveTo(FceStates.AccountAccepted, book.Now);
                 invoice!.MoveTo(FceStates.Accepted, book.Now);

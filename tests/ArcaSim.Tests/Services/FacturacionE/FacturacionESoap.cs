@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
@@ -73,6 +74,19 @@ internal sealed class FacturacionESoap
 
     public static Task SetRateAsync(ArcaSimHarness sim, string currency, DateOnly day, decimal rate) =>
         sim.Services.GetRequiredService<IExchangeRates>().SetAsync(currency, day, rate);
+
+    /// <summary>Registers (or replaces) one of the issuer's CAE points of sale, with the day ARCA will deactivate it.</summary>
+    public static async Task PutPointOfSaleAsync(ArcaSimHarness sim, int number, DateOnly deactivatedOn)
+    {
+        var response = await sim.Http.PutAsJsonAsync($"/arcasim/api/taxpayers/{Issuer}", new
+        {
+            name = "Empresa de Prueba SA",
+            vatCondition = "ResponsableInscripto",
+            active = true,
+            pointsOfSale = new[] { new { number, kind = "WebServiceCae", blocked = false, deactivatedOn } },
+        });
+        response.EnsureSuccessStatusCode();
+    }
 
     // ---- WSFEXv1 requests ----------------------------------------------------------
 
