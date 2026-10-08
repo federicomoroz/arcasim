@@ -19,17 +19,8 @@ public static class FceXml
     /// </summary>
     public const int PageSize = 100;
 
-    /// <summary>
-    /// A page of a list (the first is 1) and whether more follows it. A page past
-    /// the end is empty. The arithmetic is long, so no page number can wrap it
-    /// into the middle of the list.
-    /// </summary>
-    public static (IReadOnlyList<T> Items, bool More) Page<T>(IReadOnlyList<T> all, long page)
-    {
-        var skip = (page - 1) * PageSize;
-        IReadOnlyList<T> items = skip < 0 || skip >= all.Count ? [] : all.Skip((int)skip).Take(PageSize).ToList();
-        return (items, skip >= 0 && all.Count > skip + PageSize);
-    }
+    /// <summary>A page of a list (the first is 1) and whether more follows it; one before the first or past the end is empty.</summary>
+    public static (IReadOnlyList<T> Items, bool More) Page<T>(IReadOnlyList<T> all, long page) => Paging.Page(all, page, PageSize);
 
     /// <summary>The direct child's text, trimmed; null when it is missing or empty.</summary>
     public static string? Value(this XElement? element, string name) => element.ChildText(name) is { Length: > 0 } text ? text : null;

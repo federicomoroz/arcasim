@@ -173,15 +173,10 @@ public sealed class CecRules(IDocumentStore store, PadronDirectory padron, ICloc
     private static string ReturnOf(ServiceCall call) => call.Name == "obtenerConsultas" ? "obtenerConsultasReturn" : "consultarComprobantesExpoReturn";
 
     /// <summary>
-    /// The items of the 1-based page (never below 1 here), and whether more follow it. The sums are in long: a page
-    /// number near the int limit is a page past the last, not a wrapped number that shows the first.
+    /// The items of the 1-based page (never below 1 here), and whether more follow it: a page number near the
+    /// int limit is a page past the last, not a wrapped number that shows the first.
     /// </summary>
-    private static (List<T> Shown, bool More) PageOf<T>(IReadOnlyList<T> items, int page)
-    {
-        var skipped = (long)(page - 1) * PageSize;
-        var shown = skipped >= items.Count ? [] : items.Skip((int)skipped).Take(PageSize).ToList();
-        return (shown, items.Count > skipped + PageSize);
-    }
+    private static (List<T> Shown, bool More) PageOf<T>(IReadOnlyList<T> items, int page) => Paging.Page(items, page, PageSize);
 
     private static int Period(DateOnly date) => date.Year * 100 + date.Month;
 
