@@ -18,7 +18,7 @@ public class LumRulesTests
     /// October's liquidation: 3500 kg of fat at 100 and 3300 kg of protein at 120, a commercial bonus of 1000,
     /// 21% VAT and another tax of 1.5% over 100000: 746000 + 1000 + 156870 − 1500 = 902370.
     /// </summary>
-    private static string Liquidation(long number, int type = 27, string rate = "<alicuotaIVA>21</alicuotaIVA>", string period = "2026/10",
+    internal static string Liquidation(long number, int type = 27, string rate = "<alicuotaIVA>21</alicuotaIVA>", string period = "2026/10",
         string date = "2026-10-01", string adjustment = "", bool physical = true, string bonus = "<importe>1000</importe>", int pointOfSale = 1) =>
         "<solicitud><liquidacion>" +
         $"<periodo>{period}</periodo><fechaComprobante>{date}</fechaComprobante><puntoVenta>{pointOfSale}</puntoVenta>" +

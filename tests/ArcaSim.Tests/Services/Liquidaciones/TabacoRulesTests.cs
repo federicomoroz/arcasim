@@ -20,7 +20,7 @@ public class TabacoRulesTests
         return answer.Element("arrayCathes")!.Elements("cathe").Select(c => long.Parse(c.Value)).ToList();
     }
 
-    private static string Link(long cathe, long holder, decimal kilos, string used = "", string recovery = "S") =>
+    internal static string Link(long cathe, long holder, decimal kilos, string used = "", string recovery = "S") =>
         $"<recupero>{recovery}</recupero><tipoMercaderia>3</tipoMercaderia><arrayCathesElaborados><datosTabacoElaborado><cathe>{cathe}</cathe>" +
         $"<cuitTitular>{holder}</cuitTitular><kilosBrutos>{kilos + 5}</kilosBrutos><kilosNetos>{kilos}</kilosNetos></datosTabacoElaborado></arrayCathesElaborados>{used}";
 

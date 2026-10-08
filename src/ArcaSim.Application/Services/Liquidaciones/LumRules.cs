@@ -122,7 +122,7 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
         if (!PeriodOpen(period, today)) return Fail(call, 2055, "Error, el período seleccionado para el tipo de liquidación que se intenta realizar, no es válido.");
         var date = liquidation.Day("fechaComprobante") ?? today;
-        if ($"{date:yyyy}/{date:MM}" != period)
+        if (date.ToString("yyyy/MM", CultureInfo.InvariantCulture) != period)
             return Fail(call, 2121, "La fecha de comprobante de la liquidación debe pertenecer al año y al mes de la liquidación.");
         if (date > today) return Fail(call, 2131, "La fecha del comprobante no puede ser posterior a hoy.");
         if (today.DayNumber - date.DayNumber > 10)
