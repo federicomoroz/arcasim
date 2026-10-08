@@ -91,7 +91,7 @@ src/
   ArcaSim.Infrastructure   in-memory and PostgreSQL storage, ArcaSim's own certification authority
   ArcaSim.Api              the SOAP layer, SETIWS's REST gateway, the API and the /arcasim/ panel
   Arca.Client              the client applications use
-tests/ArcaSim.Tests        499 tests: scenarios, bytes against real responses, the WSDL client, every service against its WSDL, both stores
+tests/ArcaSim.Tests        782 tests: scenarios, bytes against real responses, the WSDL client, every service against its WSDL, both stores
 ```
 
 - **Its own SOAP layer instead of CoreWCF.** ARCA's services run on different servers (.NET ASMX, Apache Axis and Axis2, CXF, JAX-WS, Spring-WS) with their quirks, and a generic framework would smooth them out. WSFEv1 reads and writes through `XmlSerializer`, the serializer ASMX itself uses: it accepts elements in any order, ignores unknown ones and those without the namespace, and answers in the same format.
