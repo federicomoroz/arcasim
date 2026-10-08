@@ -65,6 +65,17 @@ internal sealed class LiquidacionesSim : IAsyncDisposable
         return answer.Element("respuesta") ?? answer;
     }
 
+    /// <summary>The raw answer, whatever its status: for what the service refuses with a fault.</summary>
+    public Task<(int Status, string Body)> PostAsync(string operation, string inner, CancellationToken ct = default)
+    {
+        var contract = _contract.Operations.Single(o => o.Name == operation);
+        var element = contract.Input!;
+        var envelope = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" " +
+                       $"xmlns:x=\"{element.NamespaceName}\"><soapenv:Header/><soapenv:Body><x:{element.LocalName}>{_auth}{inner}</x:{element.LocalName}>" +
+                       "</soapenv:Body></soapenv:Envelope>";
+        return Sim.PostSoapAsync(new Uri("http://localhost" + _contract.AddressPath), envelope, $"\"{contract.Action}\"", ct);
+    }
+
     /// <summary>The Body's element, valid for the WSDL.</summary>
     public async Task<XElement> RawAsync(string operation, string inner)
     {

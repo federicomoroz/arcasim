@@ -147,10 +147,30 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
 
     // ---- Requesting CATHE ------------------------------------------------------------
 
+    /// <summary>
+    /// The most CATHE one request can ask for: CantidadSimpleType in the WSDL (cantidad, cantBultos), 1 to
+    /// 999999. ARCA checks a request against its schema and refuses what does not fit with a fault (manual
+    /// 1.3.1, "errores de tipos de datos"). ArcaSim refuses only what is above the maximum, so that no
+    /// request can make it issue CATHE without end, and it does so before any business rule.
+    /// </summary>
+    private const long MaxQuantity = 999_999;
+
+    /// <summary>The fault for a request that asks for more than <see cref="MaxQuantity"/>, in the wording of a schema range error.</summary>
+    private static ContractAnswer? TooMany(ServiceCall call, long quantity) => quantity <= MaxQuantity
+        ? null
+        : call.Fault($"cvc-maxInclusive-valid: El valor '{quantity}' no cumple con la restricción maxInclusive '{MaxQuantity}' para el tipo 'CantidadSimpleType'.");
+
+    /// <summary>
+    /// A quantity read from a request, held to one past the maximum in either direction: whether it passes
+    /// the maximum is all that matters, and the sums that follow cannot overflow.
+    /// </summary>
+    private static long Bounded(long quantity) => Math.Clamp(quantity, -MaxQuantity - 1, MaxQuantity + 1);
+
     private async Task<ContractAnswer> RequestElaboratedAsync(ServiceCall call, CancellationToken ct)
     {
         var deposit = call.Request.Number("deposito");
         var quantity = call.Request.Number("cantidad");
+        if (TooMany(call, quantity) is { } tooMany) return tooMany;
         if (call.Request.Value("inicial") != "S")
         {
             if (await _book.ParametersAsync(call.Cuit, deposit, ct) is not { } parameters)
@@ -174,17 +194,21 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
     private async Task<ContractAnswer> RequestImportedAsync(ServiceCall call, CancellationToken ct)
     {
         var request = call.Request;
-        var rows = request.Child("arrayCantSolicitadas").Children("cantPorDeposito").ToList();
+        var rows = request.Child("arrayCantSolicitadas").Children("cantPorDeposito")
+            .Select(r => (Deposit: r.Number("deposito"), Quantity: Bounded(r.Number("cantidad")))).ToList();
+        // What the loop below issues: a negative row asks for nothing, though it lowers the sum rule 1302 compares.
+        var asked = rows.Where(r => r.Quantity > 0).Sum(r => r.Quantity);
+        if (TooMany(call, Math.Max(request.Number("cantBultos"), asked)) is { } tooMany) return tooMany;
         if (!Cuits.IsValid(request.Number("cuitDespachante"))) return Reject(call, (1300, "La CUIT del despachante no es válida."));
-        if (rows.Select(r => r.Number("deposito")).Distinct().Count() != rows.Count) return Reject(call, (1301, "No se puede informar más de una vez el mismo depósito."));
-        if (rows.Sum(r => r.Number("cantidad")) > request.Number("cantBultos"))
+        if (rows.Select(r => r.Deposit).Distinct().Count() != rows.Count) return Reject(call, (1301, "No se puede informar más de una vez el mismo depósito."));
+        if (rows.Sum(r => r.Quantity) > request.Number("cantBultos"))
             return Reject(call, (1302, "La suma de las cantidades solicitadas no puede superar la cantidad de bultos del despacho."));
         var dispatch = request.Value("nroDespachoImp");
         var issued = new List<Cathe>();
-        foreach (var row in rows)
-            for (var i = 0; i < row.Number("cantidad"); i++)
+        foreach (var (deposit, quantity) in rows)
+            for (var i = 0; i < quantity; i++)
             {
-                var cathe = new Cathe(await _book.NewCatheAsync(Today.Year, ct), call.Cuit, row.Number("deposito"), dispatch, Today, Cathe.Requested);
+                var cathe = new Cathe(await _book.NewCatheAsync(Today.Year, ct), call.Cuit, deposit, dispatch, Today, Cathe.Requested);
                 await _book.PutAsync(cathe, ct);
                 issued.Add(cathe);
             }
@@ -359,12 +383,21 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
 
     // ---- Denaturation ----------------------------------------------------------------
 
+    /// <summary>
+    /// The CATHE codes of a request's arrayCathes. A code that is not a number is deliberately not refused here:
+    /// the schema says xsd:long, so the request is not one ARCA would have unmarshalled, and the exception is
+    /// answered by the engine as the fault the service gives for what its rules did not foresee
+    /// (UnexpectedErrorTests pins it).
+    /// </summary>
+    private static List<long> CatheCodes(XElement request) =>
+        request.Child("arrayCathes").Children("cathe").Select(c => long.Parse(c.Value, CultureInfo.InvariantCulture)).ToList();
+
     private async Task<ContractAnswer> DenatureAsync(ServiceCall call, CancellationToken ct)
     {
         var request = call.Request;
         var deposit = request.Number("deposito");
         var date = request.Day("fecha") ?? Today;
-        var codes = request.Child("arrayCathes").Children("cathe").Select(c => long.Parse(c.Value, CultureInfo.InvariantCulture)).ToList();
+        var codes = CatheCodes(request);
 
         if (date <= Today) return Reject(call, (1700, "La fecha de desnaturalización debe ser posterior a la fecha actual."));
         var cathes = new List<Cathe>();
@@ -436,7 +469,7 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
         var request = call.Request;
         var seller = request.Number("cuitVendedor");
         var buyer = request.Number("cuitComprador");
-        var codes = request.Child("arrayCathes").Children("cathe").Select(c => long.Parse(c.Value, CultureInfo.InvariantCulture)).ToList();
+        var codes = CatheCodes(request);
 
         if (await taxpayers.FindAsync(buyer, ct) is { Active: false }) return Reject(call, (105, $"La CUIT compradora {buyer} registra inconsistencias."));
         var cathes = new List<Cathe>();
