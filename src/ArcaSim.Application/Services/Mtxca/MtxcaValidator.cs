@@ -139,8 +139,8 @@ public sealed class MtxcaValidator(MtxcaTables tables, ITaxpayerRepository taxpa
         [MtxcaRule.ActivityNotCurrent] = (R(167), O(367)),
     };
 
-    /// <summary>The code a rule carries in a method, for tests and for the manual's cross-references.</summary>
-    public static (int Code, bool Rejects)? CodeOf(MtxcaRule rule, bool caea) => caea ? Codes[rule].Caea : Codes[rule].Cae;
+    /// <summary>The code a rule carries in a method (autorizarComprobante's or informarComprobanteCAEA's), and whether it rejects; none if the method does not check it.</summary>
+    private static (int Code, bool Rejects)? CodeOf(MtxcaRule rule, bool caea) => caea ? Codes[rule].Caea : Codes[rule].Cae;
 
     /// <param name="caea">informarComprobanteCAEA's codes instead of autorizarComprobante's.</param>
     /// <param name="date">The voucher's date: the one sent, or the day it is processed.</param>

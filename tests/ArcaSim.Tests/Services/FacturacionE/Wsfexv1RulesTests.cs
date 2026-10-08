@@ -198,6 +198,22 @@ public class Wsfexv1RulesTests
     }
 
     [Fact]
+    public async Task A_permit_is_checked_for_its_format_and_for_a_known_country()
+    {
+        var (sim, _, soap) = await StartAsync();
+        await using var _s = sim;
+        static string Check(string id, int country) => $"<s:ID_Permiso>{id}</s:ID_Permiso><s:Dst_merc>{country}</s:Dst_merc>";
+
+        var right = await soap.CallAsync(Fex, "FEXCheck_Permiso", Check("99999AAXX999999A", 203));
+        var lowercase = await soap.CallAsync(Fex, "FEXCheck_Permiso", Check("99999aaxx999999a", 203));
+        var unknownCountry = await soap.CallAsync(Fex, "FEXCheck_Permiso", Check("99999AAXX999999A", 9999));
+
+        Assert.Equal("OK", right.Value("FEXResultGet/Status"));
+        Assert.Equal("NO", lowercase.Value("FEXResultGet/Status"));
+        Assert.Equal("1810", unknownCountry.Value("FEXErr/ErrCode"));
+    }
+
+    [Fact]
     public async Task The_parameter_tables_answer_the_manuals_values()
     {
         var (sim, _, soap) = await StartAsync();

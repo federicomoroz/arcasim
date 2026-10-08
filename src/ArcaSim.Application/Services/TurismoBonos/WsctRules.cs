@@ -82,6 +82,9 @@ public sealed class WsctRules(
 
     private const string Registered = "1";
 
+    /// <summary>WSCT's points of sale go from 1 to 9999: NumeroPuntoVentaSimpleType is an xsd:short with that maxInclusive (wsct-homologacion.wsdl), not WSFEv1's 99998.</summary>
+    private const int MaxPointOfSale = 9999;
+
     private static readonly (int Code, string Description)[] Relations =
     [
         (1, "Alojamiento Directo a Turista No Residente"),
@@ -250,7 +253,7 @@ public sealed class WsctRules(
     {
         if (!Production) return Return(call);
         var points = (await taxpayers.FindAsync(call.Cuit, ct))?.PointsOfSale
-            .Where(p => p.Kind == PointOfSaleKind.WebServiceCae && p.Number is >= 1 and <= 9999).ToList() ?? [];
+            .Where(p => p.Kind == PointOfSaleKind.WebServiceCae && p.Number is >= 1 and <= MaxPointOfSale).ToList() ?? [];
         if (points.Count == 0) return Return(call, Errors([WsctCodes.Note(1106)]));
         return Return(call, new XElement("arrayPuntosVenta", points.Select(p => new XElement("puntoVenta",
             new XElement("numeroPuntoVenta", p.Number),

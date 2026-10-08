@@ -87,7 +87,7 @@ internal sealed partial class ExportVoucherValidator(ParameterTables tables, IEx
         foreach (var permit in v.Permits)
         {
             if (string.IsNullOrEmpty(permit.Id) != (permit.Destination == 0)) return 1730;
-            if (permit.Id is null || !PermitFormat().IsMatch(permit.Id) || !seen.Add((permit.Id, permit.Destination))) return 1740;
+            if (permit.Id is null || !IsPermit(permit.Id) || !seen.Add((permit.Id, permit.Destination))) return 1740;
             if (!tables.Countries.Any(c => c.Id == permit.Destination)) return 1750;
         }
         return null;
@@ -210,7 +210,9 @@ internal sealed partial class ExportVoucherValidator(ParameterTables tables, IEx
     private static bool Fits(decimal value, int integers, int decimals) =>
         Math.Abs(value) < (decimal)Math.Pow(10, integers) && value == Math.Round(value, decimals);
 
-    /// <summary>99999AAXX999999A: five digits, two letters, two letters or digits, six digits, a letter.</summary>
+    /// <summary>Whether a shipping permit's id has the format 99999AAXX999999A: five digits, two letters, two letters or digits, six digits, a letter.</summary>
+    public static bool IsPermit(string id) => PermitFormat().IsMatch(id);
+
     [GeneratedRegex("^[0-9]{5}[A-Z]{2}[A-Z0-9]{2}[0-9]{6}[A-Z]$")]
     private static partial Regex PermitFormat();
 

@@ -640,8 +640,6 @@ public sealed class WsfecredRules(
 
         var now = book.Now;
         account.MoveTo(cancelsAll ? FceStates.Cancelled : FceStates.AccountAccepted, now);
-        account.AcceptanceKind = "Expresa";
-        account.AcceptedAt = now;
         account.Forms = forms;
         account.Withholdings = withholdings;
         account.Adjustments = adjustments;
@@ -761,7 +759,7 @@ public sealed class WsfecredRules(
     }
 
     /// <summary>A CBU's two BCRA check digits: the bank and branch block, and the account block.</summary>
-    public static bool IsValidCbu(string cbu)
+    private static bool IsValidCbu(string cbu)
     {
         if (cbu.Length != 22 || !cbu.All(char.IsAsciiDigit)) return false;
         static bool Block(string digits, int[] weights)

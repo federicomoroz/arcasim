@@ -113,7 +113,6 @@ public sealed class FceAgentReport
 
     public DateTimeOffset? ReadAt { get; set; }
     public DateTimeOffset? ConfirmedAt { get; set; }
-    public short? RejectionCode { get; set; }
     public string? RejectionReason { get; set; }
 }
 
@@ -135,8 +134,6 @@ public sealed class FceAccount
     public DateOnly AcceptanceDue { get; set; }
     public List<string> Notes { get; set; } = [];
     public List<FceState> History { get; set; } = [];
-    public string? AcceptanceKind { get; set; }
-    public DateTimeOffset? AcceptedAt { get; set; }
     public List<FceCodeText> Forms { get; set; } = [];
     public List<FceWithholding> Withholdings { get; set; } = [];
     public List<FceAdjustment> Adjustments { get; set; } = [];

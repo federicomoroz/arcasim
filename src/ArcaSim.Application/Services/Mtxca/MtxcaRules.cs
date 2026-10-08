@@ -60,7 +60,7 @@ public sealed partial class MtxcaRules(
 {
     private readonly MtxcaTables _tables = new(parameters);
     private readonly MtxcaStore _state = new(documents);
-    private readonly MtxcaValidator _validator = new(new MtxcaTables(parameters), taxpayers, rates, settings);
+    private MtxcaValidator? _validator;
     private readonly ConcurrentDictionary<(long, int, int), byte> _busy = new();
     private readonly SemaphoreSlim _caeaGate = new(1, 1);
 
@@ -95,6 +95,9 @@ public sealed partial class MtxcaRules(
         _ => Task.FromResult<ContractAnswer?>(null),
     };
 
+    /// <summary>The checks of autorizarComprobante and informarComprobanteCAEA, over the same tables as the queries.</summary>
+    private MtxcaValidator Validator => _validator ??= new MtxcaValidator(_tables, taxpayers, rates, settings);
+
     private static async Task<ContractAnswer?> Some(Task<ContractAnswer> answer) => await answer;
 
     private static Task<ContractAnswer?> Done(ContractAnswer answer) => Task.FromResult<ContractAnswer?>(answer);
@@ -116,7 +119,7 @@ public sealed partial class MtxcaRules(
         if (type is null) findings.Add(MtxcaCodes.Error(MtxcaTable.Cae, 100));
         if (!Usable(issuer, voucher.PointOfSale, PointOfSaleKind.WebServiceCae, today)) findings.Add(MtxcaCodes.Error(MtxcaTable.Cae, 101));
         if (type is not null)
-            findings.AddRange(await _validator.ValidateAsync(false, voucher, type, call.Cuit, date, today, Activities(issuer), ct));
+            findings.AddRange(await Validator.ValidateAsync(false, voucher, type, call.Cuit, date, today, Activities(issuer), ct));
 
         var sequence = (call.Cuit, voucher.PointOfSale, voucher.Type);
         if (!_busy.TryAdd(sequence, 0)) return Rejected(call, [MtxcaCodes.Error(MtxcaTable.Cae, 135)]);

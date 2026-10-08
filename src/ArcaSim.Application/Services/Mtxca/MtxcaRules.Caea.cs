@@ -199,7 +199,7 @@ public sealed partial class MtxcaRules
         }
         if (issuer is { } known && known.VatCondition != VatCondition.ResponsableInscripto) findings.Add(MtxcaCodes.Observation(MtxcaTable.Caea, 750));
         if (type is not null)
-            findings.AddRange(await _validator.ValidateAsync(true, voucher, type, call.Cuit, date, today, Activities(issuer), ct));
+            findings.AddRange(await Validator.ValidateAsync(true, voucher, type, call.Cuit, date, today, Activities(issuer), ct));
 
         var sequence = (call.Cuit, voucher.PointOfSale, voucher.Type);
         if (!_busy.TryAdd(sequence, 0)) return InformRejected(call, today, [MtxcaCodes.Error(MtxcaTable.Caea, 739)]);

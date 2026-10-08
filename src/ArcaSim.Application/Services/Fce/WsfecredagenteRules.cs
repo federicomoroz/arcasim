@@ -272,7 +272,6 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
             else
             {
                 report.State = "R";
-                report.RejectionCode = item.Reason;
                 report.RejectionReason = FceTables.AgentRejectionReasons.First(r => r.Code == item.Reason).Description;
                 account!.MoveTo(FceStates.AccountAccepted, book.Now);
                 invoice!.MoveTo(FceStates.Accepted, book.Now);

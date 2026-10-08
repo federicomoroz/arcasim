@@ -273,7 +273,7 @@ public sealed class Wsfexv1Rules : IServiceBehavior
         var destination = call.Request.IntOf("Dst_merc");
         if (string.IsNullOrEmpty(permit) || !_tables.Countries.Any(c => c.Id == destination))
             return Fail(call, 1810, Wsfexv1Tables.PermitCheckText);
-        var exists = System.Text.RegularExpressions.Regex.IsMatch(permit, "^[0-9]{5}[A-Z]{2}[A-Z0-9]{2}[0-9]{6}[A-Z]$");
+        var exists = ExportVoucherValidator.IsPermit(permit);
         return Answer(call, new XElement(Ns(call) + "FEXResultGet", new XElement(Ns(call) + "Status", exists ? "OK" : "NO")));
     }
 
