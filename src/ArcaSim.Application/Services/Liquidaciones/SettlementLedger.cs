@@ -107,7 +107,11 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
         locks.AcquireAsync($"{service}.{what}", cuit, 0, 0, ct);
 
     public Task<LastSettlement?> LastAsync(string service, long cuit, int pointOfSale, int voucherType, CancellationToken ct) =>
-        store.GetAsync<LastSettlement>(service, $"ultimo/{cuit}/{pointOfSale:D5}/{voucherType:D3}", ct);
+        store.GetAsync<LastSettlement>(service, LastKey(cuit, pointOfSale, voucherType), ct);
+
+    /// <summary>Where a sequence's last number is kept: "ultimo/" and the sequence's key.</summary>
+    private static string LastKey(long cuit, int pointOfSale, int voucherType) =>
+        $"ultimo/{AuthorizedVouchers.SequenceKey(cuit, pointOfSale, voucherType)}";
 
     /// <summary>
     /// The client picks the number of a voucher: it must be the last + 1 of its sequence (1 when the
@@ -141,7 +145,7 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
         var key = settlement.KeyOf();
         await store.PutAsync(settlement.Service, $"liq/{key}", settlement, ct);
         await store.PutAsync(settlement.Service, $"cae/{settlement.Cae}", new SettlementByCae(key), ct);
-        await store.PutAsync(settlement.Service, $"ultimo/{settlement.Cuit}/{settlement.PointOfSale:D5}/{settlement.VoucherType:D3}",
+        await store.PutAsync(settlement.Service, LastKey(settlement.Cuit, settlement.PointOfSale, settlement.VoucherType),
             new LastSettlement(settlement.Number, settlement.Date), ct);
         await store.PutAsync(new AuthorizedVoucher(settlement.Service, settlement.Cuit, settlement.PointOfSale, settlement.VoucherType,
             settlement.Number, settlement.Date, settlement.Total, CuitDocumentType, settlement.ReceiverCuit, "CAE",
