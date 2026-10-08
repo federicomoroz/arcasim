@@ -18,15 +18,6 @@ internal static class Soap
     /// <summary>An envelope around a request built from its schema; none at all gives an empty Body.</summary>
     public static string Envelope(XElement? request) => Envelope(request?.ToString(SaveOptions.DisableFormatting) ?? "");
 
-    /// <summary>
-    /// An operation's element with its children, in its namespace: the default one for the services that
-    /// qualify their children (ASMX, Spring-WS), a prefix for the rest, whose children travel unqualified.
-    /// </summary>
-    public static string Operation(string name, string namespaceName, string inner, bool qualified = false) =>
-        qualified
-            ? $"<{name} xmlns=\"{namespaceName}\">{inner}</{name}>"
-            : $"<x:{name} xmlns:x=\"{namespaceName}\">{inner}</x:{name}>";
-
     /// <summary>The SOAP envelope of an answer, out of its MTOM package when the service sends one.</summary>
     public static string Unwrap(string response)
     {
