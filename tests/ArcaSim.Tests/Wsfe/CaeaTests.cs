@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Wsfe;
 
@@ -10,7 +11,7 @@ public class CaeaTests
     {
         var (sim, _) = await ArcaSimHarness.StartWithIssuerAsync(now: new DateTimeOffset(2026, 10, 12, 10, 0, 0, TimeSpan.FromHours(-3)));
         await using var __ = sim;
-        var auth = await AuthAsync(sim);
+        var auth = await sim.WsfeAuthAsync();
 
         var (_, granted) = await sim.PostWsfeAsync("FECAEASolicitar", auth + "<ar:Periodo>202610</ar:Periodo><ar:Orden>2</ar:Orden>");
         var (_, again) = await sim.PostWsfeAsync("FECAEASolicitar", auth + "<ar:Periodo>202610</ar:Periodo><ar:Orden>2</ar:Orden>");
@@ -26,7 +27,7 @@ public class CaeaTests
     {
         var (sim, _) = await ArcaSimHarness.StartWithIssuerAsync(now: new DateTimeOffset(2026, 10, 1, 10, 0, 0, TimeSpan.FromHours(-3)));
         await using var __ = sim;
-        var auth = await AuthAsync(sim);
+        var auth = await sim.WsfeAuthAsync();
 
         var (_, body) = await sim.PostWsfeAsync("FECAEASolicitar", auth + "<ar:Periodo>202610</ar:Periodo><ar:Orden>2</ar:Orden>");
 
@@ -38,7 +39,7 @@ public class CaeaTests
     {
         var (sim, _) = await ArcaSimHarness.StartWithIssuerAsync();
         await using var __ = sim;
-        var auth = await AuthAsync(sim);
+        var auth = await sim.WsfeAuthAsync();
 
         var (_, body) = await sim.PostWsfeAsync("FECAEAConsultar", auth + "<ar:Periodo>202107</ar:Periodo><ar:Orden>1</ar:Orden>");
 
@@ -50,10 +51,10 @@ public class CaeaTests
     {
         var (sim, wsfe) = await ArcaSimHarness.StartWithIssuerAsync(now: new DateTimeOffset(2026, 10, 12, 10, 0, 0, TimeSpan.FromHours(-3)));
         await using var __ = sim;
-        var auth = await AuthAsync(sim);
+        var auth = await sim.WsfeAuthAsync();
         var (_, granted) = await sim.PostWsfeAsync("FECAEASolicitar", auth + "<ar:Periodo>202610</ar:Periodo><ar:Orden>2</ar:Orden>");
         sim.Clock.Advance(TimeSpan.FromDays(7));
-        auth = await AuthAsync(sim);
+        auth = await sim.WsfeAuthAsync();
 
         var (_, reported) = await sim.PostWsfeAsync("FECAEARegInformativo", auth + Report(Caea(granted), "20261018", "20261018093000"));
         var (_, withoutCaea) = await sim.PostWsfeAsync("FECAEARegInformativo", auth + Report("", "20261018", "20261018100000", number: 2));
@@ -72,11 +73,11 @@ public class CaeaTests
     {
         var (sim, _) = await ArcaSimHarness.StartWithIssuerAsync(now: new DateTimeOffset(2026, 10, 12, 10, 0, 0, TimeSpan.FromHours(-3)));
         await using var __ = sim;
-        var auth = await AuthAsync(sim);
+        var auth = await sim.WsfeAuthAsync();
         var (_, granted) = await sim.PostWsfeAsync("FECAEASolicitar", auth + "<ar:Periodo>202610</ar:Periodo><ar:Orden>2</ar:Orden>");
         var caea = Caea(granted);
         sim.Clock.Advance(TimeSpan.FromDays(20));
-        auth = await AuthAsync(sim);
+        auth = await sim.WsfeAuthAsync();
 
         var (_, first) = await sim.PostWsfeAsync("FECAEASinMovimientoInformar", auth + $"<ar:PtoVta>900</ar:PtoVta><ar:CAEA>{caea}</ar:CAEA>");
         var (_, second) = await sim.PostWsfeAsync("FECAEASinMovimientoInformar", auth + $"<ar:PtoVta>900</ar:PtoVta><ar:CAEA>{caea}</ar:CAEA>");
@@ -98,10 +99,4 @@ public class CaeaTests
         $"<ar:CAEA>{caea}</ar:CAEA><ar:CbteFchHsGen>{generated}</ar:CbteFchHsGen></ar:FECAEADetRequest></ar:FeDetReq></ar:FeCAEARegInfReq>";
 
     private static string Caea(string body) => Regex.Match(body, "<CAEA>(\\d{14})</CAEA>").Groups[1].Value;
-
-    private static async Task<string> AuthAsync(ArcaSimHarness sim)
-    {
-        var certificate = await sim.IssueCertificateAsync(ArcaSimHarness.Issuer, "facturacion");
-        return ArcaSimHarness.AuthXml(await sim.Wsaa(ArcaSimHarness.Issuer, certificate).LoginAsync("wsfe"), ArcaSimHarness.Issuer);
-    }
 }

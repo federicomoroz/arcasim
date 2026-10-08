@@ -1,4 +1,5 @@
 using ArcaSim.Application.Wsfe;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Wsfe;
 
@@ -10,7 +11,7 @@ public class ParameterTests
         var (sim, _) = await ArcaSimHarness.StartWithIssuerAsync();
         await using var __ = sim;
 
-        var (_, body) = await sim.PostWsfeAsync("FEParamGetPtosVenta", await AuthAsync(sim));
+        var (_, body) = await sim.PostWsfeAsync("FEParamGetPtosVenta", await sim.WsfeAuthAsync());
 
         Assert.Contains("<ResultGet><PtoVenta><Nro>1</Nro><EmisionTipo>CAE - Ri Iva</EmisionTipo><Bloqueado>N</Bloqueado><FchBaja>NULL</FchBaja></PtoVenta><PtoVenta><Nro>900</Nro><EmisionTipo>CAEA - Ri Iva</EmisionTipo>", body);
     }
@@ -20,7 +21,7 @@ public class ParameterTests
     {
         var (sim, _) = await ArcaSimHarness.StartWithIssuerAsync();
         await using var __ = sim;
-        var auth = await AuthAsync(sim);
+        var auth = await sim.WsfeAuthAsync();
 
         var (_, classA) = await sim.PostWsfeAsync("FEParamGetCondicionIvaReceptor", auth + "<ar:ClaseCmp>A</ar:ClaseCmp>");
         var (_, unknown) = await sim.PostWsfeAsync("FEParamGetCondicionIvaReceptor", auth + "<ar:ClaseCmp>Z</ar:ClaseCmp>");
@@ -35,7 +36,7 @@ public class ParameterTests
     {
         var (sim, _) = await ArcaSimHarness.StartWithIssuerAsync();
         await using var __ = sim;
-        var auth = await AuthAsync(sim);
+        var auth = await sim.WsfeAuthAsync();
         var rate = await sim.Http.PutAsync("/arcasim/api/rates", System.Net.Http.Json.JsonContent.Create(new { currency = "DOL", day = "2026-09-30", rate = 1385.5m }));
         rate.EnsureSuccessStatusCode();
 
@@ -59,11 +60,5 @@ public class ParameterTests
             .ToList();
 
         Assert.Empty(missing);
-    }
-
-    private static async Task<string> AuthAsync(ArcaSimHarness sim)
-    {
-        var certificate = await sim.IssueCertificateAsync(ArcaSimHarness.Issuer, "facturacion");
-        return ArcaSimHarness.AuthXml(await sim.Wsaa(ArcaSimHarness.Issuer, certificate).LoginAsync("wsfe"), ArcaSimHarness.Issuer);
     }
 }

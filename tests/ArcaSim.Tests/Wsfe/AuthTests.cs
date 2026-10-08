@@ -1,3 +1,5 @@
+using ArcaSim.Tests.Support;
+
 namespace ArcaSim.Tests.Wsfe;
 
 /// <summary>
@@ -41,7 +43,7 @@ public class AuthTests
     {
         var (sim, _) = await ArcaSimHarness.StartWithIssuerAsync();
         await using var __ = sim;
-        var ticket = await sim.Wsaa(ArcaSimHarness.Issuer, await sim.IssueCertificateAsync(ArcaSimHarness.Issuer, "facturacion")).LoginAsync("wsfe");
+        var ticket = await sim.TicketAsync(ArcaSimHarness.Issuer, "wsfe");
         sim.Clock.Advance(TimeSpan.FromHours(13));
 
         var (_, body) = await sim.PostWsfeAsync("FECompTotXRequest", ArcaSimHarness.AuthXml(ticket with { Sign = "AAAA" }, ArcaSimHarness.Issuer));
@@ -54,7 +56,7 @@ public class AuthTests
     {
         var (sim, _) = await ArcaSimHarness.StartWithIssuerAsync();
         await using var __ = sim;
-        var ticket = await sim.Wsaa(ArcaSimHarness.Issuer, await sim.IssueCertificateAsync(ArcaSimHarness.Issuer, "facturacion")).LoginAsync("wsfe");
+        var ticket = await sim.TicketAsync(ArcaSimHarness.Issuer, "wsfe");
 
         var (_, body) = await sim.PostWsfeAsync("FECompTotXRequest", ArcaSimHarness.AuthXml(ticket with { Sign = "AAAA" }, ArcaSimHarness.Issuer));
 
@@ -66,7 +68,7 @@ public class AuthTests
     {
         var (sim, _) = await ArcaSimHarness.StartWithIssuerAsync();
         await using var __ = sim;
-        var ticket = await sim.Wsaa(ArcaSimHarness.Issuer, await sim.IssueCertificateAsync(ArcaSimHarness.Issuer, "facturacion")).LoginAsync("wsfe");
+        var ticket = await sim.TicketAsync(ArcaSimHarness.Issuer, "wsfe");
 
         var (_, body) = await sim.PostWsfeAsync("FECompTotXRequest", ArcaSimHarness.AuthXml(ticket, 23000000000));
 
@@ -78,8 +80,7 @@ public class AuthTests
     {
         var (sim, _) = await ArcaSimHarness.StartWithIssuerAsync();
         await using var __ = sim;
-        var certificate = await sim.IssueCertificateAsync(ArcaSimHarness.Issuer, "facturacion", "wsfe", "ws_sr_padron_a13");
-        var ticket = await sim.Wsaa(ArcaSimHarness.Issuer, certificate).LoginAsync("ws_sr_padron_a13");
+        var ticket = await sim.TicketAsync(ArcaSimHarness.Issuer, "ws_sr_padron_a13", "wsfe");
 
         var (_, body) = await sim.PostWsfeAsync("FECompTotXRequest", ArcaSimHarness.AuthXml(ticket, ArcaSimHarness.Issuer));
 

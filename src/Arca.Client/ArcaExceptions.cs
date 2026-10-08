@@ -17,6 +17,34 @@ public sealed class ArcaUnavailableException(string message, Exception? inner = 
     public override bool Retryable => true;
 }
 
+/// <summary>
+/// ARCA's server refused the request itself, not its content: an HTTP 4xx
+/// (except 408 and 429, which ask to try again later), or a fault that says
+/// the server could not read the request or does not know the action
+/// ("Server was unable to read request", an unknown SOAPAction). The same call
+/// fails the same way every time: the address, the request or something in
+/// between has to change, so retrying is pointless.
+/// </summary>
+public sealed class ArcaBadRequestException(string message, int? httpStatus = null, Exception? inner = null) : ArcaException(message, inner)
+{
+    /// <summary>The HTTP status the server answered with, when it is known.</summary>
+    public int? HttpStatus { get; } = httpStatus;
+
+    public override bool Retryable => false;
+}
+
+/// <summary>
+/// ARCA answered, but what it sent cannot be read: a TA that does not parse, a
+/// field that should be a number or a date and is not. Not retryable: WSAA
+/// refuses a second TA while the first one lives, and a voucher whose answer
+/// cannot be read may have been authorized (AuthorizeNextAsync asks
+/// FECompConsultar before it gives up).
+/// </summary>
+public sealed class ArcaBadResponseException(string message, Exception? inner = null) : ArcaException(message, inner)
+{
+    public override bool Retryable => false;
+}
+
 /// <summary>WSAA refused the login (wrong certificate, missing authorization, malformed TRA...).</summary>
 public sealed class WsaaFaultException(string code, string message)
     : ArcaException($"WSAA {code}: {message}")

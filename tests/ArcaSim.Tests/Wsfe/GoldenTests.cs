@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using ArcaSim.Application;
 using ArcaSim.Application.Wsfe;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArcaSim.Tests.Wsfe;
@@ -45,7 +46,7 @@ public class GoldenTests
     {
         var (sim, wsfe) = await ArcaSimHarness.StartWithIssuerAsync();
         await using var _ = sim;
-        var auth = await AuthAsync(sim);
+        var auth = await sim.WsfeAuthAsync();
 
         var (_, total) = await sim.PostWsfeAsync("FECompTotXRequest", auth);
         var (_, vat) = await sim.PostWsfeAsync("FEParamGetTiposIva", auth);
@@ -68,7 +69,7 @@ public class GoldenTests
         await sim.PutTaxpayerAsync(issuer, "Emisor de la grabación", VatCondition.ResponsableInscripto, new PointOfSale(4000, PointOfSaleKind.WebServiceCae));
         await sim.PutTaxpayerAsync(30000000007, "Receptor monotributista", VatCondition.Monotributo);
         await SeedLastVoucherAsync(sim, issuer, 4000, 1, 1835, new DateOnly(2021, 7, 1));
-        var auth = await AuthAsync(sim, issuer);
+        var auth = await sim.WsfeAuthAsync(issuer);
 
         var (_, body) = await sim.PostWsfeAsync("FECAESolicitar", auth + RecordedInvoice(1836));
 
@@ -84,7 +85,7 @@ public class GoldenTests
         sim.Clock.Freeze(new DateTimeOffset(2021, 7, 1, 17, 21, 15, TimeSpan.FromHours(-3)));
         await sim.PutTaxpayerAsync(issuer, "Emisor de la grabación", VatCondition.ResponsableInscripto, new PointOfSale(4000, PointOfSaleKind.WebServiceCae));
         await SeedLastVoucherAsync(sim, issuer, 4000, 1, 1839, new DateOnly(2021, 7, 1));
-        var auth = await AuthAsync(sim, issuer);
+        var auth = await sim.WsfeAuthAsync(issuer);
 
         var (_, body) = await sim.PostWsfeAsync("FECAESolicitar", auth + RecordedInvoice(1839, concept: 1));
 
@@ -102,7 +103,7 @@ public class GoldenTests
         await sim.PutTaxpayerAsync(issuer, "Emisor de la grabación", VatCondition.ResponsableInscripto, new PointOfSale(4000, PointOfSaleKind.WebServiceCae));
         await sim.PutTaxpayerAsync(30000000007, "Receptor monotributista", VatCondition.Monotributo);
         await SeedLastVoucherAsync(sim, issuer, 4000, 1, 1836, new DateOnly(2021, 7, 1));
-        var auth = await AuthAsync(sim, issuer);
+        var auth = await sim.WsfeAuthAsync(issuer);
         await sim.PostWsfeAsync("FECAESolicitar", auth + RecordedInvoice(1837, withVatCondition: false));
 
         var (_, body) = await sim.PostWsfeAsync("FECompConsultar",
@@ -119,7 +120,7 @@ public class GoldenTests
     {
         var (sim, _) = await ArcaSimHarness.StartWithIssuerAsync(now: new DateTimeOffset(2021, 7, 22, 10, 0, 0, TimeSpan.FromHours(-3)));
         await using var __ = sim;
-        var auth = await AuthAsync(sim);
+        var auth = await sim.WsfeAuthAsync();
 
         var (_, body) = await sim.PostWsfeAsync("FECAESolicitar", auth +
             "<ar:FeCAEReq><ar:FeCabReq><ar:CantReg>1</ar:CantReg><ar:PtoVta>1</ar:PtoVta><ar:CbteTipo>6</ar:CbteTipo></ar:FeCabReq><ar:FeDetReq><ar:FECAEDetRequest>" +
@@ -138,7 +139,7 @@ public class GoldenTests
     {
         var (sim, _) = await ArcaSimHarness.StartWithIssuerAsync();
         await using var __ = sim;
-        var auth = await AuthAsync(sim);
+        var auth = await sim.WsfeAuthAsync();
         string Detail(long number, decimal total) =>
             "<ar:FECAEDetRequest><ar:Concepto>1</ar:Concepto><ar:DocTipo>99</ar:DocTipo><ar:DocNro>0</ar:DocNro>" +
             $"<ar:CbteDesde>{number}</ar:CbteDesde><ar:CbteHasta>{number}</ar:CbteHasta>" +
@@ -176,7 +177,7 @@ public class GoldenTests
     {
         var (sim, _) = await ArcaSimHarness.StartWithIssuerAsync();
         await using var __ = sim;
-        var auth = await AuthAsync(sim);
+        var auth = await sim.WsfeAuthAsync();
 
         var (_, body) = await sim.PostWsfeAsync("FECompUltimoAutorizado",
             "<ar:CbteTipo>6</ar:CbteTipo><ar:Desconocido>x</ar:Desconocido>" + auth + "<ar:PtoVta>1</ar:PtoVta>", withAction: false);
@@ -202,12 +203,6 @@ public class GoldenTests
             cuit, pointOfSale, type, number, number, date, EmissionType.Cae, "00000000000000", date.AddDays(10),
             sim.Clock.Now, new FECAEDetRequest(), []));
 
-    private static async Task<string> AuthAsync(ArcaSimHarness sim, long cuit = ArcaSimHarness.Issuer)
-    {
-        var certificate = await sim.IssueCertificateAsync(cuit, "facturacion");
-        var ticket = await sim.Wsaa(cuit, certificate).LoginAsync("wsfe");
-        return ArcaSimHarness.AuthXml(ticket, cuit);
-    }
 
     private static string BodyOf(string envelope)
     {

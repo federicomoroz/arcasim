@@ -1,7 +1,6 @@
 using System.Net.Http.Json;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using Arca.Client;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests;
 
@@ -18,10 +17,10 @@ public class OpenAccessTests
     public async Task With_a_self_signed_certificate_and_nothing_loaded_an_invoice_gets_its_CAE()
     {
         await using var sim = ArcaSimHarness.Start(open: true);
-        using var certificate = SelfSigned($"SERIALNUMBER=CUIT {Cuit}, CN=mi-aplicacion");
+        using var certificate = Certificates.SelfSigned($"SERIALNUMBER=CUIT {Cuit}, CN=mi-aplicacion");
         var wsfe = sim.Wsfe(Cuit, certificate);
 
-        var result = await wsfe.AuthorizeNextAsync(4, 6, ConsumerInvoice());
+        var result = await wsfe.AuthorizeNextAsync(4, 6, Vouchers.ConsumerInvoice());
         var taxpayer = await sim.Http.GetFromJsonAsync<TaxpayerView>($"/arcasim/api/taxpayers/{Cuit}");
 
         Assert.True(result.Approved, string.Join("; ", result.Errors.Concat(result.Observations)));
@@ -34,7 +33,7 @@ public class OpenAccessTests
     public async Task An_issuer_whose_first_voucher_is_class_C_is_taken_as_monotributista()
     {
         await using var sim = ArcaSimHarness.Start(open: true);
-        using var certificate = SelfSigned($"SERIALNUMBER=CUIT {Cuit}, CN=mi-aplicacion");
+        using var certificate = Certificates.SelfSigned($"SERIALNUMBER=CUIT {Cuit}, CN=mi-aplicacion");
 
         var result = await sim.Wsfe(Cuit, certificate).AuthorizeNextAsync(1, 11, new Voucher
         {
@@ -50,7 +49,7 @@ public class OpenAccessTests
     public async Task A_certificate_without_a_CUIT_is_still_untrusted()
     {
         await using var sim = ArcaSimHarness.Start(open: true);
-        using var certificate = SelfSigned("CN=sin-cuit");
+        using var certificate = Certificates.SelfSigned("CN=sin-cuit");
 
         var failure = await Assert.ThrowsAsync<WsaaFaultException>(() => sim.Wsaa(Cuit, certificate).LoginAsync("wsfe"));
 
@@ -61,27 +60,12 @@ public class OpenAccessTests
     public async Task Strict_access_asks_for_what_ARCA_asks_for()
     {
         await using var sim = ArcaSimHarness.Start(open: false);
-        using var certificate = SelfSigned($"SERIALNUMBER=CUIT {Cuit}, CN=mi-aplicacion");
+        using var certificate = Certificates.SelfSigned($"SERIALNUMBER=CUIT {Cuit}, CN=mi-aplicacion");
 
         var failure = await Assert.ThrowsAsync<WsaaFaultException>(() => sim.Wsaa(Cuit, certificate).LoginAsync("wsfe"));
 
         Assert.Equal("cms.cert.untrusted", failure.Code);
     }
-
-    /// <summary>A certificate like the one openssl makes in one line, with ARCA's DN.</summary>
-    private static X509Certificate2 SelfSigned(string subject)
-    {
-        using var key = RSA.Create(2048);
-        var request = new CertificateRequest(subject, key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-        using var certificate = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddYears(1));
-        return new X509Certificate2(certificate.Export(X509ContentType.Pfx), (string?)null, X509KeyStorageFlags.EphemeralKeySet);
-    }
-
-    private static Voucher ConsumerInvoice() => new()
-    {
-        Concept = 1, DocumentType = 99, DocumentNumber = 0, Total = 121, Net = 100, Vat = 21,
-        ReceiverVatCondition = 5, VatLines = [new VatLine(5, 100, 21)],
-    };
 
     private sealed record PointOfSaleView(int Number, string Kind);
 

@@ -2,9 +2,9 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Contract;
 
@@ -17,8 +17,6 @@ namespace ArcaSim.Tests.Contract;
 public class CatalogEngineTests
 {
     private const long Caller = ArcaSimHarness.Issuer;
-    private static readonly ServiceCatalog Catalog = ServiceCatalog.Load(Path.Combine(AppContext.BaseDirectory, "arca-servicios.json"));
-    private static readonly string Wsdls = Path.Combine(AppContext.BaseDirectory, "arca-wsdl");
 
     // ---- Placeholders ---------------------------------------------------------------
 
@@ -41,9 +39,9 @@ public class CatalogEngineTests
     public void Every_catalog_header_and_detail_is_well_formed_and_every_row_names_a_problem()
     {
         var keys = Enum.GetNames<Application.Access.TicketProblem>().Append("NoTicket").Append("*").ToHashSet();
-        var values = new PlaceholderValues(DateTimeOffset.Now) { Token = "abc", Sign = "abc" };
+        var values = new PlaceholderValues(TestTime.Reference) { Token = "abc", Sign = "abc" };
         var problems = new List<string>();
-        foreach (var service in Catalog.Services)
+        foreach (var service in Contracts.Catalog.Services)
         {
             var fragments = new List<string?> { service.Header, service.UnknownOperation?.Detail };
             foreach (var (key, rows) in service.Errors.Rows ?? [])
@@ -70,50 +68,50 @@ public class CatalogEngineTests
     [Fact]
     public void Several_errors_go_in_copies_of_the_row_and_validate()
     {
-        var contract = ServiceContract.Load(Path.Combine(Wsdls, "wsrgiva-homologacion.wsdl"));
+        var contract = Contracts.Of("wsrgiva-homologacion.wsdl");
         var sampler = new SchemaSampler(contract.Schemas);
         var operation = contract.Operations.First(o => o.Name.StartsWith("consultarConstancia", StringComparison.Ordinal));
 
-        var answer = sampler.ErrorResponse(operation.Output, new SampleContext(Caller, DateTimeOffset.Now),
+        var answer = sampler.ErrorResponse(operation.Output, new SampleContext(Caller, TestTime.Reference),
             [(505, "uno"), (506, "dos")], new ErrorShape("constancia", "codigoError", "descripcionError"))!;
 
         var rows = answer.Descendants().Where(e => e.Name.LocalName == "constancia").ToList();
         Assert.Equal(["505", "506"], rows.Select(r => r.Elements().First(e => e.Name.LocalName == "codigoError").Value));
         Assert.Equal(["uno", "dos"], rows.Select(r => r.Elements().First(e => e.Name.LocalName == "descripcionError").Value));
-        Validate(answer, contract);
+        Xsd.AssertValid(answer, contract);
     }
 
     [Fact]
     public void A_parent_and_block_path_picks_the_error_block_at_that_depth()
     {
-        var contract = ServiceContract.Load(Path.Combine(Wsdls, "wsagr-homologacion.wsdl"));
+        var contract = Contracts.Of("wsagr-homologacion.wsdl");
         var sampler = new SchemaSampler(contract.Schemas);
         var operation = contract.Operations.First(o => o.Name == "Consulta");
 
-        var byName = sampler.ErrorResponse(operation.Output, new SampleContext(Caller, DateTimeOffset.Now), 501, "x", new ErrorShape("Err"))!;
-        var byPath = sampler.ErrorResponse(operation.Output, new SampleContext(Caller, DateTimeOffset.Now), 501, "x", new ErrorShape("Respuesta/Err"))!;
+        var byName = sampler.ErrorResponse(operation.Output, new SampleContext(Caller, TestTime.Reference), 501, "x", new ErrorShape("Err"))!;
+        var byPath = sampler.ErrorResponse(operation.Output, new SampleContext(Caller, TestTime.Reference), 501, "x", new ErrorShape("Respuesta/Err"))!;
 
         Assert.Equal("DetalleCuits", byName.Descendants().First(e => e.Name.LocalName == "Err").Parent!.Name.LocalName);
         Assert.Equal("Respuesta", byPath.Descendants().First(e => e.Name.LocalName == "Err").Parent!.Name.LocalName);
         Assert.DoesNotContain(byPath.Descendants(), e => e.Name.LocalName == "Det");
-        Validate(byPath, contract);
+        Xsd.AssertValid(byPath, contract);
     }
 
     [Fact]
     public void Elements_listed_as_always_are_written_with_data_and_with_errors()
     {
-        var contract = ServiceContract.Load(Path.Combine(Wsdls, "wsfexv1-homologacion.wsdl"));
+        var contract = Contracts.Of("wsfexv1-homologacion.wsdl");
         var sampler = new SchemaSampler(contract.Schemas);
         var operation = contract.Operations.First(o => o.Name == "FEXGetPARAM_MON");
-        var context = new SampleContext(Caller, DateTimeOffset.Now) { Always = ["FEXEvents"] };
+        var context = new SampleContext(Caller, TestTime.Reference) { Always = ["FEXEvents"] };
 
         var data = sampler.Sample(operation.Output, context);
         var error = sampler.ErrorResponse(operation.Output, context, 1000, "x")!;
 
         Assert.Contains(data.Descendants(), e => e.Name.LocalName == "EventCode");
         Assert.Contains(error.Descendants(), e => e.Name.LocalName == "EventCode");
-        Validate(data, contract);
-        Validate(error, contract);
+        Xsd.AssertValid(data, contract);
+        Xsd.AssertValid(error, contract);
     }
 
     // ---- Refused tickets ------------------------------------------------------------
@@ -191,7 +189,7 @@ public class CatalogEngineTests
                      "<faultcode>soapenv:Client</faultcode><faultstring>Token inválido</faultstring><detail /></soapenv:Fault></soapenv:Body></soapenv:Envelope>", bad);
         Assert.Contains("<faultstring>Acceso Denegado  - El token o la firma son nulos.</faultstring>", missing);
 
-        var ticket = await TicketAsync(sim, "wsmtxca");
+        var ticket = await TicketOfAsync(sim, "wsmtxca");
         sim.Clock.Advance(TimeSpan.FromHours(13));
         var (_, expired, _) = await CallAsync(sim, "wsmtxca", "consultarTiposComprobante", ticket.Token, ticket.Sign);
         Assert.Matches(@"<faultstring>Token vencido Fecha y Hora de Vencimiento del Token Enviado: \d\d-\d\d-\d{4} \d\d:\d\d:\d\d - Fecha y Hora Actual del Servidor: \d\d-\d\d-\d{4} \d\d:\d\d:\d\d</faultstring>", expired);
@@ -223,12 +221,17 @@ public class CatalogEngineTests
     public async Task A_service_whose_request_names_no_CUIT_acts_for_the_tickets_own()
     {
         await using var sim = ArcaSimHarness.Start();
-        var ticket = await TicketAsync(sim, "wEnysa");
+        var ticket = await TicketOfAsync(sim, "wEnysa");
         var (status, body, _) = await CallAsync(sim, "wEnysa", "CargaEventoEntradaSalida", ticket.Token, ticket.Sign);
 
+        // The ticket passed, so the rules answered: they refuse the sample's tipoTransaccion (6), where a ticket
+        // that did not act for the caller would have got 500, 501 or 504.
         Assert.Equal(200, status);
-        Assert.DoesNotContain("No autorizado para utilizar este servicio", body);
-        Assert.DoesNotContain("relaciones", body);
+        var result = Soap.Body(body).Elements().Single();
+        Assert.Equal("6", result.Element(result.Name.Namespace + "codigoError")!.Value);
+        Assert.Equal("Operación inválida", result.Element(result.Name.Namespace + "descripcion")!.Value);
+        Assert.Equal("tipoTransaccion", result.Element(result.Name.Namespace + "descripcionAdicional")!.Value);
+        ValidateBody(body, "wEnysa");
     }
 
     [Fact]
@@ -274,7 +277,7 @@ public class CatalogEngineTests
         Assert.StartsWith("multipart/related; type=\"application/xop+xml\"; boundary=\"uuid:", contentType);
         Assert.StartsWith("\r\n--uuid:", body);
         Assert.Contains("Content-ID: <root.message@cxf.apache.org>\r\n\r\n<soap:Envelope", body);
-        ValidateBody(CatalogServiceTests.Soap(body), "veconsumerws");
+        ValidateBody(body, "veconsumerws");
         Assert.StartsWith("text/xml", faultType);
         Assert.Contains("No se pudo procesar el SSO Token xml recibido, error [Parsing Error : Content is not allowed in prolog.", fault);
     }
@@ -283,7 +286,7 @@ public class CatalogEngineTests
     public async Task Spring_Boot_services_answer_their_dummy_on_GET()
     {
         await using var sim = ArcaSimHarness.Start();
-        var contract = ServiceContract.Load(Path.Combine(Wsdls, Catalog.Find("wsfecredagente")!.Wsdl));
+        var contract = Contracts.Of(Contracts.Definition("wsfecredagente"));
 
         var body = await sim.Http.GetStringAsync(contract.AddressPath);
 
@@ -309,13 +312,13 @@ public class CatalogEngineTests
     public async Task The_manuals_namespaces_get_the_answers_ARCA_gives_them()
     {
         await using var sim = ArcaSimHarness.Start();
-        var sud = ServiceContract.Load(Path.Combine(Wsdls, Catalog.Find("sud_restricciones")!.Wsdl));
-        var upload = ServiceContract.Load(Path.Combine(Wsdls, Catalog.Find("uploadPresentacionService")!.Wsdl));
+        var sud = Contracts.Of(Contracts.Definition("sud_restricciones"));
+        var upload = Contracts.Of(Contracts.Definition("uploadPresentacionService"));
 
         var (sudStatus, sudBody) = await sim.PostSoapAsync(new Uri("http://localhost" + sud.AddressPath),
-            Envelope("<sud:tieneDeudaRequest xmlns:sud=\"http://afip.gob.ar/ws/sud\"/>"), "");
+            Soap.Envelope("<sud:tieneDeudaRequest xmlns:sud=\"http://afip.gob.ar/ws/sud\"/>"), "");
         var (uploadStatus, uploadBody) = await sim.PostSoapAsync(new Uri("http://localhost" + upload.AddressPath),
-            Envelope("<dom:dummy xmlns:dom=\"http://domain.presentacion.seti.osiris.arca.gov/\"/>"), "");
+            Soap.Envelope("<dom:dummy xmlns:dom=\"http://domain.presentacion.seti.osiris.arca.gov/\"/>"), "");
 
         Assert.Equal(404, sudStatus);
         Assert.Equal("", sudBody);
@@ -326,12 +329,10 @@ public class CatalogEngineTests
 
     // ---- Helpers --------------------------------------------------------------------
 
-    private static async Task<Arca.Client.AccessTicket> TicketAsync(ArcaSimHarness sim, string id)
+    private static async Task<Arca.Client.AccessTicket> TicketOfAsync(ArcaSimHarness sim, string id)
     {
-        var definition = Catalog.Find(id)!;
         await sim.PutTaxpayerAsync(Caller, "Empresa", VatCondition.ResponsableInscripto);
-        var certificate = await sim.IssueCertificateAsync(Caller, "catalogo", definition.Wsaa[0]);
-        return await sim.Wsaa(Caller, certificate).LoginAsync(definition.Wsaa[0]);
+        return await sim.TicketAsync(Caller, Contracts.Definition(id).Wsaa[0]);
     }
 
     /// <summary>
@@ -341,27 +342,13 @@ public class CatalogEngineTests
     private static async Task<(int Status, string Body, string? ContentType)> CallAsync(
         ArcaSimHarness sim, string id, string operationName, string? token, string? sign)
     {
-        var definition = Catalog.Find(id)!;
-        var contract = ServiceContract.Load(Path.Combine(Wsdls, definition.Wsdl));
+        var contract = Contracts.Of(Contracts.Definition(id));
         var sampler = new SchemaSampler(contract.Schemas);
         var operation = contract.Operations.First(o => o.Name == operationName);
-        var request = operation.Input is null ? null : sampler.Sample(operation.Input, new SampleContext(Caller, DateTimeOffset.Now));
-        if (request?.Descendants().FirstOrDefault(e => e.Name.LocalName.Equals("token", StringComparison.OrdinalIgnoreCase)) is { } tokenElement)
-        {
-            var scope = tokenElement.Parent!;
-            foreach (var element in scope.Elements().ToList())
-            {
-                var name = element.Name.LocalName.ToLowerInvariant();
-                if (name is "token" or "sign" or "firma")
-                {
-                    if (token is null) element.Remove();
-                    else element.Value = name == "token" ? token : sign ?? "";
-                }
-                else if (name.Contains("cuit")) element.Value = Caller.ToString();
-            }
-        }
+        var request = operation.Input is null ? null : sampler.Sample(operation.Input, new SampleContext(Caller, sim.Clock.Now));
+        if (request is not null) Soap.Sign(request, token, sign, Caller);
 
-        using var content = new StringContent(Envelope(request?.ToString(SaveOptions.DisableFormatting) ?? ""), Encoding.UTF8);
+        using var content = new StringContent(Soap.Envelope(request), Encoding.UTF8);
         content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml") { CharSet = "utf-8" };
         using var message = new HttpRequestMessage(HttpMethod.Post, new Uri("http://localhost" + contract.AddressPath)) { Content = content };
         message.Headers.Add("SOAPAction", operation.Action ?? "");
@@ -369,23 +356,6 @@ public class CatalogEngineTests
         return ((int)response.StatusCode, await response.Content.ReadAsStringAsync(), response.Content.Headers.ContentType?.ToString());
     }
 
-    private static string Envelope(string body) =>
-        $"<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"><soapenv:Header/><soapenv:Body>{body}</soapenv:Body></soapenv:Envelope>";
-
-    private static void ValidateBody(string envelope, string id)
-    {
-        var contract = ServiceContract.Load(Path.Combine(Wsdls, Catalog.Find(id)!.Wsdl));
-        var answer = XDocument.Parse(envelope).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
-        Validate(answer, contract);
-    }
-
-    private static void Validate(XElement answer, ServiceContract contract)
-    {
-        var problems = new List<string>();
-        new XDocument(new XElement(answer)).Validate(contract.Schemas, (_, e) =>
-        {
-            if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
-        });
-        Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems) + Environment.NewLine + answer);
-    }
+    private static void ValidateBody(string envelope, string id) =>
+        Xsd.AssertValid(Soap.Body(envelope), Contracts.Of(Contracts.Definition(id)));
 }

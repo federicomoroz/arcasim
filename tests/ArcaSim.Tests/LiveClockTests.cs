@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Xml.Linq;
 using ArcaSim.Application;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests;
 
@@ -43,16 +44,14 @@ public class LiveClockTests
         await using var sim = ArcaSimHarness.Start();
         sim.Clock.Freeze(NightInUtc);
         await sim.PutTaxpayerAsync(Caller, "Empresa", VatCondition.ResponsableInscripto);
-        var certificate = await sim.IssueCertificateAsync(Caller, "noche", "ws_sr_padron_a4", "seti-setipago-api");
 
-        var padron = await sim.Wsaa(Caller, certificate).LoginAsync("ws_sr_padron_a4");
+        var padron = await sim.TicketAsync(Caller, "ws_sr_padron_a4");
         var (_, body) = await sim.PostSoapAsync(new Uri("http://localhost/sr-padron/webservices/personaServiceA4"),
-            "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:a4=\"http://a4.soap.ws.server.puc.sr/\"><soapenv:Body><a4:getPersona>" +
-            $"<token>{padron.Token}</token><sign>{padron.Sign}</sign><cuitRepresentada>{Caller}</cuitRepresentada><idPersona>{Caller}</idPersona>" +
-            "</a4:getPersona></soapenv:Body></soapenv:Envelope>", "");
+            Soap.Envelope($"<a4:getPersona>{Login.Credentials(padron, Caller)}<idPersona>{Caller}</idPersona></a4:getPersona>",
+                ("a4", "http://a4.soap.ws.server.puc.sr/")), "");
         var stamp = XDocument.Parse(body).Descendants("fechaHora").Single().Value;
 
-        var vep = await sim.Wsaa(Caller, certificate).LoginAsync("seti-setipago-api");
+        var vep = await sim.TicketAsync(Caller, "seti-setipago-api");
         using var request = new HttpRequestMessage(HttpMethod.Post, "/setiws-pago-api/api/v1/veps")
         {
             Content = new StringContent(

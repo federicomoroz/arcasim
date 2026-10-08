@@ -5,10 +5,12 @@ using Arca.Client;
 using ArcaSim.Application;
 using ArcaSim.Domain;
 using ArcaSim.Infrastructure.Security;
+using ArcaSim.Tests.Support;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace ArcaSim.Tests;
 
@@ -30,14 +32,33 @@ public sealed class ArcaSimHarness : IAsyncDisposable
     }
 
     private readonly WebApplicationFactory<Program> _factory;
+    private readonly CapturedLogs _logs;
+    private bool _expectsLoggedErrors;
 
-    private ArcaSimHarness(WebApplicationFactory<Program> factory)
+    private ArcaSimHarness(WebApplicationFactory<Program> factory, CapturedLogs logs)
     {
         _factory = factory;
+        _logs = logs;
         Http = factory.CreateClient();
     }
 
     public HttpClient Http { get; }
+
+    /// <summary>What ArcaSim has logged at Error or above so far: an unforeseen failure of a service's rules shows up here.</summary>
+    public IReadOnlyList<LoggedError> LoggedErrors => _logs.Errors;
+
+    /// <summary>
+    /// Fails when ArcaSim logged an error. The engine answers a request its rules did not foresee with the
+    /// service's fault, which looks like any refusal; the log is what tells a crash from a refusal.
+    /// Disposing the harness does the same, unless the test called <see cref="ExpectLoggedErrors"/>.
+    /// </summary>
+    public void AssertNoLoggedErrors() => AssertNone(LoggedErrors);
+
+    /// <summary>Declares that the test makes the engine fail on purpose, so disposing the harness does not fail on what it logs.</summary>
+    public void ExpectLoggedErrors() => _expectsLoggedErrors = true;
+
+    private static void AssertNone(IReadOnlyList<LoggedError> errors) =>
+        Assert.True(errors.Count == 0, string.Join(Environment.NewLine, errors.Select(e => $"{e.Category}: {e.Message}{e.Exception}")));
 
     public IServiceProvider Services => _factory.Services;
 
@@ -57,17 +78,19 @@ public sealed class ArcaSimHarness : IAsyncDisposable
     /// <param name="services">Registrations that replace ArcaSim's own, for a test that needs a slower store or a fake.</param>
     public static ArcaSimHarness Start(string? postgres = null, bool open = false, Action<IServiceCollection>? services = null)
     {
+        var logs = new CapturedLogs();
         var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(host =>
         {
             host.UseSetting("ArcaSim:DataDirectory", KeysDirectory);
             host.UseSetting("ArcaSim:Access", open ? "Open" : "Strict");
             host.UseSetting("ArcaSim:ReplayWindowEnabled", "false");
+            host.ConfigureLogging(logging => logging.AddProvider(logs));
             if (services is not null) host.ConfigureTestServices(services);
             if (postgres is null) return;
             host.UseSetting("ArcaSim:Storage", "Postgres");
             host.UseSetting("ConnectionStrings:ArcaSim", postgres);
         });
-        return new ArcaSimHarness(factory);
+        return new ArcaSimHarness(factory, logs);
     }
 
     /// <summary>The usual starting point: ArcaSim with the issuer registered, frozen on a weekday before 01/12/2026.</summary>
@@ -75,7 +98,7 @@ public sealed class ArcaSimHarness : IAsyncDisposable
         VatCondition condition = VatCondition.ResponsableInscripto, DateTimeOffset? now = null, string? postgres = null)
     {
         var sim = Start(postgres);
-        sim.Clock.Freeze(now ?? new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.FromHours(-3)));
+        sim.Clock.Freeze(now ?? TestTime.Reference);
         await sim.PutTaxpayerAsync(Issuer, "Empresa de Prueba SA", condition,
             new PointOfSale(1, PointOfSaleKind.WebServiceCae), new PointOfSale(900, PointOfSaleKind.WebServiceCaea));
         var certificate = await sim.IssueCertificateAsync(Issuer, "facturacion");
@@ -138,17 +161,23 @@ public sealed class ArcaSimHarness : IAsyncDisposable
     /// <summary>A WSFEv1 envelope around an operation's element, written the way the manual's examples are.</summary>
     public Task<(int Status, string Body)> PostWsfeAsync(string operation, string inner, bool withAction = true) =>
         PostSoapAsync(WsfeUrl,
-            "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ar=\"http://ar.gov.afip.dif.FEV1/\">" +
-            $"<soapenv:Header/><soapenv:Body><ar:{operation}>{inner}</ar:{operation}></soapenv:Body></soapenv:Envelope>",
+            Soap.Envelope($"<ar:{operation}>{inner}</ar:{operation}>", ("ar", "http://ar.gov.afip.dif.FEV1/")),
             withAction ? $"\"http://ar.gov.afip.dif.FEV1/{operation}\"" : null);
 
     public static string AuthXml(AccessTicket ticket, long cuit) =>
         $"<ar:Auth><ar:Token>{ticket.Token}</ar:Token><ar:Sign>{ticket.Sign}</ar:Sign><ar:Cuit>{cuit}</ar:Cuit></ar:Auth>";
 
+    /// <summary>
+    /// Shuts ArcaSim down and fails the test if it logged an error on the way, unless the test said it expects
+    /// them: a rule that crashes is answered with the service's fault, and a test that only looks at faults
+    /// would pass over it.
+    /// </summary>
     public async ValueTask DisposeAsync()
     {
+        var unforeseen = _expectsLoggedErrors ? [] : LoggedErrors;
         Http.Dispose();
         await _factory.DisposeAsync();
+        AssertNone(unforeseen);
     }
 
     /// <summary>Lets the client sign its TRA with ArcaSim's clock, so frozen or advanced time stays consistent on both ends.</summary>
