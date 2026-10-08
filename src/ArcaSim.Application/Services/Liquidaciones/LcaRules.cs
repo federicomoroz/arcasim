@@ -51,13 +51,13 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<ContractAnswer> LastAsync(ServiceCall call, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
+        var request = call.Request.ChildOrEmpty("solicitud");
         var last = await _ledger.LastAsync(Service, call.Cuit, (int)request.Number("puntoVenta"), (int)request.Number("tipoComprobante"), ct);
         return Ok(call, new XElement("nroComprobante", last?.Number ?? 0), Metadata());
     }
 
     private async Task<ContractAnswer> ConsultAsync(ServiceCall call, CancellationToken ct) =>
-        await FindAsync(call, call.Request.Child("solicitud").Child("comprobante"), ct) is { } found
+        await FindAsync(call, call.Request.ChildOrEmpty("solicitud").ChildOrEmpty("comprobante"), ct) is { } found
             ? Answer(call, found)
             : Fail(call, 800, "No se encontraron resultados según los parámetros de búsqueda informados.");
 
@@ -68,10 +68,10 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<ContractAnswer> GenerateAsync(ServiceCall call, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
-        var voucher = request.Child("emisor").Child("comprobante");
-        var receiver = request.Child("receptor");
-        var general = request.Child("datosGenerales");
+        var request = call.Request.ChildOrEmpty("solicitud");
+        var voucher = request.ChildOrEmpty("emisor").ChildOrEmpty("comprobante");
+        var receiver = request.ChildOrEmpty("receptor");
+        var general = request.ChildOrEmpty("datosGenerales");
         var type = (int)voucher.Number("tipoComprobante");
         var date = general.Day("fechaComprobante") ?? _ledger.Today;
 
@@ -105,7 +105,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var cae = _ledger.NewCae();
         var detail = new XElement("respuesta",
             Authorization(cae),
-            await IssuerAsync(call.Cuit, voucher, request.Child("emisor"), ct),
+            await IssuerAsync(call.Cuit, voucher, request.ChildOrEmpty("emisor"), ct),
             await ReceiverAsync(receiver, ct),
             General(general),
             notes.Select(n => new XElement("remito", new XElement("nroRemito", n.Value("nroRemito")), new XElement("kilos", n.Number("kilos")))),
@@ -121,10 +121,10 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<ContractAnswer> PriceAsync(ServiceCall call, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
-        var issuer = request.Child("emisor");
-        var voucher = issuer.Child("comprobante");
-        var general = request.Child("datosGenerales");
+        var request = call.Request.ChildOrEmpty("solicitud");
+        var issuer = request.ChildOrEmpty("emisor");
+        var voucher = issuer.ChildOrEmpty("comprobante");
+        var general = request.ChildOrEmpty("datosGenerales");
         var type = (int)voucher.Number("tipoComprobante");
         var kind = issuer.Number("tipoAjuste");
         var date = general.Day("fechaComprobante") ?? _ledger.Today;
@@ -134,7 +134,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
         Settlement? first = null;
         foreach (var (item, i) in request.Children("detalle").Select((d, i) => (d, i)))
         {
-            var target = item.Child("comprobanteAjustado");
+            var target = item.ChildOrEmpty("comprobanteAjustado");
             var original = await FindAsync(call, target, ct);
             if (AdjustableProblem(call, target, original, type) is { } problem) return problem;
             var order = item.Number("nroOrdenItemAjustado");
@@ -158,8 +158,8 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var detail = new XElement("respuesta",
             Authorization(cae),
             new XElement("ajuste", new XElement("tipoAjuste", kind)),
-            await IssuerAsync(call.Cuit, voucher, issued.Child("emisor"), ct),
-            Copy(issued.Optional("receptor")),
+            await IssuerAsync(call.Cuit, voucher, issued.ChildOrEmpty("emisor"), ct),
+            Copy(issued.Child("receptor")),
             General(general),
             lines.Select(l => l.Element), concepts.Select(c => c.Element), taxes.Select(t => t.Element),
             Summary(lines, concepts, taxes, out var total));
@@ -170,10 +170,10 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<ContractAnswer> PhysicalAsync(ServiceCall call, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
-        var issuer = request.Child("emisor");
-        var voucher = issuer.Child("comprobante");
-        var target = issuer.Child("comprobanteAjustado");
+        var request = call.Request.ChildOrEmpty("solicitud");
+        var issuer = request.ChildOrEmpty("emisor");
+        var voucher = issuer.ChildOrEmpty("comprobante");
+        var target = issuer.ChildOrEmpty("comprobanteAjustado");
         var type = (int)voucher.Number("tipoComprobante");
         var date = request.Day("fechaComprobante") ?? _ledger.Today;
         var returned = request.Value("devolucionMercaderia") is "true" or "1";
@@ -189,13 +189,13 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
         var cae = _ledger.NewCae();
         var issued = original!.DetailXml();
-        var general = Copy(issued.Child("datosGenerales"))!;
-        general.Child("fechaComprobante").Value = Stamp(date);
+        var general = Copy(issued.ChildOrEmpty("datosGenerales"))!;
+        general.ChildOrEmpty("fechaComprobante").Value = Stamp(date);
         var detail = new XElement("respuesta",
             Authorization(cae),
             new XElement("ajuste", new XElement("tipoAjuste", 1), new XElement("esDevolucionMercaderia", returned ? "true" : "false")),
-            await IssuerAsync(call.Cuit, voucher, issued.Child("emisor"), ct),
-            Copy(issued.Optional("receptor")),
+            await IssuerAsync(call.Cuit, voucher, issued.ChildOrEmpty("emisor"), ct),
+            Copy(issued.Child("receptor")),
             general,
             issued.Children("remito").Select(r => Copy(r)),
             issued.Children("detalle").Select(d =>
@@ -206,7 +206,7 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
                 return item;
             }),
             issued.Children("otroConcepto").Select(c => Copy(c)), issued.Children("tributo").Select(t => Copy(t)),
-            Copy(issued.Optional("resumenTotales")));
+            Copy(issued.Child("resumenTotales")));
 
         var settlement = await IssueAsync(call, voucher, cae, date, original.ReceiverCuit, original.Total, true, [original.KeyOf()], detail, ct);
         await _ledger.UpdateAsync(original with { State = Settlement.Annulled }, ct);
@@ -347,23 +347,23 @@ public sealed class LcaRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private static Line Concept(XElement concept, int type)
     {
-        var amount = concept.OptionalAmount("importe") ?? Round(concept.Amount("baseImponible") * concept.Amount("alicuota") / 100);
+        var amount = concept.ChildDecimal("importe") ?? Round(concept.Amount("baseImponible") * concept.Amount("alicuota") / 100);
         var rate = concept.Amount("alicuotaIVA");
         var vat = type == 171 ? Round(amount * rate / 100) : 0;
         return new Line(new XElement("otroConcepto",
             new XElement("codConcepto", concept.Number("codConcepto")), Maybe("detalle", concept.Value("detalle")),
-            concept.OptionalAmount("baseImponible") is { } basis ? new XElement("baseImponible", Money(basis)) : null,
-            concept.OptionalAmount("alicuota") is { } share ? new XElement("alicuota", Money(share)) : null,
+            concept.ChildDecimal("baseImponible") is { } basis ? new XElement("baseImponible", Money(basis)) : null,
+            concept.ChildDecimal("alicuota") is { } share ? new XElement("alicuota", Money(share)) : null,
             new XElement("alicuotaIVA", Money(rate)), new XElement("importe", Money(amount)), new XElement("importeIVA", Money(vat))), amount, vat);
     }
 
     private static Line Tax(XElement tax)
     {
-        var amount = tax.OptionalAmount("importe") ?? Round(tax.Amount("baseImponible") * tax.Amount("alicuota") / 100);
+        var amount = tax.ChildDecimal("importe") ?? Round(tax.Amount("baseImponible") * tax.Amount("alicuota") / 100);
         return new Line(new XElement("tributo",
             new XElement("codTributo", tax.Number("codTributo")), Maybe("detalle", tax.Value("detalle")),
-            tax.OptionalAmount("baseImponible") is { } basis ? new XElement("baseImponible", Money(basis)) : null,
-            tax.OptionalAmount("alicuota") is { } share ? new XElement("alicuota", Money(share)) : null,
+            tax.ChildDecimal("baseImponible") is { } basis ? new XElement("baseImponible", Money(basis)) : null,
+            tax.ChildDecimal("alicuota") is { } share ? new XElement("alicuota", Money(share)) : null,
             new XElement("importe", Money(amount))), amount, 0);
     }
 

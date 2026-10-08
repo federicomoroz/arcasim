@@ -200,27 +200,20 @@ public sealed class SettlementLedger(IDocumentStore store, ITaxpayerRepository t
 /// <summary>Reading the requests and writing the answers of the sector liquidation services.</summary>
 public static class SettlementXml
 {
-    /// <summary>A child by local name, or an empty element when it is missing, so a chain of lookups never fails.</summary>
-    public static XElement Child(this XElement element, string name) =>
-        element.Elements().FirstOrDefault(e => e.Name.LocalName == name) ?? new XElement(name);
+    /// <summary>
+    /// The child by local name, or an empty element when there is none, so a chain of lookups never fails.
+    /// The empty one belongs to nothing: writing into it is lost.
+    /// </summary>
+    public static XElement ChildOrEmpty(this XElement element, string name) => element.Child(name) ?? new XElement(name);
 
-    public static XElement? Optional(this XElement element, string name) =>
-        element.Elements().FirstOrDefault(e => e.Name.LocalName == name);
+    /// <summary>The child's text, trimmed, or null when the child is missing or blank.</summary>
+    public static string? Value(this XElement element, string name) => element.ChildText(name) is { Length: > 0 } text ? text : null;
 
-    public static IEnumerable<XElement> Children(this XElement element, string name) =>
-        element.Elements().Where(e => e.Name.LocalName == name);
+    /// <summary>The child's whole number, or 0 when it is missing or does not read.</summary>
+    public static long Number(this XElement element, string name) => element.ChildLong(name) ?? 0;
 
-    public static string? Value(this XElement element, string name) =>
-        element.Optional(name)?.Value.Trim() is { Length: > 0 } text ? text : null;
-
-    public static long Number(this XElement element, string name) =>
-        long.TryParse(element.Value(name), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : 0;
-
-    public static decimal Amount(this XElement element, string name) =>
-        decimal.TryParse(element.Value(name), NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : 0;
-
-    public static decimal? OptionalAmount(this XElement element, string name) =>
-        decimal.TryParse(element.Value(name), NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : null;
+    /// <summary>The child's amount, or 0 when it is missing or does not read.</summary>
+    public static decimal Amount(this XElement element, string name) => element.ChildDecimal(name) ?? 0;
 
     /// <summary>An xsd:date, with or without the zone some stacks add (2019-05-06-03:00).</summary>
     public static DateOnly? Day(this XElement element, string name)
@@ -267,7 +260,7 @@ public static class SettlementXml
         block.Add(new XElement("error",
             new XElement("codigo", problem.Code.ToString(CultureInfo.InvariantCulture)),
             new XElement("descripcion", problem.Text)));
-        if (metadata is not null && block.Parent is { } holder && holder.Optional("metadata") is null) block.AddAfterSelf(metadata);
+        if (metadata is not null && block.Parent is { } holder && holder.Child("metadata") is null) block.AddAfterSelf(metadata);
         return answer;
     }
 

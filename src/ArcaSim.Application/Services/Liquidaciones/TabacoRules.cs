@@ -219,7 +219,7 @@ public sealed class TabacoRules(IDocumentStore store, ITaxpayerRepository taxpay
     private async Task<ContractAnswer> ListCathesAsync(ServiceCall call, bool linked, CancellationToken ct)
     {
         var request = call.Request;
-        var deposit = request.Optional("deposito") is null ? (long?)null : request.Number("deposito");
+        var deposit = request.Child("deposito") is null ? (long?)null : request.Number("deposito");
         var dispatch = request.Value("nroDespachoImp");
         var from = request.Day("fechaDesde") ?? DateOnly.MinValue;
         var to = request.Day("fechaHasta") ?? DateOnly.MaxValue;

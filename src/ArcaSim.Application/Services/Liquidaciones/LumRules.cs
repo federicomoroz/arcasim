@@ -48,14 +48,14 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<ContractAnswer> LastAsync(ServiceCall call, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
+        var request = call.Request.ChildOrEmpty("solicitud");
         var last = await _ledger.LastAsync(Service, call.Cuit, (int)request.Number("puntoVenta"), (int)request.Number("tipoComprobante"), ct);
         return last is null ? NotFound(call) : Ok(call, new XElement("nroComprobante", last.Number));
     }
 
     private async Task<ContractAnswer> ByNumberAsync(ServiceCall call, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
+        var request = call.Request.ChildOrEmpty("solicitud");
         var found = await _ledger.FindAsync(Service, request.Number("cuitComprador"), (int)request.Number("puntoVenta"),
             (int)request.Number("tipoComprobante"), request.Number("nroComprobante"), ct);
         return found is null ? NotFound(call) : Answer(call, found, Wants(request));
@@ -63,7 +63,7 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<ContractAnswer> ByCaeAsync(ServiceCall call, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
+        var request = call.Request.ChildOrEmpty("solicitud");
         var found = await _ledger.FindByCaeAsync(Service, request.Number("cae"), ct);
         return found is null || found.Cuit != call.Cuit ? NotFound(call) : Answer(call, found, Wants(request));
     }
@@ -73,18 +73,18 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<ContractAnswer> GenerateAsync(ServiceCall call, CancellationToken ct)
     {
-        var request = call.Request.Child("solicitud");
-        var liquidation = request.Child("liquidacion");
-        var producer = request.Child("tambero");
-        var dairy = request.Child("tambo");
-        var balance = request.Optional("balanceLitrosPorcentajesSolidos");
-        var domestic = request.Optional("conceptosBasicosMercadoInterno");
-        var foreign = request.Optional("conceptosBasicosMercadoExterno");
+        var request = call.Request.ChildOrEmpty("solicitud");
+        var liquidation = request.ChildOrEmpty("liquidacion");
+        var producer = request.ChildOrEmpty("tambero");
+        var dairy = request.ChildOrEmpty("tambo");
+        var balance = request.Child("balanceLitrosPorcentajesSolidos");
+        var domestic = request.Child("conceptosBasicosMercadoInterno");
+        var foreign = request.Child("conceptosBasicosMercadoExterno");
         var pointOfSale = (int)liquidation.Number("puntoVenta");
         var type = (int)liquidation.Number("tipoComprobante");
         var number = liquidation.Number("nroComprobante");
         var period = liquidation.Value("periodo") ?? "";
-        var adjustment = liquidation.Optional("ajuste");
+        var adjustment = liquidation.Child("ajuste");
         var today = _ledger.Today;
 
         if (await _ledger.PointProblemAsync(call.Cuit, pointOfSale, NoPoints, InvalidPoint, ct) is { } point) return Fail(call, point);
@@ -98,23 +98,23 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
         if (!AdjustmentTypes.Contains(type) && adjustment is not null) return Fail(call, 1003, "Si no es un ajuste, no debe enviar datos en la etiqueta <ajuste>.");
         if (adjustment is not null)
         {
-            if ((adjustment.Optional("formularioPapel") is null) == (adjustment.Optional("caeAAjustar") is null))
+            if ((adjustment.Child("formularioPapel") is null) == (adjustment.Child("caeAAjustar") is null))
                 return Fail(call, 1001, "Solicitud incompleta: para ajustes debe especificar uno y solo uno de los siguientes campos: <formularioPapel>, <caeAAjustar>.");
             var monetary = adjustment.Value("tipoAjuste") == "MONETARIO";
             if (monetary && (balance is not null || domestic is not null || foreign is not null))
                 return Fail(call, 1005, "Para ajustes monetarios los siguientes campos debe ser nulos: balanceLitrosPorcentajesSolidos, conceptosBasicosMercadoInterno y conceptosBasicosMercadoExterno.");
             if (!monetary && balance is null) return Fail(call, 1006, "Para ajustes físicos debe informar el campo balanceLitrosPorcentajesSolidos.");
-            if (adjustment.Optional("caeAAjustar") is not null)
+            if (adjustment.Child("caeAAjustar") is not null)
             {
                 adjusted = await _ledger.FindByCaeAsync(Service, adjustment.Number("caeAAjustar"), ct);
                 var issued = adjusted?.DetailXml();
                 if (adjusted is null || issued is null || adjusted.Cuit != call.Cuit || adjusted.ReceiverCuit != producer.Number("cuit")
-                    || issued.Child("encabezado").Value("periodo") != period || issued.Child("tambo").Value("nroRenspa") != dairy.Value("nroRenspa"))
+                    || issued.ChildOrEmpty("encabezado").Value("periodo") != period || issued.ChildOrEmpty("tambo").Value("nroRenspa") != dairy.Value("nroRenspa"))
                     return Fail(call, 2004, "No se puede ajustar la liquidación ya que no fue encontrada por los siguientes parámetros: su número de CAE, CUIT del productor, CUIT del comprador, período y número de RENSPA.");
             }
         }
 
-        var rate = liquidation.OptionalAmount("alicuotaIVA");
+        var rate = liquidation.ChildDecimal("alicuotaIVA");
         if (type == 27 && rate != 21 || type is 45 or 48 && rate is not (0 or 21))
             return Fail(call, 2114, "La alícuota IVA no se corresponde con la situación del tambero.");
         if (type is not (27 or 45 or 48) && rate is not null)
@@ -134,9 +134,9 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
         foreach (var concept in request.Children("bonificacionPenalizacion"))
         {
             var commercial = concept.Number("codBonificacionPenalizacion") == 41;
-            if (commercial && (concept.Optional("importe") is null || concept.Optional("porcentajeAAplicar") is not null))
+            if (commercial && (concept.Child("importe") is null || concept.Child("porcentajeAAplicar") is not null))
                 return Fail(call, 2122, "Para bonificaciones/penalizaciones con código igual a 41 debe informar el campo <importe> y no <porcentajeAAplicar>.");
-            if (!commercial && (concept.Optional("porcentajeAAplicar") is null || concept.Optional("importe") is not null))
+            if (!commercial && (concept.Child("porcentajeAAplicar") is null || concept.Child("importe") is not null))
                 return Fail(call, 2123, "Para bonificaciones/penalizaciones con código distinto a 41 debe informar el campo <porcentajeAAplicar> y no <importe>.");
         }
 
@@ -226,7 +226,7 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
 
     private async Task<bool> DuplicateAsync(long cuit, string period, long producer, string? renspa, CancellationToken ct) =>
         (await _ledger.ListAsync(Service, cuit, ct)).Any(s => !s.IsAdjustment && s.State == Settlement.Active && s.ReceiverCuit == producer
-            && s.DetailXml() is var detail && detail.Child("encabezado").Value("periodo") == period && detail.Child("tambo").Value("nroRenspa") == renspa);
+            && s.DetailXml() is var detail && detail.ChildOrEmpty("encabezado").Value("periodo") == period && detail.ChildOrEmpty("tambo").Value("nroRenspa") == renspa);
 
     private static XElement? Balance(XElement? balance)
     {
@@ -266,7 +266,7 @@ public sealed class LumRules(IDocumentStore store, ITaxpayerRepository taxpayers
     private static Part Concept(XElement concept, decimal basic)
     {
         var code = (int)concept.Number("codBonificacionPenalizacion");
-        var amount = concept.OptionalAmount("importe") ?? Round(basic * concept.Amount("porcentajeAAplicar") / 100);
+        var amount = concept.ChildDecimal("importe") ?? Round(basic * concept.Amount("porcentajeAAplicar") / 100);
         return new Part(new XElement("bonificacionPenalizacion",
             new XElement("codigo", code),
             Maybe("detalle", concept.Value("detalle")), Maybe("resultado", concept.Value("resultado")),
