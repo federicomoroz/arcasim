@@ -129,14 +129,14 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var detail = avian
             ? new XElement("respuesta",
                 Header(operation, cae, today),
-                AvianIssuer(issuer, taxpayer, type),
+                Issuer(issuer, taxpayer, type, avian),
                 AvianReceiver(request.Child("receptor")),
                 new XElement("datosLiquidacion",
                     Maybe("fechaComprobante", date), Maybe("fechaOperacion", data.Day("fechaOperacion")), Maybe("codMotivo", data.Value("codMotivo")),
                     data.Children("condicionVenta").Select(c => Copy(c)), Copy(data.Optional("granja"))),
                 request.Children("dte").Select(d => Copy(d)),
                 request.Children("remito").Select(r => Copy(r)),
-                lines.Select(AvianItem),
+                lines.Select(l => Item(l, avian)),
                 Production(request.Optional("resultadoProductivo")),
                 request.Children("bonificacionesPenalizaciones").Select(b => Copy(b, "bonificacionPenalizacion")),
                 expenses.Select(e => e.Element), taxes.Select(t => t.Element),
@@ -144,7 +144,7 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
                 totals.Element())
             : new XElement("respuesta",
                 Header(operation, cae, today),
-                Issuer(issuer, taxpayer, type),
+                Issuer(issuer, taxpayer, type, avian),
                 await ReceiverAsync(request.Child("receptor"), ct),
                 new XElement("datosLiquidacion",
                     Maybe("fechaComprobante", date), Maybe("fechaOperacion", data.Day("fechaOperacion")),
@@ -156,7 +156,7 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
                 request.Children("guia").Select(g => Copy(g)),
                 request.Children("dte").Select(d => Copy(d)),
                 request.Children("remito").Select(r => Copy(r)),
-                lines.Select(BovineItem),
+                lines.Select(l => Item(l, avian)),
                 expenses.Select(e => e.Element), taxes.Select(t => t.Element),
                 Maybe("datosAdicionales", request.Value("datosAdicionales")),
                 totals.Element());
@@ -238,7 +238,7 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         var detail = avian
             ? new XElement("respuesta",
                 Header(operation, cae, today), adjustedIssuer, Copy(issued.Optional("receptor")), data,
-                lines.Select(AvianItem),
+                lines.Select(l => Item(l, avian)),
                 request.Children("bonificacionesPenalizaciones").Select(b => Copy(b, "bonificacionPenalizacion")),
                 expenses.Select(e => e.Element), taxes.Select(t => t.Element),
                 Maybe("datosAdicionales", request.Value("datosAdicionales")),
@@ -253,7 +253,7 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
                         new XElement("puntoVenta", original.PointOfSale),
                         new XElement("nroComprobante", original.Number))),
                 adjustedIssuer, Copy(issued.Optional("receptor")), data,
-                lines.Select(BovineItem),
+                lines.Select(l => Item(l, avian)),
                 expenses.Select(e => e.Element), taxes.Select(t => t.Element),
                 Maybe("datosAdicionales", request.Value("datosAdicionales")),
                 totals.Element());
@@ -324,19 +324,14 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
     /// <summary>§1.5: homologación skips the issuer's checks and answers RI for A and B, MO for C (189).</summary>
     private static string VatOf(int type) => type == 189 ? "MO" : "RI";
 
-    private static XElement Issuer(XElement issuer, Taxpayer? taxpayer, int type) => new("emisor",
+    /// <summary>The emisor block of the answer; cuitAutorizado is only in the bovine schema.</summary>
+    private static XElement Issuer(XElement issuer, Taxpayer? taxpayer, int type, bool avian) => new("emisor",
         Maybe("puntoVenta", issuer.Value("puntoVenta")), Maybe("tipoComprobante", type), Maybe("nroComprobante", issuer.Value("nroComprobante")),
         Maybe("codCaracter", issuer.Value("codCaracter")), Maybe("fechaInicioActividades", issuer.Day("fechaInicioActividades")),
         Maybe("razonSocial", taxpayer?.Name.ToUpperInvariant()), Maybe("iibb", issuer.Value("iibb")),
         Maybe("domicilioPuntoVenta", SettlementLedger.AddressOf(taxpayer)), Maybe("situacionIVA", VatOf(type)),
-        Maybe("nroRUCA", issuer.Value("nroRUCA")), Maybe("nroRenspa", issuer.Value("nroRenspa")), Maybe("cuitAutorizado", issuer.Value("cuitAutorizado")));
-
-    private static XElement AvianIssuer(XElement issuer, Taxpayer? taxpayer, int type) => new("emisor",
-        Maybe("puntoVenta", issuer.Value("puntoVenta")), Maybe("tipoComprobante", type), Maybe("nroComprobante", issuer.Value("nroComprobante")),
-        Maybe("codCaracter", issuer.Value("codCaracter")), Maybe("fechaInicioActividades", issuer.Day("fechaInicioActividades")),
-        Maybe("razonSocial", taxpayer?.Name.ToUpperInvariant()), Maybe("iibb", issuer.Value("iibb")),
-        Maybe("domicilioPuntoVenta", SettlementLedger.AddressOf(taxpayer)), Maybe("situacionIVA", VatOf(type)),
-        Maybe("nroRUCA", issuer.Value("nroRUCA")), Maybe("nroRenspa", issuer.Value("nroRenspa")));
+        Maybe("nroRUCA", issuer.Value("nroRUCA")), Maybe("nroRenspa", issuer.Value("nroRenspa")),
+        avian ? null : Maybe("cuitAutorizado", issuer.Value("cuitAutorizado")));
 
     private async Task<XElement> ReceiverAsync(XElement receiver, CancellationToken ct)
     {
@@ -379,32 +374,30 @@ public sealed class LspRules(IDocumentStore store, ITaxpayerRepository taxpayers
         public decimal VatAmount => Vat is { } rate ? Round(Gross * rate / 100) : 0;
     }
 
-    private static XElement BovineItem(Line line)
-    {
-        var item = line.Source;
-        return new XElement("itemDetalleLiquidacion",
-            new XElement("nroItem", line.Item),
-            Maybe("cuitCliente", item.Value("cuitCliente")), Maybe("codCategoria", item.Value("codCategoria")),
-            new XElement("cantidad", line.Quantity), Maybe("cantidadCabezas", item.Value("cantidadCabezas")), Copy(item.Optional("raza")),
-            Maybe("tipoLiquidacion", item.Value("tipoLiquidacion")), new XElement("precioUnitario", Money(line.Price)),
-            Maybe("alicuotaIVA", line.Vat), Maybe("tipoIVANulo", item.Value("tipoIVANulo")), Maybe("nroTropa", item.Value("nroTropa")),
-            Maybe("cantidadKgVivo", item.Value("cantidadKgVivo")), Maybe("cantidadPorCorte", item.Value("cantidadPorCorte")),
-            item.OptionalAmount("precioRecupero") is { } recovery ? new XElement("precioRecupero", Money(recovery)) : null,
-            Maybe("codCorte", item.Value("codCorte")),
-            new XElement("importeBruto", Money(line.Gross)), new XElement("importeIVA", Money(line.VatAmount)),
-            new XElement("importeTotal", Money(line.Gross + line.VatAmount)),
-            item.Children("liquidacionCompraAsociada").Select(a => Copy(a)));
-    }
-
-    private static XElement AvianItem(Line line)
+    /// <summary>
+    /// An itemDetalleLiquidacion of the answer, with the fields of the species' schema in its order: the raza, the
+    /// tipoIVANulo, the tropa and the cuts are bovine; the kind of meat is avian.
+    /// </summary>
+    private static XElement Item(Line line, bool avian)
     {
         var item = line.Source;
         return new XElement("itemDetalleLiquidacion",
             new XElement("nroItem", line.Item),
             Maybe("cuitCliente", item.Value("cuitCliente")), Maybe("codCategoria", item.Value("codCategoria")),
             new XElement("cantidad", line.Quantity), Maybe("cantidadCabezas", item.Value("cantidadCabezas")),
+            avian ? null : Copy(item.Optional("raza")),
             Maybe("tipoLiquidacion", item.Value("tipoLiquidacion")), new XElement("precioUnitario", Money(line.Price)),
-            Maybe("alicuotaIVA", line.Vat), Maybe("cantidadKgVivo", item.Value("cantidadKgVivo")), Maybe("tipoCarneAviar", item.Value("tipoCarneAviar")),
+            Maybe("alicuotaIVA", line.Vat),
+            avian ? null : Maybe("tipoIVANulo", item.Value("tipoIVANulo")), avian ? null : Maybe("nroTropa", item.Value("nroTropa")),
+            Maybe("cantidadKgVivo", item.Value("cantidadKgVivo")),
+            avian
+                ? Maybe("tipoCarneAviar", item.Value("tipoCarneAviar"))
+                : new[]
+                {
+                    Maybe("cantidadPorCorte", item.Value("cantidadPorCorte")),
+                    item.OptionalAmount("precioRecupero") is { } recovery ? new XElement("precioRecupero", Money(recovery)) : null,
+                    Maybe("codCorte", item.Value("codCorte")),
+                },
             new XElement("importeBruto", Money(line.Gross)), new XElement("importeIVA", Money(line.VatAmount)),
             new XElement("importeTotal", Money(line.Gross + line.VatAmount)),
             item.Children("liquidacionCompraAsociada").Select(a => Copy(a)));
