@@ -1,7 +1,7 @@
 using System.Xml.Linq;
-using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Services.Remitos;
 
@@ -14,12 +14,10 @@ public sealed class ServiceClient
 {
     private readonly ArcaSimHarness _sim;
     private readonly ServiceContract _contract;
-    private readonly string _service;
 
-    private ServiceClient(ArcaSimHarness sim, string service, ServiceContract contract, long cuit, string token, string sign)
+    private ServiceClient(ArcaSimHarness sim, ServiceContract contract, long cuit, string token, string sign)
     {
         _sim = sim;
-        _service = service;
         _contract = contract;
         Cuit = cuit;
         Token = token;
@@ -40,10 +38,10 @@ public sealed class ServiceClient
 
     public static async Task<ServiceClient> LoginAsync(ArcaSimHarness sim, string service, long cuit)
     {
-        var contract = Load(service);
+        var contract = ContractOf(service);
         var certificate = await sim.IssueCertificateAsync(cuit, $"{service}-{cuit}", service);
         var ticket = await sim.Wsaa(cuit, certificate).LoginAsync(service);
-        return new ServiceClient(sim, service, contract, cuit, ticket.Token, ticket.Sign);
+        return new ServiceClient(sim, contract, cuit, ticket.Token, ticket.Sign);
     }
 
     /// <summary>Posts the operation's element with the inner XML given, and returns the Body's element after checking it against the WSDL.</summary>
@@ -51,34 +49,22 @@ public sealed class ServiceClient
     {
         var (status, body) = await PostAsync(operation, inner, element, prefix);
         Assert.True(status == 200, body);
-        var answer = XDocument.Parse(body).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
-        Validate(_service, answer);
+        var answer = Soap.Body(body);
+        Xsd.AssertValid(answer, _contract);
         return answer;
     }
 
     public Task<(int Status, string Body)> PostAsync(string operation, string inner, string? element = null, string prefix = "ns", CancellationToken ct = default)
     {
         var name = element ?? operation + "Request";
-        var envelope =
-            $"<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:{prefix}=\"{Namespace}\">" +
-            $"<soapenv:Header/><soapenv:Body><{prefix}:{name}>{inner}</{prefix}:{name}></soapenv:Body></soapenv:Envelope>";
+        var envelope = Soap.Envelope($"<{prefix}:{name}>{inner}</{prefix}:{name}>", (prefix, Namespace));
         return _sim.PostSoapAsync(new Uri("http://localhost" + _contract.AddressPath), envelope, $"\"{Namespace}{operation}\"", ct);
     }
 
-    public static ServiceContract Load(string service) =>
-        ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", $"{service}-homologacion.wsdl"));
+    private static ServiceContract ContractOf(string service) => Contracts.Of($"{service}-homologacion.wsdl");
 
     /// <summary>The answer is valid for the WSDL ARCA publishes: what a generated client deserializes.</summary>
-    public static void Validate(string service, XElement answer)
-    {
-        var contract = Load(service);
-        var problems = new List<string>();
-        new XDocument(new XElement(answer)).Validate(contract.Schemas, (_, e) =>
-        {
-            if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
-        });
-        Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems) + Environment.NewLine + answer);
-    }
+    public static void Validate(string service, XElement answer) => Xsd.AssertValid(answer, ContractOf(service));
 }
 
 public static class RemitoTestKit

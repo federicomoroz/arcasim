@@ -1,7 +1,7 @@
 using System.Xml.Linq;
-using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Domain;
+using ArcaSim.Tests.Support;
 
 namespace ArcaSim.Tests.Services.CpeGranos;
 
@@ -13,8 +13,7 @@ namespace ArcaSim.Tests.Services.CpeGranos;
 internal sealed class GrainsSoap(ArcaSimHarness sim, string service, string path, string ns, string cuitField)
 {
     private readonly Dictionary<long, string> _auth = [];
-    private readonly ServiceContract _contract =
-        ServiceContract.Load(Path.Combine(AppContext.BaseDirectory, "arca-wsdl", service + "-homologacion.wsdl"));
+    private readonly ServiceContract _contract = Contracts.Of(service + "-homologacion.wsdl");
 
     public static GrainsSoap Wscpe(ArcaSimHarness sim) =>
         new(sim, "wscpe", "/wscpe/services/soap", "https://serviciosjava.afip.gob.ar/wscpe/", "cuitRepresentada");
@@ -28,29 +27,18 @@ internal sealed class GrainsSoap(ArcaSimHarness sim, string service, string path
         await sim.PutTaxpayerAsync(cuit, name, VatCondition.ResponsableInscripto);
         var certificate = await sim.IssueCertificateAsync(cuit, "granos" + cuit, service);
         var ticket = await sim.Wsaa(cuit, certificate).LoginAsync(service);
-        _auth[cuit] = $"<auth><token>{ticket.Token}</token><sign>{ticket.Sign}</sign><{cuitField}>{cuit}</{cuitField}></auth>";
+        _auth[cuit] = $"<auth>{Login.Credentials(ticket, cuit, cuitField)}</auth>";
     }
 
     /// <summary>Posts the operation as <paramref name="cuit"/>, expects HTTP 200 and an answer valid for the WSDL, and returns the Body's element.</summary>
     public async Task<XElement> CallAsync(long cuit, string operation, string root, string inner = "")
     {
-        var envelope = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" " +
-                       $"xmlns:ns=\"{ns}\"><soapenv:Header/><soapenv:Body><ns:{root}>{_auth[cuit]}{inner}</ns:{root}></soapenv:Body></soapenv:Envelope>";
+        var envelope = Soap.Envelope($"<ns:{root}>{_auth[cuit]}{inner}</ns:{root}>", ("ns", ns));
         var (status, body) = await sim.PostSoapAsync(new Uri("http://localhost" + path), envelope, $"\"{ns}{operation}\"");
         Assert.True(status == 200, body);
-        var answer = XDocument.Parse(body).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
-        Validate(answer);
+        var answer = Soap.Body(body);
+        Xsd.AssertValid(answer, _contract);
         return answer;
-    }
-
-    private void Validate(XElement answer)
-    {
-        var problems = new List<string>();
-        new XDocument(new XElement(answer)).Validate(_contract.Schemas, (_, e) =>
-        {
-            if (e.Severity == XmlSeverityType.Error) problems.Add(e.Message);
-        });
-        Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems) + Environment.NewLine + answer);
     }
 }
 

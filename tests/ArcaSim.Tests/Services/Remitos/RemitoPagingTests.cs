@@ -1,4 +1,5 @@
 using System.Xml.Linq;
+using ArcaSim.Tests.Support;
 using static ArcaSim.Tests.Services.Remitos.RemitoTestKit;
 
 namespace ArcaSim.Tests.Services.Remitos;
@@ -49,7 +50,7 @@ public class RemitoPagingTests
         var (status, body) = await issuer.PostAsync("consultarRemitosEmisor",
             issuer.Auth + "<fechaDesde>2026-10-01</fechaDesde><fechaHasta>2026-10-01</fechaHasta>" + paging);
         Assert.True(status == 200, body);
-        return XDocument.Parse(body).Root!.Elements().First(e => e.Name.LocalName == "Body").Elements().First();
+        return Soap.Body(body);
     }
 
     private static int Count(XElement answer) =>
