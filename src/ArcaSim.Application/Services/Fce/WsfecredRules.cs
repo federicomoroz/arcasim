@@ -45,7 +45,14 @@ namespace ArcaSim.Application.Services.Fce;
 ///   asks for one estadoHistorico, so it carries the error's instant;
 /// - consultarMontoObligadoRecepcion: a registered, active Responsable
 ///   Inscripto must receive FCE from FceTables.MinimumAmount on; anyone else
-///   need not, without montoDesde.
+///   need not, without montoDesde;
+/// - a transfer option outside the schema's SCA | ADC is a format error, as the
+///   manual's channels say (wsfecred.md, Canales de error): R, the idCtaCte sent
+///   and arrayErroresFormato with cvc-enumeration-valid and cvc-type.3.1.3, the
+///   pair wsct answers live; the Spanish wording is inferred, and no business
+///   rule runs;
+/// - a number its field cannot hold (4294967297 as a type or a point of sale)
+///   is an invalid value with that field's code, never cut to fit.
 /// The deprecated consultarObligadoRecepcion and dummy keep the contract's answer.
 /// </summary>
 public sealed class WsfecredRules(
