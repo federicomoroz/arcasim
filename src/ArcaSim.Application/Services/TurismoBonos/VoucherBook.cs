@@ -50,10 +50,11 @@ public sealed class VoucherBook(IDocumentStore store, string family, SequenceLoc
     private string Requests => $"{family}-requerimientos";
     private string LastIds => $"{family}-ultimo-id";
 
+    /// <summary>A sequence's key (CUIT, point of sale, type): the front of AuthorizedVouchers.Key, which names the vouchers.</summary>
     private static string Sequence(long cuit, int pointOfSale, int type) => $"{cuit}/{pointOfSale:D5}/{type:D3}";
 
     public Task<BookedVoucher?> FindAsync(long cuit, int pointOfSale, int type, long number, CancellationToken ct) =>
-        store.GetAsync<BookedVoucher>(Vouchers, $"{Sequence(cuit, pointOfSale, type)}/{number:D8}", ct);
+        store.GetAsync<BookedVoucher>(Vouchers, AuthorizedVouchers.Key(cuit, pointOfSale, type, number), ct);
 
     public Task<BookedLast?> LastAsync(long cuit, int pointOfSale, int type, CancellationToken ct) =>
         store.GetAsync<BookedLast>(Lasts, Sequence(cuit, pointOfSale, type), ct);
@@ -69,9 +70,8 @@ public sealed class VoucherBook(IDocumentStore store, string family, SequenceLoc
     /// <summary>Keeps the voucher, moves its sequence forward, files its requirement Id and records it for constatación.</summary>
     public async Task AddAsync(BookedVoucher voucher, AuthorizedVoucher authorized, CancellationToken ct)
     {
-        var sequence = Sequence(voucher.Cuit, voucher.PointOfSale, voucher.VoucherType);
-        await store.PutAsync(Vouchers, $"{sequence}/{voucher.Number:D8}", voucher, ct);
-        await store.PutAsync(Lasts, sequence, new BookedLast(voucher.Number, voucher.Date), ct);
+        await store.PutAsync(Vouchers, AuthorizedVouchers.Key(voucher.Cuit, voucher.PointOfSale, voucher.VoucherType, voucher.Number), voucher, ct);
+        await store.PutAsync(Lasts, Sequence(voucher.Cuit, voucher.PointOfSale, voucher.VoucherType), new BookedLast(voucher.Number, voucher.Date), ct);
         if (voucher.RequestId > 0)
         {
             await store.PutAsync(Requests, $"{voucher.Cuit}/{voucher.RequestId}", new BookedRequest(voucher.PointOfSale, voucher.VoucherType, voucher.Number), ct);

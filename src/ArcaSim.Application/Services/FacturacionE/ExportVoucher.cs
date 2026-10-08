@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Xml.Linq;
+using ArcaSim.Application.Contracts;
 
 namespace ArcaSim.Application.Services.FacturacionE;
 
@@ -90,15 +91,14 @@ public sealed record AuthorizedExport(
     decimal Rate);
 
 /// <summary>
-/// Reading WSFEXv1's requests by exact element name, as the .NET deserializer
-/// does: Cbte_Tipo and Cbte_tipo are different fields.
+/// Reading WSFEXv1's requests by exact element name (ContractXml's Child), as
+/// the .NET deserializer does: Cbte_Tipo and Cbte_tipo are different fields. What
+/// is here is what only this service needs: an element with xsi:nil is a
+/// missing one, and a number that does not read is 0.
 /// </summary>
 internal static class FexXml
 {
     private static readonly XNamespace Xsi = "http://www.w3.org/2001/XMLSchema-instance";
-
-    public static XElement? Child(this XElement? element, string name) =>
-        element?.Elements().FirstOrDefault(e => e.Name.LocalName == name);
 
     public static string? Str(this XElement? element, string name) => element.Child(name) is { } child && !IsNil(child) ? child.Value : null;
 

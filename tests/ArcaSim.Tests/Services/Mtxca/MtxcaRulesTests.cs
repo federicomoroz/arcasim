@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using ArcaSim.Application.Contracts;
+using ArcaSim.Application.Services.FacturacionE;
 using ArcaSim.Domain;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -278,6 +279,12 @@ public class MtxcaRulesTests
         var units = await client.CallAsync("consultarUnidadesMedida", "");
         Assert.Contains(("7", "UNIDAD"), Rows(units, "arrayUnidadesMedida"));
         Assert.Contains(("99", "BONIFICACION"), Rows(units, "arrayUnidadesMedida"));
+        // The generic table WSFEXv1 answers, with 95 (cancellations and returns) in its place.
+        var unitRows = Rows(units, "arrayUnidadesMedida");
+        Assert.Equal(Wsfexv1Tables.Units.Count + 1, unitRows.Count);
+        Assert.All(Wsfexv1Tables.Units, u => Assert.Contains((u.Id.ToString(), u.Desc), unitRows));
+        Assert.Contains(("95", "ANULACIÓN/DEVOLUCIÓN"), unitRows);
+        Assert.Equal(unitRows.Select(r => int.Parse(r.Code)).Order(), unitRows.Select(r => int.Parse(r.Code)));
         var documents = await client.CallAsync("consultarTiposDocumento", "");
         Assert.Contains(Rows(documents, "arrayTiposDocumento"), r => r.Code == "80");
 

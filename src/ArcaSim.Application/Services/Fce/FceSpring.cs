@@ -1,4 +1,5 @@
 using System.Xml.Linq;
+using ArcaSim.Application.Contracts;
 using ArcaSim.Domain;
 
 namespace ArcaSim.Application.Services.Fce;
@@ -21,14 +22,8 @@ public static class FceSpring
     public static XElement? Errors(IReadOnlyDictionary<int, string> texts, IEnumerable<int> codes) =>
         FceXml.Codes("errores", codes.Select(c => ((long)c, texts[c])));
 
-    public static XElement? FormatErrors(IReadOnlyDictionary<int, string> texts, IEnumerable<int> codes)
-    {
-        var list = codes.Distinct().ToList();
-        return list.Count == 0
-            ? null
-            : new XElement("erroresFormato", list.Select(c =>
-                new XElement("codigoDescripcionString", new XElement("codigo", c), new XElement("descripcion", texts[c]))));
-    }
+    public static XElement? FormatErrors(IReadOnlyDictionary<int, string> texts, IEnumerable<int> codes) =>
+        FceXml.Codes("erroresFormato", codes.Distinct().Select(c => ((long)c, texts[c])), "codigoDescripcionString");
 
     public static XElement IdFactura(FceId id) => new("idFactura",
         new XElement("cuitEmisor", id.Cuit),
@@ -37,8 +32,8 @@ public static class FceSpring
         new XElement("nroCmp", id.Number));
 
     public static FceId? IdOf(XElement? element) =>
-        element is not null && element.LongOf("cuitEmisor") is { } cuit && element.LongOf("tipoCmp") is { } type
-        && element.LongOf("ptoVta") is { } point && element.LongOf("nroCmp") is { } number
+        element is not null && element.ChildLong("cuitEmisor") is { } cuit && element.ChildLong("tipoCmp") is { } type
+        && element.ChildLong("ptoVta") is { } point && element.ChildLong("nroCmp") is { } number
             ? new FceId(cuit, (int)type, (int)point, number)
             : null;
 
@@ -49,7 +44,7 @@ public static class FceSpring
     public static List<int> CheckQuery(XElement request, out int page, out (string? Kind, DateOnly? From, DateOnly? To) range)
     {
         var errors = new List<int>();
-        page = (int)(request.LongOf("nroPagina") ?? 0);
+        page = (int)(request.ChildLong("nroPagina") ?? 0);
         if (page <= 0) errors.Add(2004);
         var filter = request.Child("filtroFechas");
         range = (filter?.Value("tipo"), filter?.DateOf("desde"), filter?.DateOf("hasta"));

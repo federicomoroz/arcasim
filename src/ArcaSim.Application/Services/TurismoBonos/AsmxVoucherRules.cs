@@ -37,18 +37,18 @@ public sealed record AsmxCmp(
     {
         var cmp = request.Child("Cmp") ?? new XElement("Cmp");
         return new AsmxCmp(
-            cmp.Whole("Id") ?? 0,
-            (int)(cmp.Whole("Tipo_doc") ?? 0),
-            cmp.Whole("Nro_doc") ?? 0,
-            (int)(cmp.Whole("Tipo_cbte") ?? 0),
-            (int)(cmp.Whole("Punto_vta") ?? 0),
-            cmp.Whole("Cbte_nro") ?? 0,
+            cmp.ChildLong("Id") ?? 0,
+            (int)(cmp.ChildLong("Tipo_doc") ?? 0),
+            cmp.ChildLong("Nro_doc") ?? 0,
+            (int)(cmp.ChildLong("Tipo_cbte") ?? 0),
+            (int)(cmp.ChildLong("Punto_vta") ?? 0),
+            cmp.ChildLong("Cbte_nro") ?? 0,
             cmp.Amount("Imp_total") ?? 0,
             cmp.Amount("Imp_op_ex") ?? 0,
-            cmp.Field("Imp_moneda_Id"),
+            cmp.ChildText("Imp_moneda_Id"),
             cmp.Amount("Imp_moneda_ctz"),
-            cmp.Field("Fecha_cbte"),
-            cmp.Field("CondicionIVAReceptorId"),
+            cmp.ChildText("Fecha_cbte"),
+            cmp.ChildText("CondicionIVAReceptorId"),
             cmp.Child("CanMisMonExt")?.Value,
             cmp);
     }
@@ -272,7 +272,7 @@ public abstract class AsmxVoucherRules(
     private async Task<ContractAnswer> ConsultAsync(ServiceCall call, CancellationToken ct)
     {
         var cmp = call.Request.Child("Cmp") ?? new XElement("Cmp");
-        var found = await Book.FindAsync(call.Cuit, (int)(cmp.Whole("Punto_vta") ?? 0), (int)(cmp.Whole("Tipo_cbte") ?? 0), cmp.Whole("Cbte_nro") ?? 0, ct);
+        var found = await Book.FindAsync(call.Cuit, (int)(cmp.ChildLong("Punto_vta") ?? 0), (int)(cmp.ChildLong("Tipo_cbte") ?? 0), cmp.ChildLong("Cbte_nro") ?? 0, ct);
         if (found is null) return Refuse(call, new AsmxRefusal(1020, "Comprobante inexistente"));
         return Answer(call, new XElement(Ns(call) + $"{Prefix}ResultGet", Detail(Ns(call), found)));
     }
@@ -280,7 +280,7 @@ public abstract class AsmxVoucherRules(
     private async Task<ContractAnswer> LastAsync(ServiceCall call, CancellationToken ct)
     {
         var auth = call.Request.Child("Auth") ?? new XElement("Auth");
-        var last = await Book.LastAsync(call.Cuit, (int)(auth.Whole("Pto_venta") ?? 0), (int)(auth.Whole("Tipo_cbte") ?? 0), ct);
+        var last = await Book.LastAsync(call.Cuit, (int)(auth.ChildLong("Pto_venta") ?? 0), (int)(auth.ChildLong("Tipo_cbte") ?? 0), ct);
         var ns = Ns(call);
         return Answer(call, new XElement(ns + $"{Prefix}Result_LastCMP",
             new XElement(ns + "Cbte_nro", last?.Number ?? 0),
@@ -399,7 +399,7 @@ public abstract class AsmxVoucherRules(
     protected ContractAnswer Conditions(ServiceCall call, AsmxRefusal badClass)
     {
         var ns = Ns(call);
-        var wanted = call.Request.Field("ClaseCmp");
+        var wanted = call.Request.ChildText("ClaseCmp");
         if (!string.IsNullOrEmpty(wanted) && wanted is not ("A" or "B")) return Refuse(call, badClass);
         return Table(call, Annex.Where(c => string.IsNullOrEmpty(wanted) || c.Class == wanted)
             .Select(c => new XElement(ns + $"Cls{Prefix}Response_CondicionIvaReceptor",
@@ -409,10 +409,10 @@ public abstract class AsmxVoucherRules(
     /// <summary>The rate of a currency for a day (today when none is asked): the latest on or before it, pesos at 1.</summary>
     protected async Task<ContractAnswer?> QuoteAsync(ServiceCall call, QuoteRefusals refusals, CancellationToken ct)
     {
-        var currency = call.Request.Field("MonId");
+        var currency = call.Request.ChildText("MonId");
         if (string.IsNullOrEmpty(currency)) return Refuse(call, refusals.MissingCurrency);
         if (!parameters.HasCurrency(currency)) return Refuse(call, refusals.UnknownCurrency);
-        var asked = call.Request.Field("FchCotiz");
+        var asked = call.Request.ChildText("FchCotiz");
         DateOnly day;
         if (string.IsNullOrEmpty(asked)) day = clock.Today();
         else if (asked.Length == 8 && Figures.ParseDay(asked) is { } parsed) day = parsed;

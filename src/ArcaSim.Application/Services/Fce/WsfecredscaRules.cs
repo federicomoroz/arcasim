@@ -67,8 +67,8 @@ public sealed class WsfecredscaRules(FceLedger ledger) : IServiceBehavior
     private async Task<XElement> InvoicesAsync(ServiceCall call, CancellationToken ct)
     {
         var request = call.Request;
-        var issuer = request.LongOf("cuitEmisor");
-        var receiver = request.LongOf("cuitReceptor");
+        var issuer = request.ChildLong("cuitEmisor");
+        var receiver = request.ChildLong("cuitReceptor");
         var format = CheckQuery(request, out var page, out var range);
         if (BadCuit(issuer) || BadCuit(receiver)) format.Insert(0, 2002);
         if (format.Count > 0) return Refused(call, null, FormatErrors(Texts, format));

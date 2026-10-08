@@ -137,15 +137,15 @@ public sealed class WsfecredRules(
         new XElement("nroCmp", id.Number));
 
     private static FceId? IdOf(XElement? element) =>
-        element is not null && element.LongOf("CUITEmisor") is { } cuit && element.LongOf("codTipoCmp") is { } type
-        && element.LongOf("ptoVta") is { } point && element.LongOf("nroCmp") is { } number
+        element is not null && element.ChildLong("CUITEmisor") is { } cuit && element.ChildLong("codTipoCmp") is { } type
+        && element.ChildLong("ptoVta") is { } point && element.ChildLong("nroCmp") is { } number
             ? new FceId(cuit, (int)type, (int)point, number)
             : null;
 
     private static AccountRef ReferenceOf(XElement request)
     {
         var id = request.Child("idCtaCte");
-        return new AccountRef(id?.LongOf("codCtaCte"), IdOf(id?.Child("idFactura")));
+        return new AccountRef(id?.ChildLong("codCtaCte"), IdOf(id?.Child("idFactura")));
     }
 
     private static FceAccount? Find(FceBook book, AccountRef reference) =>
@@ -318,14 +318,14 @@ public sealed class WsfecredRules(
     private static XElement Vouchers(ServiceCall call, FceBook book)
     {
         var request = call.Request;
-        var page = (int)(request.LongOf("nroPagina") ?? 1);
+        var page = (int)(request.ChildLong("nroPagina") ?? 1);
         if (page <= 0) return Answer(call, "consultarCmpReturn", Errors(12011));
 
         var issuer = request.Value("rolCUITRepresentada") == "Emisor";
-        var counterpart = request.LongOf("CUITContraparte");
-        var type = request.LongOf("codTipoCmp");
+        var counterpart = request.ChildLong("CUITContraparte");
+        var type = request.ChildLong("codTipoCmp");
         var state = request.Value("estadoCmp");
-        var code = request.LongOf("codCtaCte");
+        var code = request.ChildLong("codCtaCte");
         var accountState = request.Value("estadoCtaCte");
         var inRange = DateFilter(book, request.Child("fecha"));
 
@@ -350,11 +350,11 @@ public sealed class WsfecredRules(
     private static XElement Accounts(ServiceCall call, FceBook book)
     {
         var request = call.Request;
-        var page = (int)(request.LongOf("nroPagina") ?? 1);
+        var page = (int)(request.ChildLong("nroPagina") ?? 1);
         if (page <= 0) return Answer(call, "consultarCtasCtesReturn", Errors(12011));
 
         var issuer = request.Value("rolCUITRepresentada") == "Emisor";
-        var counterpart = request.LongOf("CUITContraparte");
+        var counterpart = request.ChildLong("CUITContraparte");
         var state = request.Value("estadoCtaCte");
         var option = request.Value("opcionTransferencia");
         var inRange = DateFilter(book, request.Child("fecha"));
@@ -455,7 +455,7 @@ public sealed class WsfecredRules(
 
     private async Task<XElement> ObligationAsync(ServiceCall call, CancellationToken ct)
     {
-        var taxpayer = await taxpayers.FindAsync(call.Request.LongOf("cuitConsultada") ?? 0, ct);
+        var taxpayer = await taxpayers.FindAsync(call.Request.ChildLong("cuitConsultada") ?? 0, ct);
         var obliged = taxpayer is { Active: true, VatCondition: VatCondition.ResponsableInscripto };
         return Answer(call, "consultarMontoObligadoRecepcionReturn",
             new XElement("obligado", YesNo(obliged)),
@@ -476,7 +476,7 @@ public sealed class WsfecredRules(
 
     private static List<FceReason> ReasonsOf(XElement request) =>
         request.Child("arrayMotivosRechazo").Children("motivoRechazo")
-            .Select(m => new FceReason((short)(m.LongOf("codMotivo") ?? 0), m.Value("descMotivo") ?? "", m.Value("justificacion") ?? ""))
+            .Select(m => new FceReason((short)(m.ChildLong("codMotivo") ?? 0), m.Value("descMotivo") ?? "", m.Value("justificacion") ?? ""))
             .ToList();
 
     /// <summary>3001 for a code not in the table or repeated, 3000 for a reason without justification.</summary>
@@ -549,18 +549,18 @@ public sealed class WsfecredRules(
         var confirmations = request.Child("arrayConfirmarNotasDC").Children("confirmarNota")
             .Select(n => new Confirmation(n.Value("acepta") == "S", IdOf(n.Child("idNota")))).ToList();
         var forms = request.Child("arrayFormasCancelacion").Children("codigoDescripcion")
-            .Select(f => new FceCodeText((short)(f.LongOf("codigo") ?? 0), f.Value("descripcion") ?? "")).ToList();
+            .Select(f => new FceCodeText((short)(f.ChildLong("codigo") ?? 0), f.Value("descripcion") ?? "")).ToList();
         var withholdings = request.Child("arrayRetenciones").Children("retencion")
-            .Select(r => new FceWithholding((short)(r.LongOf("codTipo") ?? 0), r.DecimalOf("importe") ?? 0, r.DecimalOf("porcentaje") ?? 0, r.Value("descMotivo"))).ToList();
+            .Select(r => new FceWithholding((short)(r.ChildLong("codTipo") ?? 0), r.ChildDecimal("importe") ?? 0, r.ChildDecimal("porcentaje") ?? 0, r.Value("descMotivo"))).ToList();
         var adjustments = request.Child("arrayAjustesOperacion").Children("ajuste")
-            .Select(a => new FceAdjustment((short)(a.LongOf("codigo") ?? 0), a.DecimalOf("importe") ?? 0)).ToList();
+            .Select(a => new FceAdjustment((short)(a.ChildLong("codigo") ?? 0), a.ChildDecimal("importe") ?? 0)).ToList();
         var cancellation = request.Value("tipoCancelacion");
-        var cancelled = request.DecimalOf("importeCancelado");
-        var withheld = request.DecimalOf("importeTotalRetPesos");
-        var embargo = request.DecimalOf("importeEmbargoPesos");
-        var accepted = request.DecimalOf("saldoAceptado") ?? 0;
+        var cancelled = request.ChildDecimal("importeCancelado");
+        var withheld = request.ChildDecimal("importeTotalRetPesos");
+        var embargo = request.ChildDecimal("importeEmbargoPesos");
+        var accepted = request.ChildDecimal("saldoAceptado") ?? 0;
         var currency = request.Value("codMoneda");
-        var rate = request.DecimalOf("cotizacionMonedaUlt") ?? 0;
+        var rate = request.ChildDecimal("cotizacionMonedaUlt") ?? 0;
         var informsCbu = request.Value("informaCBU");
         var cbu = request.Value("CBUComprador");
 
@@ -676,8 +676,8 @@ public sealed class WsfecredRules(
         if (account.State.State != FceStates.AccountAccepted || account.Option != "ADC") return Operation(call, reference, 1108);
 
         var forms = call.Request.Child("arrayFormasCancelacion").Children("codigoDescripcion")
-            .Select(f => new FceCodeText((short)(f.LongOf("codigo") ?? 0), f.Value("descripcion") ?? "")).ToList();
-        var amount = call.Request.DecimalOf("importeCancelacion") ?? 0;
+            .Select(f => new FceCodeText((short)(f.ChildLong("codigo") ?? 0), f.Value("descripcion") ?? "")).ToList();
+        var amount = call.Request.ChildDecimal("importeCancelacion") ?? 0;
         var errors = new List<int>();
         if (forms.Count == 0) errors.Add(4001);
         else if (forms.Any(f => FceTables.CancellationForms.All(t => t.Code != f.Code)) || forms.DistinctBy(f => f.Code).Count() != forms.Count) errors.Add(4002);
@@ -722,7 +722,7 @@ public sealed class WsfecredRules(
         }
 
         var target = call.Request.Child("ctaAgente");
-        var agent = target?.LongOf("cuitAgente") ?? 0;
+        var agent = target?.ChildLong("cuitAgente") ?? 0;
         var agentAccount = await _ledger.AgentAccountAsync(agent, target?.Value("idCuenta") ?? "", ct);
         if (agentAccount is not { State: "A" } || agentAccount.Holder != call.Cuit) return Operation(call, reference, 6002);
 

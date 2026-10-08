@@ -16,7 +16,7 @@ public sealed partial class MtxcaRules
 {
     private async Task<ContractAnswer> RequestCaeaAsync(ServiceCall call, CancellationToken ct)
     {
-        var request = MtxcaVoucherInput.Child(call.Request, "solicitudCAEA") ?? call.Request;
+        var request = call.Request.Child("solicitudCAEA") ?? call.Request;
         var period = request.Int("periodo");
         var order = (short)request.Int("orden");
         var today = clock.Today();
@@ -178,7 +178,7 @@ public sealed partial class MtxcaRules
 
     private async Task<ContractAnswer> InformAsync(ServiceCall call, CancellationToken ct)
     {
-        var element = MtxcaVoucherInput.Child(call.Request, "comprobanteCAEARequest") ?? new XElement("comprobanteCAEARequest");
+        var element = call.Request.Child("comprobanteCAEARequest") ?? new XElement("comprobanteCAEARequest");
         var voucher = MtxcaVoucherInput.Read(element);
         var today = clock.Today();
         var date = voucher.Date ?? today;

@@ -54,20 +54,20 @@ public sealed class MtxcaStore(IDocumentStore store)
     private const string Caeas = "wsmtxca-caea";
     private const string CaeaCodes = "wsmtxca-caea-codigos";
 
+    /// <summary>A sequence's key (CUIT, point of sale, type): the front of AuthorizedVouchers.Key, which names the vouchers.</summary>
     private static string Sequence(long cuit, int pointOfSale, int type) => $"{cuit}/{pointOfSale:D5}/{type:D3}";
 
     public Task<MtxcaLast?> LastAsync(long cuit, int pointOfSale, int type, CancellationToken ct) =>
         store.GetAsync<MtxcaLast>(Lasts, Sequence(cuit, pointOfSale, type), ct);
 
     public Task<MtxcaVoucher?> FindAsync(long cuit, int pointOfSale, int type, long number, CancellationToken ct) =>
-        store.GetAsync<MtxcaVoucher>(Vouchers, $"{Sequence(cuit, pointOfSale, type)}/{number:D8}", ct);
+        store.GetAsync<MtxcaVoucher>(Vouchers, AuthorizedVouchers.Key(cuit, pointOfSale, type, number), ct);
 
     /// <summary>Keeps the voucher, moves its sequence forward and records it for constatación.</summary>
     public async Task AddAsync(MtxcaVoucher voucher, int receiverDocType, long receiverDocNumber, decimal total, CancellationToken ct)
     {
-        var sequence = Sequence(voucher.Cuit, voucher.PointOfSale, voucher.VoucherType);
-        await store.PutAsync(Vouchers, $"{sequence}/{voucher.Number:D8}", voucher, ct);
-        await store.PutAsync(Lasts, sequence, new MtxcaLast(voucher.Number, voucher.Date), ct);
+        await store.PutAsync(Vouchers, AuthorizedVouchers.Key(voucher.Cuit, voucher.PointOfSale, voucher.VoucherType, voucher.Number), voucher, ct);
+        await store.PutAsync(Lasts, Sequence(voucher.Cuit, voucher.PointOfSale, voucher.VoucherType), new MtxcaLast(voucher.Number, voucher.Date), ct);
         await store.PutAsync(new AuthorizedVoucher("wsmtxca", voucher.Cuit, voucher.PointOfSale, voucher.VoucherType, voucher.Number,
             voucher.Date, total, receiverDocType, receiverDocNumber, voucher.AuthorizationType == "E" ? "CAE" : "CAEA",
             voucher.AuthorizationCode.ToString(), voucher.AuthorizationDue), ct);

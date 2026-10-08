@@ -1,3 +1,4 @@
+using ArcaSim.Application.Services.FacturacionE;
 using ArcaSim.Application.Wsfe;
 
 namespace ArcaSim.Application.Services.Mtxca;
@@ -71,22 +72,9 @@ public sealed class MtxcaTables(ParameterTables tables)
     /// <summary>Currencies whose rate the Banco Nación publishes (Anexo, pág. 360-361), written with wsmtxca's three-character codes.</summary>
     public static readonly IReadOnlySet<string> BnaCurrencies = new HashSet<string> { "DOL", "002", "009", "014", "015", "016", "018", "019", "021", "026", "060", "064" };
 
+    /// <summary>The generic units table WSFEXv1 answers (Wsfexv1Tables.Units) plus 95, which the validations use for cancellations and returns.</summary>
     public static readonly IReadOnlyList<MtxcaRow> Units =
-    [
-        new(0, "SIN DESCRIPCION"), new(1, "KILOGRAMO"), new(2, "METROS"), new(3, "METRO CUADRADO"), new(4, "METRO CUBICO"),
-        new(5, "LITROS"), new(6, "1000 KILOWATT HORA"), new(7, "UNIDAD"), new(8, "PAR"), new(9, "DOCENA"), new(10, "QUILATE"),
-        new(11, "MILLAR"), new(12, "MEGA U. INTER. ACT. ANTIB"), new(13, "UNIDAD INT. ACT. INMUNG"), new(14, "GRAMO"),
-        new(15, "MILIMETRO"), new(16, "MILIMETRO CUBICO"), new(17, "KILOMETRO"), new(18, "HECTOLITRO"),
-        new(19, "MEGA UNIDAD INT. ACT. INMUNG"), new(20, "CENTIMETRO"), new(21, "KILOGRAMO ACTIVO"), new(22, "GRAMO ACTIVO"),
-        new(23, "GRAMO BASE"), new(24, "UIACTHOR"), new(25, "JGO.PQT. MAZO NAIPES"), new(26, "MUIACTHOR"),
-        new(27, "CENTIMETRO CUBICO"), new(28, "UIACTANT"), new(29, "TONELADA"), new(30, "DECAMETRO CUBICO"),
-        new(31, "HECTOMETRO CUBICO"), new(32, "KILOMETRO CUBICO"), new(33, "MICROGRAMO"), new(34, "NANOGRAMO"),
-        new(35, "PICOGRAMO"), new(36, "MUIACTANT"), new(37, "UIACTIG"), new(41, "MILIGRAMO"), new(47, "MILILITRO"),
-        new(48, "CURIE"), new(49, "MILICURIE"), new(50, "MICROCURIE"), new(51, "U.INTER. ACT. HORMONAL"),
-        new(52, "MEGA U. INTER. ACT. HOR."), new(53, "KILOGRAMO BASE"), new(54, "GRUESA"), new(55, "MUIACTIG"),
-        new(61, "KILOGRAMO BRUTO"), new(62, "PACK"), new(63, "HORMA"), new(95, "ANULACIÓN/DEVOLUCIÓN"),
-        new(97, "SEÑAS/ANTICIPOS"), new(98, "OTRAS UNIDADES"), new(99, "BONIFICACION"),
-    ];
+        Wsfexv1Tables.Units.Append((Id: 95, Desc: "ANULACIÓN/DEVOLUCIÓN")).OrderBy(u => u.Id).Select(u => new MtxcaRow(u.Id, u.Desc)).ToList();
 
     public static readonly IReadOnlyList<MtxcaRow> ExtraDataTypes =
     [

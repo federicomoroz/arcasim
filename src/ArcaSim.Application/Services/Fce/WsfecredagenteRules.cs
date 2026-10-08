@@ -85,7 +85,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
 
     private static List<AccountItem> AccountItems(XElement request) =>
         request.Child("cuentas").Children("cuenta")
-            .Select(c => new AccountItem(c.LongOf("cuitTitular"), c.Child("cuentaId")?.Value.Trim() ?? "", c.Value("denominacion")))
+            .Select(c => new AccountItem(c.ChildLong("cuitTitular"), c.ChildText("cuentaId") ?? "", c.Value("denominacion")))
             .ToList();
 
     /// <summary>2009 for too many accounts, 2002 for a holder without its check digit, 2005 for a cuentaId out of 3 to 20 characters.</summary>
@@ -157,7 +157,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
     private async Task<XElement> AccountsAsync(ServiceCall call, CancellationToken ct)
     {
         var request = call.Request;
-        var holder = request.LongOf("cuitTitular");
+        var holder = request.ChildLong("cuitTitular");
         var format = CheckQuery(request, out var page, out var range);
         if (BadCuit(holder)) format.Insert(0, 2002);
         if (format.Count > 0) return Refused(call, null, FormatErrors(Texts, format));
@@ -188,7 +188,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
     private async Task<XElement> InvoicesAsync(ServiceCall call, CancellationToken ct)
     {
         var request = call.Request;
-        var issuer = request.LongOf("cuitEmisor");
+        var issuer = request.ChildLong("cuitEmisor");
         var format = CheckQuery(request, out var page, out var range);
         if (BadCuit(issuer)) format.Insert(0, 2002);
         if (format.Count > 0) return Refused(call, null, FormatErrors(Texts, format));
@@ -241,7 +241,7 @@ public sealed class WsfecredagenteRules(FceLedger ledger, IClock clock) : IServi
     private async Task<XElement> ConfirmAsync(ServiceCall call, CancellationToken ct)
     {
         var items = call.Request.Child("facturas").Children("factura")
-            .Select(f => new Confirmation(IdOf(f.Child("idFactura")), f.Value("aceptada") == "S", (short?)f.LongOf("codRechazo")))
+            .Select(f => new Confirmation(IdOf(f.Child("idFactura")), f.Value("aceptada") == "S", (short?)f.ChildLong("codRechazo")))
             .ToList();
         var format = new List<int>();
         if (items.Count > BatchSize) format.Add(2009);

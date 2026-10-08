@@ -218,14 +218,14 @@ public abstract class BfeRules(
         if (CheckItemsSent(items) is { } none) return none;
         foreach (var item in items)
         {
-            var vat = item.Whole("Iva_id") ?? 0;
+            var vat = item.ChildLong("Iva_id") ?? 0;
             if (VatRates.All(r => r.Id != vat))
                 return new AsmxRefusal(1014, Text1014.InvalidValue("Iva_id", $"la alícuota {vat} no existe. Consultar método BFEGetPARAM_Tipo_IVA."));
-            var unit = item.Whole("Pro_umed") ?? 0;
+            var unit = item.ChildLong("Pro_umed") ?? 0;
             if (Units.All(u => u.Id != unit))
                 return new AsmxRefusal(1014, Text1014.InvalidValue("Pro_umed", $"la unidad de medida {unit} no existe. Consultar método BFEGetPARAM_UMed."));
         }
-        if (items.Any(i => i.Whole("Iva_id") == 2) && cmp.Exempt <= 0) return new AsmxRefusal(1014, Text1014.Exempt);
+        if (items.Any(i => i.ChildLong("Iva_id") == 2) && cmp.Exempt <= 0) return new AsmxRefusal(1014, Text1014.Exempt);
         return CheckItemsTotal(cmp, items);
     }
 
@@ -258,9 +258,9 @@ public abstract class BfeRules(
         var seen = new HashSet<(long, long, long)>();
         foreach (var asoc in associated)
         {
-            var type = asoc.Whole("Tipo_cbte") ?? 0;
-            var point = asoc.Whole("Punto_vta") ?? 0;
-            var number = asoc.Whole("Cbte_nro") ?? 0;
+            var type = asoc.ChildLong("Tipo_cbte") ?? 0;
+            var point = asoc.ChildLong("Punto_vta") ?? 0;
+            var number = asoc.ChildLong("Cbte_nro") ?? 0;
             if (type <= 0) return new AsmxRefusal(1031, "De enviarse el tag CbteAsoc debe enviarse <CbteAsoc><Tipo>mayor a 0");
             if (point is <= 0 or >= 99998) return new AsmxRefusal(1032, "De enviarse el tag CbteAsoc debe enviarse <CbteAsoc><PtoVta> mayor a 0 y menor a 99998.");
             if (number is <= 0 or >= 99999999) return new AsmxRefusal(1033, "De enviarse el tag CbteAsoc debe enviarse <CbteAsoc><Nro> > a 0 y < a 99999999.");
@@ -286,9 +286,9 @@ public abstract class BfeRules(
     private static AsmxRefusal? CheckCredit(AsmxCmp cmp, VoucherTypeInfo type)
     {
         var fce = type.Fce;
-        var due = cmp.Raw.Field("Fecha_vto_pago");
+        var due = cmp.Raw.ChildText("Fecha_vto_pago");
         var optionals = cmp.Raw.Child("Opcionales")?.Children("Opcional").ToList();
-        var ids = optionals?.Select(o => o.Field("Id") ?? "").ToList() ?? [];
+        var ids = optionals?.Select(o => o.ChildText("Id") ?? "").ToList() ?? [];
 
         if (fce && cmp.Total < 0)
             return new AsmxRefusal(4955, "Si el tipo de comprobante que está autorizando es Factura del tipo MiPyMEs (201, 202, 203, 206, 207, 208), el campo <Cmp>.<Imp_total> (Importe total de la operación) deber ser igual o mayor a 0 (cero).");
@@ -307,9 +307,9 @@ public abstract class BfeRules(
                 return new AsmxRefusal(1017, "El campo <Id> en <Opcionales> es obligatorio y no debe repetirse.");
             foreach (var optional in optionals)
             {
-                var value = optional.Field("Valor");
+                var value = optional.ChildText("Valor");
                 if (string.IsNullOrEmpty(value)) return new AsmxRefusal(1018, "El campo <Valor> en Opcionales es obligatorio");
-                if (OptionalValueRefusal(optional.Field("Id")!, value) is { } refusal) return refusal;
+                if (OptionalValueRefusal(optional.ChildText("Id")!, value) is { } refusal) return refusal;
             }
             if (!fce && ids.Any(FceOptionals.Contains))
                 return new AsmxRefusal(4916, "Si el tipo de comprobante que está autorizando NO es MiPyMEs (FCE), no informar los códigos 2101, 2102, 22, 27. (<Opcionales><Id><Valor>)");
@@ -351,7 +351,7 @@ public abstract class BfeRules(
         foreach (var head in Head(ns, voucher, detail)) yield return head;
         yield return new XElement(ns + "Fecha_cbte_orig", voucher.SentDate ?? "");
         yield return new XElement(ns + "Fecha_cbte_cae", Figures.Day(voucher.Date));
-        if (CreditInvoices && detail.Field("Fecha_vto_pago") is { } due) yield return new XElement(ns + "Fecha_vto_pago", due);
+        if (CreditInvoices && detail.ChildText("Fecha_vto_pago") is { } due) yield return new XElement(ns + "Fecha_vto_pago", due);
         yield return new XElement(ns + "Fch_venc_Cae", Figures.Day(voucher.CaeDue));
         yield return new XElement(ns + "Cae", voucher.Cae);
         yield return new XElement(ns + "Resultado", voucher.Result);

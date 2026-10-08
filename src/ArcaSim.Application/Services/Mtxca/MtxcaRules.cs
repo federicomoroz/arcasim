@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using ArcaSim.Application.Contracts;
 using ArcaSim.Application.Events;
 using ArcaSim.Application.Padron;
+using ArcaSim.Application.Services.Fce;
 using ArcaSim.Application.Wsfe;
 using ArcaSim.Domain;
 
@@ -81,8 +82,7 @@ public sealed partial class MtxcaRules(
         "consultarAlicuotasIVA" => Done(Table(call, "arrayAlicuotasIVA", _tables.VatRates)),
         "consultarCondicionesIVA" => Done(Table(call, "arrayCondicionesIVA", _tables.ItemVatConditions)),
         "consultarCondicionesIVAReceptor" => Done(ReceiverConditions(call)),
-        "consultarMonedas" => Done(call.Ok(new XElement(call.Operation.Output, new XElement("arrayMonedas",
-            _tables.Currencies.Select(c => new XElement("codigoDescripcion", new XElement("codigo", c.Code), new XElement("descripcion", c.Description))))))),
+        "consultarMonedas" => Done(call.Ok(new XElement(call.Operation.Output, FceXml.CodeList("arrayMonedas", _tables.Currencies)))),
         "consultarCotizacionMoneda" => Some(QuoteAsync(call, ct)),
         "consultarUnidadesMedida" => Done(Table(call, "arrayUnidadesMedida", MtxcaTables.Units)),
         "consultarTiposTributo" => Done(Table(call, "arrayTiposTributo", _tables.Taxes)),
@@ -102,7 +102,7 @@ public sealed partial class MtxcaRules(
 
     private async Task<ContractAnswer> AuthorizeAsync(ServiceCall call, CancellationToken ct)
     {
-        var element = MtxcaVoucherInput.Child(call.Request, "comprobanteCAERequest") ?? new XElement("comprobanteCAERequest");
+        var element = call.Request.Child("comprobanteCAERequest") ?? new XElement("comprobanteCAERequest");
         var voucher = MtxcaVoucherInput.Read(element);
         var today = clock.Today();
         var date = voucher.Date ?? today;
@@ -165,8 +165,8 @@ public sealed partial class MtxcaRules(
         var copy = MtxcaVoucherInput.Unqualified(voucher.Element);
         copy.Name = "comprobante";
         foreach (var name in new[] { "fechaEmision", "codigoTipoAutorizacion", "codigoAutorizacion", "fechaVencimiento" })
-            MtxcaVoucherInput.Child(copy, name)?.Remove();
-        var anchor = MtxcaVoucherInput.Child(copy, "numeroComprobante");
+            copy.Child(name)?.Remove();
+        var anchor = copy.Child("numeroComprobante");
         XElement[] authorization =
         [
             new("fechaEmision", Day(date)),
@@ -184,7 +184,7 @@ public sealed partial class MtxcaRules(
 
     private async Task<ContractAnswer> LastAsync(ServiceCall call, CancellationToken ct)
     {
-        var query = MtxcaVoucherInput.Child(call.Request, "consultaUltimoComprobanteAutorizadoRequest") ?? call.Request;
+        var query = call.Request.Child("consultaUltimoComprobanteAutorizadoRequest") ?? call.Request;
         var type = query.Int("codigoTipoComprobante");
         var pointOfSale = query.Int("numeroPuntoVenta");
         if (await QueryProblemAsync(call, type, pointOfSale, ct) is { } problem) return QueryError(call, problem);
@@ -197,7 +197,7 @@ public sealed partial class MtxcaRules(
 
     private async Task<ContractAnswer> ConsultAsync(ServiceCall call, CancellationToken ct)
     {
-        var query = MtxcaVoucherInput.Child(call.Request, "consultaComprobanteRequest") ?? call.Request;
+        var query = call.Request.Child("consultaComprobanteRequest") ?? call.Request;
         var type = query.Int("codigoTipoComprobante");
         var pointOfSale = query.Int("numeroPuntoVenta");
         if (await QueryProblemAsync(call, type, pointOfSale, ct) is { } problem) return QueryError(call, problem);
@@ -226,16 +226,14 @@ public sealed partial class MtxcaRules(
     // ---- Parameters ------------------------------------------------------------------
 
     private static ContractAnswer Table(ServiceCall call, string array, IEnumerable<MtxcaRow> rows) =>
-        call.Ok(new XElement(call.Operation.Output, new XElement(array, rows.Select(r =>
-            new XElement("codigoDescripcion", new XElement("codigo", r.Code), new XElement("descripcion", r.Description))))));
+        call.Ok(new XElement(call.Operation.Output, FceXml.CodeList(array, rows.Select(r => (r.Code, r.Description)))));
 
     private ContractAnswer ReceiverConditions(ServiceCall call)
     {
         var type = MtxcaTables.VoucherType(call.Request.Int("codigoTipoComprobante"));
         if (type is null) return QueryError(call, 196);
-        return call.Ok(new XElement(call.Operation.Output, new XElement("arrayCondicionesIVAReceptor",
-            _tables.ReceiverConditions(type).Select(r =>
-                new XElement("codigoDescripcion", new XElement("codigo", r.Code), new XElement("descripcion", r.Description))))));
+        return call.Ok(new XElement(call.Operation.Output,
+            FceXml.CodeList("arrayCondicionesIVAReceptor", _tables.ReceiverConditions(type).Select(r => (r.Code, r.Description)))));
     }
 
     /// <summary>The rate ArcaSim was given for that day or the last one before it; PES is always 1; none, no value.</summary>
@@ -297,7 +295,7 @@ public sealed partial class MtxcaRules(
         settings.OpenAccess || issuer is null ? null : [PadronDirectory.ActivityOf(issuer).Id];
 
     private static XElement Codes(string array, IEnumerable<MtxcaFinding> findings) =>
-        new(array, findings.Select(f => new XElement("codigoDescripcion", new XElement("codigo", f.Code), new XElement("descripcion", f.Text))));
+        FceXml.CodeList(array, findings.Select(f => (f.Code, f.Text)));
 
     private static string Day(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 }

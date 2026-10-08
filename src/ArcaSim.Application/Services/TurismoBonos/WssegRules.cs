@@ -120,7 +120,7 @@ public sealed class WssegRules(
         if (CheckItemsSent(items) is { } none) return none;
         foreach (var item in items)
         {
-            var vat = item.Field("Iva_id") ?? "";
+            var vat = item.ChildText("Iva_id") ?? "";
             if (Parameters.VatRates.All(r => r.Id != vat))
                 return new AsmxRefusal(1014, Text1014.InvalidValue("Iva_id", $"la alícuota {vat} no existe. Consultar método SEGGetPARAM_Tipo_IVA."));
         }
