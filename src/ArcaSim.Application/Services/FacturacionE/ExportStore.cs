@@ -24,7 +24,7 @@ internal sealed class ExportStore(IDocumentStore documents, SequenceLocks locks)
         documents.GetAsync<AuthorizedExport>(Vouchers, AuthorizedVouchers.Key(cuit, pointOfSale, voucherType, number), ct);
 
     public async Task<AuthorizedExport?> LastAsync(long cuit, int pointOfSale, int voucherType, CancellationToken ct) =>
-        (await documents.ListAsync<AuthorizedExport>(Vouchers, $"{cuit}/{pointOfSale:D5}/{voucherType:D3}/", ct)).LastOrDefault();
+        (await documents.ListAsync<AuthorizedExport>(Vouchers, $"{AuthorizedVouchers.SequenceKey(cuit, pointOfSale, voucherType)}/", ct)).LastOrDefault();
 
     public async Task<AuthorizedExport?> ByRequestAsync(long cuit, long id, CancellationToken ct) =>
         await documents.GetAsync<RequestRef>(Requests, $"{cuit}/{id}", ct) is { } reference
